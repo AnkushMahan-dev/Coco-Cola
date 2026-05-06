@@ -1,0 +1,260 @@
+################################################################################################
+# Phase: ACT_UPG
+# Description: DDIC ACTIVATION ERRORS
+################################################################################################
+
+
+#==============================================================================================#
+# Find the detailed information in log 'SAPA750EAS.Q4R':
+#==============================================================================================#
+
+    3 EDO301XActivate data element "/CCBJI/CHTXT06"
+    1EEDO315 No active domain "/CCBJI/CHTXT06" available
+    3 EDO303 Data element "/CCBJI/CHTXT06" was not activated
+1EEDO519X"Data Element" "/CCBJI/CHTXT06" could not be activated
+    3 EDO301XActivate data element "/CCBJI/UNIT_PRC"
+    1EEDO315 No active domain "/BEV3/CHTXT15" available
+    3 EDO303 Data element "/CCBJI/UNIT_PRC" was not activated
+1EEDO519 "Data Element" "/CCBJI/UNIT_PRC" could not be activated
+    3 EDT012XActivate table "/CCC/SALES_ORDER_LIST_EXTRACT8"
+    1EEDT002 Table "/CCC/SALES_ORDER_LIST_EXTRACT8" does not exist
+    3 EDT013 Table "/CCC/SALES_ORDER_LIST_EXTRACT8" was not activated
+1EEDO519 "Table" "/CCC/SALES_ORDER_LIST_EXTRACT8" could not be activated
+    3 EDT012XActivate table "/CCEJ/OTCS_HDR_CCEJ"
+    1EEDT242 Field "CH_TIM": Component type is not active or is not allowed
+    1EEDT242 Field "DOC_SUB_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "DOC_TYP": Component type is not active or is not allowed
+    1EEDT242 Field "LINE_NO": Component type is not active or is not allowed
+    1EEDT242 Field "ORD_RECEIPT_SEG": Component type is not active or is not allowed
+    1EEDT242 Field "ORD_RECEIPT_TYPE": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCEJ/OTCS_HDR_CCEJ"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCEJ/OTCS_HDR_CCEJ" cannot be generated
+    3 EDT013 Table "/CCEJ/OTCS_HDR_CCEJ" was not activated
+1EEDO519 "Table" "/CCEJ/OTCS_HDR_CCEJ" could not be activated
+    3 EDT012XActivate table "/CCEJ/OTCS_ITM_HHT"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT242 Field "PLAN_TIME": Component type is not active or is not allowed
+    1EEDT242 Field "PLAN_TO": Component type is not active or is not allowed
+    1EEDT242 Field "SEQ_NMBR": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCEJ/OTCS_ITM_HHT"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCEJ/OTCS_ITM_HHT" cannot be generated
+    3 EDT013 Table "/CCEJ/OTCS_ITM_HHT" was not activated
+1EEDO519 "Table" "/CCEJ/OTCS_ITM_HHT" could not be activated
+    3 EDT012XActivate table "/CCEJ/OTCS_PROF_ITM_CCEJ"
+    1EEDT242 Field "CH_TIM": Component type is not active or is not allowed
+    1EEDT242 Field "COMP_PROD_SUB_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "DOC_SUB_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "ITM1": Component type is not active or is not allowed
+    1EEDT242 Field "LINE_NO": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCEJ/OTCS_PROF_ITM_CCEJ"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCEJ/OTCS_PROF_ITM_CCEJ" cannot be generated
+    3 EDT013 Table "/CCEJ/OTCS_PROF_ITM_CCEJ" was not activated
+    3 EDT014XActivate dependent table "/CCEJ/OTCS_PROF_ITM_CCEJ"
+    1EEDT242 Field "ACC_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "ACC_NAME": Component type is not active or is not allowed
+    1EEDT242 Field "ACC_PROD_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "BBE": Component type is not active or is not allowed
+    1EEDT242 Field "CH_DATE": Component type is not active or is not allowed
+    1EEDT242 Field "CH_TIM": Component type is not active or is not allowed
+    1EEDT242 Field "COMP_PROD_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "COMP_PROD_SUB_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "CONT_UNIT_PRICE": Component type is not active or is not allowed
+    1EEDT242 Field "CON_UNIT_PRICE": Component type is not active or is not allowed
+    1EEDT242 Field "COST_UNIT_PRICE": Component type is not active or is not allowed
+    1EEDT242 Field "DEL_CUST_NAME": Component type is not active or is not allowed
+    1EEDT242 Field "DETAIL_NO": Component type is not active or is not allowed
+    1EEDT242 Field "DISPATCH_NUM": Component type is not active or is not allowed
+    1EEDT242 Field "DOCNUM": Component type is not active or is not allowed
+    1EEDT242 Field "DOC_SUB_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "DOC_TYP": Component type is not active or is not allowed
+    1EEDT242 Field "HAND_UNIT": Component type is not active or is not allowed
+    1EEDT242 Field "ITM1": Component type is not active or is not allowed
+    1EEDT242 Field "ITM10": Component type is not active or is not allowed
+    1EEDT242 Field "ITM11": Component type is not active or is not allowed
+    1EEDT242 Field "ITM12": Component type is not active or is not allowed
+    1EEDT242 Field "ITM13": Component type is not active or is not allowed
+    1EEDT242 Field "ITM14": Component type is not active or is not allowed
+    1EEDT242 Field "ITM15": Component type is not active or is not allowed
+    1EEDT242 Field "ITM16": Component type is not active or is not allowed
+    1EEDT242 Field "ITM2": Component type is not active or is not allowed
+    1EEDT242 Field "ITM3": Component type is not active or is not allowed
+    1EEDT242 Field "ITM4": Component type is not active or is not allowed
+    1EEDT242 Field "ITM5": Component type is not active or is not allowed
+    1EEDT242 Field "ITM6": Component type is not active or is not allowed
+    1EEDT242 Field "ITM8": Component type is not active or is not allowed
+    1EEDT242 Field "ITM9": Component type is not active or is not allowed
+    1EEDT242 Field "JAN_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "LINE_NO": Component type is not active or is not allowed
+    1EEDT242 Field "MAT_NAMEL": Component type is not active or is not allowed
+    1EEDT242 Field "MAT_NAMEU": Component type is not active or is not allowed
+    1EEDT242 Field "MAT_SUB_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "ORD_RECEIPT_SEG": Component type is not active or is not allowed
+    1EEDT242 Field "ORD_SEG": Component type is not active or is not allowed
+    1EEDT242 Field "PLANT_NAME": Component type is not active or is not allowed
+    1EEDT242 Field "PROD_SEG": Component type is not active or is not allowed
+    1EEDT242 Field "QUAN": Component type is not active or is not allowed
+    1EEDT242 Field "ROUTE": Component type is not active or is not allowed
+    1EEDT242 Field "SALE_AMT": Component type is not active or is not allowed
+    1EEDT242 Field "SALE_UNIT_PRICE": Component type is not active or is not allowed
+    1EEDT242 Field "TRUCK_ROUTE": Component type is not active or is not allowed
+    1EEDT242 Field "VAR_SEG": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCEJ/OTCS_PROF_ITM_CCEJ"
+    1EEDO251 Data type " " does not exist
+1EEDO519 "Table" "/CCEJ/OTCS_PROF_ITM_CCEJ" could not be activated
+    3 EDT012XActivate table "BSS_CENTI"
+    3 EDT402 Append structure "/CCBJI/ZBSS_CENTI" appended to table "BSS_CENTI"
+    2WEDT191 Enhancement category "3" possible (include or subtype not yet classified)
+    1EEDT963 Field "DUMMY1" in table "BSS_CENTI" is specified twice
+    3 EDT013 Table "BSS_CENTI" was not activated
+    3 EDT014XActivate dependent table "BSS_CENTI"
+    3 EDT402 Append structure "/CCBJI/ZBSS_CENTI" appended to table "BSS_CENTI"
+    2WEDT191 Enhancement category "3" possible (include or subtype not yet classified)
+    1EEDT963 Field "DUMMY1" in table "BSS_CENTI" is specified twice
+    3 EDT015 Dependent table "BSS_CENTI" was not activated
+1EEDO519 "Table" "BSS_CENTI" could not be activated
+1EEDO519 "Table" "CI_CUST_MW" could not be activated
+    3 EDO802XActivation of table type "/CCEJ/OTCT_ITM_HHT"
+    1EEDO845 Row type "/CCEJ/OTCS_ITM_HHT" is not active or does not exist
+    3 EDO804 Table type "/CCEJ/OTCT_ITM_HHT" was not activated
+1EEDO519 "Table Type" "/CCEJ/OTCT_ITM_HHT" could not be activated
+    3 EDO802XActivation of table type "/CCEJ/OTCT_PROF_ITM_CCEJ"
+    1EEDO845 Row type "/CCEJ/OTCS_PROF_ITM_CCEJ" is not active or does not exist
+    3 EDO804 Table type "/CCEJ/OTCT_PROF_ITM_CCEJ" was not activated
+1EEDO519 "Table Type" "/CCEJ/OTCT_PROF_ITM_CCEJ" could not be activated
+    3 EDO802XActivation of table type "/CCEJ/RTRT_HDR_CCEJ"
+    1EEDO845 Row type "/CCEJ/OTCS_HDR_CCEJ" is not active or does not exist
+    3 EDO804 Table type "/CCEJ/RTRT_HDR_CCEJ" was not activated
+1EEDO519 "Table Type" "/CCEJ/RTRT_HDR_CCEJ" could not be activated
+    3 EMC738XActivate view "/SCL/VCRM_MKT_PS"
+    1EEMC824 Basis object "CRMD_MKTTG_TG_H" does not exist in an active version or is inconsistent
+    3 EMC742 View "/SCL/VCRM_MKT_PS" was not activated
+1EEDO519 "View" "/SCL/VCRM_MKT_PS" could not be activated
+    3 EMC738XActivate view "/SCL/VCRM_MKT_TG"
+    1EEMC824 Basis object "CRMD_MKTTG_TG_T" does not exist in an active version or is inconsistent
+    3 EMC742 View "/SCL/VCRM_MKT_TG" was not activated
+    2 ED0348XServer Usage ************************************************************
+    2 ED0313 Server..............|Workp|Tasks|Error|.Timesum|Objcount|ms/Obj|..KCosts|ms/KCs
+    2 ED0313 -------------------------------------------------------------------------------
+    2 ED0313 hec55v072589_Q4R_02.|...12|...35|.....|......55|..11.680|.....5|.....239|...230
+    2 EDO678 Parallel execution: "11" sec., Phase out time: "7" sec., Load: "4,1666666666666664E+01" percent
+    1 EDO533X*** Activate objects at level "2" ("03.04.2026 18:22:20")
+    3 EDO631 * Parallel execution with maximum of "12" concurrent tasks *
+    3 EDO677 Total of "9.643" objects with "10.209.100" costs in "85" tasks
+    3 ETP000 A3 EDDLSX041XActivating dependent DDL source "A_ACMINCOTERMSLOCATION1" (active version)
+    A3 EDDLS 025XDDL source "A_ACMINCOTERMSLOCATION1" was activated
+    A3 EDDLS 041XActivating dependent DDL source "A_ACMINCOTERMSLOCATION2" (active version)
+    A3 EDDLS 025XDDL source "A_ACMINCOTERMSLOCATION2" was activated
+    A3 EDDLS 041XActivating dependent DDL source "A_CASHFLOWREQUEST" (active version)
+    A3 EDDLS 025XDDL source "A_CASHFLOWREQUEST" was activated
+    A3 EDDLS 041XActivating dependent DDL source "C_ACCRUALSJOURNALENTRYITEM" (active version)
+    A2WESD_CDS_ENTITY 106 Annotation "Semantics.currencyCode" should only be used once within a select list.
+    A3 EDDLS 026XDDL source "C_ACCRUALSJOURNALENTRYITEM" was activated with warning messages
+    A3 EDDLS 041XActivating dependent DDL source "C_ACMSTORAGEAGREEMENTPROPOSAL" (active version)
+    A3 EDDLS 025XDDL source "C_ACMSTORAGEAGREEMENTPROPOSAL" was activated
+    A3 EDDLS 041XActivating dependent DDL source "C_ACMTRADINGCONTRACTPROPOSAL" (active version)
+    A3 EDDLS 025XDDL source "C_ACMTRADINGCONTRACTPROPOSAL" was activated
+    A3 EDDLS 041XActivating dependent DDL source "C_ACMTRADINGCONTRBYPRCFIXATION" (active version)
+    A3 EDDLS 025XDDL source "C_ACMTRADINGCONTRBYPRCFIXATION" was activated
+    A3 EDDLS 041XActivating dependent DDL source "C_BPGOVCONTACTPERSONLIST" (active version)
+    A3 EDDLS 025XDDL source "C_BPGOVCONTACTPERSONLIST" was activated
+    A3 EDDLS 041XActivating dependent DDL source "C_BPGOVPERSONCONTACTPERSONLIST" (active version)
+    A3 EDDLS 025XDDL source "C_BPGOVPERSONCONTACTPERSONLIST" was activated
+    A3 EDDLS 041XActivating dependent DDL source "C_CUSTOMERLIST" (active version)
+    A3 EDDLS 025XDDL source "C_CUSTOMERLIST" was activated
+    A3 EDDLS 041XActivating dependent DDL source "C_CUSTRETSUPLRRETTOADDRVH" (active version)
+    A3 EDDLS 025XDDL source "C_CUSTRETSUPLRRETTOADDRVH" was activated
+    A3 EDDLS 041XActivating dependent DDL source "C_DISPLAYMATERIALVALUECHAIN" (active version)
+    A2WEDDLS 349 CAST "''" to identical type "CHAR"
+    A2WEDDLS 349 CAST "''" to identical type "CHAR"
+    A2WEDDLS 349 CAST "''" to identical type "CHAR"
+    A2WEDDLS 349 CAST "''" to identical type "CHAR"
+    A2WEDDLS 349 CAST "''" to identical type "CHAR"
+    A2WEDDLS 349 CAST "''" to identical type "CHAR"
+    A2WEDDLS 349 CAST "''" to identical type "CHAR"
+    A2WEDDLS 349 CAST "''" to identical type "CHAR"
+    A2WEDDLS 349 CAST "''" to identical type "CHAR"
+    A2WEDDLS 349 CAST "''" to identical type "CHAR"
+    A2WEDDLS 349 CAST "''" to identical type "CHAR"
+    A2WEDDLS 349 CAST "''" to identical type "CHAR"
+    A2WEDDLS 349 CAST "''" to identical type "CHAR"
+    A2WEDDLS 349 CAST "''" to identical type "CHAR"
+    A3 EDDLS 465XChecks SQL View "CDSPMATVALCHN"
+    3 ED0308 Operation started by user "DDIC" on "03.04.26" at "18:22"
+1EEDO519 "View" "/SCL/VCRM_MKT_TG" could not be activated
+    3 EDT012XActivate table "/CCEJ/OTCS_PROF_ITM_CCEJ"
+    1EEDT242 Field "CH_TIM": Component type is not active or is not allowed
+    1EEDT242 Field "COMP_PROD_SUB_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "DOC_SUB_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "ITM1": Component type is not active or is not allowed
+    1EEDT242 Field "LINE_NO": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCEJ/OTCS_PROF_ITM_CCEJ"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCEJ/OTCS_PROF_ITM_CCEJ" cannot be generated
+    3 EDT013 Table "/CCEJ/OTCS_PROF_ITM_CCEJ" was not activated
+    3 EDT014XActivate dependent table "/CCEJ/OTCS_PROF_ITM_CCEJ"
+    1EEDT242 Field "ACC_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "ACC_NAME": Component type is not active or is not allowed
+    1EEDT242 Field "ACC_PROD_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "BBE": Component type is not active or is not allowed
+    1EEDT242 Field "CH_DATE": Component type is not active or is not allowed
+    1EEDT242 Field "CH_TIM": Component type is not active or is not allowed
+    1EEDT242 Field "COMP_PROD_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "COMP_PROD_SUB_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "CONT_UNIT_PRICE": Component type is not active or is not allowed
+    1EEDT242 Field "CON_UNIT_PRICE": Component type is not active or is not allowed
+    1EEDT242 Field "COST_UNIT_PRICE": Component type is not active or is not allowed
+    1EEDT242 Field "DEL_CUST_NAME": Component type is not active or is not allowed
+    1EEDT242 Field "DETAIL_NO": Component type is not active or is not allowed
+    1EEDT242 Field "DISPATCH_NUM": Component type is not active or is not allowed
+    1EEDT242 Field "DOCNUM": Component type is not active or is not allowed
+    1EEDT242 Field "DOC_SUB_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "DOC_TYP": Component type is not active or is not allowed
+    1EEDT242 Field "HAND_UNIT": Component type is not active or is not allowed
+    1EEDT242 Field "ITM1": Component type is not active or is not allowed
+    1EEDT242 Field "ITM10": Component type is not active or is not allowed
+    1EEDT242 Field "ITM11": Component type is not active or is not allowed
+    1EEDT242 Field "ITM12": Component type is not active or is not allowed
+    1EEDT242 Field "ITM13": Component type is not active or is not allowed
+    1EEDT242 Field "ITM14": Component type is not active or is not allowed
+    1EEDT242 Field "ITM15": Component type is not active or is not allowed
+    1EEDT242 Field "ITM16": Component type is not active or is not allowed
+    1EEDT242 Field "ITM2": Component type is not active or is not allowed
+    1EEDT242 Field "ITM3": Component type is not active or is not allowed
+    1EEDT242 Field "ITM4": Component type is not active or is not allowed
+    1EEDT242 Field "ITM5": Component type is not active or is not allowed
+    1EEDT242 Field "ITM6": Component type is not active or is not allowed
+    1EEDT242 Field "ITM8": Component type is not active or is not allowed
+    1EEDT242 Field "ITM9": Component type is not active or is not allowed
+    1EEDT242 Field "JAN_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "LINE_NO": Component type is not active or is not allowed
+    1EEDT242 Field "MAT_NAMEL": Component type is not active or is not allowed
+    1EEDT242 Field "MAT_NAMEU": Component type is not active or is not allowed
+    1EEDT242 Field "MAT_SUB_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "ORD_RECEIPT_SEG": Component type is not active or is not allowed
+    1EEDT242 Field "ORD_SEG": Component type is not active or is not allowed
+    1EEDT242 Field "PLANT_NAME": Component type is not active or is not allowed
+    1EEDT242 Field "PROD_SEG": Component type is not active or is not allowed
+    1EEDT242 Field "QUAN": Component type is not active or is not allowed
+    1EEDT242 Field "ROUTE": Component type is not active or is not allowed
+    1EEDT242 Field "SALE_AMT": Component type is not active or is not allowed
+    1EEDT242 Field "SALE_UNIT_PRICE": Component type is not active or is not allowed
+    1EEDT242 Field "TRUCK_ROUTE": Component type is not active or is not allowed
+    1EEDT242 Field "VAR_SEG": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCEJ/OTCS_PROF_ITM_CCEJ"
+    1EEDO251 Data type " " does not exist
+1EEDO519 "Table" "/CCEJ/OTCS_PROF_ITM_CCEJ" could not be activated
+    3 EDT012XActivate table "BSS_CENTI"
+    3 EDT402 Append structure "/CCBJI/ZBSS_CENTI" appended to table "BSS_CENTI"
+    2WEDT191 Enhancement category "3" possible (include or subtype not yet classified)
+    1EEDT963 Field "DUMMY1" in table "BSS_CENTI" is specified twice
+    3 EDT013 Table "BSS_CENTI" was not activated
+    3 EDT014XActivate dependent table "BSS_CENTI"
+    3 EDT402 Append structure "/CCBJI/ZBSS_CENTI" appended to table "BSS_CENTI"
+    2WEDT191 Enhancement category "3" possible (include or subtype not yet classified)
+    1EEDT963 Field "DUMMY1" in table "BSS_CENTI" is specified twice
+    3 EDT015 Dependent table "BSS_CENTI" was not activated
+1EEDO519 "Table" "BSS_CENTI" could not be activated
+1 ETP111 exit code           : "8"

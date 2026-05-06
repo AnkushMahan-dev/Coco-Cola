@@ -1,0 +1,866 @@
+
+#!--------------------------------------------------------------
+#!---- MASKING file "/usr/sap/SJR/SUM/SUM/abap/log/ACTUPG.ELG"
+#!---- TIME: 20260310003941  PHASE: MAIN_SHDRUN/ACT_UPG_CUST
+#!--------------------------------------------------------------
+
+################################################################################################
+# Phase: ACT_UPG_CUST
+# Description: DDIC ACTIVATION ERRORS
+################################################################################################
+
+
+#==============================================================================================#
+# Find the detailed information in log 'SAPA750EAS.SJR':
+#==============================================================================================#
+
+    3 EDT012XActivate table "/CCC/SALES_ORDER_LIST_EXTRACT"
+    1EEDT242 Field "SALES_ORDER": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/SALES_ORDER_LIST_EXTRACT"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/SALES_ORDER_LIST_EXTRACT" cannot be generated
+    3 EDT013 Table "/CCC/SALES_ORDER_LIST_EXTRACT" was not activated
+1EEDO519X"Table" "/CCC/SALES_ORDER_LIST_EXTRACT" could not be activated
+    3 EDT012XActivate table "/CCC/SALES_ORDER_LIST_EXTRACT6"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/SALES_ORDER_LIST_EXTRACT6"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/SALES_ORDER_LIST_EXTRACT6" cannot be generated
+    3 EDT013 Table "/CCC/SALES_ORDER_LIST_EXTRACT6" was not activated
+    3 EDT014XActivate dependent table "/CCC/SALES_ORDER_LIST_EXTRACT6"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/SALES_ORDER_LIST_EXTRACT6"
+    A1EESD_EXT_MSG 007 Execution of the consistency checks failed.
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/SALES_ORDER_LIST_EXTRACT6" cannot be generated
+    3 EDT015 Dependent table "/CCC/SALES_ORDER_LIST_EXTRACT6" was not activated
+1EEDO519 "Table" "/CCC/SALES_ORDER_LIST_EXTRACT6" could not be activated
+    3 EDT012XActivate table "/CCC/SALES_ORDER_LIST_EXTRACT8"
+    1EEDT242 Field "SALES_ORDER": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/SALES_ORDER_LIST_EXTRACT8"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/SALES_ORDER_LIST_EXTRACT8" cannot be generated
+    3 EDT013 Table "/CCC/SALES_ORDER_LIST_EXTRACT8" was not activated
+1EEDO519 "Table" "/CCC/SALES_ORDER_LIST_EXTRACT8" could not be activated
+    3 EDT012XActivate table "/CCC/SHOW_SALES_ORDER_LIST_AS5"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/SHOW_SALES_ORDER_LIST_AS5"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/SHOW_SALES_ORDER_LIST_AS5" cannot be generated
+    3 EDT013 Table "/CCC/SHOW_SALES_ORDER_LIST_AS5" was not activated
+    3 EDT014XActivate dependent table "/CCC/SHOW_SALES_ORDER_LIST_AS5"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/SHOW_SALES_ORDER_LIST_AS5"
+    A1EESD_EXT_MSG 007 Execution of the consistency checks failed.
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/SHOW_SALES_ORDER_LIST_AS5" cannot be generated
+    3 EDT015 Dependent table "/CCC/SHOW_SALES_ORDER_LIST_AS5" was not activated
+1EEDO519 "Table" "/CCC/SHOW_SALES_ORDER_LIST_AS5" could not be activated
+    3 EDT012XActivate table "/CCC/SHOW_SALES_ORDER_LIST_ASY"
+    1EEDT242 Field "SALES_ORDER": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/SHOW_SALES_ORDER_LIST_ASY"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/SHOW_SALES_ORDER_LIST_ASY" cannot be generated
+    3 EDT013 Table "/CCC/SHOW_SALES_ORDER_LIST_ASY" was not activated
+1EEDO519 "Table" "/CCC/SHOW_SALES_ORDER_LIST_ASY" could not be activated
+    3 EDT012XActivate table "/CCC/VENDOR_COMPANY_DETAIL"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/VENDOR_COMPANY_DETAIL"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/VENDOR_COMPANY_DETAIL" cannot be generated
+    3 EDT013 Table "/CCC/VENDOR_COMPANY_DETAIL" was not activated
+    3 EDT014XActivate dependent table "/CCC/VENDOR_COMPANY_DETAIL"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/VENDOR_COMPANY_DETAIL"
+    A1EESD_EXT_MSG 007 Execution of the consistency checks failed.
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/VENDOR_COMPANY_DETAIL" cannot be generated
+    3 EDT015 Dependent table "/CCC/VENDOR_COMPANY_DETAIL" was not activated
+1EEDO519 "Table" "/CCC/VENDOR_COMPANY_DETAIL" could not be activated
+    3 EDT012XActivate table "/CCC/VENDOR_COMPANY_DETAIL_DUN"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/VENDOR_COMPANY_DETAIL_DUN"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/VENDOR_COMPANY_DETAIL_DUN" cannot be generated
+    3 EDT013 Table "/CCC/VENDOR_COMPANY_DETAIL_DUN" was not activated
+1EEDO519 "Table" "/CCC/VENDOR_COMPANY_DETAIL_DUN" could not be activated
+    3 EDO802XActivation of table type "/CCC/VENDOR_COMPANY_DETAI_TAB2"
+    1EEDO845 Row type "/CCC/VENDOR_COMPANY_DETAIL" is not active or does not exist
+    3 EDO804 Table type "/CCC/VENDOR_COMPANY_DETAI_TAB2" was not activated
+1EEDO519 "Table Type" "/CCC/VENDOR_COMPANY_DETAI_TAB2" could not be activated
+    3 EDO802XActivation of table type "/SNP/CC0X_TABH_DD06L"
+    1EEDO845 Row type "DD06L" is not active or does not exist
+    3 EDO804 Table type "/SNP/CC0X_TABH_DD06L" was not activated
+1EEDO519 "Table Type" "/SNP/CC0X_TABH_DD06L" could not be activated
+    3 EDT012XActivate table "/CCC/SALES_ORDER_LIST_EXTRACT6"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/SALES_ORDER_LIST_EXTRACT6"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/SALES_ORDER_LIST_EXTRACT6" cannot be generated
+    3 EDT013 Table "/CCC/SALES_ORDER_LIST_EXTRACT6" was not activated
+    3 EDT014XActivate dependent table "/CCC/SALES_ORDER_LIST_EXTRACT6"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/SALES_ORDER_LIST_EXTRACT6"
+    A1EESD_EXT_MSG 007 Execution of the consistency checks failed.
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/SALES_ORDER_LIST_EXTRACT6" cannot be generated
+    3 EDT015 Dependent table "/CCC/SALES_ORDER_LIST_EXTRACT6" was not activated
+1EEDO519 "Table" "/CCC/SALES_ORDER_LIST_EXTRACT6" could not be activated
+    3 EDT012XActivate table "/CCC/SHOW_SALES_ORDER_LIST_AS5"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/SHOW_SALES_ORDER_LIST_AS5"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/SHOW_SALES_ORDER_LIST_AS5" cannot be generated
+    3 EDT013 Table "/CCC/SHOW_SALES_ORDER_LIST_AS5" was not activated
+    3 EDT014XActivate dependent table "/CCC/SHOW_SALES_ORDER_LIST_AS5"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/SHOW_SALES_ORDER_LIST_AS5"
+    A1EESD_EXT_MSG 007 Execution of the consistency checks failed.
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/SHOW_SALES_ORDER_LIST_AS5" cannot be generated
+    3 EDT015 Dependent table "/CCC/SHOW_SALES_ORDER_LIST_AS5" was not activated
+1EEDO519 "Table" "/CCC/SHOW_SALES_ORDER_LIST_AS5" could not be activated
+    3 EDT012XActivate table "/CCC/VENDOR_COMPANY_DETAIL"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/VENDOR_COMPANY_DETAIL"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/VENDOR_COMPANY_DETAIL" cannot be generated
+    3 EDT013 Table "/CCC/VENDOR_COMPANY_DETAIL" was not activated
+    3 EDT014XActivate dependent table "/CCC/VENDOR_COMPANY_DETAIL"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/VENDOR_COMPANY_DETAIL"
+    A1EESD_EXT_MSG 007 Execution of the consistency checks failed.
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/VENDOR_COMPANY_DETAIL" cannot be generated
+    3 EDT015 Dependent table "/CCC/VENDOR_COMPANY_DETAIL" was not activated
+1EEDO519 "Table" "/CCC/VENDOR_COMPANY_DETAIL" could not be activated
+1 ETP111 exit code           : "8"
+
+#!--------------------------------------------------------------
+#!---- MASKING file "/usr/sap/SJR/SUM/SUM/abap/log/ACTUPG.ELG"
+#!---- TIME: 20260310052928  PHASE: MAIN_SHDRUN/ACT_UPG_CUST
+#!--------------------------------------------------------------
+
+################################################################################################
+# Phase: ACT_UPG_CUST
+# Description: DDIC ACTIVATION ERRORS
+################################################################################################
+
+
+#==============================================================================================#
+# Find the detailed information in log 'SAPA750EAS.SJR':
+#==============================================================================================#
+
+    3 EDT012XActivate table "/CCC/SALES_ORDER_LIST_EXTRACT"
+    1EEDT242 Field "SALES_ORDER": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/SALES_ORDER_LIST_EXTRACT"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/SALES_ORDER_LIST_EXTRACT" cannot be generated
+    3 EDT013 Table "/CCC/SALES_ORDER_LIST_EXTRACT" was not activated
+1EEDO519X"Table" "/CCC/SALES_ORDER_LIST_EXTRACT" could not be activated
+    3 EDT012XActivate table "/CCC/SALES_ORDER_LIST_EXTRACT6"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/SALES_ORDER_LIST_EXTRACT6"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/SALES_ORDER_LIST_EXTRACT6" cannot be generated
+    3 EDT013 Table "/CCC/SALES_ORDER_LIST_EXTRACT6" was not activated
+    3 EDT014XActivate dependent table "/CCC/SALES_ORDER_LIST_EXTRACT6"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/SALES_ORDER_LIST_EXTRACT6"
+    A1EESD_EXT_MSG 007 Execution of the consistency checks failed.
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/SALES_ORDER_LIST_EXTRACT6" cannot be generated
+    3 EDT015 Dependent table "/CCC/SALES_ORDER_LIST_EXTRACT6" was not activated
+1EEDO519 "Table" "/CCC/SALES_ORDER_LIST_EXTRACT6" could not be activated
+    3 EDT012XActivate table "/CCC/SALES_ORDER_LIST_EXTRACT8"
+    3EEDT242 Field "SALES_ORDER": Component type is not active or is not allowed
+    3EEDT491 Could not determine structure width of "/CCC/SALES_ORDER_LIST_EXTRACT8"
+    3EEDO251 Data type " " does not exist
+    3EEDT005 Nametab for table "/CCC/SALES_ORDER_LIST_EXTRACT8" cannot be generated
+    3 EDT013 Table "/CCC/SALES_ORDER_LIST_EXTRACT8" was not activated
+1EEDO519 "Table" "/CCC/SALES_ORDER_LIST_EXTRACT8" could not be activated
+    3 EDT012XActivate table "/CCC/SHOW_SALES_ORDER_LIST_AS5"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/SHOW_SALES_ORDER_LIST_AS5"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/SHOW_SALES_ORDER_LIST_AS5" cannot be generated
+    3 EDT013 Table "/CCC/SHOW_SALES_ORDER_LIST_AS5" was not activated
+    3 EDT014XActivate dependent table "/CCC/SHOW_SALES_ORDER_LIST_AS5"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/SHOW_SALES_ORDER_LIST_AS5"
+    A1EESD_EXT_MSG 007 Execution of the consistency checks failed.
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/SHOW_SALES_ORDER_LIST_AS5" cannot be generated
+    3 EDT015 Dependent table "/CCC/SHOW_SALES_ORDER_LIST_AS5" was not activated
+1EEDO519 "Table" "/CCC/SHOW_SALES_ORDER_LIST_AS5" could not be activated
+    3 EDT012XActivate table "/CCC/SHOW_SALES_ORDER_LIST_ASY"
+    1EEDT242 Field "SALES_ORDER": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/SHOW_SALES_ORDER_LIST_ASY"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/SHOW_SALES_ORDER_LIST_ASY" cannot be generated
+    3 EDT013 Table "/CCC/SHOW_SALES_ORDER_LIST_ASY" was not activated
+1EEDO519 "Table" "/CCC/SHOW_SALES_ORDER_LIST_ASY" could not be activated
+    3 EDT012XActivate table "/CCC/VENDOR_COMPANY_DETAIL"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/VENDOR_COMPANY_DETAIL"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/VENDOR_COMPANY_DETAIL" cannot be generated
+    3 EDT013 Table "/CCC/VENDOR_COMPANY_DETAIL" was not activated
+    3 EDT014XActivate dependent table "/CCC/VENDOR_COMPANY_DETAIL"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/VENDOR_COMPANY_DETAIL"
+    A1EESD_EXT_MSG 007 Execution of the consistency checks failed.
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/VENDOR_COMPANY_DETAIL" cannot be generated
+    3 EDT015 Dependent table "/CCC/VENDOR_COMPANY_DETAIL" was not activated
+    3 EDO532 "TABL" "/CCC/VENDOR_GENERAL_DETAIL": Time stamp was updated
+    3 EDO532 "TABL" "/CCC/VENDOR_PURCHASE_ORG_DETAI": Time stamp was updated
+    2 ED0348XServer Usage ************************************************************
+    2 ED0313 Server..............|Workp|Tasks|Error|.Timesum|Objcount|ms/Obj|..KCosts|ms/KCs
+    2 ED0313 -------------------------------------------------------------------------------
+    2 ED0313 sjrw5100_SJR_02.....|....2|....2|.....|.......0|.......8|.....0|.......6|.....0
+    2 EDO678 Parallel execution: "0" sec., Phase out time: "0" sec., Load: "1,0000000000000000E+02" percent
+    1 EDO533X*** Activate objects at level "6" ("10.03.2026 00:39:51")
+    3 EDO639 Too low costs ("370") for parallel processing. Minimum: "6.000"
+    3 EDO634 * Synchronous execution, no parallel processing *
+1EEDO519 "Table" "/CCC/VENDOR_COMPANY_DETAIL" could not be activated
+    3 EDT012XActivate table "/CCC/VENDOR_COMPANY_DETAIL_DUN"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/VENDOR_COMPANY_DETAIL_DUN"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/VENDOR_COMPANY_DETAIL_DUN" cannot be generated
+    3 EDT013 Table "/CCC/VENDOR_COMPANY_DETAIL_DUN" was not activated
+1EEDO519 "Table" "/CCC/VENDOR_COMPANY_DETAIL_DUN" could not be activated
+    3 EDO802XActivation of table type "/CCC/VENDOR_COMPANY_DETAI_TAB2"
+    3EEDO845 Row type "/CCC/VENDOR_COMPANY_DETAIL" is not active or does not exist
+    3 EDO804 Table type "/CCC/VENDOR_COMPANY_DETAI_TAB2" was not activated
+    4 EDO532 "TTYP" "/CCC/VENDOR_PURCHASE_ORG_D_TAB": Time stamp was updated
+    3 EDO680XSynchronous processing: "0" sec., "3" objects, "370" costs
+    1 EDO533X*** Activate objects at level "7" ("10.03.2026 00:39:51")
+    3 EDO639 Too low costs ("0") for parallel processing. Minimum: "6.000"
+    3 EDO634 * Synchronous execution, no parallel processing *
+    4 EDO532X"TABL" "/CCC/VENDOR_CREATE_REQUEST_PUR": Time stamp was updated
+    3 EDO680XSynchronous processing: "0" sec., "2" objects, "0" costs
+    1 EDO533X*** Activate objects at level "8" ("10.03.2026 00:39:51")
+    3 EDO639 Too low costs ("0") for parallel processing. Minimum: "6.000"
+    3 EDO634 * Synchronous execution, no parallel processing *
+    4 EDO532X"TABL" "/CCC/VENDOR_CREATE_REQUEST": Time stamp was updated
+    3 EDO680XSynchronous processing: "0" sec., "1" objects, "0" costs
+    1 EDO533X*** Activate objects at level "9" ("10.03.2026 00:39:51")
+    3 EDO639 Too low costs ("0") for parallel processing. Minimum: "6.000"
+    3 EDO634 * Synchronous execution, no parallel processing *
+    4 EDO532X"TTYP" "/CCC/VENDOR_CREATE_REQUEST_TAB": Time stamp was updated
+    3 EDO680XSynchronous processing: "1" sec., "1" objects, "0" costs
+    1 EDO533X*** Activate objects at level "10" ("10.03.2026 00:39:52")
+    3 EDO639 Too low costs ("0") for parallel processing. Minimum: "6.000"
+    3 EDO634 * Synchronous execution, no parallel processing *
+    4 EDO532X"TABL" "/CCC/VENDOR_CREATE_REQUEST_MES": Time stamp was updated
+    3 EDO680XSynchronous processing: "0" sec., "1" objects, "0" costs
+    1 EDO533X*** Activate objects at level "11" ("10.03.2026 00:39:52")
+    3 EDO639 Too low costs ("0") for parallel processing. Minimum: "6.000"
+    3 EDO634 * Synchronous execution, no parallel processing *
+    4 EDO532X"TABL" "/CCC/VENDOR_CREATE_REQUEST_ASY": Time stamp was updated
+    3 EDO680XSynchronous processing: "0" sec., "1" objects, "0" costs
+    1 ED0301X*************************************************************************
+    1 ED0306       "Object Activation"
+    1 ED0322 End phase "005" "10.03.2026" "00:39:52" **************************************
+    1 ED0320XStart phase "006" "10.03.2026" "00:39:52" *************************************
+    1 ED0306       "Set ROOT/COMPOSITION rootnode relations for mass a"
+    1 ED0301 *************************************************************************
+    1 ED0301X*************************************************************************
+    1 ED0306       "Set ROOT/COMPOSITION rootnode relations for mass a"
+    1 ED0322 End phase "006" "10.03.2026" "00:39:52" **************************************
+    1 ED0320XStart phase "007" "10.03.2026" "00:39:52" *************************************
+    1 ED0306       "Updating buffered basis table objects"
+    1 ED0301 *************************************************************************
+    3 EDO462X"0" affected tables were identified
+    1 ED0301X*************************************************************************
+    1 ED0306       "Updating buffered basis table objects"
+    1 ED0322 End phase "007" "10.03.2026" "00:39:52" **************************************
+    1 ED0320XStart phase "008" "10.03.2026" "00:39:52" *************************************
+    1 ED0306       "Resetting entity buffers"
+    1 ED0301 *************************************************************************
+    1 ED0301X*************************************************************************
+    1 ED0306       "Resetting entity buffers"
+1EEDO519 "Table Type" "/CCC/VENDOR_COMPANY_DETAI_TAB2" could not be activated
+    3 EDO802XActivation of table type "/SNP/CC0X_TABH_DD06L"
+    1EEDO845 Row type "DD06L" is not active or does not exist
+    3 EDO804 Table type "/SNP/CC0X_TABH_DD06L" was not activated
+    2 ED0348XServer Usage ************************************************************
+    2 ED0313 Server..............|Workp|Tasks|Error|.Timesum|Objcount|ms/Obj|..KCosts|ms/KCs
+    2 ED0313 -------------------------------------------------------------------------------
+    2 ED0313 sjrw5100_SJR_02.....|....2|....2|.....|.......0|.......8|.....0|.......8|.....0
+    2 EDO678 Parallel execution: "0" sec., Phase out time: "0" sec., Load: "1,0000000000000000E+02" percent
+    1 EDO533X*** Activate objects at level "2" ("10.03.2026 00:39:50")
+    3 EDO639 Too low costs ("4.260") for parallel processing. Minimum: "6.000"
+    3 EDO634 * Synchronous execution, no parallel processing *
+1EEDO519 "Table Type" "/SNP/CC0X_TABH_DD06L" could not be activated
+    3 EDT012XActivate table "/CCC/SALES_ORDER_LIST_EXTRACT6"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/SALES_ORDER_LIST_EXTRACT6"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/SALES_ORDER_LIST_EXTRACT6" cannot be generated
+    3 EDT013 Table "/CCC/SALES_ORDER_LIST_EXTRACT6" was not activated
+    3 EDT014XActivate dependent table "/CCC/SALES_ORDER_LIST_EXTRACT6"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/SALES_ORDER_LIST_EXTRACT6"
+    A1EESD_EXT_MSG 007 Execution of the consistency checks failed.
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/SALES_ORDER_LIST_EXTRACT6" cannot be generated
+    3 EDT015 Dependent table "/CCC/SALES_ORDER_LIST_EXTRACT6" was not activated
+1EEDO519 "Table" "/CCC/SALES_ORDER_LIST_EXTRACT6" could not be activated
+    3 EDT012XActivate table "/CCC/SHOW_SALES_ORDER_LIST_AS5"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/SHOW_SALES_ORDER_LIST_AS5"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/SHOW_SALES_ORDER_LIST_AS5" cannot be generated
+    3 EDT013 Table "/CCC/SHOW_SALES_ORDER_LIST_AS5" was not activated
+    3 EDT014XActivate dependent table "/CCC/SHOW_SALES_ORDER_LIST_AS5"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/SHOW_SALES_ORDER_LIST_AS5"
+    A1EESD_EXT_MSG 007 Execution of the consistency checks failed.
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/SHOW_SALES_ORDER_LIST_AS5" cannot be generated
+    3 EDT015 Dependent table "/CCC/SHOW_SALES_ORDER_LIST_AS5" was not activated
+1EEDO519 "Table" "/CCC/SHOW_SALES_ORDER_LIST_AS5" could not be activated
+    3 EDT012XActivate table "/CCC/VENDOR_COMPANY_DETAIL"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/VENDOR_COMPANY_DETAIL"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/VENDOR_COMPANY_DETAIL" cannot be generated
+    3 EDT013 Table "/CCC/VENDOR_COMPANY_DETAIL" was not activated
+    3 EDT014XActivate dependent table "/CCC/VENDOR_COMPANY_DETAIL"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/VENDOR_COMPANY_DETAIL"
+    A1EESD_EXT_MSG 007 Execution of the consistency checks failed.
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/VENDOR_COMPANY_DETAIL" cannot be generated
+    3 EDT015 Dependent table "/CCC/VENDOR_COMPANY_DETAIL" was not activated
+    3 EDO532 "TABL" "/CCC/VENDOR_GENERAL_DETAIL": Time stamp was updated
+    3 EDO532 "TABL" "/CCC/VENDOR_PURCHASE_ORG_DETAI": Time stamp was updated
+    2 ED0348XServer Usage ************************************************************
+    2 ED0313 Server..............|Workp|Tasks|Error|.Timesum|Objcount|ms/Obj|..KCosts|ms/KCs
+    2 ED0313 -------------------------------------------------------------------------------
+    2 ED0313 sjrw5100_SJR_02.....|....2|....2|.....|.......0|.......8|.....0|.......6|.....0
+    2 EDO678 Parallel execution: "0" sec., Phase out time: "0" sec., Load: "1,0000000000000000E+02" percent
+    1 EDO533X*** Activate objects at level "6" ("10.03.2026 00:39:51")
+    3 EDO639 Too low costs ("370") for parallel processing. Minimum: "6.000"
+    3 EDO634 * Synchronous execution, no parallel processing *
+1EEDO519 "Table" "/CCC/VENDOR_COMPANY_DETAIL" could not be activated
+1 ETP111 exit code           : "8"
+
+#!--------------------------------------------------------------
+#!---- MASKING file "/usr/sap/SJR/SUM/SUM/abap/log/ACTUPG.ELG"
+#!---- TIME: 20260310053118  PHASE: MAIN_SHDRUN/ACT_UPG_CUST
+#!--------------------------------------------------------------
+
+################################################################################################
+# Phase: ACT_UPG_CUST
+# Description: DDIC ACTIVATION ERRORS
+################################################################################################
+
+
+#==============================================================================================#
+# Find the detailed information in log 'SAPA750EAS.SJR':
+#==============================================================================================#
+
+    3 EDT012XActivate table "/CCC/SALES_ORDER_LIST_EXTRACT"
+    1EEDT002 Table "/CCC/SALES_ORDER_LIST_EXTRACT" does not exist
+    3 EDT013 Table "/CCC/SALES_ORDER_LIST_EXTRACT" was not activated
+1EEDO519X"Table" "/CCC/SALES_ORDER_LIST_EXTRACT" could not be activated
+    3 EDT012XActivate table "/CCC/SALES_ORDER_LIST_EXTRACT6"
+    1EEDT002 Table "/CCC/SALES_ORDER_LIST_EXTRACT6" does not exist
+    3 EDT013 Table "/CCC/SALES_ORDER_LIST_EXTRACT6" was not activated
+1EEDO519 "Table" "/CCC/SALES_ORDER_LIST_EXTRACT6" could not be activated
+    3 EDT012XActivate table "/CCC/SALES_ORDER_LIST_EXTRACT8"
+    1EEDT002 Table "/CCC/SALES_ORDER_LIST_EXTRACT8" does not exist
+    3 EDT013 Table "/CCC/SALES_ORDER_LIST_EXTRACT8" was not activated
+1EEDO519 "Table" "/CCC/SALES_ORDER_LIST_EXTRACT8" could not be activated
+    3 EDT012XActivate table "/CCC/SHOW_SALES_ORDER_LIST_AS5"
+    1EEDT002 Table "/CCC/SHOW_SALES_ORDER_LIST_AS5" does not exist
+    3 EDT013 Table "/CCC/SHOW_SALES_ORDER_LIST_AS5" was not activated
+1EEDO519 "Table" "/CCC/SHOW_SALES_ORDER_LIST_AS5" could not be activated
+    3 EDT012XActivate table "/CCC/SHOW_SALES_ORDER_LIST_ASY"
+    1EEDT002 Table "/CCC/SHOW_SALES_ORDER_LIST_ASY" does not exist
+    3 EDT013 Table "/CCC/SHOW_SALES_ORDER_LIST_ASY" was not activated
+1EEDO519 "Table" "/CCC/SHOW_SALES_ORDER_LIST_ASY" could not be activated
+    3 EDT012XActivate table "/CCC/VENDOR_COMPANY_DETAIL"
+    3EEDT491 Could not determine structure width of "/CCC/VENDOR_COMPANY_DETAIL"
+    4WEDT135 Flag: 'Incorrect enhancement category' not updated ("Runtime Object")
+    3 EDT013 Table "/CCC/VENDOR_COMPANY_DETAIL" was not activated
+    3 EDT014XActivate dependent table "/CCC/VENDOR_COMPANY_DETAIL"
+    3EEDT491 Could not determine structure width of "/CCC/VENDOR_COMPANY_DETAIL"
+    A3EESD_EXT_MSG 007 Execution of the consistency checks failed.
+    4WEDT135 Flag: 'Incorrect enhancement category' not updated ("Runtime Object")
+    3 EDT015 Dependent table "/CCC/VENDOR_COMPANY_DETAIL" was not activated
+    4 EDO532 "TABL" "/CCC/VENDOR_GENERAL_DETAIL": Time stamp was updated
+    4 EDO532 "TABL" "/CCC/VENDOR_PURCHASE_ORG_DETAI": Time stamp was updated
+    3 EDO680XSynchronous processing: "0" sec., "4" objects, "2.100" costs
+    1 EDO533X*** Activate objects at level "6" ("10.03.2026 05:29:38")
+    3 EDO639 Too low costs ("370") for parallel processing. Minimum: "6.000"
+    3 EDO634 * Synchronous execution, no parallel processing *
+1EEDO519 "Table" "/CCC/VENDOR_COMPANY_DETAIL" could not be activated
+    3 EDT012XActivate table "/CCC/VENDOR_COMPANY_DETAIL_DUN"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/VENDOR_COMPANY_DETAIL_DUN"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/VENDOR_COMPANY_DETAIL_DUN" cannot be generated
+    3 EDT013 Table "/CCC/VENDOR_COMPANY_DETAIL_DUN" was not activated
+1EEDO519 "Table" "/CCC/VENDOR_COMPANY_DETAIL_DUN" could not be activated
+    3 EDO802XActivation of table type "/CCC/VENDOR_COMPANY_DETAI_TAB2"
+    3EEDO845 Row type "/CCC/VENDOR_COMPANY_DETAIL" is not active or does not exist
+    3 EDO804 Table type "/CCC/VENDOR_COMPANY_DETAI_TAB2" was not activated
+    4 EDO532 "TTYP" "/CCC/VENDOR_PURCHASE_ORG_D_TAB": Time stamp was updated
+    3 EDO680XSynchronous processing: "0" sec., "3" objects, "370" costs
+    1 EDO533X*** Activate objects at level "7" ("10.03.2026 05:29:38")
+    3 EDO639 Too low costs ("0") for parallel processing. Minimum: "6.000"
+    3 EDO634 * Synchronous execution, no parallel processing *
+    4 EDO532X"TABL" "/CCC/VENDOR_CREATE_REQUEST_PUR": Time stamp was updated
+    3 EDO680XSynchronous processing: "0" sec., "2" objects, "0" costs
+    1 EDO533X*** Activate objects at level "8" ("10.03.2026 05:29:38")
+    3 EDO639 Too low costs ("0") for parallel processing. Minimum: "6.000"
+    3 EDO634 * Synchronous execution, no parallel processing *
+    4 EDO532X"TABL" "/CCC/VENDOR_CREATE_REQUEST": Time stamp was updated
+    3 EDO680XSynchronous processing: "0" sec., "1" objects, "0" costs
+    1 EDO533X*** Activate objects at level "9" ("10.03.2026 05:29:38")
+    3 EDO639 Too low costs ("0") for parallel processing. Minimum: "6.000"
+    3 EDO634 * Synchronous execution, no parallel processing *
+    4 EDO532X"TTYP" "/CCC/VENDOR_CREATE_REQUEST_TAB": Time stamp was updated
+    3 EDO680XSynchronous processing: "0" sec., "1" objects, "0" costs
+    1 EDO533X*** Activate objects at level "10" ("10.03.2026 05:29:38")
+    3 EDO639 Too low costs ("0") for parallel processing. Minimum: "6.000"
+    3 EDO634 * Synchronous execution, no parallel processing *
+    4 EDO532X"TABL" "/CCC/VENDOR_CREATE_REQUEST_MES": Time stamp was updated
+    3 EDO680XSynchronous processing: "0" sec., "1" objects, "0" costs
+    1 EDO533X*** Activate objects at level "11" ("10.03.2026 05:29:38")
+    3 EDO639 Too low costs ("0") for parallel processing. Minimum: "6.000"
+    3 EDO634 * Synchronous execution, no parallel processing *
+    4 EDO532X"TABL" "/CCC/VENDOR_CREATE_REQUEST_ASY": Time stamp was updated
+    3 EDO680XSynchronous processing: "0" sec., "1" objects, "0" costs
+    1 ED0301X*************************************************************************
+    1 ED0306       "Object Activation"
+    1 ED0322 End phase "005" "10.03.2026" "05:29:38" **************************************
+    1 ED0320XStart phase "006" "10.03.2026" "05:29:38" *************************************
+    1 ED0306       "Set ROOT/COMPOSITION rootnode relations for mass a"
+    1 ED0301 *************************************************************************
+    1 ED0301X*************************************************************************
+    1 ED0306       "Set ROOT/COMPOSITION rootnode relations for mass a"
+    1 ED0322 End phase "006" "10.03.2026" "05:29:38" **************************************
+    1 ED0320XStart phase "007" "10.03.2026" "05:29:38" *************************************
+    1 ED0306       "Updating buffered basis table objects"
+    1 ED0301 *************************************************************************
+    3 EDO462X"0" affected tables were identified
+    1 ED0301X*************************************************************************
+    1 ED0306       "Updating buffered basis table objects"
+    1 ED0322 End phase "007" "10.03.2026" "05:29:38" **************************************
+    1 ED0320XStart phase "008" "10.03.2026" "05:29:38" *************************************
+    1 ED0306       "Resetting entity buffers"
+    1 ED0301 *************************************************************************
+    1 ED0301X*************************************************************************
+    1 ED0306       "Resetting entity buffers"
+1EEDO519 "Table Type" "/CCC/VENDOR_COMPANY_DETAI_TAB2" could not be activated
+    3 EDO802XActivation of table type "/SNP/CC0X_TABH_DD06L"
+    1EEDO845 Row type "DD06L" is not active or does not exist
+    3 EDO804 Table type "/SNP/CC0X_TABH_DD06L" was not activated
+    2 ED0348XServer Usage ************************************************************
+    2 ED0313 Server..............|Workp|Tasks|Error|.Timesum|Objcount|ms/Obj|..KCosts|ms/KCs
+    2 ED0313 -------------------------------------------------------------------------------
+    2 ED0313 sjrw5100_SJR_02.....|....3|....3|.....|.......1|......12|....83|......11|....91
+    2 EDO678 Parallel execution: "1" sec., Phase out time: "1" sec., Load: "3,3333333333333336E+01" percent
+    1 EDO533X*** Activate objects at level "2" ("10.03.2026 05:29:37")
+    3 EDO639 Too low costs ("3.210") for parallel processing. Minimum: "6.000"
+    3 EDO634 * Synchronous execution, no parallel processing *
+1EEDO519 "Table Type" "/SNP/CC0X_TABH_DD06L" could not be activated
+    3 EDT012XActivate table "/CCC/VENDOR_COMPANY_DETAIL"
+    3EEDT491 Could not determine structure width of "/CCC/VENDOR_COMPANY_DETAIL"
+    4WEDT135 Flag: 'Incorrect enhancement category' not updated ("Runtime Object")
+    3 EDT013 Table "/CCC/VENDOR_COMPANY_DETAIL" was not activated
+    3 EDT014XActivate dependent table "/CCC/VENDOR_COMPANY_DETAIL"
+    3EEDT491 Could not determine structure width of "/CCC/VENDOR_COMPANY_DETAIL"
+    A3EESD_EXT_MSG 007 Execution of the consistency checks failed.
+    4WEDT135 Flag: 'Incorrect enhancement category' not updated ("Runtime Object")
+    3 EDT015 Dependent table "/CCC/VENDOR_COMPANY_DETAIL" was not activated
+    4 EDO532 "TABL" "/CCC/VENDOR_GENERAL_DETAIL": Time stamp was updated
+    4 EDO532 "TABL" "/CCC/VENDOR_PURCHASE_ORG_DETAI": Time stamp was updated
+    3 EDO680XSynchronous processing: "0" sec., "4" objects, "2.100" costs
+    1 EDO533X*** Activate objects at level "6" ("10.03.2026 05:29:38")
+    3 EDO639 Too low costs ("370") for parallel processing. Minimum: "6.000"
+    3 EDO634 * Synchronous execution, no parallel processing *
+1EEDO519 "Table" "/CCC/VENDOR_COMPANY_DETAIL" could not be activated
+1 ETP111 exit code           : "8"
+
+#!--------------------------------------------------------------
+#!---- MASKING file "/usr/sap/SJR/SUM/SUM/abap/log/ACTUPG.ELG"
+#!---- TIME: 20260310055243  PHASE: MAIN_SHDRUN/ACT_UPG_CUST
+#!--------------------------------------------------------------
+
+################################################################################################
+# Phase: ACT_UPG_CUST
+# Description: DDIC ACTIVATION ERRORS
+################################################################################################
+
+
+#==============================================================================================#
+# Find the detailed information in log 'SAPA750EAS.SJR':
+#==============================================================================================#
+
+    3 EDT012XActivate table "/CCC/SALES_ORDER_LIST_EXTRACT"
+    1EEDT002 Table "/CCC/SALES_ORDER_LIST_EXTRACT" does not exist
+    3 EDT013 Table "/CCC/SALES_ORDER_LIST_EXTRACT" was not activated
+1EEDO519X"Table" "/CCC/SALES_ORDER_LIST_EXTRACT" could not be activated
+    3 EDT012XActivate table "/CCC/SALES_ORDER_LIST_EXTRACT6"
+    1EEDT002 Table "/CCC/SALES_ORDER_LIST_EXTRACT6" does not exist
+    3 EDT013 Table "/CCC/SALES_ORDER_LIST_EXTRACT6" was not activated
+1EEDO519 "Table" "/CCC/SALES_ORDER_LIST_EXTRACT6" could not be activated
+    3 EDT012XActivate table "/CCC/SALES_ORDER_LIST_EXTRACT8"
+    1EEDT002 Table "/CCC/SALES_ORDER_LIST_EXTRACT8" does not exist
+    3 EDT013 Table "/CCC/SALES_ORDER_LIST_EXTRACT8" was not activated
+1EEDO519 "Table" "/CCC/SALES_ORDER_LIST_EXTRACT8" could not be activated
+    3 EDT012XActivate table "/CCC/SHOW_SALES_ORDER_LIST_AS5"
+    1EEDT002 Table "/CCC/SHOW_SALES_ORDER_LIST_AS5" does not exist
+    3 EDT013 Table "/CCC/SHOW_SALES_ORDER_LIST_AS5" was not activated
+1EEDO519 "Table" "/CCC/SHOW_SALES_ORDER_LIST_AS5" could not be activated
+    3 EDT012XActivate table "/CCC/SHOW_SALES_ORDER_LIST_ASY"
+    1EEDT002 Table "/CCC/SHOW_SALES_ORDER_LIST_ASY" does not exist
+    3 EDT013 Table "/CCC/SHOW_SALES_ORDER_LIST_ASY" was not activated
+1EEDO519 "Table" "/CCC/SHOW_SALES_ORDER_LIST_ASY" could not be activated
+    3 EDO802XActivation of table type "/SNP/CC0X_TABH_DD06L"
+    1EEDO845 Row type "DD06L" is not active or does not exist
+    3 EDO804 Table type "/SNP/CC0X_TABH_DD06L" was not activated
+    2 ED0348XServer Usage ************************************************************
+    2 ED0313 Server..............|Workp|Tasks|Error|.Timesum|Objcount|ms/Obj|..KCosts|ms/KCs
+    2 ED0313 -------------------------------------------------------------------------------
+    2 ED0313 sjrw5100_SJR_02.....|....6|...15|.....|......12|...1.314|.....9|......47|...255
+    2 EDO678 Parallel execution: "3" sec., Phase out time: "2" sec., Load: "6,6666666666666671E+01" percent
+    1 EDO533X*** Activate objects at level "2" ("10.03.2026 05:34:01")
+    3 EDO631 * Parallel execution with maximum of "6" concurrent tasks *
+    3 EDO677 Total of "711" objects with "1.000.290" costs in "17" tasks
+    A3 EDDLSX030XActivate DDL source "BSAD_DDL"
+    A3 EDDLS 465XChecks SQL View "BSAD"
+    3 ED0308 Operation started by user "DDIC" on "10.03.26" at "05:34"
+    2WEMC506 Inconsistency in reference field for "BSAD"-"BDIF2"
+    2WEMC506 Inconsistency in reference field for "BSAD"-"DMBE2"
+    2WEMC506 Inconsistency in reference field for "BSAD"-"DMBE3"
+    2WEMC506 Inconsistency in reference field for "BSAD"-"DMB21"
+    2WEMC506 Inconsistency in reference field for "BSAD"-"DMB22"
+    2WEMC506 Inconsistency in reference field for "BSAD"-"DMB23"
+    2WEMC506 Inconsistency in reference field for "BSAD"-"DMB31"
+    2WEMC506 Inconsistency in reference field for "BSAD"-"DMB32"
+    2WEMC506 Inconsistency in reference field for "BSAD"-"DMB33"
+    2WEMC506 Inconsistency in reference field for "BSAD"-"BDIF3"
+    2WEMC506 Inconsistency in reference field for "BSAD"-"MWST2"
+    2WEMC506 Inconsistency in reference field for "BSAD"-"MWST3"
+    2WEMC506 Inconsistency in reference field for "BSAD"-"SKNT2"
+    2WEMC506 Inconsistency in reference field for "BSAD"-"SKNT3"
+    2WEMC506 Inconsistency in reference field for "BSAD"-"PPDIF2"
+    2WEMC506 Inconsistency in reference field for "BSAD"-"PPDIF3"
+    3 EMC741 View "BSAD" is consistent
+    A3 EDDLS 453XCheck of dependent objects
+    A3 EDDLS 454 Dependent objects checked successfully
+    A3 ESTOBJ 011XActivating structured object "BSAD_VIEW"
+    3 ED0308 Operation started by user "DDIC" on "10.03.26" at "05:34"
+    A3 ESTOBJ 104 Checking structured object "BSAD_VIEW"
+    A3 ESTOBJ 105 Structured object "BSAD_VIEW" has been checked successfully
+    A3 ESTOBJ 004 Structured object "BSAD_VIEW" was activated successfully
+1EEDO519 "Table Type" "/SNP/CC0X_TABH_DD06L" could not be activated
+1 ETP111 exit code           : "8"
+
+#!--------------------------------------------------------------
+#!---- MASKING file "/usr/sap/SJR/SUM/SUM/abap/log/ACTUPG.ELG"
+#!---- TIME: 20260310055929  PHASE: MAIN_SHDRUN/ACT_UPG_CUST
+#!--------------------------------------------------------------
+
+################################################################################################
+# Phase: ACT_UPG_CUST
+# Description: DDIC ACTIVATION ERRORS
+################################################################################################
+
+
+#==============================================================================================#
+# Find the detailed information in log 'SAPA750EAS.SJR':
+#==============================================================================================#
+
+    3 EDT012XActivate table "/CCC/SALES_ORDER_LIST_EXTRACT"
+    3EEDT002 Table "/CCC/SALES_ORDER_LIST_EXTRACT" does not exist
+    3 EDT013 Table "/CCC/SALES_ORDER_LIST_EXTRACT" was not activated
+1EEDO519X"Table" "/CCC/SALES_ORDER_LIST_EXTRACT" could not be activated
+    3 EDT012XActivate table "/CCC/SALES_ORDER_LIST_EXTRACT6"
+    3EEDT002 Table "/CCC/SALES_ORDER_LIST_EXTRACT6" does not exist
+    3 EDT013 Table "/CCC/SALES_ORDER_LIST_EXTRACT6" was not activated
+1EEDO519 "Table" "/CCC/SALES_ORDER_LIST_EXTRACT6" could not be activated
+    3 EDT012XActivate table "/CCC/SALES_ORDER_LIST_EXTRACT8"
+    3EEDT002 Table "/CCC/SALES_ORDER_LIST_EXTRACT8" does not exist
+    3 EDT013 Table "/CCC/SALES_ORDER_LIST_EXTRACT8" was not activated
+1EEDO519 "Table" "/CCC/SALES_ORDER_LIST_EXTRACT8" could not be activated
+    3 EDT012XActivate table "/CCC/SHOW_SALES_ORDER_LIST_AS5"
+    3EEDT002 Table "/CCC/SHOW_SALES_ORDER_LIST_AS5" does not exist
+    3 EDT013 Table "/CCC/SHOW_SALES_ORDER_LIST_AS5" was not activated
+1EEDO519 "Table" "/CCC/SHOW_SALES_ORDER_LIST_AS5" could not be activated
+    3 EDT012XActivate table "/CCC/SHOW_SALES_ORDER_LIST_ASY"
+    3EEDT002 Table "/CCC/SHOW_SALES_ORDER_LIST_ASY" does not exist
+    3 EDT013 Table "/CCC/SHOW_SALES_ORDER_LIST_ASY" was not activated
+1EEDO519 "Table" "/CCC/SHOW_SALES_ORDER_LIST_ASY" could not be activated
+    3 EDO802XActivation of table type "/SNP/CC0X_TABH_DD06L"
+    3EEDO845 Row type "DD06L" is not active or does not exist
+    3 EDO804 Table type "/SNP/CC0X_TABH_DD06L" was not activated
+    3 EDO680XSynchronous processing: "0" sec., "6" objects, "5.620" costs
+    1 ED0301X*************************************************************************
+    1 ED0306       "Object Activation"
+    1 ED0322 End phase "005" "10.03.2026" "05:52:50" **************************************
+    1 ED0320XStart phase "006" "10.03.2026" "05:52:50" *************************************
+    1 ED0306       "Set ROOT/COMPOSITION rootnode relations for mass a"
+    1 ED0301 *************************************************************************
+    1 ED0301X*************************************************************************
+    1 ED0306       "Set ROOT/COMPOSITION rootnode relations for mass a"
+    1 ED0322 End phase "006" "10.03.2026" "05:52:50" **************************************
+    1 ED0320XStart phase "007" "10.03.2026" "05:52:50" *************************************
+    1 ED0306       "Updating buffered basis table objects"
+    1 ED0301 *************************************************************************
+    3 EDO462X"0" affected tables were identified
+    1 ED0301X*************************************************************************
+    1 ED0306       "Updating buffered basis table objects"
+    1 ED0322 End phase "007" "10.03.2026" "05:52:50" **************************************
+    1 ED0320XStart phase "008" "10.03.2026" "05:52:50" *************************************
+    1 ED0306       "Resetting entity buffers"
+    1 ED0301 *************************************************************************
+    1 ED0301X*************************************************************************
+    1 ED0306       "Resetting entity buffers"
+    1 ED0322 End phase "008" "10.03.2026" "05:52:50" **************************************
+    1 ED0320XStart phase "009" "10.03.2026" "05:52:50" *************************************
+    1 ED0306       "Deactivating entity buffers"
+    1 ED0301 *************************************************************************
+    1 ED0301X*************************************************************************
+    1 ED0306       "Deactivating entity buffers"
+    1 ED0322 End phase "009" "10.03.2026" "05:52:50" **************************************
+    1 ED0320XStart phase "010" "10.03.2026" "05:52:50" *************************************
+    1 ED0306       "View  deleted from the database"
+    1 ED0301 *************************************************************************
+    1 ED0301X*************************************************************************
+    1 ED0306       "View  deleted from the database"
+    1 ED0322 End phase "010" "10.03.2026" "05:52:50" **************************************
+    1 ED0320XStart phase "011" "10.03.2026" "05:52:50" *************************************
+    1 ED0306       "Updating/Deleting replacement object for Tables an"
+    1 ED0301 *************************************************************************
+    A3 ESD_MA_POST_PROCESS 024XNo replaced objects(TABL/VIEW) exist for post processing
+    1 ED0301X*************************************************************************
+    1 ED0306       "Updating/Deleting replacement object for Tables an"
+    1 ED0322 End phase "011" "10.03.2026" "05:52:50" **************************************
+    1 ED0320XStart phase "012" "10.03.2026" "05:52:50" *************************************
+    1 ED0306       "Updating tables/views with substitute object"
+    1 ED0301 *************************************************************************
+    1 ED0301X*************************************************************************
+    1 ED0306       "Updating tables/views with substitute object"
+    1 ED0322 End phase "012" "10.03.2026" "05:52:50" **************************************
+1EEDO519 "Table Type" "/SNP/CC0X_TABH_DD06L" could not be activated
+1 ETP111 exit code           : "8"
+
+#!--------------------------------------------------------------
+#!---- MASKING file "/usr/sap/SJR/SUM/SUM/abap/log/ACTUPG.ELG"
+#!---- TIME: 20260310063842  PHASE: MAIN_SHDRUN/ACT_UPG_CUST
+#!--------------------------------------------------------------
+
+################################################################################################
+# Phase: ACT_UPG_CUST
+# Description: DDIC ACTIVATION ERRORS
+################################################################################################
+
+
+#==============================================================================================#
+# Find the detailed information in log 'SAPA750EAS.SJR':
+#==============================================================================================#
+
+    3 EDT012XActivate table "/CCC/SALES_ORDER_LIST_EXTRACT"
+    3EEDT002 Table "/CCC/SALES_ORDER_LIST_EXTRACT" does not exist
+    3 EDT013 Table "/CCC/SALES_ORDER_LIST_EXTRACT" was not activated
+1EEDO519X"Table" "/CCC/SALES_ORDER_LIST_EXTRACT" could not be activated
+    3 EDT012XActivate table "/CCC/SALES_ORDER_LIST_EXTRACT6"
+    3EEDT002 Table "/CCC/SALES_ORDER_LIST_EXTRACT6" does not exist
+    3 EDT013 Table "/CCC/SALES_ORDER_LIST_EXTRACT6" was not activated
+1EEDO519 "Table" "/CCC/SALES_ORDER_LIST_EXTRACT6" could not be activated
+    3 EDT012XActivate table "/CCC/SALES_ORDER_LIST_EXTRACT8"
+    3EEDT002 Table "/CCC/SALES_ORDER_LIST_EXTRACT8" does not exist
+    3 EDT013 Table "/CCC/SALES_ORDER_LIST_EXTRACT8" was not activated
+1EEDO519 "Table" "/CCC/SALES_ORDER_LIST_EXTRACT8" could not be activated
+    3 EDT012XActivate table "/CCC/SHOW_SALES_ORDER_LIST_AS5"
+    3EEDT002 Table "/CCC/SHOW_SALES_ORDER_LIST_AS5" does not exist
+    3 EDT013 Table "/CCC/SHOW_SALES_ORDER_LIST_AS5" was not activated
+1EEDO519 "Table" "/CCC/SHOW_SALES_ORDER_LIST_AS5" could not be activated
+    3 EDT012XActivate table "/CCC/SHOW_SALES_ORDER_LIST_ASY"
+    3EEDT002 Table "/CCC/SHOW_SALES_ORDER_LIST_ASY" does not exist
+    3 EDT013 Table "/CCC/SHOW_SALES_ORDER_LIST_ASY" was not activated
+1EEDO519 "Table" "/CCC/SHOW_SALES_ORDER_LIST_ASY" could not be activated
+    3 EDO802XActivation of table type "/SNP/CC0X_TABH_DD06L"
+    3EEDO845 Row type "DD06L" is not active or does not exist
+    3 EDO804 Table type "/SNP/CC0X_TABH_DD06L" was not activated
+    3 EDO680XSynchronous processing: "0" sec., "6" objects, "5.620" costs
+    1 ED0301X*************************************************************************
+    1 ED0306       "Object Activation"
+    1 ED0322 End phase "005" "10.03.2026" "05:59:35" **************************************
+    1 ED0320XStart phase "006" "10.03.2026" "05:59:35" *************************************
+    1 ED0306       "Set ROOT/COMPOSITION rootnode relations for mass a"
+    1 ED0301 *************************************************************************
+    1 ED0301X*************************************************************************
+    1 ED0306       "Set ROOT/COMPOSITION rootnode relations for mass a"
+    1 ED0322 End phase "006" "10.03.2026" "05:59:35" **************************************
+    1 ED0320XStart phase "007" "10.03.2026" "05:59:35" *************************************
+    1 ED0306       "Updating buffered basis table objects"
+    1 ED0301 *************************************************************************
+    3 EDO462X"0" affected tables were identified
+    1 ED0301X*************************************************************************
+    1 ED0306       "Updating buffered basis table objects"
+    1 ED0322 End phase "007" "10.03.2026" "05:59:35" **************************************
+    1 ED0320XStart phase "008" "10.03.2026" "05:59:35" *************************************
+    1 ED0306       "Resetting entity buffers"
+    1 ED0301 *************************************************************************
+    1 ED0301X*************************************************************************
+    1 ED0306       "Resetting entity buffers"
+    1 ED0322 End phase "008" "10.03.2026" "05:59:35" **************************************
+    1 ED0320XStart phase "009" "10.03.2026" "05:59:35" *************************************
+    1 ED0306       "Deactivating entity buffers"
+    1 ED0301 *************************************************************************
+    1 ED0301X*************************************************************************
+    1 ED0306       "Deactivating entity buffers"
+    1 ED0322 End phase "009" "10.03.2026" "05:59:35" **************************************
+    1 ED0320XStart phase "010" "10.03.2026" "05:59:35" *************************************
+    1 ED0306       "View  deleted from the database"
+    1 ED0301 *************************************************************************
+    1 ED0301X*************************************************************************
+    1 ED0306       "View  deleted from the database"
+    1 ED0322 End phase "010" "10.03.2026" "05:59:35" **************************************
+    1 ED0320XStart phase "011" "10.03.2026" "05:59:35" *************************************
+    1 ED0306       "Updating/Deleting replacement object for Tables an"
+    1 ED0301 *************************************************************************
+    A3 ESD_MA_POST_PROCESS 024XNo replaced objects(TABL/VIEW) exist for post processing
+    1 ED0301X*************************************************************************
+    1 ED0306       "Updating/Deleting replacement object for Tables an"
+    1 ED0322 End phase "011" "10.03.2026" "05:59:35" **************************************
+    1 ED0320XStart phase "012" "10.03.2026" "05:59:35" *************************************
+    1 ED0306       "Updating tables/views with substitute object"
+    1 ED0301 *************************************************************************
+    1 ED0301X*************************************************************************
+    1 ED0306       "Updating tables/views with substitute object"
+    1 ED0322 End phase "012" "10.03.2026" "05:59:35" **************************************
+1EEDO519 "Table Type" "/SNP/CC0X_TABH_DD06L" could not be activated
+1 ETP111 exit code           : "8"
+
+#!--------------------------------------------------------------
+#!---- MASKING file "/usr/sap/SJR/SUM/SUM/abap/log/ACTUPG.ELG"
+#!---- TIME: 20260310065545  PHASE: MAIN_SHDRUN/ACT_UPG_CUST
+#!--------------------------------------------------------------
+
+################################################################################################
+# Phase: ACT_UPG_CUST
+# Description: DDIC ACTIVATION ERRORS
+################################################################################################
+
+
+#==============================================================================================#
+# Find the detailed information in log 'SAPA750EAS.SJR':
+#==============================================================================================#
+
+    3 EDT012XActivate table "/CCC/SALES_ORDER_LIST_EXTRACT"
+    1EEDT002 Table "/CCC/SALES_ORDER_LIST_EXTRACT" does not exist
+    3 EDT013 Table "/CCC/SALES_ORDER_LIST_EXTRACT" was not activated
+1EEDO519X"Table" "/CCC/SALES_ORDER_LIST_EXTRACT" could not be activated
+    3 EDT012XActivate table "/CCC/SALES_ORDER_LIST_EXTRACT6"
+    1EEDT002 Table "/CCC/SALES_ORDER_LIST_EXTRACT6" does not exist
+    3 EDT013 Table "/CCC/SALES_ORDER_LIST_EXTRACT6" was not activated
+1EEDO519 "Table" "/CCC/SALES_ORDER_LIST_EXTRACT6" could not be activated
+    3 EDT012XActivate table "/CCC/SALES_ORDER_LIST_EXTRACT8"
+    1EEDT002 Table "/CCC/SALES_ORDER_LIST_EXTRACT8" does not exist
+    3 EDT013 Table "/CCC/SALES_ORDER_LIST_EXTRACT8" was not activated
+1EEDO519 "Table" "/CCC/SALES_ORDER_LIST_EXTRACT8" could not be activated
+    3 EDT012XActivate table "/CCC/SHOW_SALES_ORDER_LIST_AS5"
+    1EEDT002 Table "/CCC/SHOW_SALES_ORDER_LIST_AS5" does not exist
+    3 EDT013 Table "/CCC/SHOW_SALES_ORDER_LIST_AS5" was not activated
+1EEDO519 "Table" "/CCC/SHOW_SALES_ORDER_LIST_AS5" could not be activated
+    3 EDT012XActivate table "/CCC/SHOW_SALES_ORDER_LIST_ASY"
+    1EEDT002 Table "/CCC/SHOW_SALES_ORDER_LIST_ASY" does not exist
+    3 EDT013 Table "/CCC/SHOW_SALES_ORDER_LIST_ASY" was not activated
+1EEDO519 "Table" "/CCC/SHOW_SALES_ORDER_LIST_ASY" could not be activated
+1 ETP111 exit code           : "8"
+
+#!--------------------------------------------------------------
+#!---- MASKING file "/usr/sap/SJR/SUM/SUM/abap/log/ACTUPG.ELG"
+#!---- TIME: 20260310071310  PHASE: MAIN_SHDRUN/ACT_UPG_CUST
+#!--------------------------------------------------------------
+
+################################################################################################
+# Phase: ACT_UPG_CUST
+# Description: DDIC ACTIVATION ERRORS
+################################################################################################
+
+
+#==============================================================================================#
+# Find the detailed information in log 'SAPA750EAS.SJR':
+#==============================================================================================#
+
+    3 EDT012XActivate table "/CCC/SALES_ORDER_LIST_EXTRACT"
+    3EEDT002 Table "/CCC/SALES_ORDER_LIST_EXTRACT" does not exist
+    3 EDT013 Table "/CCC/SALES_ORDER_LIST_EXTRACT" was not activated
+1EEDO519X"Table" "/CCC/SALES_ORDER_LIST_EXTRACT" could not be activated
+    3 EDT012XActivate table "/CCC/SALES_ORDER_LIST_EXTRACT6"
+    3EEDT002 Table "/CCC/SALES_ORDER_LIST_EXTRACT6" does not exist
+    3 EDT013 Table "/CCC/SALES_ORDER_LIST_EXTRACT6" was not activated
+1EEDO519 "Table" "/CCC/SALES_ORDER_LIST_EXTRACT6" could not be activated
+    3 EDT012XActivate table "/CCC/SALES_ORDER_LIST_EXTRACT8"
+    3EEDT002 Table "/CCC/SALES_ORDER_LIST_EXTRACT8" does not exist
+    3 EDT013 Table "/CCC/SALES_ORDER_LIST_EXTRACT8" was not activated
+1EEDO519 "Table" "/CCC/SALES_ORDER_LIST_EXTRACT8" could not be activated
+    3 EDT012XActivate table "/CCC/SHOW_SALES_ORDER_LIST_AS5"
+    3EEDT002 Table "/CCC/SHOW_SALES_ORDER_LIST_AS5" does not exist
+    3 EDT013 Table "/CCC/SHOW_SALES_ORDER_LIST_AS5" was not activated
+1EEDO519 "Table" "/CCC/SHOW_SALES_ORDER_LIST_AS5" could not be activated
+    3 EDT012XActivate table "/CCC/SHOW_SALES_ORDER_LIST_ASY"
+    3EEDT002 Table "/CCC/SHOW_SALES_ORDER_LIST_ASY" does not exist
+    3 EDT013 Table "/CCC/SHOW_SALES_ORDER_LIST_ASY" was not activated
+    3 EDO680XSynchronous processing: "0" sec., "5" objects, "5.250" costs
+    1 ED0301X*************************************************************************
+    1 ED0306       "Object Activation"
+    1 ED0322 End phase "005" "10.03.2026" "06:55:52" **************************************
+    1 ED0320XStart phase "006" "10.03.2026" "06:55:52" *************************************
+    1 ED0306       "Set ROOT/COMPOSITION rootnode relations for mass a"
+    1 ED0301 *************************************************************************
+    1 ED0301X*************************************************************************
+    1 ED0306       "Set ROOT/COMPOSITION rootnode relations for mass a"
+    1 ED0322 End phase "006" "10.03.2026" "06:55:52" **************************************
+    1 ED0320XStart phase "007" "10.03.2026" "06:55:52" *************************************
+    1 ED0306       "Updating buffered basis table objects"
+    1 ED0301 *************************************************************************
+    3 EDO462X"0" affected tables were identified
+    1 ED0301X*************************************************************************
+    1 ED0306       "Updating buffered basis table objects"
+    1 ED0322 End phase "007" "10.03.2026" "06:55:52" **************************************
+    1 ED0320XStart phase "008" "10.03.2026" "06:55:52" *************************************
+    1 ED0306       "Resetting entity buffers"
+    1 ED0301 *************************************************************************
+    1 ED0301X*************************************************************************
+    1 ED0306       "Resetting entity buffers"
+    1 ED0322 End phase "008" "10.03.2026" "06:55:52" **************************************
+    1 ED0320XStart phase "009" "10.03.2026" "06:55:52" *************************************
+    1 ED0306       "Deactivating entity buffers"
+    1 ED0301 *************************************************************************
+    1 ED0301X*************************************************************************
+    1 ED0306       "Deactivating entity buffers"
+    1 ED0322 End phase "009" "10.03.2026" "06:55:52" **************************************
+    1 ED0320XStart phase "010" "10.03.2026" "06:55:52" *************************************
+    1 ED0306       "View  deleted from the database"
+    1 ED0301 *************************************************************************
+    1 ED0301X*************************************************************************
+    1 ED0306       "View  deleted from the database"
+    1 ED0322 End phase "010" "10.03.2026" "06:55:52" **************************************
+    1 ED0320XStart phase "011" "10.03.2026" "06:55:52" *************************************
+    1 ED0306       "Updating/Deleting replacement object for Tables an"
+    1 ED0301 *************************************************************************
+    A3 ESD_MA_POST_PROCESS 024XNo replaced objects(TABL/VIEW) exist for post processing
+    1 ED0301X*************************************************************************
+    1 ED0306       "Updating/Deleting replacement object for Tables an"
+    1 ED0322 End phase "011" "10.03.2026" "06:55:52" **************************************
+    1 ED0320XStart phase "012" "10.03.2026" "06:55:52" *************************************
+    1 ED0306       "Updating tables/views with substitute object"
+    1 ED0301 *************************************************************************
+    1 ED0301X*************************************************************************
+    1 ED0306       "Updating tables/views with substitute object"
+    1 ED0322 End phase "012" "10.03.2026" "06:55:52" **************************************
+1EEDO519 "Table" "/CCC/SHOW_SALES_ORDER_LIST_ASY" could not be activated
+1 ETP111 exit code           : "8"

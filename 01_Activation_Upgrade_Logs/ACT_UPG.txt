@@ -1,0 +1,134 @@
+Directory:    /usr/sap/SJR/SUM/SUM/abap/log
+Name:         ACTUPG.ELG
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+################################################################################################
+# Phase: ACT_UPG_CUST
+# Description: DDIC ACTIVATION ERRORS
+################################################################################################
+
+
+#==============================================================================================#
+# Find the detailed information in log 'SAPA750EAS.SJR':
+#==============================================================================================#
+
+    3 EDT012XActivate table "/CCC/SALES_ORDER_LIST_EXTRACT"
+    1EEDT242 Field "SALES_ORDER": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/SALES_ORDER_LIST_EXTRACT"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/SALES_ORDER_LIST_EXTRACT" cannot be generated
+    3 EDT013 Table "/CCC/SALES_ORDER_LIST_EXTRACT" was not activated
+1EEDO519X"Table" "/CCC/SALES_ORDER_LIST_EXTRACT" could not be activated
+    3 EDT012XActivate table "/CCC/SALES_ORDER_LIST_EXTRACT6"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/SALES_ORDER_LIST_EXTRACT6"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/SALES_ORDER_LIST_EXTRACT6" cannot be generated
+    3 EDT013 Table "/CCC/SALES_ORDER_LIST_EXTRACT6" was not activated
+    3 EDT014XActivate dependent table "/CCC/SALES_ORDER_LIST_EXTRACT6"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/SALES_ORDER_LIST_EXTRACT6"
+    A1EESD_EXT_MSG 007 Execution of the consistency checks failed.
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/SALES_ORDER_LIST_EXTRACT6" cannot be generated
+    3 EDT015 Dependent table "/CCC/SALES_ORDER_LIST_EXTRACT6" was not activated
+1EEDO519 "Table" "/CCC/SALES_ORDER_LIST_EXTRACT6" could not be activated
+    3 EDT012XActivate table "/CCC/SALES_ORDER_LIST_EXTRACT8"
+    1EEDT242 Field "SALES_ORDER": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/SALES_ORDER_LIST_EXTRACT8"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/SALES_ORDER_LIST_EXTRACT8" cannot be generated
+    3 EDT013 Table "/CCC/SALES_ORDER_LIST_EXTRACT8" was not activated
+1EEDO519 "Table" "/CCC/SALES_ORDER_LIST_EXTRACT8" could not be activated
+    3 EDT012XActivate table "/CCC/SHOW_SALES_ORDER_LIST_AS5"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/SHOW_SALES_ORDER_LIST_AS5"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/SHOW_SALES_ORDER_LIST_AS5" cannot be generated
+    3 EDT013 Table "/CCC/SHOW_SALES_ORDER_LIST_AS5" was not activated
+    3 EDT014XActivate dependent table "/CCC/SHOW_SALES_ORDER_LIST_AS5"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/SHOW_SALES_ORDER_LIST_AS5"
+    A1EESD_EXT_MSG 007 Execution of the consistency checks failed.
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/SHOW_SALES_ORDER_LIST_AS5" cannot be generated
+    3 EDT015 Dependent table "/CCC/SHOW_SALES_ORDER_LIST_AS5" was not activated
+1EEDO519 "Table" "/CCC/SHOW_SALES_ORDER_LIST_AS5" could not be activated
+    3 EDT012XActivate table "/CCC/SHOW_SALES_ORDER_LIST_ASY"
+    1EEDT242 Field "SALES_ORDER": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/SHOW_SALES_ORDER_LIST_ASY"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/SHOW_SALES_ORDER_LIST_ASY" cannot be generated
+    3 EDT013 Table "/CCC/SHOW_SALES_ORDER_LIST_ASY" was not activated
+1EEDO519 "Table" "/CCC/SHOW_SALES_ORDER_LIST_ASY" could not be activated
+    3 EDT012XActivate table "/CCC/VENDOR_COMPANY_DETAIL"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/VENDOR_COMPANY_DETAIL"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/VENDOR_COMPANY_DETAIL" cannot be generated
+    3 EDT013 Table "/CCC/VENDOR_COMPANY_DETAIL" was not activated
+    3 EDT014XActivate dependent table "/CCC/VENDOR_COMPANY_DETAIL"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/VENDOR_COMPANY_DETAIL"
+    A1EESD_EXT_MSG 007 Execution of the consistency checks failed.
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/VENDOR_COMPANY_DETAIL" cannot be generated
+    3 EDT015 Dependent table "/CCC/VENDOR_COMPANY_DETAIL" was not activated
+1EEDO519 "Table" "/CCC/VENDOR_COMPANY_DETAIL" could not be activated
+    3 EDT012XActivate table "/CCC/VENDOR_COMPANY_DETAIL_DUN"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/VENDOR_COMPANY_DETAIL_DUN"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/VENDOR_COMPANY_DETAIL_DUN" cannot be generated
+    3 EDT013 Table "/CCC/VENDOR_COMPANY_DETAIL_DUN" was not activated
+1EEDO519 "Table" "/CCC/VENDOR_COMPANY_DETAIL_DUN" could not be activated
+    3 EDO802XActivation of table type "/CCC/VENDOR_COMPANY_DETAI_TAB2"
+    1EEDO845 Row type "/CCC/VENDOR_COMPANY_DETAIL" is not active or does not exist
+    3 EDO804 Table type "/CCC/VENDOR_COMPANY_DETAI_TAB2" was not activated
+1EEDO519 "Table Type" "/CCC/VENDOR_COMPANY_DETAI_TAB2" could not be activated
+    3 EDO802XActivation of table type "/SNP/CC0X_TABH_DD06L"
+    1EEDO845 Row type "DD06L" is not active or does not exist
+    3 EDO804 Table type "/SNP/CC0X_TABH_DD06L" was not activated
+1EEDO519 "Table Type" "/SNP/CC0X_TABH_DD06L" could not be activated
+    3 EDT012XActivate table "/CCC/SALES_ORDER_LIST_EXTRACT6"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/SALES_ORDER_LIST_EXTRACT6"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/SALES_ORDER_LIST_EXTRACT6" cannot be generated
+    3 EDT013 Table "/CCC/SALES_ORDER_LIST_EXTRACT6" was not activated
+    3 EDT014XActivate dependent table "/CCC/SALES_ORDER_LIST_EXTRACT6"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/SALES_ORDER_LIST_EXTRACT6"
+    A1EESD_EXT_MSG 007 Execution of the consistency checks failed.
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/SALES_ORDER_LIST_EXTRACT6" cannot be generated
+    3 EDT015 Dependent table "/CCC/SALES_ORDER_LIST_EXTRACT6" was not activated
+1EEDO519 "Table" "/CCC/SALES_ORDER_LIST_EXTRACT6" could not be activated
+    3 EDT012XActivate table "/CCC/SHOW_SALES_ORDER_LIST_AS5"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/SHOW_SALES_ORDER_LIST_AS5"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/SHOW_SALES_ORDER_LIST_AS5" cannot be generated
+    3 EDT013 Table "/CCC/SHOW_SALES_ORDER_LIST_AS5" was not activated
+    3 EDT014XActivate dependent table "/CCC/SHOW_SALES_ORDER_LIST_AS5"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/SHOW_SALES_ORDER_LIST_AS5"
+    A1EESD_EXT_MSG 007 Execution of the consistency checks failed.
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/SHOW_SALES_ORDER_LIST_AS5" cannot be generated
+    3 EDT015 Dependent table "/CCC/SHOW_SALES_ORDER_LIST_AS5" was not activated
+1EEDO519 "Table" "/CCC/SHOW_SALES_ORDER_LIST_AS5" could not be activated
+    3 EDT012XActivate table "/CCC/VENDOR_COMPANY_DETAIL"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/VENDOR_COMPANY_DETAIL"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/VENDOR_COMPANY_DETAIL" cannot be generated
+    3 EDT013 Table "/CCC/VENDOR_COMPANY_DETAIL" was not activated
+    3 EDT014XActivate dependent table "/CCC/VENDOR_COMPANY_DETAIL"
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/VENDOR_COMPANY_DETAIL"
+    A1EESD_EXT_MSG 007 Execution of the consistency checks failed.
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/VENDOR_COMPANY_DETAIL" cannot be generated
+    3 EDT015 Dependent table "/CCC/VENDOR_COMPANY_DETAIL" was not activated
+1EEDO519 "Table" "/CCC/VENDOR_COMPANY_DETAIL" could not be activated
+1 ETP111 exit code           : "8"

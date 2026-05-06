@@ -1,0 +1,2342 @@
+################################################################################################
+# Phase: ACT_UPG
+# Description: DDIC ACTIVATION ERRORS
+################################################################################################
+
+
+#==============================================================================================#
+# Find the detailed information in log 'SAPA750EAS.Q4R':
+#==============================================================================================#
+
+    3 EDH102XActivate search help "/OBIZ/VMVA_QT"
+    3 EDH211 Parameter "KUNDE" is changed from " " to "N" in field 'Modified'
+    3 EDH211 Parameter "PARVW" is changed from " " to "N" in field 'Modified'
+    3 EDH211 Parameter "VKORG_P" is changed from " " to "N" in field 'Modified'
+    3 EDH211 Parameter "VKBUR_P" is changed from " " to "N" in field 'Modified'
+    3 EDH211 Parameter "VKGRP_P" is changed from " " to "N" in field 'Modified'
+    3 EDH211 Parameter "VTWEG_P" is changed from " " to "N" in field 'Modified'
+    3 EDH211 Parameter "SPART_P" is changed from " " to "N" in field 'Modified'
+    3 EDH211 Parameter "AUART_P" is changed from " " to "N" in field 'Modified'
+    3 EDH211 Parameter "BSTNK_P" is changed from " " to "N" in field 'Modified'
+    3 EDH211 Parameter "AUDAT" is changed from " " to "N" in field 'Modified'
+    3 EDH211 Parameter "ERNAM_P" is changed from " " to "N" in field 'Modified'
+    3 EDH211 Parameter "DATAB" is changed from " " to "N" in field 'Modified'
+    3 EDH211 Parameter "DATBI" is changed from " " to "N" in field 'Modified'
+    3 EDH211 Parameter "TRVOG_P" is changed from " " to "N" in field 'Modified'
+    3 EDH211 Parameter "VBELN" is changed from " " to "N" in field 'Modified'
+    2WEDH118 Table "M_VMVAE" is not a database table => not suitable as selection method
+    2WEDH163 Search help parameter "KUNDE" does not occur in the selection method
+    2WEDH163 Search help parameter "PARVW" does not occur in the selection method
+    2WEDH163 Search help parameter "VKORG_P" does not occur in the selection method
+    2WEDH163 Search help parameter "VKBUR_P" does not occur in the selection method
+    2WEDH163 Search help parameter "VKGRP_P" does not occur in the selection method
+    2WEDH163 Search help parameter "VTWEG_P" does not occur in the selection method
+    2WEDH163 Search help parameter "SPART_P" does not occur in the selection method
+    2WEDH163 Search help parameter "AUART_P" does not occur in the selection method
+    2WEDH163 Search help parameter "BSTNK_P" does not occur in the selection method
+    2WEDH163 Search help parameter "AUDAT" does not occur in the selection method
+    2WEDH163 Search help parameter "ERNAM_P" does not occur in the selection method
+    2WEDH163 Search help parameter "DATAB" does not occur in the selection method
+    2WEDH163 Search help parameter "DATBI" does not occur in the selection method
+    2WEDH163 Search help parameter "TRVOG_P" does not occur in the selection method
+    2WEDH163 Search help parameter "VBELN" does not occur in the selection method
+    A1EEDDCNT_COMMON 010 Object "NTAB" "M_VMVAE" not found
+    A1EEDDCNT_COMMON 010 Object "NTAB" "M_VMVAE" not found
+    1EED0800 "DD_SHLP_PUT": Operation "CL_DDCMP_UDP::WRITE_SHLPS" failed
+    3 EDH109 Search help "/OBIZ/VMVA_QT" was not activated
+1EEDO519X"Srch Help" "/OBIZ/VMVA_QT" could not be activated
+    3 EDO301XActivate data element "/CCBJI/CONT_UP"
+    1EEDO315 No active domain "/BEV3/CHTXT10" available
+    3 EDO303 Data element "/CCBJI/CONT_UP" was not activated
+1EEDO519 "Data Element" "/CCBJI/CONT_UP" could not be activated
+    3 EDO301XActivate data element "/CCBJI/UNIT_PRC"
+    1EEDO315 No active domain "/BEV3/CHTXT15" available
+    3 EDO303 Data element "/CCBJI/UNIT_PRC" was not activated
+1EEDO519 "Data Element" "/CCBJI/UNIT_PRC" could not be activated
+    3 EDO301XActivate data element "/CCC/BL_CLAIM_DATE"
+    1EEDO315 No active domain "/BEV3/CHYYYYMMDD" available
+    3 EDO303 Data element "/CCC/BL_CLAIM_DATE" was not activated
+1EEDO519 "Data Element" "/CCC/BL_CLAIM_DATE" could not be activated
+    3 EDO301XActivate data element "/CCC/BL_DOC_NO"
+    1EEDO315 No active domain "/BEV3/CHCHAR25" available
+    3 EDO303 Data element "/CCC/BL_DOC_NO" was not activated
+1EEDO519 "Data Element" "/CCC/BL_DOC_NO" could not be activated
+    3 EDO301XActivate data element "/CCC/BL_GUEBG12"
+    1EEDO315 No active domain "/BEV1/CLABDAT" available
+    3 EDO303 Data element "/CCC/BL_GUEBG12" was not activated
+1EEDO519 "Data Element" "/CCC/BL_GUEBG12" could not be activated
+    3 EDO301XActivate data element "/CCC/BL_RECORD_DATE"
+    1EEDO315 No active domain "/BEV1/CLABDAT" available
+    3 EDO303 Data element "/CCC/BL_RECORD_DATE" was not activated
+1EEDO519 "Data Element" "/CCC/BL_RECORD_DATE" could not be activated
+    3 EDO301XActivate data element "/CCC/MDM_CRTF_NME"
+    1EEDO315 No active domain "/BEV3/CHTXT60" available
+    3 EDO303 Data element "/CCC/MDM_CRTF_NME" was not activated
+1EEDO519 "Data Element" "/CCC/MDM_CRTF_NME" could not be activated
+    3 EDO301XActivate data element "/CCC/MDM_CRTF_TYPE"
+    1EEDO315 No active domain "/BEV3/CHTXT01" available
+    3 EDO303 Data element "/CCC/MDM_CRTF_TYPE" was not activated
+1EEDO519 "Data Element" "/CCC/MDM_CRTF_TYPE" could not be activated
+    3 EDO301XActivate data element "/CCC/MDM_DESCRIPTION"
+    1EEDO315 No active domain "/BEV3/CHTXT60" available
+    3 EDO303 Data element "/CCC/MDM_DESCRIPTION" was not activated
+1EEDO519 "Data Element" "/CCC/MDM_DESCRIPTION" could not be activated
+    3 EDO301XActivate data element "/CCC/MDM_DISCIND"
+    1EEDO315 No active domain "/BEV3/CHTXT01" available
+    3 EDO303 Data element "/CCC/MDM_DISCIND" was not activated
+1EEDO519 "Data Element" "/CCC/MDM_DISCIND" could not be activated
+    3 EDO301XActivate data element "/CCC/MDM_GEOLVL1"
+    1EEDO315 No active domain "/BEV3/CHTXT05" available
+    3 EDO303 Data element "/CCC/MDM_GEOLVL1" was not activated
+1EEDO519 "Data Element" "/CCC/MDM_GEOLVL1" could not be activated
+    3 EDO301XActivate data element "/CCC/MDM_GEOLVL2"
+    1EEDO315 No active domain "/BEV3/CHTXT05" available
+    3 EDO303 Data element "/CCC/MDM_GEOLVL2" was not activated
+1EEDO519 "Data Element" "/CCC/MDM_GEOLVL2" could not be activated
+    3 EDO301XActivate data element "/CCC/MDM_GEOLVL3"
+    1EEDO315 No active domain "/BEV3/CHTXT07" available
+    3 EDO303 Data element "/CCC/MDM_GEOLVL3" was not activated
+1EEDO519 "Data Element" "/CCC/MDM_GEOLVL3" could not be activated
+    3 EDO301XActivate data element "/CCC/MDM_GEOLVL4"
+    1EEDO315 No active domain "/BEV3/CHTXT07" available
+    3 EDO303 Data element "/CCC/MDM_GEOLVL4" was not activated
+1EEDO519 "Data Element" "/CCC/MDM_GEOLVL4" could not be activated
+    3 EDO301XActivate data element "/CCC/MDM_GKP_MEP"
+    1EEDO315 No active domain "/BEV3/CHTXT01" available
+    3 EDO303 Data element "/CCC/MDM_GKP_MEP" was not activated
+1EEDO519 "Data Element" "/CCC/MDM_GKP_MEP" could not be activated
+    3 EDO301XActivate data element "/CCC/MDM_INCMLVL"
+    1EEDO315 No active domain "/BEV1/RSZA" available
+    3 EDO303 Data element "/CCC/MDM_INCMLVL" was not activated
+1EEDO519 "Data Element" "/CCC/MDM_INCMLVL" could not be activated
+    3 EDO301XActivate data element "/CCC/MDM_MRKT"
+    1EEDO315 No active domain "/BEV3/CHTXT07" available
+    3 EDO303 Data element "/CCC/MDM_MRKT" was not activated
+1EEDO519 "Data Element" "/CCC/MDM_MRKT" could not be activated
+    3 EDO301XActivate data element "/CCC/MDM_RN_TP"
+    1EEDO315 No active domain "/BEV3/CHTXT01" available
+    3 EDO303 Data element "/CCC/MDM_RN_TP" was not activated
+1EEDO519 "Data Element" "/CCC/MDM_RN_TP" could not be activated
+    3 EDO301XActivate data element "/CCC/MDM_SNTN_NUM"
+    1EEDO315 No active domain "/BEV3/CHTXT40" available
+    3 EDO303 Data element "/CCC/MDM_SNTN_NUM" was not activated
+1EEDO519 "Data Element" "/CCC/MDM_SNTN_NUM" could not be activated
+    3 EDO301XActivate data element "/CCC/MDM_TAXREG"
+    1EEDO315 No active domain "/BEV3/CHTXT60" available
+    3 EDO303 Data element "/CCC/MDM_TAXREG" was not activated
+1EEDO519 "Data Element" "/CCC/MDM_TAXREG" could not be activated
+    3 EDO301XActivate data element "/CCC/MDM_VHCLLIMIT"
+    1EEDO315 No active domain "/BEV3/CHTXT01" available
+    3 EDO303 Data element "/CCC/MDM_VHCLLIMIT" was not activated
+1EEDO519 "Data Element" "/CCC/MDM_VHCLLIMIT" could not be activated
+    3 EDO301XActivate data element "/CCC/OTC_PURCH_NO_C"
+    1EEDO315 No active domain "/SNP/EX00_CHAR40" available
+    3 EDO303 Data element "/CCC/OTC_PURCH_NO_C" was not activated
+1EEDO519 "Data Element" "/CCC/OTC_PURCH_NO_C" could not be activated
+    3 EDO301XActivate data element "/CCC/RTR_ALLVARQTY"
+    1EEDO315 No active domain "/BEV1/CLMENGE" available
+    3 EDO303 Data element "/CCC/RTR_ALLVARQTY" was not activated
+1EEDO519 "Data Element" "/CCC/RTR_ALLVARQTY" could not be activated
+    3 EDO301XActivate data element "/CCC/RTR_ALLVARQTY1"
+    1EEDO315 No active domain "/BEV1/CLMENGE" available
+    3 EDO303 Data element "/CCC/RTR_ALLVARQTY1" was not activated
+1EEDO519 "Data Element" "/CCC/RTR_ALLVARQTY1" could not be activated
+    3 EDO301XActivate data element "/CCC/RTR_ALLVARQTY_TOTAL"
+    1EEDO315 No active domain "/BEV1/CLMENGE" available
+    3 EDO303 Data element "/CCC/RTR_ALLVARQTY_TOTAL" was not activated
+1EEDO519 "Data Element" "/CCC/RTR_ALLVARQTY_TOTAL" could not be activated
+    3 EDO301XActivate data element "/CCC/SLOCA_DESC"
+    1EEDO315 No active domain "/BEV3/CHTXT60" available
+    3 EDO303 Data element "/CCC/SLOCA_DESC" was not activated
+1EEDO519 "Data Element" "/CCC/SLOCA_DESC" could not be activated
+    3 EDO301XActivate data element "/CCEJ/OTC_CONT_AMT"
+    1EEDO315 No active domain "/BEV3/CHTXT15" available
+    3 EDO303 Data element "/CCEJ/OTC_CONT_AMT" was not activated
+1EEDO519 "Data Element" "/CCEJ/OTC_CONT_AMT" could not be activated
+    3 EDO301XActivate data element "/CCEJ/OTC_CON_PRICE"
+    1EEDO315 No active domain "/BEV3/CHTXT11" available
+    3 EDO303 Data element "/CCEJ/OTC_CON_PRICE" was not activated
+1EEDO519 "Data Element" "/CCEJ/OTC_CON_PRICE" could not be activated
+    3 EDO301XActivate data element "/CCEJ/OTC_COST_AMT"
+    1EEDO315 No active domain "/BEV3/CHTXT15" available
+    3 EDO303 Data element "/CCEJ/OTC_COST_AMT" was not activated
+1EEDO519 "Data Element" "/CCEJ/OTC_COST_AMT" could not be activated
+    3 EDO301XActivate data element "/CCEJ/OTC_DEL_QTY"
+    1EEDO315 No active domain "/BEV1/CLPALSTK" available
+    3 EDO303 Data element "/CCEJ/OTC_DEL_QTY" was not activated
+1EEDO519 "Data Element" "/CCEJ/OTC_DEL_QTY" could not be activated
+    3 EDO301XActivate data element "/CCEJ/OTC_DOC_SUB"
+    1EEDO315 No active domain "/BEV1/EMBREITE" available
+    3 EDO303 Data element "/CCEJ/OTC_DOC_SUB" was not activated
+1EEDO519 "Data Element" "/CCEJ/OTC_DOC_SUB" could not be activated
+    3 EDO301XActivate data element "/CCEJ/OTC_MAT_PRICE"
+    1EEDO315 No active domain "/BEV3/CHTXT11" available
+    3 EDO303 Data element "/CCEJ/OTC_MAT_PRICE" was not activated
+1EEDO519 "Data Element" "/CCEJ/OTC_MAT_PRICE" could not be activated
+    3 EDO301XActivate data element "/CCEJ/OTC_MAT_SUBCODE"
+    1EEDO315 No active domain "/BEV1/CAMRKF" available
+    3 EDO303 Data element "/CCEJ/OTC_MAT_SUBCODE" was not activated
+1EEDO519 "Data Element" "/CCEJ/OTC_MAT_SUBCODE" could not be activated
+    3 EDO301XActivate data element "/CCEJ/OTC_PROMO"
+    1EEDO315 No active domain "/BEV3/CHTXT15" available
+    3 EDO303 Data element "/CCEJ/OTC_PROMO" was not activated
+1EEDO519 "Data Element" "/CCEJ/OTC_PROMO" could not be activated
+    3 EDO301XActivate data element "/CCEJ/OTC_REC_CASH_AMT"
+    1EEDO315 No active domain "/BEV3/CHTXT15" available
+    3 EDO303 Data element "/CCEJ/OTC_REC_CASH_AMT" was not activated
+1EEDO519 "Data Element" "/CCEJ/OTC_REC_CASH_AMT" could not be activated
+    3 EDO301XActivate data element "/CCEJ/OTC_SALES_PROMO"
+    1EEDO315 No active domain "/BEV3/CHTXT09" available
+    3 EDO303 Data element "/CCEJ/OTC_SALES_PROMO" was not activated
+1EEDO519 "Data Element" "/CCEJ/OTC_SALES_PROMO" could not be activated
+    3 EDO301XActivate data element "/CCEJ/OTC_SALES_TAX"
+    1EEDO315 No active domain "/BEV3/CHTXT11" available
+    3 EDO303 Data element "/CCEJ/OTC_SALES_TAX" was not activated
+1EEDO519 "Data Element" "/CCEJ/OTC_SALES_TAX" could not be activated
+    3 EDO301XActivate data element "/CCEJ/OTC_STORE_CODE"
+    1EEDO315 No active domain "/BEV3/CHBTRGLST" available
+    3 EDO303 Data element "/CCEJ/OTC_STORE_CODE" was not activated
+1EEDO519 "Data Element" "/CCEJ/OTC_STORE_CODE" could not be activated
+    3 EDO301XActivate data element "/CCEJ/OTC_TAX_AMT"
+    1EEDO315 No active domain "/BEV3/CHTXT15" available
+    3 EDO303 Data element "/CCEJ/OTC_TAX_AMT" was not activated
+1EEDO519 "Data Element" "/CCEJ/OTC_TAX_AMT" could not be activated
+    3 EDO301XActivate data element "/CCEJ/OTC_TAX_AMT1"
+    1EEDO315 No active domain "/BEV3/CHTXT11" available
+    3 EDO303 Data element "/CCEJ/OTC_TAX_AMT1" was not activated
+1EEDO519 "Data Element" "/CCEJ/OTC_TAX_AMT1" could not be activated
+    3 EDO301XActivate data element "/CCEJ/OTC_TQUANT"
+    1EEDO315 No active domain "/BEV3/CHTXT10" available
+    3 EDO303 Data element "/CCEJ/OTC_TQUANT" was not activated
+1EEDO519 "Data Element" "/CCEJ/OTC_TQUANT" could not be activated
+    3 EDO301XActivate data element "/CCEJ/OTC_UNIT_PRICE"
+    1EEDO315 No active domain "/BEV3/CHTXT11" available
+    3 EDO303 Data element "/CCEJ/OTC_UNIT_PRICE" was not activated
+1EEDO519 "Data Element" "/CCEJ/OTC_UNIT_PRICE" could not be activated
+    3 EDO301XActivate data element "/CCEJ/OTC_UNIT_PRICE_CS"
+    1EEDO315 No active domain "/BEV3/CHTXT15" available
+    3 EDO303 Data element "/CCEJ/OTC_UNIT_PRICE_CS" was not activated
+1EEDO519 "Data Element" "/CCEJ/OTC_UNIT_PRICE_CS" could not be activated
+    3 EDO301XActivate data element "/CCEJ/OTC_UNIT_PRICE_EA"
+    1EEDO315 No active domain "/BEV3/CHTXT15" available
+    3 EDO303 Data element "/CCEJ/OTC_UNIT_PRICE_EA" was not activated
+1EEDO519 "Data Element" "/CCEJ/OTC_UNIT_PRICE_EA" could not be activated
+    3 EDO301XActivate data element "/CCEJ/RTR_GKP"
+    1EEDO315 No active domain "/BEV3/CHTXT01" available
+    3 EDO303 Data element "/CCEJ/RTR_GKP" was not activated
+1EEDO519 "Data Element" "/CCEJ/RTR_GKP" could not be activated
+    3 EDO301XActivate data element "/CCEJ/RTR_STORE_CODE"
+    1EEDO315 No active domain "/BEV3/CHBTRGLST" available
+    3 EDO303 Data element "/CCEJ/RTR_STORE_CODE" was not activated
+1EEDO519 "Data Element" "/CCEJ/RTR_STORE_CODE" could not be activated
+    3 EDO301XActivate data element "/LOT/SC_CUST_GROUP"
+    1EEDO315 No active domain "CHAR05" available
+    3 EDO303 Data element "/LOT/SC_CUST_GROUP" was not activated
+1EEDO519 "Data Element" "/LOT/SC_CUST_GROUP" could not be activated
+    3 EDO301XActivate data element "/LOT/SC_EMISSION_CLASS"
+    1EEDO315 No active domain "CHAR05" available
+    3 EDO303 Data element "/LOT/SC_EMISSION_CLASS" was not activated
+1EEDO519 "Data Element" "/LOT/SC_EMISSION_CLASS" could not be activated
+    3 EDO301XActivate data element "/LOT/SC_PACKAGE_GROUP"
+    1EEDO315 No active domain "CHAR05" available
+    3 EDO303 Data element "/LOT/SC_PACKAGE_GROUP" was not activated
+1EEDO519 "Data Element" "/LOT/SC_PACKAGE_GROUP" could not be activated
+    3 EDO301XActivate data element "/LOT/SC_TEUNIT"
+    1EEDO315 No active domain "CHAR05" available
+    3 EDO303 Data element "/LOT/SC_TEUNIT" was not activated
+1EEDO519 "Data Element" "/LOT/SC_TEUNIT" could not be activated
+    3 EDO301XActivate data element "/SCL/AT101"
+    1EEDO315 No active domain "/BEV1/CLABHZUS" available
+    3 EDO303 Data element "/SCL/AT101" was not activated
+1EEDO519 "Data Element" "/SCL/AT101" could not be activated
+    3 EDO301XActivate data element "/SCL/AT102"
+    1EEDO315 No active domain "/BEV1/CLREEDREI" available
+    3 EDO303 Data element "/SCL/AT102" was not activated
+1EEDO519 "Data Element" "/SCL/AT102" could not be activated
+    3 EDO301XActivate data element "/SCL/AT103"
+    1EEDO315 No active domain "/BEV1/CABAUFD" available
+    3 EDO303 Data element "/SCL/AT103" was not activated
+1EEDO519 "Data Element" "/SCL/AT103" could not be activated
+    3 EDO301XActivate data element "/SCL/ATP_CHMOD"
+    1EEDO315 No active domain "/BEV1/CLLAND1" available
+    3 EDO303 Data element "/SCL/ATP_CHMOD" was not activated
+1EEDO519 "Data Element" "/SCL/ATP_CHMOD" could not be activated
+    3 EDO301XActivate data element "/SCL/ATT01"
+    1EEDO315 No active domain "/BEV1/CLABHZUS" available
+    3 EDO303 Data element "/SCL/ATT01" was not activated
+1EEDO519 "Data Element" "/SCL/ATT01" could not be activated
+    3 EDO301XActivate data element "/SCL/ATT02"
+    1EEDO315 No active domain "/BEV1/CLREEDREI" available
+    3 EDO303 Data element "/SCL/ATT02" was not activated
+1EEDO519 "Data Element" "/SCL/ATT02" could not be activated
+    3 EDO301XActivate data element "/SCL/ATT03"
+    1EEDO315 No active domain "/BEV1/CABAUFD" available
+    3 EDO303 Data element "/SCL/ATT03" was not activated
+1EEDO519 "Data Element" "/SCL/ATT03" could not be activated
+    3 EDO301XActivate data element "/SCL/BCAT"
+    1EEDO315 No active domain "/BEV1/CLLAND1" available
+    3 EDO303 Data element "/SCL/BCAT" was not activated
+1EEDO519 "Data Element" "/SCL/BCAT" could not be activated
+    3 EDO301XActivate data element "/SCL/BEVTYPE"
+    1EEDO315 No active domain "/BEV1/CLCODE" available
+    3 EDO303 Data element "/SCL/BEVTYPE" was not activated
+1EEDO519 "Data Element" "/SCL/BEVTYPE" could not be activated
+    3 EDO301XActivate data element "/SCL/BRAND"
+    1EEDO315 No active domain "/BEV1/CLLAND1" available
+    3 EDO303 Data element "/SCL/BRAND" was not activated
+1EEDO519 "Data Element" "/SCL/BRAND" could not be activated
+    3 EDO301XActivate data element "/SCL/BRDOWN"
+    1EEDO315 No active domain "/BEV1/CLCTART" available
+    3 EDO303 Data element "/SCL/BRDOWN" was not activated
+1EEDO519 "Data Element" "/SCL/BRDOWN" could not be activated
+    3 EDO301XActivate data element "/SCL/CONVH"
+    1EEDO315 No active domain "/BEV1/RPANZSTOP" available
+    3 EDO303 Data element "/SCL/CONVH" was not activated
+1EEDO519 "Data Element" "/SCL/CONVH" could not be activated
+    3 EDO301XActivate data element "/SCL/FLAVO"
+    1EEDO315 No active domain "/BEV1/CLLAND1" available
+    3 EDO303 Data element "/SCL/FLAVO" was not activated
+1EEDO519 "Data Element" "/SCL/FLAVO" could not be activated
+    3 EDO301XActivate data element "/SCL/LLABSUFFIX"
+    1EEDO315 No active domain "/BEV1/CLLAND1" available
+    3 EDO303 Data element "/SCL/LLABSUFFIX" was not activated
+1EEDO519 "Data Element" "/SCL/LLABSUFFIX" could not be activated
+    3 EDO301XActivate data element "/SCL/MDM_ABBR_NM"
+    1EEDO315 No active domain "/BEV1/CLKUNDE" available
+    3 EDO303 Data element "/SCL/MDM_ABBR_NM" was not activated
+1EEDO519 "Data Element" "/SCL/MDM_ABBR_NM" could not be activated
+    3 EDO301XActivate data element "/SCL/MDM_BEVMKT_ABBRNM"
+    1EEDO315 No active domain "/BEV1/CLKUNDE" available
+    3 EDO303 Data element "/SCL/MDM_BEVMKT_ABBRNM" was not activated
+1EEDO519 "Data Element" "/SCL/MDM_BEVMKT_ABBRNM" could not be activated
+    3 EDO301XActivate data element "/SCL/MDM_BEV_CAT_ABBR_NM"
+    1EEDO315 No active domain "/BEV1/CLKUNDE" available
+    3 EDO303 Data element "/SCL/MDM_BEV_CAT_ABBR_NM" was not activated
+1EEDO519 "Data Element" "/SCL/MDM_BEV_CAT_ABBR_NM" could not be activated
+    3 EDO301XActivate data element "/SCL/MDM_BEV_MKT_CD"
+    1EEDO315 No active domain "/BEV1/CLCODE" available
+    3 EDO303 Data element "/SCL/MDM_BEV_MKT_CD" was not activated
+1EEDO519 "Data Element" "/SCL/MDM_BEV_MKT_CD" could not be activated
+    3 EDO301XActivate data element "/SCL/MDM_BRND_ABBRNM"
+    1EEDO315 No active domain "/BEV1/CLKUNDE" available
+    3 EDO303 Data element "/SCL/MDM_BRND_ABBRNM" was not activated
+1EEDO519 "Data Element" "/SCL/MDM_BRND_ABBRNM" could not be activated
+    3 EDO301XActivate data element "/SCL/MDM_BRND_CD"
+    1EEDO315 No active domain "/BEV1/CLLAND1" available
+    3 EDO303 Data element "/SCL/MDM_BRND_CD" was not activated
+1EEDO519 "Data Element" "/SCL/MDM_BRND_CD" could not be activated
+    3 EDO301XActivate data element "/SCL/MDM_FLVR_ABBRNM"
+    1EEDO315 No active domain "/BEV1/CLKUNDE" available
+    3 EDO303 Data element "/SCL/MDM_FLVR_ABBRNM" was not activated
+1EEDO519 "Data Element" "/SCL/MDM_FLVR_ABBRNM" could not be activated
+    3 EDO301XActivate data element "/SCL/MDM_FLVR_CAT_CD"
+    1EEDO315 No active domain "/BEV1/CAMRKF" available
+    3 EDO303 Data element "/SCL/MDM_FLVR_CAT_CD" was not activated
+1EEDO519 "Data Element" "/SCL/MDM_FLVR_CAT_CD" could not be activated
+    3 EDO301XActivate data element "/SCL/MDM_FLVR_CD"
+    1EEDO315 No active domain "/BEV1/CLLAND1" available
+    3 EDO303 Data element "/SCL/MDM_FLVR_CD" was not activated
+1EEDO519 "Data Element" "/SCL/MDM_FLVR_CD" could not be activated
+    3 EDO301XActivate data element "/SCL/MDM_KEY_STTE_CD"
+    1EEDO315 No active domain "/BEV1/CAMRKF" available
+    3 EDO303 Data element "/SCL/MDM_KEY_STTE_CD" was not activated
+1EEDO519 "Data Element" "/SCL/MDM_KEY_STTE_CD" could not be activated
+    3 EDO301XActivate data element "/SCL/MDM_MFGR_CD"
+    1EEDO315 No active domain "/BEV1/CLCTART" available
+    3 EDO303 Data element "/SCL/MDM_MFGR_CD" was not activated
+1EEDO519 "Data Element" "/SCL/MDM_MFGR_CD" could not be activated
+    3 EDO301XActivate data element "/SCL/MDM_PHYS_STTE_ABBR_NM"
+    1EEDO315 No active domain "/BEV1/CLKUNDE" available
+    3 EDO303 Data element "/SCL/MDM_PHYS_STTE_ABBR_NM" was not activated
+1EEDO519 "Data Element" "/SCL/MDM_PHYS_STTE_ABBR_NM" could not be activated
+    3 EDO301XActivate data element "/SCL/MDM_PKG_CAT_CD"
+    1EEDO315 No active domain "/BEV1/CLCTART" available
+    3 EDO303 Data element "/SCL/MDM_PKG_CAT_CD" was not activated
+1EEDO519 "Data Element" "/SCL/MDM_PKG_CAT_CD" could not be activated
+    3 EDO301XActivate data element "/SCL/MDM_PRIM_PKG_CD"
+    1EEDO315 No active domain "/BEV1/CLLAND1" available
+    3 EDO303 Data element "/SCL/MDM_PRIM_PKG_CD" was not activated
+1EEDO519 "Data Element" "/SCL/MDM_PRIM_PKG_CD" could not be activated
+    3 EDO301XActivate data element "/SCL/MDM_SCND_PKG_CD"
+    1EEDO315 No active domain "/BEV1/CLLAND1" available
+    3 EDO303 Data element "/SCL/MDM_SCND_PKG_CD" was not activated
+1EEDO519 "Data Element" "/SCL/MDM_SCND_PKG_CD" could not be activated
+    3 EDO301XActivate data element "/SCL/MDM_SHRT_NM"
+    1EEDO315 No active domain "/BEV3/CHTXT05" available
+    3 EDO303 Data element "/SCL/MDM_SHRT_NM" was not activated
+1EEDO519 "Data Element" "/SCL/MDM_SHRT_NM" could not be activated
+    3 EDO301XActivate data element "/SCL/MDM_SUBCHNL_ABBRNM"
+    1EEDO315 No active domain "/BEV1/CLKUNDE" available
+    3 EDO303 Data element "/SCL/MDM_SUBCHNL_ABBRNM" was not activated
+1EEDO519 "Data Element" "/SCL/MDM_SUBCHNL_ABBRNM" could not be activated
+    3 EDO301XActivate data element "/SCL/MDM_SUBCHNL_SHRTNM"
+    1EEDO315 No active domain "/BEV3/CHTXT05" available
+    3 EDO303 Data element "/SCL/MDM_SUBCHNL_SHRTNM" was not activated
+1EEDO519 "Data Element" "/SCL/MDM_SUBCHNL_SHRTNM" could not be activated
+    3 EDO301XActivate data element "/SCL/MDM_TMK_ABBR_NM"
+    1EEDO315 No active domain "/BEV1/CLKUNDE" available
+    3 EDO303 Data element "/SCL/MDM_TMK_ABBR_NM" was not activated
+1EEDO519 "Data Element" "/SCL/MDM_TMK_ABBR_NM" could not be activated
+    3 EDO301XActivate data element "/SCL/MDM_TMK_CD"
+    1EEDO315 No active domain "/BEV1/CLCTART" available
+    3 EDO303 Data element "/SCL/MDM_TMK_CD" was not activated
+1EEDO519 "Data Element" "/SCL/MDM_TMK_CD" could not be activated
+    3 EDO301XActivate data element "/SCL/MDM_TRDCHNL_ABBRNM"
+    1EEDO315 No active domain "/BEV1/CLKUNDE" available
+    3 EDO303 Data element "/SCL/MDM_TRDCHNL_ABBRNM" was not activated
+1EEDO519 "Data Element" "/SCL/MDM_TRDCHNL_ABBRNM" could not be activated
+    3 EDO301XActivate data element "/SCL/MDM_TRDCHNL_SHRTNM"
+    1EEDO315 No active domain "/BEV3/CHTXT05" available
+    3 EDO303 Data element "/SCL/MDM_TRDCHNL_SHRTNM" was not activated
+1EEDO519 "Data Element" "/SCL/MDM_TRDCHNL_SHRTNM" could not be activated
+    3 EDO301XActivate data element "/SCL/MDM_TRD_CHNL_CD"
+    1EEDO315 No active domain "/BEV1/CLCODE" available
+    3 EDO303 Data element "/SCL/MDM_TRD_CHNL_CD" was not activated
+1EEDO519 "Data Element" "/SCL/MDM_TRD_CHNL_CD" could not be activated
+    3 EDO301XActivate data element "/SCL/MD_GLBEVPHYSST"
+    1EEDO315 No active domain "/BEV1/CLCTART" available
+    3 EDO303 Data element "/SCL/MD_GLBEVPHYSST" was not activated
+1EEDO519 "Data Element" "/SCL/MD_GLBEVPHYSST" could not be activated
+    3 EDO301XActivate data element "/SCL/PLANNER_DEMAND"
+    1EEDO315 No active domain "/BEV1/CLLAND1" available
+    3 EDO303 Data element "/SCL/PLANNER_DEMAND" was not activated
+1EEDO519 "Data Element" "/SCL/PLANNER_DEMAND" could not be activated
+    3 EDO301XActivate data element "/SCL/PLANNER_SNP"
+    1EEDO315 No active domain "/BEV1/CLLAND1" available
+    3 EDO303 Data element "/SCL/PLANNER_SNP" was not activated
+1EEDO519 "Data Element" "/SCL/PLANNER_SNP" could not be activated
+    3 EDO301XActivate data element "/SCL/PLANNER_TRANS"
+    1EEDO315 No active domain "/BEV1/CLLAND1" available
+    3 EDO303 Data element "/SCL/PLANNER_TRANS" was not activated
+1EEDO519 "Data Element" "/SCL/PLANNER_TRANS" could not be activated
+    3 EDO301XActivate data element "/SCL/PROMI"
+    1EEDO315 No active domain "/BEV1/CLCTART" available
+    3 EDO303 Data element "/SCL/PROMI" was not activated
+1EEDO519 "Data Element" "/SCL/PROMI" could not be activated
+    3 EDO301XActivate data element "/SCL/PSIZE"
+    1EEDO315 No active domain "/BEV1/CLLAND1" available
+    3 EDO303 Data element "/SCL/PSIZE" was not activated
+1EEDO519 "Data Element" "/SCL/PSIZE" could not be activated
+    3 EDO301XActivate data element "/SCL/PSTATE"
+    1EEDO315 No active domain "/BEV1/CLCTART" available
+    3 EDO303 Data element "/SCL/PSTATE" was not activated
+1EEDO519 "Data Element" "/SCL/PSTATE" could not be activated
+    3 EDO301XActivate data element "/SCL/PTYPE"
+    1EEDO315 No active domain "/BEV1/CLLAND1" available
+    3 EDO303 Data element "/SCL/PTYPE" was not activated
+1EEDO519 "Data Element" "/SCL/PTYPE" could not be activated
+    3 EDO301XActivate data element "/SCL/RRP_SEL_GROUP"
+    1EEDO315 No active domain "/BEV1/CLCTART" available
+    3 EDO303 Data element "/SCL/RRP_SEL_GROUP" was not activated
+1EEDO519 "Data Element" "/SCL/RRP_SEL_GROUP" could not be activated
+    3 EDO301XActivate data element "/SCL/SAFETY_STK_METHOD"
+    1EEDO315 No active domain "/BEV1/CLCTART" available
+    3 EDO303 Data element "/SCL/SAFETY_STK_METHOD" was not activated
+1EEDO519 "Data Element" "/SCL/SAFETY_STK_METHOD" could not be activated
+    3 EDO301XActivate data element "/SCL/SLUN"
+    1EEDO315 No active domain "/BEV1/CLLAND1" available
+    3 EDO303 Data element "/SCL/SLUN" was not activated
+1EEDO519 "Data Element" "/SCL/SLUN" could not be activated
+    3 EDO301XActivate data element "/SCL/SNPCHKHOR"
+    1EEDO315 No active domain "/BEV1/TSSPNRD" available
+    3 EDO303 Data element "/SCL/SNPCHKHOR" was not activated
+1EEDO519 "Data Element" "/SCL/SNPCHKHOR" could not be activated
+    3 EDO301XActivate data element "/SCL/STFAC"
+    1EEDO315 No active domain "/BEV1/EMBREITE" available
+    3 EDO303 Data element "/SCL/STFAC" was not activated
+1EEDO519 "Data Element" "/SCL/STFAC" could not be activated
+    3 EDO301XActivate data element "/SCL/SUBTYPE"
+    1EEDO315 No active domain "/BEV1/CLCTART" available
+    3 EDO303 Data element "/SCL/SUBTYPE" was not activated
+1EEDO519 "Data Element" "/SCL/SUBTYPE" could not be activated
+    3 EDO301XActivate data element "/SCL/TRM"
+    1EEDO315 No active domain "/BEV1/CLLAND1" available
+    3 EDO303 Data element "/SCL/TRM" was not activated
+1EEDO519 "Data Element" "/SCL/TRM" could not be activated
+1EEDO516 "Index" "UDM_WL_ITEM" "Z01" could not be activated
+    3 EDH102XActivate search help "/SCL/OTCC_DOC_TYPE"
+    1EEDH006 Search help parameter "/SCL/OTCC_DOC_TYPE"-"DOCTYPE" assigned to nonexistent parameter "H_JTVLK"-"LFART"
+    1EEDH006 Search help parameter "/SCL/OTCC_DOC_TYPE"-"TEXT" assigned to nonexistent parameter "H_JTVLK"-"VTEXT"
+    1EEDH006 Search help parameter "/SCL/OTCC_DOC_TYPE"-"DOCTYPE" assigned to nonexistent parameter "H_JTVAK"-"AUART"
+    1EEDH006 Search help parameter "/SCL/OTCC_DOC_TYPE"-"TEXT" assigned to nonexistent parameter "H_JTVAK"-"BEZEI"
+    1EEDH003 Search help "/SCL/OTCC_DOC_TYPE" does not include active search help "H_JTVAK"
+    1EEDH003 Search help "/SCL/OTCC_DOC_TYPE" does not include active search help "H_JTVLK"
+    3 EDH109 Search help "/SCL/OTCC_DOC_TYPE" was not activated
+1EEDO519 "Srch Help" "/SCL/OTCC_DOC_TYPE" could not be activated
+    3 EDT012XActivate table "/CCC/CCAS_COSTCEXT"
+    2WEDT192 Enhancement category for table missing
+    2WEDT193 Enhancement category for include or subtype missing
+    1EEDT242 Field "KOMPL": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/CCAS_COSTCEXT"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/CCAS_COSTCEXT" cannot be generated
+    3 EDT013 Table "/CCC/CCAS_COSTCEXT" was not activated
+    3 EDT014XActivate dependent table "/CCC/CCAS_COSTCEXT"
+    2WEDT192 Enhancement category for table missing
+    2WEDT193 Enhancement category for include or subtype missing
+    1EEDT242 Field "KOMPL": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/CCAS_COSTCEXT"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/CCAS_COSTCEXT" cannot be generated
+    3 EDT015 Dependent table "/CCC/CCAS_COSTCEXT" was not activated
+1EEDO519 "Table" "/CCC/CCAS_COSTCEXT" could not be activated
+    3 EDT012XActivate table "/CCC/DSDS_DRIVER_DISRUPTS"
+    1EEDT242 Field "END_TIME": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/DSDS_DRIVER_DISRUPTS"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/DSDS_DRIVER_DISRUPTS" cannot be generated
+    3 EDT013 Table "/CCC/DSDS_DRIVER_DISRUPTS" was not activated
+1EEDO519 "Table" "/CCC/DSDS_DRIVER_DISRUPTS" could not be activated
+    3 EDT012XActivate table "/CCC/SALES_ORDER_LIST_EXTRACT8"
+    1EEDT242 Field "SALES_ORDER_LIST_EXTRACT_SHOW": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/SALES_ORDER_LIST_EXTRACT8"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/SALES_ORDER_LIST_EXTRACT8" cannot be generated
+    3 EDT013 Table "/CCC/SALES_ORDER_LIST_EXTRACT8" was not activated
+1EEDO519 "Table" "/CCC/SALES_ORDER_LIST_EXTRACT8" could not be activated
+    3 EDT012XActivate table "/CCC/T_CI_EXC"
+    1EEDT242 Field "ROW_ID": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/T_CI_EXC"
+    2WEAD855 "/CCC/T_CI_EXC"-"CONSUME_MENGE" (no reference table/field combination "/CCC/T_GI_EXC"-"MEINS" exists or data type wrong)
+    2WEAD855 "/CCC/T_CI_EXC"-"MENGE" (no reference table/field combination "/CCC/T_GI_EXC"-"MEINS" exists or data type wrong)
+    2WEAD855 "/CCC/T_CI_EXC"-"REMAIN_QTY" (no reference table/field combination "/CCC/T_GI_EXC"-"MEINS" exists or data type wrong)
+    2WEAD855 "/CCC/T_CI_EXC"-"SALES_MENGE" (no reference table/field combination "/CCC/T_GI_EXC"-"MEINS" exists or data type wrong)
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/T_CI_EXC" cannot be generated
+    3 EDT013 Table "/CCC/T_CI_EXC" was not activated
+1EEDO519 "Table" "/CCC/T_CI_EXC" could not be activated
+    3 EDT012XActivate table "/CCC/T_CLERK"
+    1EEDT242 Field "URL": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/T_CLERK"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/T_CLERK" cannot be generated
+    3 EDT013 Table "/CCC/T_CLERK" was not activated
+1EEDO519 "Table" "/CCC/T_CLERK" could not be activated
+    3 EDT012XActivate table "/CCEJ/OTCS_HDR_CCEJ"
+    1EEDT242 Field "ACC_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "ACC_NAME": Component type is not active or is not allowed
+    1EEDT242 Field "BP_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "BP_NAME": Component type is not active or is not allowed
+    1EEDT242 Field "CH_DATE": Component type is not active or is not allowed
+    1EEDT242 Field "CH_TIM": Component type is not active or is not allowed
+    1EEDT242 Field "CLASS_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "COMP_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "COMP_NAME": Component type is not active or is not allowed
+    1EEDT242 Field "COST_CONSUME_TAX": Component type is not active or is not allowed
+    1EEDT242 Field "CUST_MSG": Component type is not active or is not allowed
+    1EEDT242 Field "CUST_MSG_DOC1": Component type is not active or is not allowed
+    1EEDT242 Field "CUST_MSG_DOC2": Component type is not active or is not allowed
+    1EEDT242 Field "DEL_CUST_NAME": Component type is not active or is not allowed
+    1EEDT242 Field "DISPATCH_NUM": Component type is not active or is not allowed
+    1EEDT242 Field "DOCNUM": Component type is not active or is not allowed
+    1EEDT242 Field "DOC_SUB_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "DOC_TYP": Component type is not active or is not allowed
+    1EEDT242 Field "ITM1": Component type is not active or is not allowed
+    1EEDT242 Field "ITM10": Component type is not active or is not allowed
+    1EEDT242 Field "ITM11": Component type is not active or is not allowed
+    1EEDT242 Field "ITM12": Component type is not active or is not allowed
+    1EEDT242 Field "ITM13": Component type is not active or is not allowed
+    1EEDT242 Field "ITM14": Component type is not active or is not allowed
+    1EEDT242 Field "ITM15": Component type is not active or is not allowed
+    1EEDT242 Field "ITM16": Component type is not active or is not allowed
+    1EEDT242 Field "ITM17": Component type is not active or is not allowed
+    1EEDT242 Field "ITM18": Component type is not active or is not allowed
+    1EEDT242 Field "ITM19": Component type is not active or is not allowed
+    1EEDT242 Field "ITM2": Component type is not active or is not allowed
+    1EEDT242 Field "ITM20": Component type is not active or is not allowed
+    1EEDT242 Field "ITM21": Component type is not active or is not allowed
+    1EEDT242 Field "ITM22": Component type is not active or is not allowed
+    1EEDT242 Field "ITM23": Component type is not active or is not allowed
+    1EEDT242 Field "ITM24": Component type is not active or is not allowed
+    1EEDT242 Field "ITM25": Component type is not active or is not allowed
+    1EEDT242 Field "ITM26": Component type is not active or is not allowed
+    1EEDT242 Field "ITM27": Component type is not active or is not allowed
+    1EEDT242 Field "ITM28": Component type is not active or is not allowed
+    1EEDT242 Field "ITM3": Component type is not active or is not allowed
+    1EEDT242 Field "ITM4": Component type is not active or is not allowed
+    1EEDT242 Field "ITM5": Component type is not active or is not allowed
+    1EEDT242 Field "ITM6": Component type is not active or is not allowed
+    1EEDT242 Field "ITM7": Component type is not active or is not allowed
+    1EEDT242 Field "ITM8": Component type is not active or is not allowed
+    1EEDT242 Field "ITM9": Component type is not active or is not allowed
+    1EEDT242 Field "JOINT_DEL_DATE": Component type is not active or is not allowed
+    1EEDT242 Field "LINE_NO": Component type is not active or is not allowed
+    1EEDT242 Field "ORD_RECEIPT_SEG": Component type is not active or is not allowed
+    1EEDT242 Field "ORD_RECEIPT_TYPE": Component type is not active or is not allowed
+1EEDO519 "Table" "/CCEJ/OTCS_HDR_CCEJ" could not be activated
+    3 EDT012XActivate table "/CCEJ/OTCS_HDR_HHT"
+    1EEDT242 Field "CNTRCT_GRP_CD": Component type is not active or is not allowed
+    1EEDT242 Field "CONT_AMT": Component type is not active or is not allowed
+    1EEDT242 Field "COST_AMT": Component type is not active or is not allowed
+    1EEDT242 Field "COST_AMT_PROMO1": Component type is not active or is not allowed
+    1EEDT242 Field "COST_AMT_PROMO2": Component type is not active or is not allowed
+    1EEDT242 Field "CYLINDER": Component type is not active or is not allowed
+    1EEDT242 Field "DISCNT_OSLIP_FLG": Component type is not active or is not allowed
+    1EEDT242 Field "LINE_NO": Component type is not active or is not allowed
+    1EEDT242 Field "PROMO_AMT": Component type is not active or is not allowed
+    1EEDT242 Field "REC_CASH_AMT": Component type is not active or is not allowed
+    1EEDT242 Field "SALE_AMT": Component type is not active or is not allowed
+    1EEDT242 Field "SALE_TAX": Component type is not active or is not allowed
+    1EEDT242 Field "SALE_TOTAL_AMT": Component type is not active or is not allowed
+    1EEDT242 Field "SETTL_WAY_CD": Component type is not active or is not allowed
+    1EEDT242 Field "SPLIT_SEG": Component type is not active or is not allowed
+    1EEDT242 Field "TAX_AMT": Component type is not active or is not allowed
+    1EEDT242 Field "TAX_TYPE": Component type is not active or is not allowed
+    1EEDT242 Field "TOTAL_AMT": Component type is not active or is not allowed
+    1EEDT242 Field "TOTAL_QUAN": Component type is not active or is not allowed
+    1EEDT242 Field "VES_OSLIP_FLG": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCEJ/OTCS_HDR_HHT"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCEJ/OTCS_HDR_HHT" cannot be generated
+    3 EDT013 Table "/CCEJ/OTCS_HDR_HHT" was not activated
+1EEDO519 "Table" "/CCEJ/OTCS_HDR_HHT" could not be activated
+    3 EDT012XActivate table "/CCEJ/OTCS_ITM_HHT"
+    1EEDT242 Field "BBE": Component type is not active or is not allowed
+    1EEDT242 Field "CASE_JAN_CD": Component type is not active or is not allowed
+    1EEDT242 Field "CON_PRICE_CS": Component type is not active or is not allowed
+    1EEDT242 Field "CON_PRICE_EA": Component type is not active or is not allowed
+    1EEDT242 Field "DEL_QUAN": Component type is not active or is not allowed
+    1EEDT242 Field "ITEM": Component type is not active or is not allowed
+    1EEDT242 Field "LINE_NO": Component type is not active or is not allowed
+    1EEDT242 Field "LINE_TYPE": Component type is not active or is not allowed
+    1EEDT242 Field "LS_JAN_CD": Component type is not active or is not allowed
+    1EEDT242 Field "MAT_DESC": Component type is not active or is not allowed
+    1EEDT242 Field "MAT_SUB_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "PLAN_TIME": Component type is not active or is not allowed
+    1EEDT242 Field "PLAN_TO": Component type is not active or is not allowed
+    1EEDT242 Field "SALE_AMT": Component type is not active or is not allowed
+    1EEDT242 Field "SALE_PROMO_PRICE": Component type is not active or is not allowed
+    1EEDT242 Field "SALE_UNIT_PRICE": Component type is not active or is not allowed
+    1EEDT242 Field "SEQ_NMBR": Component type is not active or is not allowed
+    1EEDT242 Field "UOM": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCEJ/OTCS_ITM_HHT"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCEJ/OTCS_ITM_HHT" cannot be generated
+    3 EDT013 Table "/CCEJ/OTCS_ITM_HHT" was not activated
+1EEDO519 "Table" "/CCEJ/OTCS_ITM_HHT" could not be activated
+    3 EDT012XActivate table "/CCEJ/OTCS_PROF_ITM_CCEJ"
+    1EEDT242 Field "ACC_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "ACC_NAME": Component type is not active or is not allowed
+    1EEDT242 Field "ACC_PROD_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "BBE": Component type is not active or is not allowed
+    1EEDT242 Field "CH_DATE": Component type is not active or is not allowed
+    1EEDT242 Field "CH_TIM": Component type is not active or is not allowed
+    1EEDT242 Field "COMP_PROD_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "COMP_PROD_SUB_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "CONT_UNIT_PRICE": Component type is not active or is not allowed
+    1EEDT242 Field "CON_UNIT_PRICE": Component type is not active or is not allowed
+    1EEDT242 Field "COST_UNIT_PRICE": Component type is not active or is not allowed
+    1EEDT242 Field "DEL_CUST_NAME": Component type is not active or is not allowed
+    1EEDT242 Field "DETAIL_NO": Component type is not active or is not allowed
+    1EEDT242 Field "DISPATCH_NUM": Component type is not active or is not allowed
+    1EEDT242 Field "DOCNUM": Component type is not active or is not allowed
+    1EEDT242 Field "DOC_SUB_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "DOC_TYP": Component type is not active or is not allowed
+    1EEDT242 Field "HAND_UNIT": Component type is not active or is not allowed
+    1EEDT242 Field "ITM1": Component type is not active or is not allowed
+    1EEDT242 Field "ITM10": Component type is not active or is not allowed
+    1EEDT242 Field "ITM11": Component type is not active or is not allowed
+    1EEDT242 Field "ITM12": Component type is not active or is not allowed
+    1EEDT242 Field "ITM13": Component type is not active or is not allowed
+    1EEDT242 Field "ITM14": Component type is not active or is not allowed
+    1EEDT242 Field "ITM15": Component type is not active or is not allowed
+    1EEDT242 Field "ITM16": Component type is not active or is not allowed
+    1EEDT242 Field "ITM2": Component type is not active or is not allowed
+    1EEDT242 Field "ITM3": Component type is not active or is not allowed
+    1EEDT242 Field "ITM4": Component type is not active or is not allowed
+    1EEDT242 Field "ITM5": Component type is not active or is not allowed
+    1EEDT242 Field "ITM6": Component type is not active or is not allowed
+    1EEDT242 Field "ITM8": Component type is not active or is not allowed
+    1EEDT242 Field "ITM9": Component type is not active or is not allowed
+    1EEDT242 Field "JAN_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "LINE_NO": Component type is not active or is not allowed
+    1EEDT242 Field "MAT_NAMEL": Component type is not active or is not allowed
+    1EEDT242 Field "MAT_NAMEU": Component type is not active or is not allowed
+    1EEDT242 Field "MAT_SUB_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "ORD_RECEIPT_SEG": Component type is not active or is not allowed
+    1EEDT242 Field "ORD_SEG": Component type is not active or is not allowed
+    1EEDT242 Field "PLANT_NAME": Component type is not active or is not allowed
+    1EEDT242 Field "PROD_SEG": Component type is not active or is not allowed
+    1EEDT242 Field "QUAN": Component type is not active or is not allowed
+    1EEDT242 Field "ROUTE": Component type is not active or is not allowed
+    1EEDT242 Field "SALE_AMT": Component type is not active or is not allowed
+    1EEDT242 Field "SALE_UNIT_PRICE": Component type is not active or is not allowed
+    1EEDT242 Field "TRUCK_ROUTE": Component type is not active or is not allowed
+    1EEDT242 Field "VAR_SEG": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCEJ/OTCS_PROF_ITM_CCEJ"
+    1EEDO251 Data type " " does not exist
+    3 EDT014XActivate dependent table "/CCEJ/OTCS_PROF_ITM_CCEJ"
+    1EEDT242 Field "ACC_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "ACC_NAME": Component type is not active or is not allowed
+    1EEDT242 Field "ACC_PROD_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "BBE": Component type is not active or is not allowed
+    1EEDT242 Field "CH_DATE": Component type is not active or is not allowed
+    1EEDT242 Field "CH_TIM": Component type is not active or is not allowed
+    1EEDT242 Field "COMP_PROD_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "COMP_PROD_SUB_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "CONT_UNIT_PRICE": Component type is not active or is not allowed
+    1EEDT242 Field "CON_UNIT_PRICE": Component type is not active or is not allowed
+    1EEDT242 Field "COST_UNIT_PRICE": Component type is not active or is not allowed
+    1EEDT242 Field "DEL_CUST_NAME": Component type is not active or is not allowed
+    1EEDT242 Field "DETAIL_NO": Component type is not active or is not allowed
+    1EEDT242 Field "DISPATCH_NUM": Component type is not active or is not allowed
+    1EEDT242 Field "DOCNUM": Component type is not active or is not allowed
+    1EEDT242 Field "DOC_SUB_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "DOC_TYP": Component type is not active or is not allowed
+    1EEDT242 Field "HAND_UNIT": Component type is not active or is not allowed
+    1EEDT242 Field "ITM1": Component type is not active or is not allowed
+    1EEDT242 Field "ITM10": Component type is not active or is not allowed
+    1EEDT242 Field "ITM11": Component type is not active or is not allowed
+    1EEDT242 Field "ITM12": Component type is not active or is not allowed
+    1EEDT242 Field "ITM13": Component type is not active or is not allowed
+    1EEDT242 Field "ITM14": Component type is not active or is not allowed
+    1EEDT242 Field "ITM15": Component type is not active or is not allowed
+    1EEDT242 Field "ITM16": Component type is not active or is not allowed
+    1EEDT242 Field "ITM2": Component type is not active or is not allowed
+    1EEDT242 Field "ITM3": Component type is not active or is not allowed
+    1EEDT242 Field "ITM4": Component type is not active or is not allowed
+    1EEDT242 Field "ITM5": Component type is not active or is not allowed
+    1EEDT242 Field "ITM6": Component type is not active or is not allowed
+    1EEDT242 Field "ITM8": Component type is not active or is not allowed
+    1EEDT242 Field "ITM9": Component type is not active or is not allowed
+    1EEDT242 Field "JAN_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "LINE_NO": Component type is not active or is not allowed
+    1EEDT242 Field "MAT_NAMEL": Component type is not active or is not allowed
+    1EEDT242 Field "MAT_NAMEU": Component type is not active or is not allowed
+    1EEDT242 Field "MAT_SUB_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "ORD_RECEIPT_SEG": Component type is not active or is not allowed
+    1EEDT242 Field "ORD_SEG": Component type is not active or is not allowed
+    1EEDT242 Field "PLANT_NAME": Component type is not active or is not allowed
+    1EEDT242 Field "PROD_SEG": Component type is not active or is not allowed
+    1EEDT242 Field "QUAN": Component type is not active or is not allowed
+    1EEDT242 Field "ROUTE": Component type is not active or is not allowed
+    1EEDT242 Field "SALE_AMT": Component type is not active or is not allowed
+    1EEDT242 Field "SALE_UNIT_PRICE": Component type is not active or is not allowed
+    1EEDT242 Field "TRUCK_ROUTE": Component type is not active or is not allowed
+    1EEDT242 Field "VAR_SEG": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCEJ/OTCS_PROF_ITM_CCEJ"
+    1EEDO251 Data type " " does not exist
+1EEDO519 "Table" "/CCEJ/OTCS_PROF_ITM_CCEJ" could not be activated
+    3 EDT012XActivate table "/CCEJ/S_WEST_PICKTICK"
+    1EEDT242 Field "/BEV1/RPFAR1": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCEJ/S_WEST_PICKTICK"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCEJ/S_WEST_PICKTICK" cannot be generated
+    3 EDT013 Table "/CCEJ/S_WEST_PICKTICK" was not activated
+    3 EDT014XActivate dependent table "/CCEJ/S_WEST_PICKTICK"
+    1EEDT242 Field "/BEV1/RPFAR1": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCEJ/S_WEST_PICKTICK"
+    A1EESD_EXT_MSG 007 Execution of the consistency checks failed.
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCEJ/S_WEST_PICKTICK" cannot be generated
+    3 EDT015 Dependent table "/CCEJ/S_WEST_PICKTICK" was not activated
+1EEDO519 "Table" "/CCEJ/S_WEST_PICKTICK" could not be activated
+    3 EDT012XActivate table "/COCKPIT/SSAPLOGON"
+    1EEDT242 Field "CLIENT": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/COCKPIT/SSAPLOGON"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/COCKPIT/SSAPLOGON" cannot be generated
+    3 EDT013 Table "/COCKPIT/SSAPLOGON" was not activated
+1EEDO519 "Table" "/COCKPIT/SSAPLOGON" could not be activated
+    3 EDT012XActivate table "/EBY/PDBO_SMAP_IFLEN"
+    1EEDT242 Field "OPERATOR": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/EBY/PDBO_SMAP_IFLEN"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/EBY/PDBO_SMAP_IFLEN" cannot be generated
+    3 EDT013 Table "/EBY/PDBO_SMAP_IFLEN" was not activated
+1EEDO519 "Table" "/EBY/PDBO_SMAP_IFLEN" could not be activated
+    3 EDT012XActivate table "/FARSIDE/MLSV3IF_TEST_DEEP"
+    2WEDT192 Enhancement category for table missing
+    2WEDT193 Enhancement category for include or subtype missing
+    1EEDT242 Field "FHEX": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/FARSIDE/MLSV3IF_TEST_DEEP"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/FARSIDE/MLSV3IF_TEST_DEEP" cannot be generated
+    3 EDT013 Table "/FARSIDE/MLSV3IF_TEST_DEEP" was not activated
+    3 EDT014XActivate dependent table "/FARSIDE/MLSV3IF_TEST_DEEP"
+    2WEDT192 Enhancement category for table missing
+    2WEDT193 Enhancement category for include or subtype missing
+    1EEDT242 Field "FHEX": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/FARSIDE/MLSV3IF_TEST_DEEP"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/FARSIDE/MLSV3IF_TEST_DEEP" cannot be generated
+    3 EDT015 Dependent table "/FARSIDE/MLSV3IF_TEST_DEEP" was not activated
+1EEDO519 "Table" "/FARSIDE/MLSV3IF_TEST_DEEP" could not be activated
+    3 EDT012XActivate table "/FARSIDE/MLSV3IF_TEST_FLAT"
+    2WEDT192 Enhancement category for table missing
+    2WEDT193 Enhancement category for include or subtype missing
+    1EEDT242 Field "FHEX": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/FARSIDE/MLSV3IF_TEST_FLAT"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/FARSIDE/MLSV3IF_TEST_FLAT" cannot be generated
+    3 EDT013 Table "/FARSIDE/MLSV3IF_TEST_FLAT" was not activated
+1EEDO519 "Table" "/FARSIDE/MLSV3IF_TEST_FLAT" could not be activated
+    3 EDT012XActivate table "/FARSIDE/MLSV3IF_TEST_INCLUDE"
+    2WEDT192 Enhancement category for table missing
+    2WEDT193 Enhancement category for include or subtype missing
+    1EEDT242 Field "FHEX": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/FARSIDE/MLSV3IF_TEST_INCLUDE"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/FARSIDE/MLSV3IF_TEST_INCLUDE" cannot be generated
+    3 EDT013 Table "/FARSIDE/MLSV3IF_TEST_INCLUDE" was not activated
+    3 EDT014XActivate dependent table "/FARSIDE/MLSV3IF_TEST_INCLUDE"
+    2WEDT192 Enhancement category for table missing
+    2WEDT193 Enhancement category for include or subtype missing
+    1EEDT242 Field "FHEX": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/FARSIDE/MLSV3IF_TEST_INCLUDE"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/FARSIDE/MLSV3IF_TEST_INCLUDE" cannot be generated
+    3 EDT015 Dependent table "/FARSIDE/MLSV3IF_TEST_INCLUDE" was not activated
+1EEDO519 "Table" "/FARSIDE/MLSV3IF_TEST_INCLUDE" could not be activated
+    3 EDT012XActivate table "/HOAG/ABS_CAW_DEBITOREN_ALV"
+    1EEAD225 INCLUDE cannot be broken down; field name with suffix is too long
+    1EEAD225 INCLUDE cannot be broken down; field name with suffix is too long
+    1EEDT003 Routine "EXPAND" (Table "/HOAG/ABS_CAW_DEBITOREN_ALV" could not be expanded)
+    3 EDT013 Table "/HOAG/ABS_CAW_DEBITOREN_ALV" was not activated
+    3 EDT014XActivate dependent table "/HOAG/ABS_CAW_DEBITOREN_ALV"
+    1EEAD225 INCLUDE cannot be broken down; field name with suffix is too long
+    1EEAD225 INCLUDE cannot be broken down; field name with suffix is too long
+    1EEDT003 Routine "EXPAND" (Table "/HOAG/ABS_CAW_DEBITOREN_ALV" could not be expanded)
+    3 EDT015 Dependent table "/HOAG/ABS_CAW_DEBITOREN_ALV" was not activated
+1EEDO519 "Table" "/HOAG/ABS_CAW_DEBITOREN_ALV" could not be activated
+    3 EDT012XActivate table "/HOAG/ABS_FEB_ALV"
+    1EEAD225 INCLUDE cannot be broken down; field name with suffix is too long
+    1EEAD225 INCLUDE cannot be broken down; field name with suffix is too long
+    1EEDT003 Routine "EXPAND" (Table "/HOAG/ABS_FEB_ALV" could not be expanded)
+    3 EDT013 Table "/HOAG/ABS_FEB_ALV" was not activated
+    3 EDT014XActivate dependent table "/HOAG/ABS_FEB_ALV"
+    1EEAD225 INCLUDE cannot be broken down; field name with suffix is too long
+    1EEAD225 INCLUDE cannot be broken down; field name with suffix is too long
+    1EEDT003 Routine "EXPAND" (Table "/HOAG/ABS_FEB_ALV" could not be expanded)
+    3 EDT015 Dependent table "/HOAG/ABS_FEB_ALV" was not activated
+1EEDO519 "Table" "/HOAG/ABS_FEB_ALV" could not be activated
+    3 EDT012XActivate table "/HOAG/ABS_ID_MONITOR_BNK_STATE"
+    1EEAD225 INCLUDE cannot be broken down; field name with suffix is too long
+    1EEAD225 INCLUDE cannot be broken down; field name with suffix is too long
+    1EEDT003 Routine "EXPAND" (Table "/HOAG/ABS_ID_MONITOR_BNK_STATE" could not be expanded)
+    3 EDT013 Table "/HOAG/ABS_ID_MONITOR_BNK_STATE" was not activated
+    3 EDT014XActivate dependent table "/HOAG/ABS_ID_MONITOR_BNK_STATE"
+    1EEAD225 INCLUDE cannot be broken down; field name with suffix is too long
+    1EEAD225 INCLUDE cannot be broken down; field name with suffix is too long
+    1EEDT003 Routine "EXPAND" (Table "/HOAG/ABS_ID_MONITOR_BNK_STATE" could not be expanded)
+    3 EDT015 Dependent table "/HOAG/ABS_ID_MONITOR_BNK_STATE" was not activated
+1EEDO519 "Table" "/HOAG/ABS_ID_MONITOR_BNK_STATE" could not be activated
+    3 EDT012XActivate table "/HOAG/AB_BSEG_CO"
+    1EEDT963 Field "LAND1" in table "/HOAG/AB_BSEG_CO" is specified twice
+    2WEDT351 Deleting interface of search help "H_T005_LAND" to field "/HOAG/AB_BSEG_CO"-"LAND1"
+    2WEDT351 Deleting interface of search help "FICEPC" to field "/HOAG/AB_BSEG_CO"-"PRCTR"
+    2WEDT135 Flag: 'Incorrect enhancement category' not updated ("Runtime Object")
+    3 EDT013 Table "/HOAG/AB_BSEG_CO" was not activated
+    3 EDT014XActivate dependent table "/HOAG/AB_BSEG_CO"
+    1EEDT963 Field "LAND1" in table "/HOAG/AB_BSEG_CO" is specified twice
+    2WEDT351 Deleting interface of search help "H_T005_LAND" to field "/HOAG/AB_BSEG_CO"-"LAND1"
+    2WEDT351 Deleting interface of search help "FICEPC" to field "/HOAG/AB_BSEG_CO"-"PRCTR"
+    2WEDT135 Flag: 'Incorrect enhancement category' not updated ("Runtime Object")
+    3 EDT015 Dependent table "/HOAG/AB_BSEG_CO" was not activated
+1EEDO519 "Table" "/HOAG/AB_BSEG_CO" could not be activated
+    3 EDT012XActivate table "/LOT/SC_PL_HIST_S"
+    1EEDT242 Field "TIME": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/LOT/SC_PL_HIST_S"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/LOT/SC_PL_HIST_S" cannot be generated
+    3 EDT013 Table "/LOT/SC_PL_HIST_S" was not activated
+    3 EDT014XActivate dependent table "/LOT/SC_PL_HIST_S"
+    1EEDT242 Field "TIME": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/LOT/SC_PL_HIST_S"
+    A1EESD_EXT_MSG 007 Execution of the consistency checks failed.
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/LOT/SC_PL_HIST_S" cannot be generated
+    3 EDT015 Dependent table "/LOT/SC_PL_HIST_S" was not activated
+1EEDO519 "Table" "/LOT/SC_PL_HIST_S" could not be activated
+    3 EDT012XActivate table "/LOT/SC_S_TEXTEDIT"
+    1EEDT242 Field "TXTTAB": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/LOT/SC_S_TEXTEDIT"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/LOT/SC_S_TEXTEDIT" cannot be generated
+    3 EDT013 Table "/LOT/SC_S_TEXTEDIT" was not activated
+    3 EDO662XSwitchable object "TABL" "/MVA/AMAR_DE_SUBJCT" will not be activated (switched off)
+1EEDO519 "Table" "/LOT/SC_S_TEXTEDIT" could not be activated
+    3 EDT012XActivate table "/ORTEC/TLO_S_ALV_DOCQ_VBAK"
+    2WEDT191 Enhancement category "4" possible (include or subtype not yet classified)
+    1EEDT963 Field "LSSTK" in table "/ORTEC/TLO_S_ALV_DOCQ_VBAK" is specified twice
+    2WEDT135 Flag: 'Incorrect enhancement category' not updated ("Runtime Object")
+    3 EDT013 Table "/ORTEC/TLO_S_ALV_DOCQ_VBAK" was not activated
+    3 EDT014XActivate dependent table "/ORTEC/TLO_S_ALV_DOCQ_VBAK"
+    2WEDT191 Enhancement category "4" possible (include or subtype not yet classified)
+    1EEDT963 Field "LSSTK" in table "/ORTEC/TLO_S_ALV_DOCQ_VBAK" is specified twice
+    2WEDT135 Flag: 'Incorrect enhancement category' not updated ("Runtime Object")
+    3 EDT015 Dependent table "/ORTEC/TLO_S_ALV_DOCQ_VBAK" was not activated
+1EEDO519 "Table" "/ORTEC/TLO_S_ALV_DOCQ_VBAK" could not be activated
+    3 EDT012XActivate table "/ORTEC/TLO_S_ALV_DOCQ_VBAP"
+    2WEDT191 Enhancement category "4" possible (include or subtype not yet classified)
+    1EEDT963 Field "LSSTA" in table "/ORTEC/TLO_S_ALV_DOCQ_VBAP" is specified twice
+    2WEDT135 Flag: 'Incorrect enhancement category' not updated ("Runtime Object")
+    3 EDT013 Table "/ORTEC/TLO_S_ALV_DOCQ_VBAP" was not activated
+    3 EDT014XActivate dependent table "/ORTEC/TLO_S_ALV_DOCQ_VBAP"
+    2WEDT191 Enhancement category "4" possible (include or subtype not yet classified)
+    1EEDT963 Field "LSSTA" in table "/ORTEC/TLO_S_ALV_DOCQ_VBAP" is specified twice
+    2WEDT135 Flag: 'Incorrect enhancement category' not updated ("Runtime Object")
+    3 EDT015 Dependent table "/ORTEC/TLO_S_ALV_DOCQ_VBAP" was not activated
+1EEDO519 "Table" "/ORTEC/TLO_S_ALV_DOCQ_VBAP" could not be activated
+    3 EDT012XActivate table "/SCL/ESDOC_SALES_ATTR0001"
+    2WEDT191 Enhancement category "3" possible (include or subtype not yet classified)
+    1EEDT242 Field "HB_CONT_REASON": Component type is not active or is not allowed
+    1EEDT242 Field "HB_EXPDATE": Component type is not active or is not allowed
+    1EEDT242 Field "HB_RESDATE": Component type is not active or is not allowed
+    1EEDT242 Field "MTLAUR": Component type is not active or is not allowed
+    1EEDT242 Field "PHASE": Component type is not active or is not allowed
+    1EEDT242 Field "SMENR": Component type is not active or is not allowed
+    1EEDT242 Field "STAGE": Component type is not active or is not allowed
+    1EEDT242 Field "SWENR": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/SCL/ESDOC_SALES_ATTR0001"
+    2WEAD285 Check table "HBSCREASON" does not exist or does not have any key fields
+    1EEDT317 Check field "HB_CONT_REASON" cannot be type " "
+    2WEAD285 Check table "CHBSNCM" does not exist or does not have any key fields
+    1EEDT317 Check field "MTLAUR" cannot be type " "
+    2WEAD285 Check table "HBSSPH" does not exist or does not have any key fields
+    1EEDT317 Check field "PHASE" cannot be type " "
+    1EEDT317 Check field "SMENR" cannot be type " "
+    2WEDT313 For. "/SCL/ESDOC_SALES_ATTR0001"-"SMENR" ("SWENR" and "SWENR" have different data types)
+    2WEAD274 Foreign key "/SCL/ESDOC_SALES_ATTR0001"-"SMENR" ("SMENR" and "SMENR" point to different domains)
+    1EEDT317 Check field "SWENR" cannot be type " "
+    2WEAD274 Foreign key "/SCL/ESDOC_SALES_ATTR0001"-"SWENR" ("SWENR" and "SWENR" point to different domains)
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/SCL/ESDOC_SALES_ATTR0001" cannot be generated
+    3 EDT013 Table "/SCL/ESDOC_SALES_ATTR0001" was not activated
+    3 EDT014XActivate dependent table "/SCL/ESDOC_SALES_ATTR0001"
+    2WEDT191 Enhancement category "3" possible (include or subtype not yet classified)
+    1EEDT242 Field "HB_CONT_REASON": Component type is not active or is not allowed
+    1EEDT242 Field "HB_EXPDATE": Component type is not active or is not allowed
+    1EEDT242 Field "HB_RESDATE": Component type is not active or is not allowed
+    1EEDT242 Field "MTLAUR": Component type is not active or is not allowed
+    1EEDT242 Field "PHASE": Component type is not active or is not allowed
+    1EEDT242 Field "SMENR": Component type is not active or is not allowed
+    1EEDT242 Field "STAGE": Component type is not active or is not allowed
+    1EEDT242 Field "SWENR": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/SCL/ESDOC_SALES_ATTR0001"
+    A1EESD_EXT_MSG 007 Execution of the consistency checks failed.
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/SCL/ESDOC_SALES_ATTR0001" cannot be generated
+    3 EDT015 Dependent table "/SCL/ESDOC_SALES_ATTR0001" was not activated
+1EEDO519 "Table" "/SCL/ESDOC_SALES_ATTR0001" could not be activated
+    3 EDT012XActivate table "/SCL/FIARS_UKM_S_ITEM"
+    1EEDT242 Field "DUE_DATE": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/SCL/FIARS_UKM_S_ITEM"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/SCL/FIARS_UKM_S_ITEM" cannot be generated
+    3 EDT013 Table "/SCL/FIARS_UKM_S_ITEM" was not activated
+1EEDO519 "Table" "/SCL/FIARS_UKM_S_ITEM" could not be activated
+    3 EDT012XActivate table "/SCL/YCRMD_MKTTG_TG_I"
+    1EEAD222 INCLUDE table "CRMD_MKTTG_TG_I" is not active
+    1EEDT003 Routine "EXPAND" (Table "/SCL/YCRMD_MKTTG_TG_I" could not be expanded)
+    3 EDT013 Table "/SCL/YCRMD_MKTTG_TG_I" was not activated
+1EEDO519 "Table" "/SCL/YCRMD_MKTTG_TG_I" could not be activated
+    3 EDT012XActivate table "/SCL/YCRMD_MKTTG_TG_I2"
+    1EEAD222 INCLUDE table "CRMD_MKTTG_TG_I2" is not active
+    1EEDT003 Routine "EXPAND" (Table "/SCL/YCRMD_MKTTG_TG_I2" could not be expanded)
+    3 EDT013 Table "/SCL/YCRMD_MKTTG_TG_I2" was not activated
+1EEDO519 "Table" "/SCL/YCRMD_MKTTG_TG_I2" could not be activated
+    3 EDT012XActivate table "BSS_CENTI"
+    3 EDT402 Append structure "/CCBJI/ZABSS_CENTI" appended to table "BSS_CENTI"
+    2WEDT191 Enhancement category "3" possible (include or subtype not yet classified)
+    1EEDT963 Field "/CCC/KEYACCCUST" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/CCC/SLOCA" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/BUSOWN" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/CSTPLNLEV" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/CUSTTYPE" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/DEMAND_AREA" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/GLCUST" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/LQEXPDAT" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/LQLNUM" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/OPCHANNEL" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/OPMARKET" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/RED_DATE" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/RED_IND" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/SUBDEM_AREA" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/SUPR" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/TRADENAME" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "VBUND1" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZY1" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZY2" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZY3" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZY4" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZY5" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZY6" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZY7" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZY8" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZY9" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZZ0" in table "BSS_CENTI" is specified twice
+    3 EDT013 Table "BSS_CENTI" was not activated
+    3 EDT014XActivate dependent table "BSS_CENTI"
+    3 EDT402 Append structure "/CCBJI/ZABSS_CENTI" appended to table "BSS_CENTI"
+    2WEDT191 Enhancement category "3" possible (include or subtype not yet classified)
+    1EEDT963 Field "/CCC/KEYACCCUST" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/CCC/SLOCA" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/BUSOWN" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/CSTPLNLEV" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/CUSTTYPE" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/DEMAND_AREA" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/GLCUST" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/LQEXPDAT" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/LQLNUM" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/OPCHANNEL" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/OPMARKET" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/RED_DATE" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/RED_IND" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/SUBDEM_AREA" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/SUPR" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/TRADENAME" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "VBUND1" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZY1" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZY2" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZY3" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZY4" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZY5" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZY6" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZY7" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZY8" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZY9" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZZ0" in table "BSS_CENTI" is specified twice
+    3 EDT015 Dependent table "BSS_CENTI" was not activated
+1EEDO519 "Table" "BSS_CENTI" could not be activated
+    3 EDT012XActivate table "BSS_CENTIGUID"
+    3 EDT402 Append structure "/CCBJI/ZABSS_CENTIGUID" appended to table "BSS_CENTIGUID"
+    2WEDT191 Enhancement category "3" possible (include or subtype not yet classified)
+    1EEDT963 Field "/CCC/KEYACCCUST" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/CCC/SLOCA" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/BUSOWN" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/CSTPLNLEV" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/CUSTTYPE" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/DEMAND_AREA" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/GLCUST" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/LQEXPDAT" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/LQLNUM" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/OPCHANNEL" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/OPMARKET" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/RED_DATE" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/RED_IND" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/SUBDEM_AREA" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/SUPR" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/TRADENAME" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "VBUND1" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZY1" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZY2" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZY3" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZY4" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZY5" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZY6" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZY7" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZY8" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZY9" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZZ0" in table "BSS_CENTIGUID" is specified twice
+    3 EDT013 Table "BSS_CENTIGUID" was not activated
+    3 EDT014XActivate dependent table "BSS_CENTIGUID"
+    3 EDT402 Append structure "/CCBJI/ZABSS_CENTIGUID" appended to table "BSS_CENTIGUID"
+    2WEDT191 Enhancement category "3" possible (include or subtype not yet classified)
+    1EEDT963 Field "/CCC/KEYACCCUST" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/CCC/SLOCA" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/BUSOWN" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/CSTPLNLEV" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/CUSTTYPE" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/DEMAND_AREA" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/GLCUST" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/LQEXPDAT" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/LQLNUM" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/OPCHANNEL" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/OPMARKET" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/RED_DATE" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/RED_IND" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/SUBDEM_AREA" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/SUPR" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/TRADENAME" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "VBUND1" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZY1" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZY2" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZY3" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZY4" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZY5" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZY6" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZY7" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZY8" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZY9" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZZ0" in table "BSS_CENTIGUID" is specified twice
+    3 EDT015 Dependent table "BSS_CENTIGUID" was not activated
+1EEDO519 "Table" "BSS_CENTIGUID" could not be activated
+    3 EDT012XActivate table "BSS_CENTIX"
+    3 EDT402 Append structure "/CCBJI/ZABSS_CENTIX" appended to table "BSS_CENTIX"
+    2WEDT191 Enhancement category "2" possible (include or subtype not yet classified)
+    1EEDT963 Field "/CCC/KEYACCCUST" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/CCC/SLOCA" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/BUSOWN" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/CSTPLNLEV" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/CUSTTYPE" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/DEMAND_AREA" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/GLCUST" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/LQEXPDAT" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/LQLNUM" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/OPCHANNEL" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/OPMARKET" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/RED_DATE" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/RED_IND" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/SUBDEM_AREA" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/SUPR" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/TRADENAME" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "UMSA1" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "VBUND1" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZY1" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZY2" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZY3" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZY4" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZY5" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZY6" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZY7" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZY8" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZY9" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZZ0" in table "BSS_CENTIX" is specified twice
+    3 EDT013 Table "BSS_CENTIX" was not activated
+    3 EDT014XActivate dependent table "BSS_CENTIX"
+    3 EDT402 Append structure "/CCBJI/ZABSS_CENTIX" appended to table "BSS_CENTIX"
+    2WEDT191 Enhancement category "2" possible (include or subtype not yet classified)
+    1EEDT963 Field "/CCC/KEYACCCUST" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/CCC/SLOCA" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/BUSOWN" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/CSTPLNLEV" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/CUSTTYPE" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/DEMAND_AREA" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/GLCUST" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/LQEXPDAT" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/LQLNUM" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/OPCHANNEL" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/OPMARKET" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/RED_DATE" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/RED_IND" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/SUBDEM_AREA" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/SUPR" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/TRADENAME" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "UMSA1" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "VBUND1" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZY1" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZY2" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZY3" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZY4" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZY5" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZY6" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZY7" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZY8" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZY9" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZZ0" in table "BSS_CENTIX" is specified twice
+    3 EDT015 Dependent table "BSS_CENTIX" was not activated
+1EEDO519 "Table" "BSS_CENTIX" could not be activated
+    3 EDT012XActivate table "EDOINADDINFO"
+    3 EDT402 Append structure "ZEDOC_IN_ADDINFO" appended to table "EDOINADDINFO"
+    2WEDT191 Enhancement category "4" possible (include or subtype not yet classified)
+    1EEDT963 Field "BUPLA" in table "EDOINADDINFO" is specified twice
+    3 EDT013 Table "EDOINADDINFO" was not activated
+    3 EDT014XActivate dependent table "EDOINADDINFO"
+    3 EDT402 Append structure "ZEDOC_IN_ADDINFO" appended to table "EDOINADDINFO"
+    2WEDT191 Enhancement category "4" possible (include or subtype not yet classified)
+    1EEDT963 Field "BUPLA" in table "EDOINADDINFO" is specified twice
+    3 EDT015 Dependent table "EDOINADDINFO" was not activated
+1EEDO519 "Table" "EDOINADDINFO" could not be activated
+    3 EDT012XActivate table "ZOXDCR0322"
+    1EEDT242 Field "ISM_SE_PLANNING": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "ZOXDCR0322"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "ZOXDCR0322" cannot be generated
+    3 EDT013 Table "ZOXDCR0322" was not activated
+    3 EDT014XActivate dependent table "ZOXDCR0322"
+    1EEDT242 Field "ISM_SE_PLANNING": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "ZOXDCR0322"
+    A1EESD_EXT_MSG 007 Execution of the consistency checks failed.
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "ZOXDCR0322" cannot be generated
+    3 EDT015 Dependent table "ZOXDCR0322" was not activated
+1EEDO519 "Table" "ZOXDCR0322" could not be activated
+    3 EDO802XActivation of table type "/CCC/DSDT_DRIVER_DISRUPTS"
+    1EEDO845 Row type "/CCC/DSDS_DRIVER_DISRUPTS" is not active or does not exist
+    3 EDO804 Table type "/CCC/DSDT_DRIVER_DISRUPTS" was not activated
+1EEDO519 "Table Type" "/CCC/DSDT_DRIVER_DISRUPTS" could not be activated
+    3 EDO802XActivation of table type "/CCEJ/OTCT_ITM_HHT"
+    1EEDO845 Row type "/CCEJ/OTCS_ITM_HHT" is not active or does not exist
+    3 EDO804 Table type "/CCEJ/OTCT_ITM_HHT" was not activated
+1EEDO519 "Table Type" "/CCEJ/OTCT_ITM_HHT" could not be activated
+    3 EDO802XActivation of table type "/CCEJ/OTCT_PROF_ITM_CCEJ"
+    1EEDO845 Row type "/CCEJ/OTCS_PROF_ITM_CCEJ" is not active or does not exist
+    3 EDO804 Table type "/CCEJ/OTCT_PROF_ITM_CCEJ" was not activated
+1EEDO519 "Table Type" "/CCEJ/OTCT_PROF_ITM_CCEJ" could not be activated
+    3 EDO802XActivation of table type "/CCEJ/RTRT_HDR_CCEJ"
+    1EEDO845 Row type "/CCEJ/OTCS_HDR_CCEJ" is not active or does not exist
+    3 EDO804 Table type "/CCEJ/RTRT_HDR_CCEJ" was not activated
+1EEDO519 "Table Type" "/CCEJ/RTRT_HDR_CCEJ" could not be activated
+    3 EDO802XActivation of table type "/CCEJ/RTRT_HDR_HHT"
+    1EEDO845 Row type "/CCEJ/OTCS_HDR_HHT" is not active or does not exist
+    3 EDO804 Table type "/CCEJ/RTRT_HDR_HHT" was not activated
+1EEDO519 "Table Type" "/CCEJ/RTRT_HDR_HHT" could not be activated
+    3 EDO802XActivation of table type "/CCEJ/TT_WEST_PICKTICK"
+    1EEDO845 Row type "/CCEJ/S_WEST_PICKTICK" is not active or does not exist
+    3 EDO804 Table type "/CCEJ/TT_WEST_PICKTICK" was not activated
+1EEDO519 "Table Type" "/CCEJ/TT_WEST_PICKTICK" could not be activated
+    3 EDO802XActivation of table type "/HOAG/ABT_BSEG_CO"
+    1EEDO845 Row type "/HOAG/AB_BSEG_CO" is not active or does not exist
+    3 EDO804 Table type "/HOAG/ABT_BSEG_CO" was not activated
+1EEDO519 "Table Type" "/HOAG/ABT_BSEG_CO" could not be activated
+    3 EDO802XActivation of table type "/HOAG/ABT_CAW_DEBITOREN_ALV"
+    1EEDO845 Row type "/HOAG/ABS_CAW_DEBITOREN_ALV" is not active or does not exist
+    3 EDO804 Table type "/HOAG/ABT_CAW_DEBITOREN_ALV" was not activated
+1EEDO519 "Table Type" "/HOAG/ABT_CAW_DEBITOREN_ALV" could not be activated
+    3 EDO802XActivation of table type "/LOT/SC_PL_HIST_T"
+    1EEDO845 Row type "/LOT/SC_PL_HIST_S" is not active or does not exist
+    3 EDO804 Table type "/LOT/SC_PL_HIST_T" was not activated
+1EEDO519 "Table Type" "/LOT/SC_PL_HIST_T" could not be activated
+    3 EDO802XActivation of table type "/LOT/SC_T_TEXTEDIT"
+    1EEDO845 Row type "/LOT/SC_S_TEXTEDIT" is not active or does not exist
+    3 EDO804 Table type "/LOT/SC_T_TEXTEDIT" was not activated
+1EEDO519 "Table Type" "/LOT/SC_T_TEXTEDIT" could not be activated
+    3 EDO802XActivation of table type "/ORTEC/TLO_T_ALV_DOCQ_VBAK"
+    1EEDO845 Row type "/ORTEC/TLO_S_ALV_DOCQ_VBAK" is not active or does not exist
+    3 EDO804 Table type "/ORTEC/TLO_T_ALV_DOCQ_VBAK" was not activated
+1EEDO519 "Table Type" "/ORTEC/TLO_T_ALV_DOCQ_VBAK" could not be activated
+    3 EDO802XActivation of table type "/ORTEC/TLO_T_ALV_DOCQ_VBAP"
+    1EEDO845 Row type "/ORTEC/TLO_S_ALV_DOCQ_VBAP" is not active or does not exist
+    3 EDO804 Table type "/ORTEC/TLO_T_ALV_DOCQ_VBAP" was not activated
+1EEDO519 "Table Type" "/ORTEC/TLO_T_ALV_DOCQ_VBAP" could not be activated
+    3 EMC738XActivate view "/ORTEC/TLO_V_VBK"
+    4EEMC060 Field name "LSSTK" not unique
+    3 EMC742 View "/ORTEC/TLO_V_VBK" was not activated
+    3 EDO525XActivate dependent view "/ORTEC/TLO_V_VBK"
+    4EEMC060 Field name "LSSTK" not unique
+    3 EMC742 View "/ORTEC/TLO_V_VBK" was not activated
+1EEDO519 "View" "/ORTEC/TLO_V_VBK" could not be activated
+    3 EMC738XActivate view "/ORTEC/TLO_V_VBP"
+    4EEMC060 Field name "LFGSA" not unique
+    3 EMC742 View "/ORTEC/TLO_V_VBP" was not activated
+    3 EDO525XActivate dependent view "/ORTEC/TLO_V_VBP"
+    4EEMC060 Field name "LFGSA" not unique
+    3 EMC742 View "/ORTEC/TLO_V_VBP" was not activated
+1EEDO519 "View" "/ORTEC/TLO_V_VBP" could not be activated
+    3 EMC738XActivate view "/SCL/G_V_IMORDE"
+    2WEMC735 The view ignores client-dependency of the base tables
+    3 EMC763 Key field "AUFK"-"MANDT" missing
+    3 EMC763 Key field "COSP"-"BEKNZ" missing
+    3 EMC763 Key field "COSP"-"HRKFT" missing
+    3 EMC763 Key field "COSP"-"KSTAR" missing
+    3 EMC763 Key field "COSP"-"LEDNR" missing
+    3 EMC763 Key field "COSP"-"PARGB" missing
+    3 EMC763 Key field "COSP"-"PERBL" missing
+    3 EMC763 Key field "COSP"-"VBUND" missing
+    3 EMC763 Key field "COSP"-"VRGNG" missing
+    3 EMC763 Key field "COSP"-"WRTTP" missing
+    3 EMC763 Key field "IMPR"-"POSNR" missing
+    3 EMC763 Key field "IMZO"-"OBJNR" missing
+    2WEMC732 All fields are evaluated as key field
+    4EEMC710 Base tables of type "VIEW" not permitted
+    3 EMC742 View "/SCL/G_V_IMORDE" was not activated
+    3 EDO525XActivate dependent view "/SCL/G_V_IMORDE"
+    2WEMC735 The view ignores client-dependency of the base tables
+    3 EMC763 Key field "AUFK"-"MANDT" missing
+    3 EMC763 Key field "COSP"-"BEKNZ" missing
+    3 EMC763 Key field "COSP"-"HRKFT" missing
+    3 EMC763 Key field "COSP"-"KSTAR" missing
+    3 EMC763 Key field "COSP"-"LEDNR" missing
+    3 EMC763 Key field "COSP"-"PARGB" missing
+    3 EMC763 Key field "COSP"-"PERBL" missing
+    3 EMC763 Key field "COSP"-"VBUND" missing
+    3 EMC763 Key field "COSP"-"VRGNG" missing
+    3 EMC763 Key field "COSP"-"WRTTP" missing
+    3 EMC763 Key field "IMPR"-"POSNR" missing
+    3 EMC763 Key field "IMZO"-"OBJNR" missing
+    2WEMC732 All fields are evaluated as key field
+    4EEMC710 Base tables of type "VIEW" not permitted
+    3 EMC742 View "/SCL/G_V_IMORDE" was not activated
+1EEDO519 "View" "/SCL/G_V_IMORDE" could not be activated
+    3 EMC738XActivate view "/SCL/G_V_IMORDI"
+    2WEMC735 The view ignores client-dependency of the base tables
+    3 EMC763 Key field "AUFK"-"MANDT" missing
+    3 EMC763 Key field "COSP_VTYPE"-"VRGNG_OLTP" missing
+    3 EMC763 Key field "COSP_VTYPE"-"WRTTP_OLTP" missing
+    3 EMC763 Key field "COSS"-"BEKNZ" missing
+    3 EMC763 Key field "COSS"-"HRKFT" missing
+    3 EMC763 Key field "COSS"-"KSTAR" missing
+    3 EMC763 Key field "COSS"-"LEDNR" missing
+    3 EMC763 Key field "COSS"-"PAROB" missing
+    3 EMC763 Key field "COSS"-"PERBL" missing
+    3 EMC763 Key field "COSS"-"USPOB" missing
+    3 EMC763 Key field "IMPR"-"POSNR" missing
+    3 EMC763 Key field "IMZO"-"OBJNR" missing
+    2WEMC732 All fields are evaluated as key field
+    4EEMC710 Base tables of type "VIEW" not permitted
+    3 EMC742 View "/SCL/G_V_IMORDI" was not activated
+    3 EDO525XActivate dependent view "/SCL/G_V_IMORDI"
+    2WEMC735 The view ignores client-dependency of the base tables
+    3 EMC763 Key field "AUFK"-"MANDT" missing
+    3 EMC763 Key field "COSP_VTYPE"-"VRGNG_OLTP" missing
+    3 EMC763 Key field "COSP_VTYPE"-"WRTTP_OLTP" missing
+    3 EMC763 Key field "COSS"-"BEKNZ" missing
+    3 EMC763 Key field "COSS"-"HRKFT" missing
+    3 EMC763 Key field "COSS"-"KSTAR" missing
+    3 EMC763 Key field "COSS"-"LEDNR" missing
+    3 EMC763 Key field "COSS"-"PAROB" missing
+    3 EMC763 Key field "COSS"-"PERBL" missing
+    3 EMC763 Key field "COSS"-"USPOB" missing
+    3 EMC763 Key field "IMPR"-"POSNR" missing
+    3 EMC763 Key field "IMZO"-"OBJNR" missing
+    2WEMC732 All fields are evaluated as key field
+    4EEMC710 Base tables of type "VIEW" not permitted
+    3 EMC742 View "/SCL/G_V_IMORDI" was not activated
+1EEDO519 "View" "/SCL/G_V_IMORDI" could not be activated
+    3 EMC738XActivate view "/SCL/VCRM_MKT_PS"
+    4EEMC824 Basis object "CRMD_MKTTG_TG_H" does not exist in an active version or is inconsistent
+    3 EMC742 View "/SCL/VCRM_MKT_PS" was not activated
+1EEDO519 "View" "/SCL/VCRM_MKT_PS" could not be activated
+    3 EMC738XActivate view "/SCL/VCRM_MKT_TG"
+    4EEMC824 Basis object "CRMD_MKTTG_TG_H" does not exist in an active version or is inconsistent
+    3 EMC742 View "/SCL/VCRM_MKT_TG" was not activated
+    2 ED0348XServer Usage ************************************************************
+    2 ED0313 Server..............|Workp|Tasks|Error|.Timesum|Objcount|ms/Obj|..KCosts|ms/KCs
+    2 ED0313 -------------------------------------------------------------------------------
+    2 ED0313 hec55v072589_Q4R_02.|...12|...35|.....|......72|..11.995|.....6|.....306|...235
+    2 EDO678 Parallel execution: "13" sec., Phase out time: "8" sec., Load: "4,6153846153846153E+01" percent
+    1 EDO533X*** Activate objects at level "2" ("02.04.2026 12:54:08")
+    3 EDO631 * Parallel execution with maximum of "12" concurrent tasks *
+    3 EDO677 Total of "10.130" objects with "10.611.300" costs in "89" tasks
+    3 ETP000 A3 EDDLSX041XActivating dependent DDL source "A_ACMINCOTERMSLOCATION1" (active version)
+    A3 EDDLS 025XDDL source "A_ACMINCOTERMSLOCATION1" was activated
+    A3 EDDLS 041XActivating dependent DDL source "A_ACMINCOTERMSLOCATION2" (active version)
+    A3 EDDLS 025XDDL source "A_ACMINCOTERMSLOCATION2" was activated
+    A3 EDDLS 041XActivating dependent DDL source "A_CASHFLOWREQUEST" (active version)
+    A3 EDDLS 025XDDL source "A_CASHFLOWREQUEST" was activated
+    A3 EDDLS 041XActivating dependent DDL source "C_ACCRUALSJOURNALENTRYITEM" (active version)
+    A2WESD_CDS_ENTITY 106 Annotation "Semantics.currencyCode" should only be used once within a select list.
+    A3 EDDLS 026XDDL source "C_ACCRUALSJOURNALENTRYITEM" was activated with warning messages
+    A3 EDDLS 041XActivating dependent DDL source "C_ACMSTORAGEAGREEMENTPROPOSAL" (active version)
+    A3 EDDLS 025XDDL source "C_ACMSTORAGEAGREEMENTPROPOSAL" was activated
+    A3 EDDLS 041XActivating dependent DDL source "C_ACMTRADINGCONTRACTPROPOSAL" (active version)
+    A3 EDDLS 025XDDL source "C_ACMTRADINGCONTRACTPROPOSAL" was activated
+    A3 EDDLS 041XActivating dependent DDL source "C_ACMTRADINGCONTRBYPRCFIXATION" (active version)
+    A3 EDDLS 025XDDL source "C_ACMTRADINGCONTRBYPRCFIXATION" was activated
+    A3 EDDLS 041XActivating dependent DDL source "C_BPGOVCONTACTPERSONLIST" (active version)
+    A3 EDDLS 025XDDL source "C_BPGOVCONTACTPERSONLIST" was activated
+    A3 EDDLS 041XActivating dependent DDL source "C_BPGOVPERSONCONTACTPERSONLIST" (active version)
+    A3 EDDLS 025XDDL source "C_BPGOVPERSONCONTACTPERSONLIST" was activated
+    A3 EDDLS 041XActivating dependent DDL source "C_CUSTOMERLIST" (active version)
+    A3 EDDLS 025XDDL source "C_CUSTOMERLIST" was activated
+    A3 EDDLS 041XActivating dependent DDL source "C_CUSTRETSUPLRRETTOADDRVH" (active version)
+    A3 EDDLS 025XDDL source "C_CUSTRETSUPLRRETTOADDRVH" was activated
+    A3 EDDLS 041XActivating dependent DDL source "C_DISPLAYMATERIALVALUECHAIN" (active version)
+    A2WEDDLS 349 CAST "''" to identical type "CHAR"
+    A2WEDDLS 349 CAST "''" to identical type "CHAR"
+    A2WEDDLS 349 CAST "''" to identical type "CHAR"
+    A2WEDDLS 349 CAST "''" to identical type "CHAR"
+    A2WEDDLS 349 CAST "''" to identical type "CHAR"
+    A2WEDDLS 349 CAST "''" to identical type "CHAR"
+    A2WEDDLS 349 CAST "''" to identical type "CHAR"
+    A2WEDDLS 349 CAST "''" to identical type "CHAR"
+    A2WEDDLS 349 CAST "''" to identical type "CHAR"
+    A2WEDDLS 349 CAST "''" to identical type "CHAR"
+    A2WEDDLS 349 CAST "''" to identical type "CHAR"
+    A2WEDDLS 349 CAST "''" to identical type "CHAR"
+    A2WEDDLS 349 CAST "''" to identical type "CHAR"
+    A2WEDDLS 349 CAST "''" to identical type "CHAR"
+    A3 EDDLS 465XChecks SQL View "CDSPMATVALCHN"
+    3 ED0308 Operation started by user "DDIC" on "02.04.26" at "12:54"
+1EEDO519 "View" "/SCL/VCRM_MKT_TG" could not be activated
+    3 EMC738XActivate view "Z6_T_DUEINV_BI"
+    3 EMC763 Key field "/CCC/T_DUEINV_BI"-"BUKRS" missing
+    3 EMC763 Key field "/CCC/T_DUEINV_BI"-"BUZEI" missing
+    3 EMC763 Key field "BSID"-"AUGBL" missing
+    3 EMC763 Key field "BSID"-"AUGDT" missing
+    3 EMC763 Key field "BSID"-"BUZEI" missing
+    3 EMC763 Key field "BSID"-"UMSKS" missing
+    3 EMC763 Key field "BSID"-"UMSKZ" missing
+    3 EMC763 Key field "BSID"-"ZUONR" missing
+    2WEMC732 All fields are evaluated as key field
+    4EEMC710 Base tables of type "VIEW" not permitted
+    3 EMC742 View "Z6_T_DUEINV_BI" was not activated
+    3 EDO525XActivate dependent view "Z6_T_DUEINV_BI"
+    3 EMC763 Key field "/CCC/T_DUEINV_BI"-"BUKRS" missing
+    3 EMC763 Key field "/CCC/T_DUEINV_BI"-"BUZEI" missing
+    3 EMC763 Key field "BSID"-"AUGBL" missing
+    3 EMC763 Key field "BSID"-"AUGDT" missing
+    3 EMC763 Key field "BSID"-"BUZEI" missing
+    3 EMC763 Key field "BSID"-"UMSKS" missing
+    3 EMC763 Key field "BSID"-"UMSKZ" missing
+    3 EMC763 Key field "BSID"-"ZUONR" missing
+    2WEMC732 All fields are evaluated as key field
+    4EEMC710 Base tables of type "VIEW" not permitted
+    3 EMC742 View "Z6_T_DUEINV_BI" was not activated
+1EEDO519 "View" "Z6_T_DUEINV_BI" could not be activated
+    3 EMC738XActivate view "ZJVBSIK"
+    3 EMC748 View field "ZJVBSIK"-"ZLSCH" (data element not adjusted to base field)
+    4EEMC710 Base tables of type "VIEW" not permitted
+    3 EMC742 View "ZJVBSIK" was not activated
+    3 EDO525XActivate dependent view "ZJVBSIK"
+    3 EMC748 View field "ZJVBSIK"-"ZLSCH" (data element not adjusted to base field)
+    4EEMC710 Base tables of type "VIEW" not permitted
+    3 EMC742 View "ZJVBSIK" was not activated
+    2 ED0348XServer Usage ************************************************************
+    2 ED0313 Server..............|Workp|Tasks|Error|.Timesum|Objcount|ms/Obj|..KCosts|ms/KCs
+    2 ED0313 -------------------------------------------------------------------------------
+    2 ED0313 hec55v072589_Q4R_02.|...12|...35|.....|.....494|...3.311|...149|...1.534|...322
+    2 EDO678 Parallel execution: "42" sec., Phase out time: "2" sec., Load: "9,8015873015873012E+01" percent
+    1 EDO533X*** Activate objects at level "8" ("02.04.2026 13:02:20")
+    3 EDO631 * Parallel execution with maximum of "12" concurrent tasks *
+    3 EDO677 Total of "1.798" objects with "751.400" costs in "35" tasks
+    3 ETP000 A3 EDDLSX041XActivating dependent DDL source "/SAPPSPRO/SHSM_M_MEKKB" (active version)
+    A2WESDDL_PARSER_MSG 509 Prefix '"SHSM_M_MEKKB"' must be specified for expression '"BEDNR"'
+    A2WESDDL_PARSER_MSG 509 Prefix '"SHSM_M_MEKKB"' must be specified for expression '"BSTYP"'
+    A2WESDDL_PARSER_MSG 509 Prefix '"SHSM_M_MEKKB"' must be specified for expression '"BSART"'
+    A2WESDDL_PARSER_MSG 509 Prefix '"SHSM_M_MEKKB"' must be specified for expression '"EKORG"'
+    A2WESDDL_PARSER_MSG 509 Prefix '"SHSM_M_MEKKB"' must be specified for expression '"EBELP"'
+    A2WESDDL_PARSER_MSG 509 Prefix '"SHSM_M_MEKKB"' must be specified for expression '"EXLIN"'
+    A2WESDDL_PARSER_MSG 509 Prefix '"SHSM_M_MEKKB"' must be specified for expression '"ISEOPBLOCKED"'
+    A2WESDDL_PARSER_MSG 509 Prefix '"SHSM_M_MEKKB"' must be specified for expression '"EKGRP"'
+    A2WESDDL_PARSER_MSG 509 Prefix '"SHSM_M_MEKKB"' must be specified for expression '"WERKS"'
+    A2WESDDL_PARSER_MSG 509 Prefix '"SHSM_M_MEKKB"' must be specified for expression '"STATU"'
+    A2WEDDLS 102 Annotation for "EndUserText.label" does not exist
+    A3 EDDLS 465XChecks SQL View "/SAPPSPRO/MEKKB"
+    3 ED0308 Operation started by user "DDIC" on "02.04.26" at "13:02"
+    3 EMC741 View "/SAPPSPRO/MEKKB" is consistent
+    A3 EDDLS 453XCheck of dependent objects
+    A3 EDDLS 454 Dependent objects checked successfully
+    A3 ESTOBJ 011XActivating structured object "/SAPPSPRO/SHSM_M_MEKKB"
+    3 ED0308 Operation started by user "DDIC" on "02.04.26" at "13:02"
+    A3 ESTOBJ 104 Checking structured object "/SAPPSPRO/SHSM_M_MEKKB"
+    A3 ESTOBJ 105 Structured object "/SAPPSPRO/SHSM_M_MEKKB" has been checked successfully
+    A3 ESD_CDS_ENTITY 328 Flag 'access_control_exists' was set for entity
+    A3 ESTOBJ 004 Structured object "/SAPPSPRO/SHSM_M_MEKKB" was activated successfully
+1EEDO519 "View" "ZJVBSIK" could not be activated
+    3 EDT012XActivate table "/CCC/CCAS_COSTCEXT"
+    2WEDT192 Enhancement category for table missing
+    2WEDT193 Enhancement category for include or subtype missing
+    1EEDT242 Field "KOMPL": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/CCAS_COSTCEXT"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/CCAS_COSTCEXT" cannot be generated
+    3 EDT013 Table "/CCC/CCAS_COSTCEXT" was not activated
+    3 EDT014XActivate dependent table "/CCC/CCAS_COSTCEXT"
+    2WEDT192 Enhancement category for table missing
+    2WEDT193 Enhancement category for include or subtype missing
+    1EEDT242 Field "KOMPL": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCC/CCAS_COSTCEXT"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCC/CCAS_COSTCEXT" cannot be generated
+    3 EDT015 Dependent table "/CCC/CCAS_COSTCEXT" was not activated
+1EEDO519 "Table" "/CCC/CCAS_COSTCEXT" could not be activated
+    3 EDT012XActivate table "/CCEJ/OTCS_PROF_ITM_CCEJ"
+    1EEDT242 Field "ACC_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "ACC_NAME": Component type is not active or is not allowed
+    1EEDT242 Field "ACC_PROD_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "BBE": Component type is not active or is not allowed
+    1EEDT242 Field "CH_DATE": Component type is not active or is not allowed
+    1EEDT242 Field "CH_TIM": Component type is not active or is not allowed
+    1EEDT242 Field "COMP_PROD_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "COMP_PROD_SUB_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "CONT_UNIT_PRICE": Component type is not active or is not allowed
+    1EEDT242 Field "CON_UNIT_PRICE": Component type is not active or is not allowed
+    1EEDT242 Field "COST_UNIT_PRICE": Component type is not active or is not allowed
+    1EEDT242 Field "DEL_CUST_NAME": Component type is not active or is not allowed
+    1EEDT242 Field "DETAIL_NO": Component type is not active or is not allowed
+    1EEDT242 Field "DISPATCH_NUM": Component type is not active or is not allowed
+    1EEDT242 Field "DOCNUM": Component type is not active or is not allowed
+    1EEDT242 Field "DOC_SUB_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "DOC_TYP": Component type is not active or is not allowed
+    1EEDT242 Field "HAND_UNIT": Component type is not active or is not allowed
+    1EEDT242 Field "ITM1": Component type is not active or is not allowed
+    1EEDT242 Field "ITM10": Component type is not active or is not allowed
+    1EEDT242 Field "ITM11": Component type is not active or is not allowed
+    1EEDT242 Field "ITM12": Component type is not active or is not allowed
+    1EEDT242 Field "ITM13": Component type is not active or is not allowed
+    1EEDT242 Field "ITM14": Component type is not active or is not allowed
+    1EEDT242 Field "ITM15": Component type is not active or is not allowed
+    1EEDT242 Field "ITM16": Component type is not active or is not allowed
+    1EEDT242 Field "ITM2": Component type is not active or is not allowed
+    1EEDT242 Field "ITM3": Component type is not active or is not allowed
+    1EEDT242 Field "ITM4": Component type is not active or is not allowed
+    1EEDT242 Field "ITM5": Component type is not active or is not allowed
+    1EEDT242 Field "ITM6": Component type is not active or is not allowed
+    1EEDT242 Field "ITM8": Component type is not active or is not allowed
+    1EEDT242 Field "ITM9": Component type is not active or is not allowed
+    1EEDT242 Field "JAN_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "LINE_NO": Component type is not active or is not allowed
+    1EEDT242 Field "MAT_NAMEL": Component type is not active or is not allowed
+    1EEDT242 Field "MAT_NAMEU": Component type is not active or is not allowed
+    1EEDT242 Field "MAT_SUB_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "ORD_RECEIPT_SEG": Component type is not active or is not allowed
+    1EEDT242 Field "ORD_SEG": Component type is not active or is not allowed
+    1EEDT242 Field "PLANT_NAME": Component type is not active or is not allowed
+    1EEDT242 Field "PROD_SEG": Component type is not active or is not allowed
+    1EEDT242 Field "QUAN": Component type is not active or is not allowed
+    1EEDT242 Field "ROUTE": Component type is not active or is not allowed
+    1EEDT242 Field "SALE_AMT": Component type is not active or is not allowed
+    1EEDT242 Field "SALE_UNIT_PRICE": Component type is not active or is not allowed
+    1EEDT242 Field "TRUCK_ROUTE": Component type is not active or is not allowed
+    1EEDT242 Field "VAR_SEG": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCEJ/OTCS_PROF_ITM_CCEJ"
+    1EEDO251 Data type " " does not exist
+    3 EDT014XActivate dependent table "/CCEJ/OTCS_PROF_ITM_CCEJ"
+    1EEDT242 Field "ACC_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "ACC_NAME": Component type is not active or is not allowed
+    1EEDT242 Field "ACC_PROD_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "BBE": Component type is not active or is not allowed
+    1EEDT242 Field "CH_DATE": Component type is not active or is not allowed
+    1EEDT242 Field "CH_TIM": Component type is not active or is not allowed
+    1EEDT242 Field "COMP_PROD_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "COMP_PROD_SUB_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "CONT_UNIT_PRICE": Component type is not active or is not allowed
+    1EEDT242 Field "CON_UNIT_PRICE": Component type is not active or is not allowed
+    1EEDT242 Field "COST_UNIT_PRICE": Component type is not active or is not allowed
+    1EEDT242 Field "DEL_CUST_NAME": Component type is not active or is not allowed
+    1EEDT242 Field "DETAIL_NO": Component type is not active or is not allowed
+    1EEDT242 Field "DISPATCH_NUM": Component type is not active or is not allowed
+    1EEDT242 Field "DOCNUM": Component type is not active or is not allowed
+    1EEDT242 Field "DOC_SUB_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "DOC_TYP": Component type is not active or is not allowed
+    1EEDT242 Field "HAND_UNIT": Component type is not active or is not allowed
+    1EEDT242 Field "ITM1": Component type is not active or is not allowed
+    1EEDT242 Field "ITM10": Component type is not active or is not allowed
+    1EEDT242 Field "ITM11": Component type is not active or is not allowed
+    1EEDT242 Field "ITM12": Component type is not active or is not allowed
+    1EEDT242 Field "ITM13": Component type is not active or is not allowed
+    1EEDT242 Field "ITM14": Component type is not active or is not allowed
+    1EEDT242 Field "ITM15": Component type is not active or is not allowed
+    1EEDT242 Field "ITM16": Component type is not active or is not allowed
+    1EEDT242 Field "ITM2": Component type is not active or is not allowed
+    1EEDT242 Field "ITM3": Component type is not active or is not allowed
+    1EEDT242 Field "ITM4": Component type is not active or is not allowed
+    1EEDT242 Field "ITM5": Component type is not active or is not allowed
+    1EEDT242 Field "ITM6": Component type is not active or is not allowed
+    1EEDT242 Field "ITM8": Component type is not active or is not allowed
+    1EEDT242 Field "ITM9": Component type is not active or is not allowed
+    1EEDT242 Field "JAN_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "LINE_NO": Component type is not active or is not allowed
+    1EEDT242 Field "MAT_NAMEL": Component type is not active or is not allowed
+    1EEDT242 Field "MAT_NAMEU": Component type is not active or is not allowed
+    1EEDT242 Field "MAT_SUB_CODE": Component type is not active or is not allowed
+    1EEDT242 Field "ORD_RECEIPT_SEG": Component type is not active or is not allowed
+    1EEDT242 Field "ORD_SEG": Component type is not active or is not allowed
+    1EEDT242 Field "PLANT_NAME": Component type is not active or is not allowed
+    1EEDT242 Field "PROD_SEG": Component type is not active or is not allowed
+    1EEDT242 Field "QUAN": Component type is not active or is not allowed
+    1EEDT242 Field "ROUTE": Component type is not active or is not allowed
+    1EEDT242 Field "SALE_AMT": Component type is not active or is not allowed
+    1EEDT242 Field "SALE_UNIT_PRICE": Component type is not active or is not allowed
+    1EEDT242 Field "TRUCK_ROUTE": Component type is not active or is not allowed
+    1EEDT242 Field "VAR_SEG": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCEJ/OTCS_PROF_ITM_CCEJ"
+    1EEDO251 Data type " " does not exist
+1EEDO519 "Table" "/CCEJ/OTCS_PROF_ITM_CCEJ" could not be activated
+    3 EDT012XActivate table "/CCEJ/S_WEST_PICKTICK"
+    1EEDT242 Field "/BEV1/RPFAR1": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCEJ/S_WEST_PICKTICK"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCEJ/S_WEST_PICKTICK" cannot be generated
+    3 EDT013 Table "/CCEJ/S_WEST_PICKTICK" was not activated
+    3 EDT014XActivate dependent table "/CCEJ/S_WEST_PICKTICK"
+    1EEDT242 Field "/BEV1/RPFAR1": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/CCEJ/S_WEST_PICKTICK"
+    A1EESD_EXT_MSG 007 Execution of the consistency checks failed.
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/CCEJ/S_WEST_PICKTICK" cannot be generated
+    3 EDT015 Dependent table "/CCEJ/S_WEST_PICKTICK" was not activated
+1EEDO519 "Table" "/CCEJ/S_WEST_PICKTICK" could not be activated
+    3 EDT012XActivate table "/FARSIDE/MLSV3IF_TEST_DEEP"
+    2WEDT192 Enhancement category for table missing
+    2WEDT193 Enhancement category for include or subtype missing
+    1EEDT242 Field "FHEX": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/FARSIDE/MLSV3IF_TEST_DEEP"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/FARSIDE/MLSV3IF_TEST_DEEP" cannot be generated
+    3 EDT013 Table "/FARSIDE/MLSV3IF_TEST_DEEP" was not activated
+    3 EDT014XActivate dependent table "/FARSIDE/MLSV3IF_TEST_DEEP"
+    2WEDT192 Enhancement category for table missing
+    2WEDT193 Enhancement category for include or subtype missing
+    1EEDT242 Field "FHEX": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/FARSIDE/MLSV3IF_TEST_DEEP"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/FARSIDE/MLSV3IF_TEST_DEEP" cannot be generated
+    3 EDT015 Dependent table "/FARSIDE/MLSV3IF_TEST_DEEP" was not activated
+1EEDO519 "Table" "/FARSIDE/MLSV3IF_TEST_DEEP" could not be activated
+    3 EDT012XActivate table "/FARSIDE/MLSV3IF_TEST_INCLUDE"
+    2WEDT192 Enhancement category for table missing
+    2WEDT193 Enhancement category for include or subtype missing
+    1EEDT242 Field "FHEX": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/FARSIDE/MLSV3IF_TEST_INCLUDE"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/FARSIDE/MLSV3IF_TEST_INCLUDE" cannot be generated
+    3 EDT013 Table "/FARSIDE/MLSV3IF_TEST_INCLUDE" was not activated
+    3 EDT014XActivate dependent table "/FARSIDE/MLSV3IF_TEST_INCLUDE"
+    2WEDT192 Enhancement category for table missing
+    2WEDT193 Enhancement category for include or subtype missing
+    1EEDT242 Field "FHEX": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/FARSIDE/MLSV3IF_TEST_INCLUDE"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/FARSIDE/MLSV3IF_TEST_INCLUDE" cannot be generated
+    3 EDT015 Dependent table "/FARSIDE/MLSV3IF_TEST_INCLUDE" was not activated
+1EEDO519 "Table" "/FARSIDE/MLSV3IF_TEST_INCLUDE" could not be activated
+    3 EDT012XActivate table "/HOAG/ABS_CAW_DEBITOREN_ALV"
+    1EEAD225 INCLUDE cannot be broken down; field name with suffix is too long
+    1EEAD225 INCLUDE cannot be broken down; field name with suffix is too long
+    1EEDT003 Routine "EXPAND" (Table "/HOAG/ABS_CAW_DEBITOREN_ALV" could not be expanded)
+    3 EDT013 Table "/HOAG/ABS_CAW_DEBITOREN_ALV" was not activated
+    3 EDT014XActivate dependent table "/HOAG/ABS_CAW_DEBITOREN_ALV"
+    1EEAD225 INCLUDE cannot be broken down; field name with suffix is too long
+    1EEAD225 INCLUDE cannot be broken down; field name with suffix is too long
+    1EEDT003 Routine "EXPAND" (Table "/HOAG/ABS_CAW_DEBITOREN_ALV" could not be expanded)
+    3 EDT015 Dependent table "/HOAG/ABS_CAW_DEBITOREN_ALV" was not activated
+1EEDO519 "Table" "/HOAG/ABS_CAW_DEBITOREN_ALV" could not be activated
+    3 EDT012XActivate table "/HOAG/ABS_FEB_ALV"
+    1EEAD225 INCLUDE cannot be broken down; field name with suffix is too long
+    1EEAD225 INCLUDE cannot be broken down; field name with suffix is too long
+    1EEDT003 Routine "EXPAND" (Table "/HOAG/ABS_FEB_ALV" could not be expanded)
+    3 EDT013 Table "/HOAG/ABS_FEB_ALV" was not activated
+    3 EDT014XActivate dependent table "/HOAG/ABS_FEB_ALV"
+    1EEAD225 INCLUDE cannot be broken down; field name with suffix is too long
+    1EEAD225 INCLUDE cannot be broken down; field name with suffix is too long
+    1EEDT003 Routine "EXPAND" (Table "/HOAG/ABS_FEB_ALV" could not be expanded)
+    3 EDT015 Dependent table "/HOAG/ABS_FEB_ALV" was not activated
+1EEDO519 "Table" "/HOAG/ABS_FEB_ALV" could not be activated
+    3 EDT012XActivate table "/HOAG/ABS_ID_MONITOR_BNK_STATE"
+    1EEAD225 INCLUDE cannot be broken down; field name with suffix is too long
+    1EEAD225 INCLUDE cannot be broken down; field name with suffix is too long
+    1EEDT003 Routine "EXPAND" (Table "/HOAG/ABS_ID_MONITOR_BNK_STATE" could not be expanded)
+    3 EDT013 Table "/HOAG/ABS_ID_MONITOR_BNK_STATE" was not activated
+    3 EDT014XActivate dependent table "/HOAG/ABS_ID_MONITOR_BNK_STATE"
+    1EEAD225 INCLUDE cannot be broken down; field name with suffix is too long
+    1EEAD225 INCLUDE cannot be broken down; field name with suffix is too long
+    1EEDT003 Routine "EXPAND" (Table "/HOAG/ABS_ID_MONITOR_BNK_STATE" could not be expanded)
+    3 EDT015 Dependent table "/HOAG/ABS_ID_MONITOR_BNK_STATE" was not activated
+1EEDO519 "Table" "/HOAG/ABS_ID_MONITOR_BNK_STATE" could not be activated
+    3 EDT012XActivate table "/HOAG/AB_BSEG_CO"
+    1EEDT963 Field "LAND1" in table "/HOAG/AB_BSEG_CO" is specified twice
+    2WEDT351 Deleting interface of search help "H_T005_LAND" to field "/HOAG/AB_BSEG_CO"-"LAND1"
+    2WEDT351 Deleting interface of search help "FICEPC" to field "/HOAG/AB_BSEG_CO"-"PRCTR"
+    2WEDT135 Flag: 'Incorrect enhancement category' not updated ("Runtime Object")
+    3 EDT013 Table "/HOAG/AB_BSEG_CO" was not activated
+    3 EDT014XActivate dependent table "/HOAG/AB_BSEG_CO"
+    1EEDT963 Field "LAND1" in table "/HOAG/AB_BSEG_CO" is specified twice
+    2WEDT351 Deleting interface of search help "H_T005_LAND" to field "/HOAG/AB_BSEG_CO"-"LAND1"
+    2WEDT351 Deleting interface of search help "FICEPC" to field "/HOAG/AB_BSEG_CO"-"PRCTR"
+    2WEDT135 Flag: 'Incorrect enhancement category' not updated ("Runtime Object")
+    3 EDT015 Dependent table "/HOAG/AB_BSEG_CO" was not activated
+1EEDO519 "Table" "/HOAG/AB_BSEG_CO" could not be activated
+    3 EDT012XActivate table "/LOT/SC_PL_HIST_S"
+    1EEDT242 Field "TIME": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/LOT/SC_PL_HIST_S"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/LOT/SC_PL_HIST_S" cannot be generated
+    3 EDT013 Table "/LOT/SC_PL_HIST_S" was not activated
+    3 EDT014XActivate dependent table "/LOT/SC_PL_HIST_S"
+    1EEDT242 Field "TIME": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/LOT/SC_PL_HIST_S"
+    A1EESD_EXT_MSG 007 Execution of the consistency checks failed.
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/LOT/SC_PL_HIST_S" cannot be generated
+    3 EDT015 Dependent table "/LOT/SC_PL_HIST_S" was not activated
+1EEDO519 "Table" "/LOT/SC_PL_HIST_S" could not be activated
+    3 EDT014XActivate dependent table "/MDGBP/_SD_BP_PDF_AD_POSTAL"
+    1EEDT963 Field "DLVSRV_TY" in table "/MDGBP/_SD_BP_PDF_AD_POSTAL" is specified twice
+    3 EDT015 Dependent table "/MDGBP/_SD_BP_PDF_AD_POSTAL" was not activated
+1EEDO519 "Table" "/MDGBP/_SD_BP_PDF_AD_POSTAL" could not be activated
+    3 EDT014XActivate dependent table "/MDGBP/_S_BP_ES_ADDRESS"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBP/_S_BP_ES_ADDRESS" is specified twice
+    3 EDT015 Dependent table "/MDGBP/_S_BP_ES_ADDRESS" was not activated
+1EEDO519 "Table" "/MDGBP/_S_BP_ES_ADDRESS" could not be activated
+    3 EDT014XActivate dependent table "/MDGBP/_S_BP_ES_AD_EMAIL"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBP/_S_BP_ES_AD_EMAIL" is specified twice
+    3 EDT015 Dependent table "/MDGBP/_S_BP_ES_AD_EMAIL" was not activated
+1EEDO519 "Table" "/MDGBP/_S_BP_ES_AD_EMAIL" could not be activated
+    3 EDT014XActivate dependent table "/MDGBP/_S_BP_ES_AD_FAX"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBP/_S_BP_ES_AD_FAX" is specified twice
+    3 EDT015 Dependent table "/MDGBP/_S_BP_ES_AD_FAX" was not activated
+1EEDO519 "Table" "/MDGBP/_S_BP_ES_AD_FAX" could not be activated
+    3 EDT014XActivate dependent table "/MDGBP/_S_BP_ES_AD_NAME_O"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBP/_S_BP_ES_AD_NAME_O" is specified twice
+    3 EDT015 Dependent table "/MDGBP/_S_BP_ES_AD_NAME_O" was not activated
+1EEDO519 "Table" "/MDGBP/_S_BP_ES_AD_NAME_O" could not be activated
+    3 EDT014XActivate dependent table "/MDGBP/_S_BP_ES_AD_NAME_P"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBP/_S_BP_ES_AD_NAME_P" is specified twice
+    3 EDT015 Dependent table "/MDGBP/_S_BP_ES_AD_NAME_P" was not activated
+1EEDO519 "Table" "/MDGBP/_S_BP_ES_AD_NAME_P" could not be activated
+    3 EDT014XActivate dependent table "/MDGBP/_S_BP_ES_AD_POSTAL"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBP/_S_BP_ES_AD_POSTAL" is specified twice
+    3 EDT015 Dependent table "/MDGBP/_S_BP_ES_AD_POSTAL" was not activated
+1EEDO519 "Table" "/MDGBP/_S_BP_ES_AD_POSTAL" could not be activated
+    3 EDT014XActivate dependent table "/MDGBP/_S_BP_ES_AD_TEL"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBP/_S_BP_ES_AD_TEL" is specified twice
+    3 EDT015 Dependent table "/MDGBP/_S_BP_ES_AD_TEL" was not activated
+1EEDO519 "Table" "/MDGBP/_S_BP_ES_AD_TEL" could not be activated
+    3 EDT014XActivate dependent table "/MDGBP/_S_BP_ES_AD_URL"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBP/_S_BP_ES_AD_URL" is specified twice
+    3 EDT015 Dependent table "/MDGBP/_S_BP_ES_AD_URL" was not activated
+1EEDO519 "Table" "/MDGBP/_S_BP_ES_AD_URL" could not be activated
+    3 EDT014XActivate dependent table "/MDGBP/_S_BP_ES_BP_ADDR"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBP/_S_BP_ES_BP_ADDR" is specified twice
+    3 EDT015 Dependent table "/MDGBP/_S_BP_ES_BP_ADDR" was not activated
+1EEDO519 "Table" "/MDGBP/_S_BP_ES_BP_ADDR" could not be activated
+    3 EDT014XActivate dependent table "/MDGBP/_S_BP_ES_BP_ADDUSG"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBP/_S_BP_ES_BP_ADDUSG" is specified twice
+    3 EDT015 Dependent table "/MDGBP/_S_BP_ES_BP_ADDUSG" was not activated
+1EEDO519 "Table" "/MDGBP/_S_BP_ES_BP_ADDUSG" could not be activated
+    3 EDT014XActivate dependent table "/MDGBP/_S_BP_ES_BP_BKDTL"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBP/_S_BP_ES_BP_BKDTL" is specified twice
+    3 EDT015 Dependent table "/MDGBP/_S_BP_ES_BP_BKDTL" was not activated
+1EEDO519 "Table" "/MDGBP/_S_BP_ES_BP_BKDTL" could not be activated
+    3 EDT014XActivate dependent table "/MDGBP/_S_BP_ES_BP_CENTRL"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBP/_S_BP_ES_BP_CENTRL" is specified twice
+    3 EDT015 Dependent table "/MDGBP/_S_BP_ES_BP_CENTRL" was not activated
+1EEDO519 "Table" "/MDGBP/_S_BP_ES_BP_CENTRL" could not be activated
+    3 EDT014XActivate dependent table "/MDGBP/_S_BP_ES_BP_CPGEN"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBP/_S_BP_ES_BP_CPGEN" is specified twice
+    3 EDT015 Dependent table "/MDGBP/_S_BP_ES_BP_CPGEN" was not activated
+1EEDO519 "Table" "/MDGBP/_S_BP_ES_BP_CPGEN" could not be activated
+    3 EDT014XActivate dependent table "/MDGBP/_S_BP_ES_BP_HEADER"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBP/_S_BP_ES_BP_HEADER" is specified twice
+    1EEDT963 Field "TXTLG" in table "/MDGBP/_S_BP_ES_BP_HEADER" is specified twice
+    3 EDT015 Dependent table "/MDGBP/_S_BP_ES_BP_HEADER" was not activated
+1EEDO519 "Table" "/MDGBP/_S_BP_ES_BP_HEADER" could not be activated
+    3 EDT014XActivate dependent table "/MDGBP/_S_BP_ES_BP_IDNUM"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBP/_S_BP_ES_BP_IDNUM" is specified twice
+    3 EDT015 Dependent table "/MDGBP/_S_BP_ES_BP_IDNUM" was not activated
+1EEDO519 "Table" "/MDGBP/_S_BP_ES_BP_IDNUM" could not be activated
+    3 EDT014XActivate dependent table "/MDGBP/_S_BP_ES_BP_INDSTR"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBP/_S_BP_ES_BP_INDSTR" is specified twice
+    3 EDT015 Dependent table "/MDGBP/_S_BP_ES_BP_INDSTR" was not activated
+1EEDO519 "Table" "/MDGBP/_S_BP_ES_BP_INDSTR" could not be activated
+    3 EDT014XActivate dependent table "/MDGBP/_S_BP_ES_BP_REL"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBP/_S_BP_ES_BP_REL" is specified twice
+    3 EDT015 Dependent table "/MDGBP/_S_BP_ES_BP_REL" was not activated
+1EEDO519 "Table" "/MDGBP/_S_BP_ES_BP_REL" could not be activated
+    3 EDT014XActivate dependent table "/MDGBP/_S_BP_ES_BP_ROLE"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBP/_S_BP_ES_BP_ROLE" is specified twice
+    3 EDT015 Dependent table "/MDGBP/_S_BP_ES_BP_ROLE" was not activated
+1EEDO519 "Table" "/MDGBP/_S_BP_ES_BP_ROLE" could not be activated
+    3 EDT014XActivate dependent table "/MDGBP/_S_BP_ES_BP_WPAD"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBP/_S_BP_ES_BP_WPAD" is specified twice
+    3 EDT015 Dependent table "/MDGBP/_S_BP_ES_BP_WPAD" was not activated
+1EEDO519 "Table" "/MDGBP/_S_BP_ES_BP_WPAD" could not be activated
+    3 EDT014XActivate dependent table "/MDGBP/_S_BP_ES_WP_EMAIL"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBP/_S_BP_ES_WP_EMAIL" is specified twice
+    3 EDT015 Dependent table "/MDGBP/_S_BP_ES_WP_EMAIL" was not activated
+1EEDO519 "Table" "/MDGBP/_S_BP_ES_WP_EMAIL" could not be activated
+    3 EDT014XActivate dependent table "/MDGBP/_S_BP_ES_WP_FAX"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBP/_S_BP_ES_WP_FAX" is specified twice
+    3 EDT015 Dependent table "/MDGBP/_S_BP_ES_WP_FAX" was not activated
+1EEDO519 "Table" "/MDGBP/_S_BP_ES_WP_FAX" could not be activated
+    3 EDT014XActivate dependent table "/MDGBP/_S_BP_ES_WP_TEL"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBP/_S_BP_ES_WP_TEL" is specified twice
+    3 EDT015 Dependent table "/MDGBP/_S_BP_ES_WP_TEL" was not activated
+1EEDO519 "Table" "/MDGBP/_S_BP_ES_WP_TEL" could not be activated
+    3 EDT014XActivate dependent table "/MDGBP/_S_BP_ES_WP_URL"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBP/_S_BP_ES_WP_URL" is specified twice
+    3 EDT015 Dependent table "/MDGBP/_S_BP_ES_WP_URL" was not activated
+1EEDO519 "Table" "/MDGBP/_S_BP_ES_WP_URL" could not be activated
+    3 EDT014XActivate dependent table "/MDGBPX/_S_BP_ES_BP_COMPNY"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBPX/_S_BP_ES_BP_COMPNY" is specified twice
+    3 EDT015 Dependent table "/MDGBPX/_S_BP_ES_BP_COMPNY" was not activated
+1EEDO519 "Table" "/MDGBPX/_S_BP_ES_BP_COMPNY" could not be activated
+    3 EDT014XActivate dependent table "/MDGBPX/_S_BP_ES_BP_CUSDUN"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBPX/_S_BP_ES_BP_CUSDUN" is specified twice
+    3 EDT015 Dependent table "/MDGBPX/_S_BP_ES_BP_CUSDUN" was not activated
+1EEDO519 "Table" "/MDGBPX/_S_BP_ES_BP_CUSDUN" could not be activated
+    3 EDT014XActivate dependent table "/MDGBPX/_S_BP_ES_BP_CUSFCN"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBPX/_S_BP_ES_BP_CUSFCN" is specified twice
+    3 EDT015 Dependent table "/MDGBPX/_S_BP_ES_BP_CUSFCN" was not activated
+1EEDO519 "Table" "/MDGBPX/_S_BP_ES_BP_CUSFCN" could not be activated
+    3 EDT014XActivate dependent table "/MDGBPX/_S_BP_ES_BP_CUSTAX"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBPX/_S_BP_ES_BP_CUSTAX" is specified twice
+    3 EDT015 Dependent table "/MDGBPX/_S_BP_ES_BP_CUSTAX" was not activated
+1EEDO519 "Table" "/MDGBPX/_S_BP_ES_BP_CUSTAX" could not be activated
+    3 EDT014XActivate dependent table "/MDGBPX/_S_BP_ES_BP_CUSWHT"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBPX/_S_BP_ES_BP_CUSWHT" is specified twice
+    3 EDT015 Dependent table "/MDGBPX/_S_BP_ES_BP_CUSWHT" was not activated
+1EEDO519 "Table" "/MDGBPX/_S_BP_ES_BP_CUSWHT" could not be activated
+    3 EDT014XActivate dependent table "/MDGBPX/_S_BP_ES_BP_CUS_CC"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBPX/_S_BP_ES_BP_CUS_CC" is specified twice
+    3 EDT015 Dependent table "/MDGBPX/_S_BP_ES_BP_CUS_CC" was not activated
+1EEDO519 "Table" "/MDGBPX/_S_BP_ES_BP_CUS_CC" could not be activated
+    3 EDT014XActivate dependent table "/MDGBPX/_S_BP_ES_BP_DUNN"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBPX/_S_BP_ES_BP_DUNN" is specified twice
+    3 EDT015 Dependent table "/MDGBPX/_S_BP_ES_BP_DUNN" was not activated
+1EEDO519 "Table" "/MDGBPX/_S_BP_ES_BP_DUNN" could not be activated
+    3 EDT014XActivate dependent table "/MDGBPX/_S_BP_ES_BP_MLT_AS"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBPX/_S_BP_ES_BP_MLT_AS" is specified twice
+    3 EDT015 Dependent table "/MDGBPX/_S_BP_ES_BP_MLT_AS" was not activated
+1EEDO519 "Table" "/MDGBPX/_S_BP_ES_BP_MLT_AS" could not be activated
+    3 EDT014XActivate dependent table "/MDGBPX/_S_BP_ES_BP_PORG"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBPX/_S_BP_ES_BP_PORG" is specified twice
+    3 EDT015 Dependent table "/MDGBPX/_S_BP_ES_BP_PORG" was not activated
+1EEDO519 "Table" "/MDGBPX/_S_BP_ES_BP_PORG" could not be activated
+    3 EDT014XActivate dependent table "/MDGBPX/_S_BP_ES_BP_PORG2"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBPX/_S_BP_ES_BP_PORG2" is specified twice
+    3 EDT015 Dependent table "/MDGBPX/_S_BP_ES_BP_PORG2" was not activated
+1EEDO519 "Table" "/MDGBPX/_S_BP_ES_BP_PORG2" could not be activated
+    3 EDT014XActivate dependent table "/MDGBPX/_S_BP_ES_BP_SALES"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBPX/_S_BP_ES_BP_SALES" is specified twice
+    3 EDT015 Dependent table "/MDGBPX/_S_BP_ES_BP_SALES" was not activated
+1EEDO519 "Table" "/MDGBPX/_S_BP_ES_BP_SALES" could not be activated
+    3 EDT014XActivate dependent table "/MDGBPX/_S_BP_ES_BP_TAXGRP"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBPX/_S_BP_ES_BP_TAXGRP" is specified twice
+    3 EDT015 Dependent table "/MDGBPX/_S_BP_ES_BP_TAXGRP" was not activated
+1EEDO519 "Table" "/MDGBPX/_S_BP_ES_BP_TAXGRP" could not be activated
+    3 EDT014XActivate dependent table "/MDGBPX/_S_BP_ES_BP_VENFCN"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBPX/_S_BP_ES_BP_VENFCN" is specified twice
+    3 EDT015 Dependent table "/MDGBPX/_S_BP_ES_BP_VENFCN" was not activated
+1EEDO519 "Table" "/MDGBPX/_S_BP_ES_BP_VENFCN" could not be activated
+    3 EDT014XActivate dependent table "/MDGBPX/_S_BP_ES_BP_VENSUB"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBPX/_S_BP_ES_BP_VENSUB" is specified twice
+    3 EDT015 Dependent table "/MDGBPX/_S_BP_ES_BP_VENSUB" was not activated
+1EEDO519 "Table" "/MDGBPX/_S_BP_ES_BP_VENSUB" could not be activated
+    3 EDT014XActivate dependent table "/MDGBPX/_S_BP_ES_BP_WHTAX"
+    1EEDT963 Field "SEARCH_RANK" in table "/MDGBPX/_S_BP_ES_BP_WHTAX" is specified twice
+    3 EDT015 Dependent table "/MDGBPX/_S_BP_ES_BP_WHTAX" was not activated
+1EEDO519 "Table" "/MDGBPX/_S_BP_ES_BP_WHTAX" could not be activated
+    3 EDT012XActivate table "/ORTEC/TLO_S_ALV_DOCQ_VBAK"
+    2WEDT191 Enhancement category "4" possible (include or subtype not yet classified)
+    1EEDT963 Field "LSSTK" in table "/ORTEC/TLO_S_ALV_DOCQ_VBAK" is specified twice
+    2WEDT135 Flag: 'Incorrect enhancement category' not updated ("Runtime Object")
+    3 EDT013 Table "/ORTEC/TLO_S_ALV_DOCQ_VBAK" was not activated
+    3 EDT014XActivate dependent table "/ORTEC/TLO_S_ALV_DOCQ_VBAK"
+    2WEDT191 Enhancement category "4" possible (include or subtype not yet classified)
+    1EEDT963 Field "LSSTK" in table "/ORTEC/TLO_S_ALV_DOCQ_VBAK" is specified twice
+    2WEDT135 Flag: 'Incorrect enhancement category' not updated ("Runtime Object")
+    3 EDT015 Dependent table "/ORTEC/TLO_S_ALV_DOCQ_VBAK" was not activated
+1EEDO519 "Table" "/ORTEC/TLO_S_ALV_DOCQ_VBAK" could not be activated
+    3 EDT012XActivate table "/ORTEC/TLO_S_ALV_DOCQ_VBAP"
+    2WEDT191 Enhancement category "4" possible (include or subtype not yet classified)
+    1EEDT963 Field "LSSTA" in table "/ORTEC/TLO_S_ALV_DOCQ_VBAP" is specified twice
+    2WEDT135 Flag: 'Incorrect enhancement category' not updated ("Runtime Object")
+    3 EDT013 Table "/ORTEC/TLO_S_ALV_DOCQ_VBAP" was not activated
+    3 EDT014XActivate dependent table "/ORTEC/TLO_S_ALV_DOCQ_VBAP"
+    2WEDT191 Enhancement category "4" possible (include or subtype not yet classified)
+    1EEDT963 Field "LSSTA" in table "/ORTEC/TLO_S_ALV_DOCQ_VBAP" is specified twice
+    2WEDT135 Flag: 'Incorrect enhancement category' not updated ("Runtime Object")
+    3 EDT015 Dependent table "/ORTEC/TLO_S_ALV_DOCQ_VBAP" was not activated
+1EEDO519 "Table" "/ORTEC/TLO_S_ALV_DOCQ_VBAP" could not be activated
+    3 EDT012XActivate table "/SCL/ESDOC_SALES_ATTR0001"
+    2WEDT191 Enhancement category "3" possible (include or subtype not yet classified)
+    1EEDT242 Field "HB_CONT_REASON": Component type is not active or is not allowed
+    1EEDT242 Field "HB_EXPDATE": Component type is not active or is not allowed
+    1EEDT242 Field "HB_RESDATE": Component type is not active or is not allowed
+    1EEDT242 Field "MTLAUR": Component type is not active or is not allowed
+    1EEDT242 Field "PHASE": Component type is not active or is not allowed
+    1EEDT242 Field "SMENR": Component type is not active or is not allowed
+    1EEDT242 Field "STAGE": Component type is not active or is not allowed
+    1EEDT242 Field "SWENR": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/SCL/ESDOC_SALES_ATTR0001"
+    2WEAD285 Check table "HBSCREASON" does not exist or does not have any key fields
+    1EEDT317 Check field "HB_CONT_REASON" cannot be type " "
+    2WEAD285 Check table "CHBSNCM" does not exist or does not have any key fields
+    1EEDT317 Check field "MTLAUR" cannot be type " "
+    2WEAD285 Check table "HBSSPH" does not exist or does not have any key fields
+    1EEDT317 Check field "PHASE" cannot be type " "
+    1EEDT317 Check field "SMENR" cannot be type " "
+    2WEDT313 For. "/SCL/ESDOC_SALES_ATTR0001"-"SMENR" ("SWENR" and "SWENR" have different data types)
+    2WEAD274 Foreign key "/SCL/ESDOC_SALES_ATTR0001"-"SMENR" ("SMENR" and "SMENR" point to different domains)
+    1EEDT317 Check field "SWENR" cannot be type " "
+    2WEAD274 Foreign key "/SCL/ESDOC_SALES_ATTR0001"-"SWENR" ("SWENR" and "SWENR" point to different domains)
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/SCL/ESDOC_SALES_ATTR0001" cannot be generated
+    3 EDT013 Table "/SCL/ESDOC_SALES_ATTR0001" was not activated
+    3 EDT014XActivate dependent table "/SCL/ESDOC_SALES_ATTR0001"
+    2WEDT191 Enhancement category "3" possible (include or subtype not yet classified)
+    1EEDT242 Field "HB_CONT_REASON": Component type is not active or is not allowed
+    1EEDT242 Field "HB_EXPDATE": Component type is not active or is not allowed
+    1EEDT242 Field "HB_RESDATE": Component type is not active or is not allowed
+    1EEDT242 Field "MTLAUR": Component type is not active or is not allowed
+    1EEDT242 Field "PHASE": Component type is not active or is not allowed
+    1EEDT242 Field "SMENR": Component type is not active or is not allowed
+    1EEDT242 Field "STAGE": Component type is not active or is not allowed
+    1EEDT242 Field "SWENR": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "/SCL/ESDOC_SALES_ATTR0001"
+    A1EESD_EXT_MSG 007 Execution of the consistency checks failed.
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "/SCL/ESDOC_SALES_ATTR0001" cannot be generated
+    3 EDT015 Dependent table "/SCL/ESDOC_SALES_ATTR0001" was not activated
+1EEDO519 "Table" "/SCL/ESDOC_SALES_ATTR0001" could not be activated
+    3 EDT014XActivate dependent table "BIW_LFA1_S"
+    3 EDT402 Append structure "/CCC/BIW_LFA1_S_HCCBPL_APPEND" appended to table "BIW_LFA1_S"
+    3 EDT402 Append structure "ZABIW_LFA1_S" appended to table "BIW_LFA1_S"
+    2WEDT191 Enhancement category "3" possible (include or subtype not yet classified)
+    1EEDT963 Field "ADRNR" in table "BIW_LFA1_S" is specified twice
+    3 EDT015 Dependent table "BIW_LFA1_S" was not activated
+1EEDO519 "Table" "BIW_LFA1_S" could not be activated
+    3 EDT012XActivate table "BSS_CENTI"
+    3 EDT402 Append structure "/CCBJI/ZABSS_CENTI" appended to table "BSS_CENTI"
+    2WEDT191 Enhancement category "3" possible (include or subtype not yet classified)
+    1EEDT963 Field "/CCC/KEYACCCUST" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/CCC/SLOCA" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/BUSOWN" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/CSTPLNLEV" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/CUSTTYPE" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/DEMAND_AREA" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/GLCUST" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/LQEXPDAT" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/LQLNUM" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/OPCHANNEL" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/OPMARKET" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/RED_DATE" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/RED_IND" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/SUBDEM_AREA" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/SUPR" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/TRADENAME" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "VBUND1" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZY1" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZY2" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZY3" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZY4" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZY5" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZY6" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZY7" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZY8" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZY9" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZZ0" in table "BSS_CENTI" is specified twice
+    3 EDT013 Table "BSS_CENTI" was not activated
+    3 EDT014XActivate dependent table "BSS_CENTI"
+    3 EDT402 Append structure "/CCBJI/ZABSS_CENTI" appended to table "BSS_CENTI"
+    2WEDT191 Enhancement category "3" possible (include or subtype not yet classified)
+    1EEDT963 Field "/CCC/KEYACCCUST" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/CCC/SLOCA" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/BUSOWN" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/CSTPLNLEV" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/CUSTTYPE" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/DEMAND_AREA" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/GLCUST" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/LQEXPDAT" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/LQLNUM" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/OPCHANNEL" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/OPMARKET" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/RED_DATE" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/RED_IND" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/SUBDEM_AREA" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/SUPR" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "/SCL/TRADENAME" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "VBUND1" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZY1" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZY2" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZY3" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZY4" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZY5" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZY6" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZY7" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZY8" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZY9" in table "BSS_CENTI" is specified twice
+    1EEDT963 Field "ZZZ0" in table "BSS_CENTI" is specified twice
+    3 EDT015 Dependent table "BSS_CENTI" was not activated
+1EEDO519 "Table" "BSS_CENTI" could not be activated
+    3 EDT012XActivate table "BSS_CENTIGUID"
+    3 EDT402 Append structure "/CCBJI/ZABSS_CENTIGUID" appended to table "BSS_CENTIGUID"
+    2WEDT191 Enhancement category "3" possible (include or subtype not yet classified)
+    1EEDT963 Field "/CCC/KEYACCCUST" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/CCC/SLOCA" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/BUSOWN" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/CSTPLNLEV" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/CUSTTYPE" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/DEMAND_AREA" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/GLCUST" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/LQEXPDAT" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/LQLNUM" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/OPCHANNEL" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/OPMARKET" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/RED_DATE" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/RED_IND" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/SUBDEM_AREA" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/SUPR" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/TRADENAME" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "VBUND1" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZY1" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZY2" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZY3" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZY4" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZY5" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZY6" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZY7" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZY8" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZY9" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZZ0" in table "BSS_CENTIGUID" is specified twice
+    3 EDT013 Table "BSS_CENTIGUID" was not activated
+    3 EDT014XActivate dependent table "BSS_CENTIGUID"
+    3 EDT402 Append structure "/CCBJI/ZABSS_CENTIGUID" appended to table "BSS_CENTIGUID"
+    2WEDT191 Enhancement category "3" possible (include or subtype not yet classified)
+    1EEDT963 Field "/CCC/KEYACCCUST" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/CCC/SLOCA" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/BUSOWN" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/CSTPLNLEV" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/CUSTTYPE" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/DEMAND_AREA" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/GLCUST" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/LQEXPDAT" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/LQLNUM" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/OPCHANNEL" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/OPMARKET" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/RED_DATE" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/RED_IND" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/SUBDEM_AREA" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/SUPR" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "/SCL/TRADENAME" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "VBUND1" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZY1" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZY2" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZY3" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZY4" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZY5" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZY6" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZY7" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZY8" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZY9" in table "BSS_CENTIGUID" is specified twice
+    1EEDT963 Field "ZZZ0" in table "BSS_CENTIGUID" is specified twice
+    3 EDT015 Dependent table "BSS_CENTIGUID" was not activated
+1EEDO519 "Table" "BSS_CENTIGUID" could not be activated
+    3 EDT012XActivate table "BSS_CENTIX"
+    3 EDT402 Append structure "/CCBJI/ZABSS_CENTIX" appended to table "BSS_CENTIX"
+    2WEDT191 Enhancement category "2" possible (include or subtype not yet classified)
+    1EEDT963 Field "/CCC/KEYACCCUST" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/CCC/SLOCA" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/BUSOWN" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/CSTPLNLEV" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/CUSTTYPE" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/DEMAND_AREA" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/GLCUST" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/LQEXPDAT" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/LQLNUM" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/OPCHANNEL" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/OPMARKET" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/RED_DATE" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/RED_IND" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/SUBDEM_AREA" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/SUPR" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/TRADENAME" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "UMSA1" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "VBUND1" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZY1" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZY2" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZY3" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZY4" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZY5" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZY6" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZY7" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZY8" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZY9" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZZ0" in table "BSS_CENTIX" is specified twice
+    3 EDT013 Table "BSS_CENTIX" was not activated
+    3 EDT014XActivate dependent table "BSS_CENTIX"
+    3 EDT402 Append structure "/CCBJI/ZABSS_CENTIX" appended to table "BSS_CENTIX"
+    2WEDT191 Enhancement category "2" possible (include or subtype not yet classified)
+    1EEDT963 Field "/CCC/KEYACCCUST" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/CCC/SLOCA" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/BUSOWN" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/CSTPLNLEV" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/CUSTTYPE" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/DEMAND_AREA" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/GLCUST" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/LQEXPDAT" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/LQLNUM" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/OPCHANNEL" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/OPMARKET" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/RED_DATE" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/RED_IND" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/SUBDEM_AREA" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/SUPR" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "/SCL/TRADENAME" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "UMSA1" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "VBUND1" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZY1" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZY2" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZY3" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZY4" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZY5" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZY6" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZY7" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZY8" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZY9" in table "BSS_CENTIX" is specified twice
+    1EEDT963 Field "ZZZ0" in table "BSS_CENTIX" is specified twice
+    3 EDT015 Dependent table "BSS_CENTIX" was not activated
+1EEDO519 "Table" "BSS_CENTIX" could not be activated
+    3 EDT014XActivate dependent table "CMM_PRICING_ITEM"
+    3 EDT405 No customer or SAP include "SI_KOMP_CM" exists
+    3 EDT405 No customer or SAP include "CI_PRS_CPILS_2" exists
+    2WEDT191 Enhancement category "3" possible (include or subtype not yet classified)
+    1EEDT963 Field "MVGR1" in table "CMM_PRICING_ITEM" is specified twice
+    1EEDT963 Field "MVGR2" in table "CMM_PRICING_ITEM" is specified twice
+    1EEDT963 Field "MVGR3" in table "CMM_PRICING_ITEM" is specified twice
+    1EEDT963 Field "MVGR4" in table "CMM_PRICING_ITEM" is specified twice
+    1EEDT963 Field "MVGR5" in table "CMM_PRICING_ITEM" is specified twice
+    3 EDT015 Dependent table "CMM_PRICING_ITEM" was not activated
+    3 EDO532 "TABL" "CMS_STR_COR_CAG_CHG": Time stamp was updated
+    3 EDO532 "TABL" "CMS_STR_INDV_READ_QRY_INBOUND": Time stamp was updated
+1EEDO519 "Table" "CMM_PRICING_ITEM" could not be activated
+    3 EDT012XActivate table "EDOINADDINFO"
+    3 EDT402 Append structure "ZEDOC_IN_ADDINFO" appended to table "EDOINADDINFO"
+    2WEDT191 Enhancement category "4" possible (include or subtype not yet classified)
+    1EEDT963 Field "BUPLA" in table "EDOINADDINFO" is specified twice
+    3 EDT013 Table "EDOINADDINFO" was not activated
+    3 EDT014XActivate dependent table "EDOINADDINFO"
+    3 EDT402 Append structure "ZEDOC_IN_ADDINFO" appended to table "EDOINADDINFO"
+    2WEDT191 Enhancement category "4" possible (include or subtype not yet classified)
+    1EEDT963 Field "BUPLA" in table "EDOINADDINFO" is specified twice
+    3 EDT015 Dependent table "EDOINADDINFO" was not activated
+1EEDO519 "Table" "EDOINADDINFO" could not be activated
+    3 EDT014XActivate dependent table "FAGLPOSBW"
+    3 EDT402 Append structure "/SCL/0FI_GL_14_APPEND" appended to table "FAGLPOSBW"
+    3 EDT402 Append structure "ZJPAOBJNR" appended to table "FAGLPOSBW"
+    1EEDT963 Field "MATNR" in table "FAGLPOSBW" is specified twice
+    3 EDT015 Dependent table "FAGLPOSBW" was not activated
+1EEDO519 "Table" "FAGLPOSBW" could not be activated
+    3 EDT014XActivate dependent table "KOMB"
+    3 EDT402 Append structure "/CCEJ/BSARK" appended to table "KOMB"
+    2WEDT191 Enhancement category "3" possible (include or subtype not yet classified)
+    1EEDT963 Field "BWART" in table "KOMB" is specified twice
+    1EEDT963 Field "ZTERM" in table "KOMB" is specified twice
+    3 EDT015 Dependent table "KOMB" was not activated
+1EEDO519 "Table" "KOMB" could not be activated
+    3 EDT014XActivate dependent table "KOMG"
+    3 EDT402 Append structure "/CCC/MDMS_HCCBPL_DISCOUNT_IND1" appended to table "KOMG"
+    3 EDT402 Append structure "/CCC/OTCS_MRP1" appended to table "KOMG"
+    3 EDT402 Append structure "/CCC/SLSS_PCLEVKOMG" appended to table "KOMG"
+    3 EDT402 Append structure "/CCC/S_BUSINESS_PLACE" appended to table "KOMG"
+    3 EDT402 Append structure "/CCEJ/ADD_VEH_RETURN" appended to table "KOMG"
+    3 EDT402 Append structure "/CCEJ/SLSS_CPG_KOMG" appended to table "KOMG"
+    3 EDT402 Append structure "/CCEJ/SLSS_PRICING_KOMG" appended to table "KOMG"
+    3 EDT402 Append structure "/SCL/OTCS_ADDITIONAL_DATA_KDKG" appended to table "KOMG"
+    3 EDT402 Append structure "/SCL/SLSS_PCLEVKOMG" appended to table "KOMG"
+    3 EDT402 Append structure "KOMG_MKTTG" appended to table "KOMG"
+    3 EDT405 No customer or SAP include "SI_KOMK_CM" exists
+    3 EDT405 No customer or SAP include "SI_KOMP_CM" exists
+    3 EDT405 No customer or SAP include "CI_PRS_CPILS_2" exists
+    2WEDT191 Enhancement category "3" possible (include or subtype not yet classified)
+    1EEDT963 Field "KVGR4" in table "KOMG" is specified twice
+    1EEDT963 Field "MVGR1" in table "KOMG" is specified twice
+    1EEDT963 Field "MVGR2" in table "KOMG" is specified twice
+    1EEDT963 Field "MVGR3" in table "KOMG" is specified twice
+    1EEDT963 Field "MVGR4" in table "KOMG" is specified twice
+    1EEDT963 Field "MVGR5" in table "KOMG" is specified twice
+    3 EDT015 Dependent table "KOMG" was not activated
+1EEDO519 "Table" "KOMG" could not be activated
+    3 EDT014XActivate dependent table "KOMKBV3"
+    3 EDT402 Append structure "/CCC/OTCS_CUSTOM_ACCESS_SEQ" appended to table "KOMKBV3"
+    3 EDT402 Append structure "/CCC/OTC_ADDFLD_KOMKBV3" appended to table "KOMKBV3"
+    3 EDT402 Append structure "/CCC/OTC_KOMK_ADDITIONAL" appended to table "KOMKBV3"
+    3 EDT402 Append structure "/SCL/FKSTO" appended to table "KOMKBV3"
+    3 EDT402 Append structure "/SCL/OTCS_CUSTOM_ACCESS_SEQ" appended to table "KOMKBV3"
+    3 EDT402 Append structure "/SCL/OTC_DSD_MEDIUM_SHIP_PARTY" appended to table "KOMKBV3"
+    2WEDT191 Enhancement category "3" possible (include or subtype not yet classified)
+    1EEDT963 Field "KUNWE" in table "KOMKBV3" is specified twice
+    3 EDT015 Dependent table "KOMKBV3" was not activated
+1EEDO519 "Table" "KOMKBV3" could not be activated
+    3 EDT014XActivate dependent table "KOMK_KEY_UC"
+    3 EDT405 No customer or SAP include "SI_KOMK_CM" exists
+    2WEDT191 Enhancement category "3" possible (include or subtype not yet classified)
+    1EEDT963 Field "KVGR4" in table "KOMK_KEY_UC" is specified twice
+    3 EDT015 Dependent table "KOMK_KEY_UC" was not activated
+1EEDO519 "Table" "KOMK_KEY_UC" could not be activated
+    3 EDT014XActivate dependent table "KOMP"
+    3 EDT402 Append structure "/CCC/OTCS_MRP" appended to table "KOMP"
+    3 EDT402 Append structure "/CCC/S_BRANCH" appended to table "KOMP"
+    3 EDT402 Append structure "/CCC/TPM_KOMP_APPEND" appended to table "KOMP"
+    3 EDT402 Append structure "/CCEJ/ADD_COND_FIELDS1" appended to table "KOMP"
+    3 EDT402 Append structure "/CCEJ/SLSS_ECUPKG_KOMP" appended to table "KOMP"
+    3 EDT402 Append structure "/SCL/KOMP" appended to table "KOMP"
+    3 EDT402 Append structure "/SCL/SLSS_PCLEVKOMP" appended to table "KOMP"
+    3 EDT402 Append structure "KOMP_MKTTG" appended to table "KOMP"
+    3 EDT405 No customer or SAP include "SI_KOMP_CM" exists
+    3 EDT405 No customer or SAP include "CI_PRS_CPILS_2" exists
+    2WEDT191 Enhancement category "3" possible (include or subtype not yet classified)
+    1EEDT963 Field "MVGR1" in table "KOMP" is specified twice
+    1EEDT963 Field "MVGR2" in table "KOMP" is specified twice
+    1EEDT963 Field "MVGR3" in table "KOMP" is specified twice
+    1EEDT963 Field "MVGR4" in table "KOMP" is specified twice
+    1EEDT963 Field "MVGR5" in table "KOMP" is specified twice
+    3 EDT015 Dependent table "KOMP" was not activated
+1EEDO519 "Table" "KOMP" could not be activated
+    3 EDT014XActivate dependent table "KOMPBME"
+    1EEDT963 Field "BWART" in table "KOMPBME" is specified twice
+    1EEDT963 Field "MATNR" in table "KOMPBME" is specified twice
+    3 EDT015 Dependent table "KOMPBME" was not activated
+1EEDO519 "Table" "KOMPBME" could not be activated
+    3 EDT014XActivate dependent table "MIG_VMDS_EI_COMPANY"
+    1EEAD225 INCLUDE cannot be broken down; field name with suffix is too long
+    1EEDT003 Routine "EXPAND" (Table "MIG_VMDS_EI_COMPANY" could not be expanded)
+    3 EDT015 Dependent table "MIG_VMDS_EI_COMPANY" was not activated
+1EEDO519 "Table" "MIG_VMDS_EI_COMPANY" could not be activated
+    3 EDT014XActivate dependent table "PDCOM"
+    3 EDT402 Append structure "/CCC/PDCOM" appended to table "PDCOM"
+    3 EDT402 Append structure "/SCL/PDCOM" appended to table "PDCOM"
+    1EEDT963 Field "KAPTPROG" in table "PDCOM" is specified twice
+    3 EDT015 Dependent table "PDCOM" was not activated
+1EEDO519 "Table" "PDCOM" could not be activated
+    3 EDT014XActivate dependent table "PDORDU18"
+    3 EDT402 Append structure "/CCC/PDORDU18" appended to table "PDORDU18"
+    3 EDT402 Append structure "/SCL/PDORDU18" appended to table "PDORDU18"
+    2WENP230 Field name "RESOURCE" is reserved (Do not use structure as include in DB table)
+    1EEDT963 Field "ISERH" in table "PDORDU18" is specified twice
+    1EEDT963 Field "KAPTPROG" in table "PDORDU18" is specified twice
+    1EEDT963 Field "ZEIER" in table "PDORDU18" is specified twice
+    3 EDT015 Dependent table "PDORDU18" was not activated
+1EEDO519 "Table" "PDORDU18" could not be activated
+    3 EDT014XActivate dependent table "UDM_WL_ITEM"
+    1EEDT509 Indexes "H43" and "Z01" for table "UDM_WL_ITEM" have identical fields
+    3 EDT015 Dependent table "UDM_WL_ITEM" was not activated
+1EEDO519 "Table" "UDM_WL_ITEM" could not be activated
+    3 EDT012XActivate table "ZOXDCR0322"
+    1EEDT242 Field "ISM_SE_PLANNING": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "ZOXDCR0322"
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "ZOXDCR0322" cannot be generated
+    3 EDT013 Table "ZOXDCR0322" was not activated
+    3 EDT014XActivate dependent table "ZOXDCR0322"
+    1EEDT242 Field "ISM_SE_PLANNING": Component type is not active or is not allowed
+    1EEDT491 Could not determine structure width of "ZOXDCR0322"
+    A1EESD_EXT_MSG 007 Execution of the consistency checks failed.
+    1EEDO251 Data type " " does not exist
+    1EEDT005 Nametab for table "ZOXDCR0322" cannot be generated
+    3 EDT015 Dependent table "ZOXDCR0322" was not activated
+1EEDO519 "Table" "ZOXDCR0322" could not be activated
+    3 EMC738XActivate view "/ORTEC/TLO_V_VBK"
+    4EEMC060 Field name "LSSTK" not unique
+    3 EMC742 View "/ORTEC/TLO_V_VBK" was not activated
+    3 EDO525XActivate dependent view "/ORTEC/TLO_V_VBK"
+    4EEMC060 Field name "LSSTK" not unique
+    3 EMC742 View "/ORTEC/TLO_V_VBK" was not activated
+1EEDO519 "View" "/ORTEC/TLO_V_VBK" could not be activated
+    3 EMC738XActivate view "/ORTEC/TLO_V_VBP"
+    4EEMC060 Field name "LFGSA" not unique
+    3 EMC742 View "/ORTEC/TLO_V_VBP" was not activated
+    3 EDO525XActivate dependent view "/ORTEC/TLO_V_VBP"
+    4EEMC060 Field name "LFGSA" not unique
+    3 EMC742 View "/ORTEC/TLO_V_VBP" was not activated
+1EEDO519 "View" "/ORTEC/TLO_V_VBP" could not be activated
+    3 EMC738XActivate view "/SCL/G_V_IMORDE"
+    2WEMC735 The view ignores client-dependency of the base tables
+    3 EMC763 Key field "AUFK"-"MANDT" missing
+    3 EMC763 Key field "COSP"-"BEKNZ" missing
+    3 EMC763 Key field "COSP"-"HRKFT" missing
+    3 EMC763 Key field "COSP"-"KSTAR" missing
+    3 EMC763 Key field "COSP"-"LEDNR" missing
+    3 EMC763 Key field "COSP"-"PARGB" missing
+    3 EMC763 Key field "COSP"-"PERBL" missing
+    3 EMC763 Key field "COSP"-"VBUND" missing
+    3 EMC763 Key field "COSP"-"VRGNG" missing
+    3 EMC763 Key field "COSP"-"WRTTP" missing
+    3 EMC763 Key field "IMPR"-"POSNR" missing
+    3 EMC763 Key field "IMZO"-"OBJNR" missing
+    2WEMC732 All fields are evaluated as key field
+    4EEMC710 Base tables of type "VIEW" not permitted
+    3 EMC742 View "/SCL/G_V_IMORDE" was not activated
+    3 EDO525XActivate dependent view "/SCL/G_V_IMORDE"
+    2WEMC735 The view ignores client-dependency of the base tables
+    3 EMC763 Key field "AUFK"-"MANDT" missing
+    3 EMC763 Key field "COSP"-"BEKNZ" missing
+    3 EMC763 Key field "COSP"-"HRKFT" missing
+    3 EMC763 Key field "COSP"-"KSTAR" missing
+    3 EMC763 Key field "COSP"-"LEDNR" missing
+    3 EMC763 Key field "COSP"-"PARGB" missing
+    3 EMC763 Key field "COSP"-"PERBL" missing
+    3 EMC763 Key field "COSP"-"VBUND" missing
+    3 EMC763 Key field "COSP"-"VRGNG" missing
+    3 EMC763 Key field "COSP"-"WRTTP" missing
+    3 EMC763 Key field "IMPR"-"POSNR" missing
+    3 EMC763 Key field "IMZO"-"OBJNR" missing
+    2WEMC732 All fields are evaluated as key field
+    4EEMC710 Base tables of type "VIEW" not permitted
+    3 EMC742 View "/SCL/G_V_IMORDE" was not activated
+1EEDO519 "View" "/SCL/G_V_IMORDE" could not be activated
+    3 EMC738XActivate view "/SCL/G_V_IMORDI"
+    2WEMC735 The view ignores client-dependency of the base tables
+    3 EMC763 Key field "AUFK"-"MANDT" missing
+    3 EMC763 Key field "COSP_VTYPE"-"VRGNG_OLTP" missing
+    3 EMC763 Key field "COSP_VTYPE"-"WRTTP_OLTP" missing
+    3 EMC763 Key field "COSS"-"BEKNZ" missing
+    3 EMC763 Key field "COSS"-"HRKFT" missing
+    3 EMC763 Key field "COSS"-"KSTAR" missing
+    3 EMC763 Key field "COSS"-"LEDNR" missing
+    3 EMC763 Key field "COSS"-"PAROB" missing
+    3 EMC763 Key field "COSS"-"PERBL" missing
+    3 EMC763 Key field "COSS"-"USPOB" missing
+    3 EMC763 Key field "IMPR"-"POSNR" missing
+    3 EMC763 Key field "IMZO"-"OBJNR" missing
+    2WEMC732 All fields are evaluated as key field
+    4EEMC710 Base tables of type "VIEW" not permitted
+    3 EMC742 View "/SCL/G_V_IMORDI" was not activated
+    3 EDO525XActivate dependent view "/SCL/G_V_IMORDI"
+    2WEMC735 The view ignores client-dependency of the base tables
+    3 EMC763 Key field "AUFK"-"MANDT" missing
+    3 EMC763 Key field "COSP_VTYPE"-"VRGNG_OLTP" missing
+    3 EMC763 Key field "COSP_VTYPE"-"WRTTP_OLTP" missing
+    3 EMC763 Key field "COSS"-"BEKNZ" missing
+    3 EMC763 Key field "COSS"-"HRKFT" missing
+    3 EMC763 Key field "COSS"-"KSTAR" missing
+    3 EMC763 Key field "COSS"-"LEDNR" missing
+    3 EMC763 Key field "COSS"-"PAROB" missing
+    3 EMC763 Key field "COSS"-"PERBL" missing
+    3 EMC763 Key field "COSS"-"USPOB" missing
+    3 EMC763 Key field "IMPR"-"POSNR" missing
+    3 EMC763 Key field "IMZO"-"OBJNR" missing
+    2WEMC732 All fields are evaluated as key field
+    4EEMC710 Base tables of type "VIEW" not permitted
+    3 EMC742 View "/SCL/G_V_IMORDI" was not activated
+1EEDO519 "View" "/SCL/G_V_IMORDI" could not be activated
+    3 EMC738XActivate view "Z6_T_DUEINV_BI"
+    3 EMC763 Key field "/CCC/T_DUEINV_BI"-"BUKRS" missing
+    3 EMC763 Key field "/CCC/T_DUEINV_BI"-"BUZEI" missing
+    3 EMC763 Key field "BSID"-"AUGBL" missing
+    3 EMC763 Key field "BSID"-"AUGDT" missing
+    3 EMC763 Key field "BSID"-"BUZEI" missing
+    3 EMC763 Key field "BSID"-"UMSKS" missing
+    3 EMC763 Key field "BSID"-"UMSKZ" missing
+    3 EMC763 Key field "BSID"-"ZUONR" missing
+    2WEMC732 All fields are evaluated as key field
+    4EEMC710 Base tables of type "VIEW" not permitted
+    3 EMC742 View "Z6_T_DUEINV_BI" was not activated
+    3 EDO525XActivate dependent view "Z6_T_DUEINV_BI"
+    3 EMC763 Key field "/CCC/T_DUEINV_BI"-"BUKRS" missing
+    3 EMC763 Key field "/CCC/T_DUEINV_BI"-"BUZEI" missing
+    3 EMC763 Key field "BSID"-"AUGBL" missing
+    3 EMC763 Key field "BSID"-"AUGDT" missing
+    3 EMC763 Key field "BSID"-"BUZEI" missing
+    3 EMC763 Key field "BSID"-"UMSKS" missing
+    3 EMC763 Key field "BSID"-"UMSKZ" missing
+    3 EMC763 Key field "BSID"-"ZUONR" missing
+    2WEMC732 All fields are evaluated as key field
+    4EEMC710 Base tables of type "VIEW" not permitted
+    3 EMC742 View "Z6_T_DUEINV_BI" was not activated
+1EEDO519 "View" "Z6_T_DUEINV_BI" could not be activated
+    3 EMC738XActivate view "ZJVBSIK"
+    3 EMC748 View field "ZJVBSIK"-"ZLSCH" (data element not adjusted to base field)
+    4EEMC710 Base tables of type "VIEW" not permitted
+    3 EMC742 View "ZJVBSIK" was not activated
+    3 EDO525XActivate dependent view "ZJVBSIK"
+    3 EMC748 View field "ZJVBSIK"-"ZLSCH" (data element not adjusted to base field)
+    4EEMC710 Base tables of type "VIEW" not permitted
+    3 EMC742 View "ZJVBSIK" was not activated
+    2 ED0348XServer Usage ************************************************************
+    2 ED0313 Server..............|Workp|Tasks|Error|.Timesum|Objcount|ms/Obj|..KCosts|ms/KCs
+    2 ED0313 -------------------------------------------------------------------------------
+    2 ED0313 hec55v072589_Q4R_02.|...12|...35|.....|.....494|...3.311|...149|...1.534|...322
+    2 EDO678 Parallel execution: "42" sec., Phase out time: "2" sec., Load: "9,8015873015873012E+01" percent
+    1 EDO533X*** Activate objects at level "8" ("02.04.2026 13:02:20")
+    3 EDO631 * Parallel execution with maximum of "12" concurrent tasks *
+    3 EDO677 Total of "1.798" objects with "751.400" costs in "35" tasks
+    3 ETP000 A3 EDDLSX041XActivating dependent DDL source "/SAPPSPRO/SHSM_M_MEKKB" (active version)
+    A2WESDDL_PARSER_MSG 509 Prefix '"SHSM_M_MEKKB"' must be specified for expression '"BEDNR"'
+    A2WESDDL_PARSER_MSG 509 Prefix '"SHSM_M_MEKKB"' must be specified for expression '"BSTYP"'
+    A2WESDDL_PARSER_MSG 509 Prefix '"SHSM_M_MEKKB"' must be specified for expression '"BSART"'
+    A2WESDDL_PARSER_MSG 509 Prefix '"SHSM_M_MEKKB"' must be specified for expression '"EKORG"'
+    A2WESDDL_PARSER_MSG 509 Prefix '"SHSM_M_MEKKB"' must be specified for expression '"EBELP"'
+    A2WESDDL_PARSER_MSG 509 Prefix '"SHSM_M_MEKKB"' must be specified for expression '"EXLIN"'
+    A2WESDDL_PARSER_MSG 509 Prefix '"SHSM_M_MEKKB"' must be specified for expression '"ISEOPBLOCKED"'
+    A2WESDDL_PARSER_MSG 509 Prefix '"SHSM_M_MEKKB"' must be specified for expression '"EKGRP"'
+    A2WESDDL_PARSER_MSG 509 Prefix '"SHSM_M_MEKKB"' must be specified for expression '"WERKS"'
+    A2WESDDL_PARSER_MSG 509 Prefix '"SHSM_M_MEKKB"' must be specified for expression '"STATU"'
+    A2WEDDLS 102 Annotation for "EndUserText.label" does not exist
+    A3 EDDLS 465XChecks SQL View "/SAPPSPRO/MEKKB"
+    3 ED0308 Operation started by user "DDIC" on "02.04.26" at "13:02"
+    3 EMC741 View "/SAPPSPRO/MEKKB" is consistent
+    A3 EDDLS 453XCheck of dependent objects
+    A3 EDDLS 454 Dependent objects checked successfully
+    A3 ESTOBJ 011XActivating structured object "/SAPPSPRO/SHSM_M_MEKKB"
+    3 ED0308 Operation started by user "DDIC" on "02.04.26" at "13:02"
+    A3 ESTOBJ 104 Checking structured object "/SAPPSPRO/SHSM_M_MEKKB"
+    A3 ESTOBJ 105 Structured object "/SAPPSPRO/SHSM_M_MEKKB" has been checked successfully
+    A3 ESD_CDS_ENTITY 328 Flag 'access_control_exists' was set for entity
+    A3 ESTOBJ 004 Structured object "/SAPPSPRO/SHSM_M_MEKKB" was activated successfully
+1EEDO519 "View" "ZJVBSIK" could not be activated
+1 ETP111 exit code           : "8"

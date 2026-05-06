@@ -1,0 +1,698 @@
+1 ETQ201 Entering upgrade-phase "MAIN_SHDRUN/ACT_UPG" ("20260330085515").
+4 ETQ399 Set database connect to shadow schema (SAPHANADBSHD).
+4 ETQ399 Set environment for shadow connect:
+4 ETQ399 Set RFC variables for shadow connect:
+4 ETQ399 System-nr = '02', GwService = 'sapgw02' Client = '000'
+4 ETQ399 Map TP_CALL_EXE to path '/mount_lt/SUM/abap/exe'
+4 ETQ399 Set tool parameters for shadow connect with TPPARAM 'SHADOW.TPP'.
+2 ETQ366 Connect variables are set for shadow instance access: System-nr = '02', GwService = 'sapgw02' Client = '000'.
+4 ETQ399 Environment variable: auth_shadow_upgrade=1
+1 ETQ200 Executing actual phase 'MAIN_SHDRUN/ACT_UPG'.
+1 ETQ399 Phase arguments:
+2 ETQ399 Arg[SourceBuffer] = 'ACTUPG.BUF'
+2 ETQ399 Arg[Tp0File]      = 'ACTUPG.TP0'
+2 ETQ399 Arg[TargetBuffer] = 'SHDINCIMP.BUF'
+2 ETQ399 Arg[Options]      = <NULL>
+1 ETQ000 ==================================================
+1 ETQ399 Executing putsteps '{|(A'.
+1 ETQ399 Disabling SPDD/SPAU preview mode.
+2 ETQ399 Requested SQL task ID is 'SELECT_CUSTOMER_APPENDS', to be executed in parallel.
+4 ETQ399 Preparing internal output table 'CustAppends' to receive named fields.
+3WETQ399 Statement has selections, parallel execution disabled.
+3 ETQ399 Generated TQL file 'SELECT_CUSTOMER_APPENDS.TQL' with 4 SQL statements, log file 'SELECT_CUSTOMER_APPENDS.OUT'.
+2 ETQ399 Distributed 0 statements, 4 actual ones are written to TQL files.
+2 ETQ399 Running 1 scripts serially, writing to 'ACTUPG.ELG'.
+2 ETQ000 ==================================================
+2 ETQ101 Executing 1 processes sequentially.
+3 ETQ120 20260330085515 #1 (1): PID 3820840 execute '~/bin_s4/SAPuptool execdb ../var/SELECT_CUSTOMER_APPENDS.TQL', output written to '/mount_lt/SUM/abap/log/SQLSTMTSTD.001'.
+3 ETQ122 20260330085515 #1 (1): PID 3820840 exited with status 0 'SELECT_CUSTOMER_APPENDS:SELECT_CUSTOMER_APPENDS.TQL' (time:     0.0/    0.1/    0.1/1069MB real/usr/sys/maxmem)
+4 ETQ113 Run process with pid 3820840, finished with 0.
+3 ETQ399 Log Scanner: Start scanning log file 'log/SELECT_CUSTOMER_APPENDS.OUT'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SELECT_CUSTOMER_APPENDS.OUT' (from offset 0 until 4422)
+1 ETQ000 ==================================================
+4 ETQ010 Date & Time: 20260330085515
+2 ETQ102 Finished execution of 1 process(es).
+2 ETQ108 Analyzing logs for errors.
+3 ETQ114 Analyzed 1 log files.
+3 ETQ399 Reading selections from 'SELECT_CUSTOMER_APPENDS.OUT'.
+4 ETQ399 Read 0 entries for table 'CustAppends'.
+4 ETQ399 Read 0 entries for table 'CustAppends'.
+4 ETQ399 Read 0 entries for table 'CustAppends'.
+4 ETQ399 Read 0 entries for table 'CustAppends'.
+1 ETQ359 RFC Login to: System="Q4R", AsHost="hec55v072589" Nr="02", Client="000", User="DDIC", GwHost="hec55v072589", GwService="sapgw02"
+2 ETQ232 RFC Login succeeded
+4 ETQ010 Date & Time: 20260330085515.888
+1 ETQ233 Calling the function module "SUBST_CHECK_PASSIVE_DEL_DDIC" via RFC.
+1 ETQ234 Call of function module "SUBST_CHECK_PASSIVE_DEL_DDIC" via RFC succeeded.
+4 ETQ010 Date & Time: 20260330085516.327
+2 ETQ374 Parameter "P_CNT_DEL_DDIC" = "20"
+2 ETQ373 Parameter "P_LISTFILE_NAME" = "/mount_lt/SUM/abap/var/PASSIVE_DELETED_DDIC.Q4R"
+1 ETQ359 RFC Login to: System="Q4R", AsHost="hec55v072589" Nr="02", Client="000", User="DDIC", GwHost="hec55v072589", GwService="sapgw02"
+2 ETQ232 RFC Login succeeded
+4 ETQ010 Date & Time: 20260330085516.386
+1 ETQ233 Calling the function module "SUBST_EVAL_THE_PAST" via RFC.
+1 ETQ234 Call of function module "SUBST_EVAL_THE_PAST" via RFC succeeded.
+4 ETQ010 Date & Time: 20260330085516.387
+2 ETQ373 Parameter "EV_DATUM" = "20260330"
+2 ETQ373 Parameter "EV_UHRZEIT" = "085516"
+4 ETQ399 Map TP_CALL_EXE to path '/mount_lt/SUM/abap/exe'
+2 ETQ399 Distributing 48 parallel processes to 2 tp and 24 R3trans.
+3 ETQ120 20260330085516: PID 3820841 execute '~/exe/tp pf=~/var/SHADOW.TPP unlocksys Q4R', output written to '/mount_lt/SUM/abap/log/TP.ECO'.
+3 ETQ122 20260330085516: PID 3820841 exited with status 0 '' (time:     0.0/    0.1/    0.1/1069MB real/usr/sys/maxmem)
+2 ETQ399 tp finished successfully.
+4 ETQ399 Determining lock status of development environment from system.
+2 ETQ399 Requested SQL task ID is 'READ_SYSEULOCK'.
+3 ETQ399 Generated TQL file 'READEULOCK.TQL' with 1 SQL statements, log file 'READEULOCK.LOG'.
+2 ETQ399 Distributed 0 statements, 1 actual ones are written to TQL files.
+2 ETQ399 Running 1 scripts serially, writing to 'ACTUPG.ELG'.
+2 ETQ000 ==================================================
+2 ETQ101 Executing 1 processes sequentially.
+3 ETQ120 20260330085516 #1 (1): PID 3820842 execute '~/bin_s4/SAPuptool execdb ../var/READEULOCK.TQL', output written to '/mount_lt/SUM/abap/log/SQLSTMTSTD.001'.
+3 ETQ122 20260330085516 #1 (1): PID 3820842 exited with status 0 'READ_SYSEULOCK:READEULOCK.TQL' (time:     0.0/    0.1/    0.1/1069MB real/usr/sys/maxmem)
+4 ETQ113 Run process with pid 3820842, finished with 0.
+3 ETQ399 Log Scanner: Start scanning log file 'log/READEULOCK.LOG'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/READEULOCK.LOG' (from offset 0 until 478)
+1 ETQ000 ==================================================
+4 ETQ010 Date & Time: 20260330085516
+2 ETQ102 Finished execution of 1 process(es).
+2 ETQ108 Analyzing logs for errors.
+3 ETQ114 Analyzed 1 log files.
+3 ETQ399 Reading selections from 'READEULOCK.LOG'.
+4 ETQ399 Read 1 entries for table 'LIST'.
+3 ETQ120 20260330085516: PID 3820843 execute '~/exe/tp pf=~/var/SHADOW.TPP unlock_eu Q4R', output written to '/mount_lt/SUM/abap/log/TP.ECO'.
+3 ETQ122 20260330085517: PID 3820843 exited with status 0 '' (time:     1.0/    0.1/    0.1/1069MB real/usr/sys/maxmem)
+2 ETQ399 tp finished successfully.
+1 ETQ359 RFC Login to: System="Q4R", AsHost="hec55v072589" Nr="02", Client="000", User="DDIC", GwHost="hec55v072589", GwService="sapgw02"
+2 ETQ232 RFC Login succeeded
+4 ETQ010 Date & Time: 20260330085517.143
+1 ETQ233 Calling the function module "UPG_BUFFER_SYNC" via RFC.
+1 ETQ234 Call of function module "UPG_BUFFER_SYNC" via RFC succeeded.
+4 ETQ010 Date & Time: 20260330085517.151
+1 ETQ359 RFC Login to: System="Q4R", AsHost="hec55v072589" Nr="02", Client="000", User="DDIC", GwHost="hec55v072589", GwService="sapgw02"
+2 ETQ232 RFC Login succeeded
+4 ETQ010 Date & Time: 20260330085517.267
+1 ETQ233 Calling the function module "FUNCTION_EXISTS" via RFC.
+2 ETQ373 Parameter "FUNCNAME" = "SUPG_ENABLE_CLIENT_FOR_CHANGES"
+1 ETQ234 Call of function module "FUNCTION_EXISTS" via RFC succeeded.
+4 ETQ010 Date & Time: 20260330085517.267
+1 ETQ359 RFC Login to: System="Q4R", AsHost="hec55v072589" Nr="02", Client="000", User="DDIC", GwHost="hec55v072589", GwService="sapgw02"
+2 ETQ232 RFC Login succeeded
+4 ETQ010 Date & Time: 20260330085517.322
+1 ETQ233 Calling the function module "SUPG_ENABLE_CLIENT_FOR_CHANGES" via RFC.
+2 ETQ373 Parameter "IV_CHANGE_SPECIFIC_CLIENT" = "X"
+2 ETQ373 Parameter "IV_CHANGE_CROSS_CLIENT" = "X"
+2 ETQ373 Parameter "IV_LOGFILE_NAME" = "SUPG_CLIENT_CHANGES.Q4R"
+1 ETQ234 Call of function module "SUPG_ENABLE_CLIENT_FOR_CHANGES" via RFC succeeded.
+4 ETQ010 Date & Time: 20260330085518.232
+2 ETQ374 Parameter "EV_RETURN_CODE" = "0"
+2 ETQ373 Parameter "EV_MESSAGE_TEXT" = ""
+1 ETQ359 RFC Login to: System="Q4R", AsHost="hec55v072589" Nr="02", Client="000", User="DDIC", GwHost="hec55v072589", GwService="sapgw02"
+2 ETQ232 RFC Login succeeded
+4 ETQ010 Date & Time: 20260330085518.259
+1 ETQ233 Calling the function module "FUNCTION_EXISTS" via RFC.
+2 ETQ373 Parameter "FUNCNAME" = "SUPG_RESET_OBSOLETE_NOTES"
+1 ETQ234 Call of function module "FUNCTION_EXISTS" via RFC succeeded.
+4 ETQ010 Date & Time: 20260330085518.260
+1 ETQ359 RFC Login to: System="Q4R", AsHost="hec55v072589" Nr="02", Client="000", User="DDIC", GwHost="hec55v072589", GwService="sapgw02"
+2 ETQ232 RFC Login succeeded
+4 ETQ010 Date & Time: 20260330085518.288
+1 ETQ233 Calling the function module "SUPG_RESET_OBSOLETE_NOTES" via RFC.
+2 ETQ373 Parameter "IV_LOGFILE_NAME" = "SUPG_RESET_OBSOLETE_NOTES.Q4R"
+1 ETQ234 Call of function module "SUPG_RESET_OBSOLETE_NOTES" via RFC succeeded.
+4 ETQ010 Date & Time: 20260330085518.513
+2 ETQ374 Parameter "EV_RETURN_CODE" = "2"
+2 ETQ373 Parameter "EV_MESSAGE_TEXT" = "No transport could be created in SILENT_SNOTE_API_TRKORR_CREATE"
+2WETQ399 RFC call for reset of obsolete notes has failed, the error will be ignored (rc: 1, evRc: 2, message: 'No transport could be created in SILENT_SNOTE_API_TRKORR_CREATE')
+4 ETQ399 Starting dialog 'SPDDimport' at 20260330085518.
+4 ETQ399 Dialog finished at 20260402090759.
+4 ETQ399 Map TP_CALL_EXE to path '/mount_lt/SUM/abap/exe'
+2 ETQ399 Distributing 48 parallel processes to 2 tp and 24 R3trans.
+4 ETQ399 Determining lock status of development environment from system.
+2 ETQ399 Requested SQL task ID is 'READ_SYSEULOCK'.
+3 ETQ399 Generated TQL file 'READEULOCK.TQL' with 1 SQL statements, log file 'READEULOCK.LOG'.
+2 ETQ399 Distributed 0 statements, 1 actual ones are written to TQL files.
+2 ETQ399 Running 1 scripts serially, writing to 'ACTUPG.ELG'.
+2 ETQ000 ==================================================
+2 ETQ101 Executing 1 processes sequentially.
+3 ETQ120 20260402090759 #1 (1): PID 113273 execute '~/bin_s4/SAPuptool execdb ../var/READEULOCK.TQL', output written to '/mount_lt/SUM/abap/log/SQLSTMTSTD.001'.
+3 ETQ122 20260402090759 #1 (1): PID 113273 exited with status 0 'READ_SYSEULOCK:READEULOCK.TQL' (time:     0.0/    0.1/    0.1/1069MB real/usr/sys/maxmem)
+4 ETQ113 Run process with pid 113273, finished with 0.
+3 ETQ399 Log Scanner: Start scanning log file 'log/READEULOCK.LOG'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/READEULOCK.LOG' (from offset 0 until 478)
+1 ETQ000 ==================================================
+4 ETQ010 Date & Time: 20260402090759
+2 ETQ102 Finished execution of 1 process(es).
+2 ETQ108 Analyzing logs for errors.
+3 ETQ114 Analyzed 1 log files.
+3 ETQ399 Reading selections from 'READEULOCK.LOG'.
+4 ETQ399 Read 1 entries for table 'LIST'.
+3 ETQ120 20260402090759: PID 113274 execute '~/exe/tp pf=~/var/SHADOW.TPP lock_eu Q4R', output written to '/mount_lt/SUM/abap/log/TP.ECO'.
+3 ETQ122 20260402090759: PID 113274 exited with status 0 '' (time:     0.0/    0.1/    0.1/1069MB real/usr/sys/maxmem)
+2 ETQ399 tp finished successfully.
+3 ETQ120 20260402090759: PID 113275 execute '~/exe/tp pf=~/var/SHADOW.TPP locksys Q4R', output written to '/mount_lt/SUM/abap/log/TP.ECO'.
+3 ETQ122 20260402090759: PID 113275 exited with status 0 '' (time:     0.0/    0.1/    0.1/1069MB real/usr/sys/maxmem)
+2 ETQ399 tp finished successfully.
+1 ETQ359 RFC Login to: System="Q4R", AsHost="hec55v072589" Nr="02", Client="000", User="DDIC", GwHost="hec55v072589", GwService="sapgw02"
+2 ETQ232 RFC Login succeeded
+4 ETQ010 Date & Time: 20260402090759.975
+1 ETQ233 Calling the function module "UPG_BUFFER_SYNC" via RFC.
+1 ETQ234 Call of function module "UPG_BUFFER_SYNC" via RFC succeeded.
+4 ETQ010 Date & Time: 20260402090759.983
+1 ETQ399 Enabling SPDD/SPAU preview mode.
+4 ETQ265 Starting the report "RDDCOLLE" with variant "RDDCOLLE_INIT" in batch...
+1 ETQ359 RFC Login to: System="Q4R", AsHost="hec55v072589" Nr="02", Client="000", User="DDIC", GwHost="hec55v072589", GwService="sapgw02"
+2 ETQ232 RFC Login succeeded
+4 ETQ010 Date & Time: 20260402090800.176
+1 ETQ233 Calling the function module "SUBST_START_REPORT_IN_BATCH" via RFC.
+2 ETQ373 Parameter "IV_ABORT_ON_ERROR" = ""
+2 ETQ373 Parameter "IV_AUTHCKNAM" = "DDIC"
+2 ETQ373 Parameter "IV_BATCHHOST" = ""
+2 ETQ373 Parameter "IV_JOBNAME" = "RDDCOLLE"
+2 ETQ373 Parameter "IV_REPNAME" = "RDDCOLLE"
+2 ETQ373 Parameter "IV_SCHEDEVER" = "X"
+2 ETQ373 Parameter "IV_VARIANTTEXT" = "RDDCOLLE initialize mode"
+2 ETQ373 Parameter "IV_VARNAME" = "RDDCOLLE_INIT"
+2 ETQ373 Parameter "IV_LANGUAGE" = "E"
+2 ETQ399 Table TT_REPORTPARAM (#2):
+3 ETQ399 #"SELNAME","KIND","SIGN","OPTION","LOW","HIGH"
+3 ETQ399 "P_REPEAT","P","",""," ",""
+3 ETQ399 "P_TSTMP","P","","","20260330085516",""
+2 ETQ373 Parameter "IV_BATCHINSTANCE" = ""
+1 ETQ234 Call of function module "SUBST_START_REPORT_IN_BATCH" via RFC succeeded.
+4 ETQ010 Date & Time: 20260402090800.321
+2 ETQ373 Parameter "EV_JOBCOUNT" = "09080000"
+2 ETQ374 Parameter "EV_STARTRC" = "0"
+2 ETQ374 Parameter "EV_VARIWRC" = "0"
+4 ETQ311 Batch job "RDDCOLLE" with job count "09080000" scheduled
+1 ETQ359 RFC Login to: System="Q4R", AsHost="hec55v072589" Nr="02", Client="000", User="DDIC", GwHost="hec55v072589", GwService="sapgw02"
+2 ETQ232 RFC Login succeeded
+4 ETQ010 Date & Time: 20260402090800.405
+1 ETQ233 Calling the function module "SUBST_CHECK_BATCHJOB" via RFC.
+2 ETQ373 Parameter "JOBNAME" = "RDDCOLLE"
+2 ETQ373 Parameter "JOBCOUNT" = "09080000"
+2 ETQ373 Parameter "IV_VERIFY" = " "
+2 ETQ374 Parameter "NR_OF_DETAILS" = "0"
+1 ETQ234 Call of function module "SUBST_CHECK_BATCHJOB" via RFC succeeded.
+4 ETQ010 Date & Time: 20260402090800.417
+2 ETQ373 Parameter "JOBSTATUS" = "R"
+2 ETQ374 Parameter "RC_CHECK" = "0"
+2 ETQ373 Parameter "JOBENDDATE" = ""
+2 ETQ373 Parameter "JOBENDTIME" = ""
+2 ETQ374 Parameter "JOB_DURATION_SECONDS" = "-1"
+2 ETQ374 Parameter "JOB_PROGRESS" = "-1"
+2 ETQ373 Parameter "JOB_TEXT" = ""
+1 ETQ359 RFC Login to: System="Q4R", AsHost="hec55v072589" Nr="02", Client="000", User="DDIC", GwHost="hec55v072589", GwService="sapgw02"
+2 ETQ232 RFC Login succeeded
+4 ETQ010 Date & Time: 20260402090802.446
+1 ETQ233 Calling the function module "SUBST_CHECK_BATCHJOB" via RFC.
+2 ETQ373 Parameter "JOBNAME" = "RDDCOLLE"
+2 ETQ373 Parameter "JOBCOUNT" = "09080000"
+2 ETQ373 Parameter "IV_VERIFY" = " "
+2 ETQ374 Parameter "NR_OF_DETAILS" = "0"
+1 ETQ234 Call of function module "SUBST_CHECK_BATCHJOB" via RFC succeeded.
+4 ETQ010 Date & Time: 20260402090802.453
+2 ETQ373 Parameter "JOBSTATUS" = "F"
+2 ETQ374 Parameter "RC_CHECK" = "0"
+2 ETQ373 Parameter "JOBENDDATE" = "20260402"
+2 ETQ373 Parameter "JOBENDTIME" = "090800"
+2 ETQ374 Parameter "JOB_DURATION_SECONDS" = "0"
+2 ETQ374 Parameter "JOB_PROGRESS" = "-1"
+2 ETQ373 Parameter "JOB_TEXT" = ""
+4 ETQ263 Batchjob "RDDCOLLE" finished successfully.
+3 ETQ399 Log Scanner: Start scanning log file 'tmp/RDDCOLLP.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'tmp/RDDCOLLP.Q4R' (from offset 0 until 64557)
+4 ETQ399 Creating dummy data file '/mount_lt/SUM/abap/data/RAAA816.SAP'.
+4 ETQ399 Create cofile '/mount_lt/SUM/abap/cofiles/KAAA816.SAP'.
+3 ETQ120 20260402090802: PID 113277 execute '~/exe/tp pf=~/var/SHADOW.TPP createinfo SAPKAAA816 -s Q4R', output written to '/mount_lt/SUM/abap/log/TP.ECO'.
+3 ETQ122 20260402090802: PID 113277 exited with status 0 '' (time:     0.0/    0.1/    0.1/1069MB real/usr/sys/maxmem)
+2 ETQ399 tp finished successfully.
+3 ETQ120 20260402090802: PID 113278 execute '~/exe/tp pf=~/var/SHADOW.TPP delstopmark buffer=ACTUPG.BUF', output written to '/mount_lt/SUM/abap/log/TP.ECO'.
+3 ETQ122 20260402090803: PID 113278 exited with status 0 '' (time:     1.0/    0.1/    0.1/1069MB real/usr/sys/maxmem)
+2 ETQ399 tp finished successfully.
+3 ETQ120 20260402090803: PID 113279 execute '~/exe/tp pf=~/var/SHADOW.TPP addtobuffer SAPKAAA816 buffer=ACTUPG.BUF u1236', output written to '/mount_lt/SUM/abap/log/TP.ECO'.
+3 ETQ122 20260402090803: PID 113279 exited with status 0 '' (time:     0.0/    0.1/    0.1/1069MB real/usr/sys/maxmem)
+2 ETQ399 tp finished successfully.
+3 ETQ120 20260402090803: PID 113280 execute '~/exe/tp pf=~/var/SHADOW.TPP modbuffer SAPKAAA816 buffer=ACTUPG.BUF mode=Ix0,G0,Hx0,V0,R0,w0', output written to '/mount_lt/SUM/abap/log/TP.ECO'.
+3 ETQ122 20260402090803: PID 113280 exited with status 0 '' (time:     0.0/    0.1/    0.1/1069MB real/usr/sys/maxmem)
+2 ETQ399 tp finished successfully.
+4 ETQ399 Map TP_CALL_EXE to path '/mount_lt/SUM/abap/exe'
+2 ETQ399 Writing TR list to '/mount_lt/SUM/abap/mem/TRLIST.DMP'.
+2 ETQ399 Requested SQL task ID is 'CHECK_IMPDP'.
+3 ETQ399 Generated TQL file 'CHKIMPDP.XQL' with 1 SQL statements, log file 'CHKIMPDP.LOG'.
+2 ETQ399 Distributed 0 statements, 1 actual ones are written to TQL files.
+2 ETQ399 Running 1 scripts serially, writing to 'ACTUPG.ELG'.
+2 ETQ000 ==================================================
+2 ETQ101 Executing 1 processes sequentially.
+3 ETQ120 20260402090803 #1 (1): PID 113281 execute '~/bin_s4/SAPuptool execdb ../var/CHKIMPDP.XQL', output written to '/mount_lt/SUM/abap/log/SQLSTMTSTD.001'.
+3 ETQ122 20260402090803 #1 (1): PID 113281 exited with status 0 'CHECK_IMPDP:CHKIMPDP.XQL' (time:     0.0/    0.1/    0.1/1069MB real/usr/sys/maxmem)
+4 ETQ113 Run process with pid 113281, finished with 0.
+3 ETQ399 Log Scanner: Start scanning log file 'log/CHKIMPDP.LOG'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/CHKIMPDP.LOG' (from offset 0 until 539)
+1 ETQ000 ==================================================
+4 ETQ010 Date & Time: 20260402090803
+2 ETQ102 Finished execution of 1 process(es).
+2 ETQ108 Analyzing logs for errors.
+3 ETQ114 Analyzed 1 log files.
+3 ETQ399 Reading selections from 'CHKIMPDP.LOG'.
+4 ETQ399 Map TP_CALL_EXE to path '/mount_lt/SUM/abap/exe'
+2 ETQ399 Distributing 48 parallel processes to 2 tp and 24 R3trans.
+3 ETQ120 20260402090803: PID 113282 execute '~/exe/tp pf=~/var/SHADOW.TPP showbuffer buffer=ACTUPG.BUF -DR3UP=1', output written to '/mount_lt/SUM/abap/log/TP.ECO'.
+3 ETQ122 20260402090803: PID 113282 exited with status 0 '' (time:     0.0/    0.0/    0.1/1069MB real/usr/sys/maxmem)
+2 ETQ399 tp finished successfully.
+4 ETQ399 Map TP_CALL_EXE to path '/mount_lt/SUM/abap/exe'
+2 ETQ399 Copying buffer 'ACTUPG.BUF' to target 'Q4R'.
+2 ETQ399 Initialize sub-progress by reading activation level information
+4 ETQ399 Map TP_CALL_EXE to path '/mount_lt/SUM/abap/exe'
+2 ETQ399 Distributing 48 parallel processes to 2 tp and 24 R3trans.
+3 ETQ120 20260402090803: PID 113283 execute '~/exe/tp pf=~/var/SHADOW.TPP showbuffer buffer=Q4R -DR3UP=1', output written to '/mount_lt/SUM/abap/log/TPREADBUFFER.ECO'.
+3 ETQ122 20260402090803: PID 113283 exited with status 0 '' (time:     0.0/    0.1/    0.1/1069MB real/usr/sys/maxmem)
+2 ETQ399 tp finished successfully.
+4 ETQ399 Map TP_CALL_EXE to path '/mount_lt/SUM/abap/exe'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SUPG_CLIENT_CHANGES.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SUPG_RESET_OBSOLETE_NOTES.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SUPG_CLIENT_CHANGES.Q4R' (from offset 0 until 1666)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SUPG_RESET_OBSOLETE_NOTES.Q4R' (from offset 0 until 1096)
+3 ETQ399 Log Scanner: Start scanning log file 'tmp/SAPRUPGM.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'tmp/SAPRUPGM.Q4R' (from offset 0 until 57270)
+3 ETQ120 20260402090804: PID 113284 execute '~/exe/tp pf=~/var/SHADOW.TPP delstopmark buffer=Q4R', output written to '/mount_lt/SUM/abap/log/TP.ECO'.
+3 ETQ122 20260402090804: PID 113284 exited with status 0 '' (time:     0.0/    0.1/    0.1/1069MB real/usr/sys/maxmem)
+2 ETQ399 tp finished successfully.
+3 ETQ121 20260402090804: PID 113285 execute '~/exe/tp pf=~/var/ACTUPG.TPP put Q4R' in background, output written to '/mount_lt/SUM/abap/log/TP.ECO'.
+2 ETQ399 Using transport log file 'SAPA750EAS.Q4R' for getting current activation progress.
+3WETQ122 20260402140345: PID 113285 exited with status 8 '<UNKNOWN>' (time: 17741.0/    1.9/    0.3/1069MB real/usr/sys/maxmem)
+1 ETQ359 RFC Login to: System="Q4R", AsHost="hec55v072589" Nr="02", Client="000", User="DDIC", GwHost="hec55v072589", GwService="sapgw02"
+2 ETQ232 RFC Login succeeded
+4 ETQ010 Date & Time: 20260402140345.777
+1 ETQ233 Calling the function module "SUBST_EVAL_THE_PAST" via RFC.
+1 ETQ234 Call of function module "SUBST_EVAL_THE_PAST" via RFC succeeded.
+4 ETQ010 Date & Time: 20260402140345.777
+2 ETQ373 Parameter "EV_DATUM" = "20260402"
+2 ETQ373 Parameter "EV_UHRZEIT" = "140345"
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA700EWU.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA700EWU.Q4R' (from offset 1314 until 1882)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA731EBW.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA750EAS.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10S10INARBCI1.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10S09INARBCI1.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10S08INARBCI1.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA731EBW.Q4R' (from offset 688 until 1256)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA750EMG.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10S10INARBCI1.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10S08INARBCI1.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA731EFC.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10S09INARBCI1.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA731ESF.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA731EFC.Q4R' (from offset 626 until 1194)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA750EMG.Q4R' (from offset 626 until 1194)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA731ESI.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA731ESF.Q4R' (from offset 626 until 1194)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA731ESQ.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10S06INARBCI1.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10S07INARBCI1.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA731ESQ.Q4R' (from offset 626 until 1194)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10S06INTAUCI1.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10S06INARBCI1.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10S05INARBCI2.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10S06INTAUCI1.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10S04INARBCI1.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10202INS4HCM.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10S04INARBCI1.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10S07INARBCI1.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10202INS4HCM.Q4R' (from offset 0 until 575)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10S05INARBCI2.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10206INS4HCM.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA731ESI.Q4R' (from offset 626 until 1194)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10901INUIS4H.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10206INS4HCM.Q4R' (from offset 0 until 575)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10S01INTAUCI1.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10S04INTAUCI1.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10901INUIS4H.Q4R' (from offset 0 until 575)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10S01INTAUCI1.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10204INS4HCM.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10901INS4COREOP.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10S01INARBCI2.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10S04INTAUCI1.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10901INS4COREOP.Q4R' (from offset 0 until 578)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10204INS4HCM.Q4R' (from offset 0 until 575)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10S03INARBCI1.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10901INS4CEXT.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10S01INARBCI2.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-109AGINUIS4H.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-109AGINUIS4H.Q4R' (from offset 0 until 575)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10S02INARBCI2.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10203INS4HCM.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10901INS4CEXT.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10901INS4CORE.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10S01INARBCI1.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10S03INARBCI1.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10203INS4HCM.Q4R' (from offset 0 until 575)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10S02INARBCI2.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10S01INARBCI1.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10901INS4CORE.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10S02INTAUCI1.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10S02INARBCI1.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10S02INARBCI1.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10S05INARBCI1.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10001INECS4HCM.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10001INS4CI1.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10001INECS4HCM.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10001INUIHR002.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10S05INARBCI1.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10S02INTAUCI1.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10001INS4CI1.Q4R' (from offset 0 until 575)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10001INUIHR002.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10002INECS4HCM.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10002INUIHR002.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10003INECS4HCM.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10002INECS4HCM.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10002INUIHR002.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10003INUIHR002.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10004INECS4HCM.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10003INUIHR002.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10005INECS4HCM.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10005INUIHR002.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10004INECS4HCM.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10006INECS4HCM.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10006INUIHR002.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10005INECS4HCM.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10005INUIHR002.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10006INUIHR002.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10006INECS4HCM.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10007INUIHR002.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10009INUIHR002.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10003INECS4HCM.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10007INUIHR002.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10010INUIHR002.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10009INUIHR002.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10014INUIHR002.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10010INUIHR002.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10016INUIHR002.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10023INUIHR002.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10014INUIHR002.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10016INUIHR002.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10023INUIHR002.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-100AGINS4CI1.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-100AGINUIHR002.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-100ADINECS4HCM.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-100AGINUIHR002.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10201INS4HCM.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-100AOINECS4HCM.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-100ADINECS4HCM.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10205INS4HCM.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-100AGINS4CI1.Q4R' (from offset 0 until 575)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10901INS4FND.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-100AOINECS4HCM.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10S01INARBCIGR.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10205INS4HCM.Q4R' (from offset 0 until 575)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10201INS4HCM.Q4R' (from offset 0 until 575)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10S01INARBCIGR.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10S03INTAUCI1.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10S11INARBCI1.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10901INS4FND.Q4R' (from offset 0 until 575)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10S11INARBCI2.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10S12INARBCI1.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10S11INARBCI1.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10S03INTAUCI1.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10S13INARBCI1.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10S13INARBCI2.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10S13INARBCI1.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10S12INARBCI1.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10S13INARBCI2.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10S11INARBCI2.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10S14INARBCI1.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10S15INARBCI1.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10S16INARBCI1.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10S14INARBCI1.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10S15INARBCI1.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10S17INARBCI1.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10S16INARBCI1.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10S18INARBCI1.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10S19INARBCI1.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10S17INARBCI1.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10S20INARBCI1.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10S18INARBCI1.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10S20INARBCI1.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10S19INARBCI1.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10S21INARBCI1.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10S22INARBCI1.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10S21INARBCI1.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10S23INARBCI1.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10S22INARBCI1.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10S24INARBCI1.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10S23INARBCI1.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10S25INARBCI1.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10SAGINARBCI1.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10S24INARBCI1.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10SAGINARBCI2.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10S25INARBCI1.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10SAGINARBCIGR.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-10SAGINTAUCI1.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10SAGINARBCI1.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10SAGINARBCI2.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10SAGINARBCIGR.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-10SAGINTAUCI1.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-20012INUIMDG001.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-20010INUIMDG001.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-200AGINUIMDG001.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-60533INGBX01HR5.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-20010INUIMDG001.Q4R' (from offset 0 until 578)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-20012INUIMDG001.Q4R' (from offset 0 until 578)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-200AGINUIMDG001.Q4R' (from offset 0 until 578)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-60534INGBX01HR5.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-60533INGBX01HR5.Q4R' (from offset 0 until 578)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-60534INGBX01HR5.Q4R' (from offset 0 until 578)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-80901INEADFPS.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-80901INEAPS.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-758AGINSTPI.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-80901INEADFPS.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-80901INISOIL.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-758AGINSTPI.Q4R' (from offset 0 until 574)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-80901INEAPS.Q4R' (from offset 0 until 574)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-80901INISPRA.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-80901INISOIL.Q4R' (from offset 0 until 575)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-80901INISPSCA.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-80901INISUT.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-80901INISPSCA.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-80901INMDGAPPL.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-80901INMDGFND.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-80901INISUT.Q4R' (from offset 0 until 574)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-81601INSAPABA.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-80901INMDGAPPL.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-80901INISPRA.Q4R' (from offset 0 until 575)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-81601INSAPBASIS.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-81601INSAPBW.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-80901INMDGFND.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-81601INSAPGWFND.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-81601INSAPABA.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-81601INSAPUI.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-81601INSAPBW.Q4R' (from offset 0 until 575)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V1201INGRCPIERP.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V1201INGRCPINW.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V1201INGRCPIERP.Q4R' (from offset 0 until 578)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-81601INSAPBASIS.Q4R' (from offset 0 until 578)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V1201INGRCPINW.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V1202INGRCPINW.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-81601INSAPGWFND.Q4R' (from offset 0 until 578)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-81601INSAPUI.Q4R' (from offset 0 until 575)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V1204INGRCPINW.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V1202INGRCPINW.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V1205INGRCPINW.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V1204INGRCPINW.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V1206INGRCPINW.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V1207INGRCPINW.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V1209INGRCPIERP.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V1210INGRCPINW.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V1205INGRCPINW.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V1206INGRCPINW.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V1209INGRCPIERP.Q4R' (from offset 0 until 578)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V1210INGRCPINW.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V1207INGRCPINW.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V1211INGRCPIERP.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V1211INGRCPINW.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V1212INGRCPINW.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V1211INGRCPIERP.Q4R' (from offset 0 until 578)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V1211INGRCPINW.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V1213INGRCPINW.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V1214INGRCPINW.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V1215INGRCPINW.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V1212INGRCPINW.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V1217INGRCPINW.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V1214INGRCPINW.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V1217INGRCPINW.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V1213INGRCPINW.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V1219INGRCPINW.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V1220INGRCPINW.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V1219INGRCPINW.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V1221INGRCPINW.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V1215INGRCPINW.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V1221INGRCPINW.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V1222INGRCPINW.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V1224INGRCPINW.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V1220INGRCPINW.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V1222INGRCPINW.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V1224INGRCPINW.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V1225INGRCPINW.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V1226INGRCPINW.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V1225INGRCPINW.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V12AGINGRCPIERP.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V12AGINGRCPINW.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V8101INGRCFNDA.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V12AGINGRCPIERP.Q4R' (from offset 0 until 578)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V8102INGRCFNDA.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V1226INGRCPINW.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V8103INGRCFNDA.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V8102INGRCFNDA.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V8104INGRCFNDA.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V8105INGRCFNDA.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V8104INGRCFNDA.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V12AGINGRCPINW.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V8106INGRCFNDA.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V8105INGRCFNDA.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V8107INGRCFNDA.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V8103INGRCFNDA.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V8107INGRCFNDA.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V8101INGRCFNDA.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V8106INGRCFNDA.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V8108INGRCFNDA.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V8109INGRCFNDA.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V8108INGRCFNDA.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V8110INGRCFNDA.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V8109INGRCFNDA.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V8111INGRCFNDA.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V8112INGRCFNDA.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V8111INGRCFNDA.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V8114INGRCFNDA.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V8112INGRCFNDA.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V8113INGRCFNDA.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V8116INGRCFNDA.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V8110INGRCFNDA.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V8113INGRCFNDA.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V8114INGRCFNDA.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V8115INGRCFNDA.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V8116INGRCFNDA.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V8118INGRCFNDA.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V8115INGRCFNDA.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V8117INGRCFNDA.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V8119INGRCFNDA.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V8118INGRCFNDA.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V8120INGRCFNDA.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V8121INGRCFNDA.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V8120INGRCFNDA.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V8119INGRCFNDA.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V8122INGRCFNDA.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V8123INGRCFNDA.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V8121INGRCFNDA.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V8124INGRCFNDA.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V8122INGRCFNDA.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V8124INGRCFNDA.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V8123INGRCFNDA.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V8126INGRCFNDA.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V8125INGRCFNDA.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V8127INGRCFNDA.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V8117INGRCFNDA.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V8128INGRCFNDA.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V8126INGRCFNDA.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V8127INGRCFNDA.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V8129INGRCFNDA.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V8129INGRCFNDA.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V8130INGRCFNDA.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V8125INGRCFNDA.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V8131INGRCFNDA.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V8128INGRCFNDA.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V81ADINGRCFNDA.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V8131INGRCFNDA.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V81AMINGRCFNDA.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V8130INGRCFNDA.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V81AOINGRCFNDA.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA-V81ARINGRCFNDA.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V81ADINGRCFNDA.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA102Q4RINPOASBC.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V81ARINGRCFNDA.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V81AMINGRCFNDA.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA-V81AOINGRCFNDA.Q4R' (from offset 0 until 577)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA600Q4RINODTFINCC.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA102Q4RINPOASBC.Q4R' (from offset 0 until 576)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA731EDL.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA600Q4RINODTFINCC.Q4R' (from offset 0 until 578)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA731EDL.Q4R' (from offset 0 until 568)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA816001CPSAPBASIS.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA816005CPSAPBASIS.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPA816EP2.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA816001CPSAPBASIS.Q4R' (from offset 0 until 578)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA816005CPSAPBASIS.Q4R' (from offset 0 until 578)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPA816EP2.Q4R' (from offset 0 until 568)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPAAAA816.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPAAAB816.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPACCC810.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPAAAA816.Q4R' (from offset 0 until 568)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPAAAB816.Q4R' (from offset 0 until 568)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPACCC811.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPACCC810.Q4R' (from offset 0 until 568)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPACCC812.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPACCC813.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPACCC814.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPACCC811.Q4R' (from offset 0 until 568)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPACCC813.Q4R' (from offset 0 until 568)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPACCC815.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPACCC812.Q4R' (from offset 0 until 568)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPACCC815.Q4R' (from offset 0 until 568)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPACCC814.Q4R' (from offset 0 until 568)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPACCC816.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPACCC817.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPACCC818.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPACCC816.Q4R' (from offset 0 until 568)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPACCC817.Q4R' (from offset 0 until 568)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPACCC819.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPACCG810.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPACCG811.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPACCG810.Q4R' (from offset 0 until 568)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPACCC819.Q4R' (from offset 0 until 568)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPACCG812.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPACCG813.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPACCC818.Q4R' (from offset 0 until 568)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPACCG814.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPACCG815.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPACCG814.Q4R' (from offset 0 until 568)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPACCG813.Q4R' (from offset 0 until 568)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPACCG811.Q4R' (from offset 0 until 568)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPACCG816.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPACCG815.Q4R' (from offset 0 until 568)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPACCG812.Q4R' (from offset 0 until 568)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPACCG817.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPACCG818.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPACCG817.Q4R' (from offset 0 until 568)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPACCG816.Q4R' (from offset 0 until 568)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPACCG819.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPACCG818.Q4R' (from offset 0 until 568)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPACCI810.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPACCI811.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPACCG819.Q4R' (from offset 0 until 568)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPACCI810.Q4R' (from offset 0 until 568)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPACCI812.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPACCI813.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPACCI812.Q4R' (from offset 0 until 568)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPACCI811.Q4R' (from offset 0 until 568)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPACCI814.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPACCI815.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPACCI814.Q4R' (from offset 0 until 568)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPACCI813.Q4R' (from offset 0 until 568)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPACCI816.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPACCI815.Q4R' (from offset 0 until 568)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPACCI817.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPACCI818.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPACCI817.Q4R' (from offset 0 until 568)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPACCI816.Q4R' (from offset 0 until 568)
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPACCI819.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPAD81694.Q4R'
+3 ETQ399 Log Scanner: Start scanning log file 'log/SAPAITABCA.Q4R'
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPACCI819.Q4R' (from offset 0 until 568)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPAD81694.Q4R' (from offset 0 until 568)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPAITABCA.Q4R' (from offset 0 until 568)
+3 ETQ399 Log Scanner: Finished scanning log file 'log/SAPACCI818.Q4R' (from offset 0 until 568)
+3WETQ399 Log Scanner: Finished scanning log file 'log/SAPA750EAS.Q4R' (from offset 102224 until 118979748)
+1EETQ399 Log Scanner: Found 233 errors during the log scan (exit code: 8)!
+4 ETQ010 Date & Time: 20260402140352
+1EETQ399 Last generated error message is: Detected 233 errors summarized in 'ACTUPG.ELG'
+1EETQ399XCalling '/mount_lt/SUM/abap/exe/tp' failed with return code 8, check /mount_lt/SUM/abap/log/TP.ECO for details!
+1EETQ399Xtp used shadow connect
+1EETQ203 Upgrade phase "ACT_UPG" terminated with errors ("20260402140352").
