@@ -414,7 +414,7 @@ FORM f_expand_clas USING p_class TYPE tadir-obj_name.
     lv_mname = lv_m.
     lv_iname = lv_incl.
     REFRESH lt_v.
-    APPEND 'REPS' TO lt_v.
+    APPEND 'METH' TO lt_v.            " methods are versioned under METH
     PERFORM f_add_result USING 'METH' lv_mname p_class 'METHOD'
                                lt_v lv_iname lv_iname.
 
@@ -513,25 +513,100 @@ FORM f_compare_core USING    pt_vtypes   TYPE ty_vtype_tab
 
   CLEAR: ps_dev, ps_prd, p_method.
 
-  IF pt_vtypes IS NOT INITIAL.
-    PERFORM f_get_vrsd_agg USING p_vrsdname pt_vtypes p_srfc CHANGING ps_dev.
-    PERFORM f_get_vrsd_agg USING p_vrsdname pt_vtypes p_trfc CHANGING ps_prd.
-    IF ps_dev-found = abap_true AND ps_prd-found = abap_true.
-      p_method = gc_vrsd.
-    ENDIF.
-  ENDIF.
-
-  IF p_method IS INITIAL AND p_reposname IS NOT INITIAL.
-    PERFORM f_get_reposrc USING p_reposname p_srfc CHANGING ps_dev.
-    PERFORM f_get_reposrc USING p_reposname p_trfc CHANGING ps_prd.
-    p_method = gc_reposrc.
-  ENDIF.
-
-  IF p_method IS INITIAL.
-    p_method = gc_vrsd.
-  ENDIF.
+* Active version of every component via SVRS_GET_VERSION_DIRECTORY_46
+* (remote-enabled FM; uses the correct version object type per component
+* - REPS, METH, FUNC, CLSD, TABD, ...). P_REPOSNAME is no longer needed.
+  p_method = gc_reposrc.
+  PERFORM f_get_active_agg USING p_vrsdname pt_vtypes p_srfc CHANGING ps_dev.
+  PERFORM f_get_active_agg USING p_vrsdname pt_vtypes p_trfc CHANGING ps_prd.
 
 ENDFORM.                    "f_compare_core
+
+*&---------------------------------------------------------------------*
+*&      Form  F_GET_ACTIVE_AGG
+*&---------------------------------------------------------------------*
+*  Active version across all components of an object (latest by date).
+*----------------------------------------------------------------------*
+FORM f_get_active_agg USING    p_objname TYPE tadir-obj_name
+                               pt_vtypes TYPE ty_vtype_tab
+                               p_dest    TYPE rfcdest
+                      CHANGING ps_agg    TYPE ty_ver.
+
+  DATA: lv_vtype TYPE vrsd-objtype,
+        ls_one   TYPE ty_ver.
+
+  CLEAR ps_agg.
+
+  LOOP AT pt_vtypes INTO lv_vtype.
+    PERFORM f_get_active_one USING lv_vtype p_objname p_dest CHANGING ls_one.
+
+    IF ls_one-rc <> 0 AND ps_agg-rc = 0.
+      ps_agg-rc     = ls_one-rc.
+      ps_agg-rctext = ls_one-rctext.
+    ENDIF.
+
+    IF ls_one-found = abap_true.
+      IF ps_agg-found = abap_false OR ls_one-date > ps_agg-date.
+        ps_agg-found = abap_true.
+        ps_agg-req   = ls_one-req.
+        ps_agg-date  = ls_one-date.
+        ps_agg-user  = ls_one-user.
+      ENDIF.
+    ENDIF.
+  ENDLOOP.
+
+ENDFORM.                    "f_get_active_agg
+
+*&---------------------------------------------------------------------*
+*&      Form  F_GET_ACTIVE_ONE
+*&---------------------------------------------------------------------*
+*  Active version of one component (object type + name) via the FM. The
+*  active entry is versno 0; else the most recent entry is taken.
+*----------------------------------------------------------------------*
+FORM f_get_active_one USING    p_objtype TYPE clike
+                               p_objname TYPE clike
+                               p_dest    TYPE rfcdest
+                      CHANGING ps_ver    TYPE ty_ver.
+
+  DATA: lt_svrs TYPE ty_vrsd_tab,
+        ls_vrsd TYPE vrsd,
+        lv_rc   TYPE sysubrc,
+        lv_msg  TYPE char80.
+
+  CLEAR ps_ver.
+
+  PERFORM f_svrs_dir USING p_objtype p_objname p_dest
+                     CHANGING lt_svrs lv_rc lv_msg.
+
+  IF lv_rc <> 0.
+    ps_ver-rc = lv_rc.
+    IF lv_msg IS NOT INITIAL.
+      CONCATENATE 'SVRS:' lv_msg INTO ps_ver-rctext SEPARATED BY space.
+    ELSE.
+      ps_ver-rctext = 'SVRS read error'.
+    ENDIF.
+    RETURN.
+  ENDIF.
+
+  IF lt_svrs IS INITIAL.
+    RETURN.
+  ENDIF.
+
+  CLEAR ls_vrsd.
+  LOOP AT lt_svrs INTO ls_vrsd WHERE versno IS INITIAL.
+    EXIT.
+  ENDLOOP.
+  IF sy-subrc <> 0.
+    SORT lt_svrs BY datum DESCENDING zeit DESCENDING versno DESCENDING.
+    READ TABLE lt_svrs INTO ls_vrsd INDEX 1.
+  ENDIF.
+
+  ps_ver-found = abap_true.
+  ps_ver-req   = ls_vrsd-korrnum.
+  ps_ver-date  = ls_vrsd-datum.
+  ps_ver-user  = ls_vrsd-author.
+
+ENDFORM.                    "f_get_active_one
 
 *&---------------------------------------------------------------------*
 *&      Form  F_EVALUATE
