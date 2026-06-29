@@ -7,27 +7,32 @@
 *&
 *&           Input  : Range of object type and object name (no interval),
 *&                    plus the source and target RFC destinations.
-*&                    Object name is mandatory - the mandatory check is
-*&                    raised in START-OF-SELECTION (not via OBLIGATORY).
+*&                    Object name is mandatory - checked in
+*&                    START-OF-SELECTION (not via OBLIGATORY).
 *&           Source : Object list is read from table TADIR (R3TR + LIMU).
-*&           Read   : The LOCAL system (destination NONE / blank) is read
-*&                    with a direct SELECT (no RFC table-auth needed and
-*&                    field names are validated at compile time). A REMOTE
-*&                    system is read with the standard remote-enabled
-*&                    module RFC_READ_TABLE - so no custom FM is needed in
-*&                    the target. Any remote read error (authorisation,
-*&                    field, communication...) is reported in Remarks
-*&                    instead of being mistaken for "does not exist".
-*&           Compare: Two methods with automatic fallback -
-*&                      1. VRSD    - latest numbered version (KORRNUM),
-*&                                   used when BOTH systems have rows.
-*&                      2. REPOSRC - active version (last-changed date /
+*&           Read   : LOCAL system (destination NONE / blank) is read with
+*&                    a direct SELECT; a REMOTE system with the standard
+*&                    remote-enabled module RFC_READ_TABLE. Remote read
+*&                    errors (authorisation, field, ...) are reported in
+*&                    Remarks instead of being mistaken for "missing".
+*&           Compare: Each object type maps to a LIST of version
+*&                    components (VRSD object types). All are queried and
+*&                    the latest is aggregated. Two methods with fallback:
+*&                      1. VRSD    - latest version (KORRNUM), used when
+*&                                   BOTH systems have version rows.
+*&                      2. REPOSRC - active source (last-changed date /
 *&                                   author, preserved across transport),
-*&                                   fallback when VRSD is not available
-*&                                   in both systems.
+*&                                   fallback for program-source objects
+*&                                   when VRSD is not available in both.
 *&           Log    : Every run is logged to table ZVERSION_CMP_LOG.
 *&           Output : ALV grid (object type, name, method, request / date
 *&                    / author per system, Mismatch, Remarks).
+*&
+*& Coverage: PROG, REPS, DYNP, VIED/VIEW, CLAS, FUGR, INTF, DOMA, DTEL,
+*&           ENQU, SHLP, TABL, TTYP, ENHO, ENHS, TRAN, MSAG.
+*&           Only program source (PROG/REPS) has the REPOSRC active
+*&           fallback; other types rely on the version directory VRSD
+*&           being present in both systems.
 *&
 *& Prereq  : - Create transparent table ZVERSION_CMP_LOG (see the .txt).
 *&           - The target RFC user needs RFC_READ_TABLE read auth on
@@ -42,6 +47,8 @@ TABLES: tadir.
 *&---------------------------------------------------------------------*
 *& Types
 *&---------------------------------------------------------------------*
+TYPES: ty_vtype_tab TYPE STANDARD TABLE OF vrsd-objtype WITH DEFAULT KEY.
+
 TYPES: BEGIN OF ty_object,
          pgmid    TYPE tadir-pgmid,
          object   TYPE tadir-object,
@@ -62,8 +69,8 @@ TYPES: BEGIN OF ty_ver,
          date   TYPE sydatum,
          user   TYPE syuname,
          found  TYPE abap_bool,
-         rc     TYPE sysubrc,           " read return code (remote)
-         rctext TYPE char40,            " read error text (remote)
+         rc     TYPE sysubrc,
+         rctext TYPE char40,
        END OF ty_ver.
 
 TYPES: BEGIN OF ty_output,
@@ -89,10 +96,10 @@ DATA: gt_object TYPE STANDARD TABLE OF ty_object,
       gt_fieldc TYPE slis_t_fieldcat_alv,
       gs_layout TYPE slis_layout_alv.
 
-CONSTANTS: gc_yes     TYPE char3  VALUE 'YES',
-           gc_no      TYPE char3  VALUE 'NO',
-           gc_vrsd    TYPE char10 VALUE 'VRSD',
-           gc_reposrc TYPE char10 VALUE 'REPOSRC',
+CONSTANTS: gc_yes     TYPE char3   VALUE 'YES',
+           gc_no      TYPE char3   VALUE 'NO',
+           gc_vrsd    TYPE char10  VALUE 'VRSD',
+           gc_reposrc TYPE char10  VALUE 'REPOSRC',
            gc_none    TYPE rfcdest VALUE 'NONE'.
 
 *&---------------------------------------------------------------------*
@@ -197,7 +204,7 @@ ENDFORM.                    "f_collect_versions
 FORM f_compare_object USING    ps_object TYPE ty_object
                       CHANGING ps_output TYPE ty_output.
 
-  DATA: lv_vtype     TYPE vrsd-objtype,
+  DATA: lt_vtypes    TYPE ty_vtype_tab,
         lv_reposr_ok TYPE abap_bool,
         ls_dev       TYPE ty_ver,
         ls_prd       TYPE ty_ver,
@@ -206,27 +213,27 @@ FORM f_compare_object USING    ps_object TYPE ty_object
   ps_output-object   = ps_object-object.
   ps_output-obj_name = ps_object-obj_name.
 
-  PERFORM f_map_vtype USING ps_object-object
-                      CHANGING lv_vtype lv_reposr_ok.
+  PERFORM f_map_components USING ps_object-object
+                           CHANGING lt_vtypes lv_reposr_ok.
 
-  IF lv_vtype IS INITIAL AND lv_reposr_ok = abap_false.
+  IF lt_vtypes IS INITIAL AND lv_reposr_ok = abap_false.
     ps_output-mismatch = space.
-    ps_output-remarks  = 'Object type not supported - extend F_MAP_VTYPE'.
+    ps_output-remarks  = 'Object type not supported - extend F_MAP_COMPONENTS'.
     RETURN.
   ENDIF.
 
   CLEAR lv_method.
 
 * --- Method 1: VRSD (only when usable in BOTH systems) ----------------
-  IF lv_vtype IS NOT INITIAL.
-    PERFORM f_get_vrsd USING lv_vtype ps_object-obj_name p_srfc CHANGING ls_dev.
-    PERFORM f_get_vrsd USING lv_vtype ps_object-obj_name p_trfc CHANGING ls_prd.
+  IF lt_vtypes IS NOT INITIAL.
+    PERFORM f_get_vrsd_agg USING ps_object-obj_name lt_vtypes p_srfc CHANGING ls_dev.
+    PERFORM f_get_vrsd_agg USING ps_object-obj_name lt_vtypes p_trfc CHANGING ls_prd.
     IF ls_dev-found = abap_true AND ls_prd-found = abap_true.
       lv_method = gc_vrsd.
     ENDIF.
   ENDIF.
 
-* --- Method 2: REPOSRC fallback (active version) ----------------------
+* --- Method 2: REPOSRC fallback (active source) -----------------------
   IF lv_method IS INITIAL AND lv_reposr_ok = abap_true.
     PERFORM f_get_reposrc USING ps_object-obj_name p_srfc CHANGING ls_dev.
     PERFORM f_get_reposrc USING ps_object-obj_name p_trfc CHANGING ls_prd.
@@ -263,7 +270,6 @@ FORM f_evaluate USING    ps_dev   TYPE ty_ver
 
   CLEAR: pv_flag, pv_rem.
 
-* Surface remote read errors instead of mislabelling them as "missing"
   IF ps_dev-rc <> 0 OR ps_prd-rc <> 0.
     pv_flag = space.
     CONCATENATE 'Read error - Source:' ps_dev-rctext
@@ -315,9 +321,48 @@ FORM f_evaluate USING    ps_dev   TYPE ty_ver
 ENDFORM.                    "f_evaluate
 
 *&---------------------------------------------------------------------*
+*&      Form  F_GET_VRSD_AGG
+*&---------------------------------------------------------------------*
+*  Reads every version component (VRSD object type) and keeps the latest
+*  entry across them. A read error on any component is propagated.
+*----------------------------------------------------------------------*
+FORM f_get_vrsd_agg USING    p_objname TYPE tadir-obj_name
+                             pt_vtypes TYPE ty_vtype_tab
+                             p_dest    TYPE rfcdest
+                    CHANGING ps_agg    TYPE ty_ver.
+
+  DATA: lv_vtype TYPE vrsd-objtype,
+        ls_one   TYPE ty_ver.
+
+  CLEAR ps_agg.
+
+  LOOP AT pt_vtypes INTO lv_vtype.
+
+    PERFORM f_get_vrsd USING lv_vtype p_objname p_dest CHANGING ls_one.
+
+    IF ls_one-rc <> 0 AND ps_agg-rc = 0.
+      ps_agg-rc     = ls_one-rc.
+      ps_agg-rctext = ls_one-rctext.
+    ENDIF.
+
+    IF ls_one-found = abap_true.
+      IF ps_agg-found = abap_false OR ls_one-date > ps_agg-date.
+        ps_agg-found = abap_true.
+        ps_agg-req   = ls_one-req.
+        ps_agg-date  = ls_one-date.
+        ps_agg-user  = ls_one-user.
+      ENDIF.
+    ENDIF.
+
+  ENDLOOP.
+
+ENDFORM.                    "f_get_vrsd_agg
+
+*&---------------------------------------------------------------------*
 *&      Form  F_GET_VRSD
 *&---------------------------------------------------------------------*
-*  Latest VRSD entry. Local read = direct SELECT; remote = RFC_READ_TABLE.
+*  Latest VRSD entry of one version type. Local = direct SELECT;
+*  remote = RFC_READ_TABLE.
 *----------------------------------------------------------------------*
 FORM f_get_vrsd USING    p_vtype   TYPE vrsd-objtype
                          p_objname TYPE tadir-obj_name
@@ -502,8 +547,6 @@ ENDFORM.                    "f_get_reposrc
 *&---------------------------------------------------------------------*
 *&      Form  F_RC_TEXT
 *&---------------------------------------------------------------------*
-*  Maps an RFC_READ_TABLE return code to a readable reason.
-*----------------------------------------------------------------------*
 FORM f_rc_text USING    p_rc    TYPE sysubrc
                         p_table TYPE c
                CHANGING p_text  TYPE char40.
@@ -526,39 +569,89 @@ FORM f_rc_text USING    p_rc    TYPE sysubrc
 ENDFORM.                    "f_rc_text
 
 *&---------------------------------------------------------------------*
-*&      Form  F_MAP_VTYPE
+*&      Form  F_MAP_COMPONENTS
 *&---------------------------------------------------------------------*
-*  Maps an object type to its VRSD type and whether the REPOSRC active-
-*  version fallback applies (source-based program objects).
+*  Returns the VRSD version component(s) of an object type and whether
+*  the REPOSRC active-source fallback applies (program-source objects).
+*  Composite objects (CLAS, FUGR) map to several components.
 *----------------------------------------------------------------------*
-FORM f_map_vtype USING    p_objtype  TYPE tadir-object
-                 CHANGING p_vtype    TYPE vrsd-objtype
-                          p_reposrok TYPE abap_bool.
+FORM f_map_components USING    p_objtype  TYPE tadir-object
+                      CHANGING pt_vtypes  TYPE ty_vtype_tab
+                               p_reposrok TYPE abap_bool.
 
-  CLEAR: p_vtype, p_reposrok.
+  DATA lv_v TYPE vrsd-objtype.
+
+  REFRESH pt_vtypes.
+  CLEAR p_reposrok.
 
   CASE p_objtype.
-*   --- programs / report source (R3TR PROG and LIMU REPS) ----------
-    WHEN 'PROG'.  p_vtype = 'REPS'. p_reposrok = abap_true.
-    WHEN 'REPS'.  p_vtype = 'REPS'. p_reposrok = abap_true.
-*   --- screens (LIMU DYNP) -----------------------------------------
-    WHEN 'DYNP'.  p_vtype = 'DYNP'.
+
+*   --- programs / report source ------------------------------------
+    WHEN 'PROG'.
+      lv_v = 'REPS'. APPEND lv_v TO pt_vtypes.
+      lv_v = 'REPT'. APPEND lv_v TO pt_vtypes.   " text elements
+      p_reposrok = abap_true.
+    WHEN 'REPS'.
+      lv_v = 'REPS'. APPEND lv_v TO pt_vtypes.
+      p_reposrok = abap_true.
+
+*   --- screens -----------------------------------------------------
+    WHEN 'DYNP'.
+      lv_v = 'DYNP'. APPEND lv_v TO pt_vtypes.
+
+*   --- classes (composite) -----------------------------------------
+    WHEN 'CLAS'.
+      lv_v = 'CLSD'. APPEND lv_v TO pt_vtypes.   " definition
+      lv_v = 'CPUB'. APPEND lv_v TO pt_vtypes.   " public section
+      lv_v = 'CPRO'. APPEND lv_v TO pt_vtypes.   " protected section
+      lv_v = 'CPRI'. APPEND lv_v TO pt_vtypes.   " private section
+      lv_v = 'CINC'. APPEND lv_v TO pt_vtypes.   " class includes
+      lv_v = 'METH'. APPEND lv_v TO pt_vtypes.   " methods
+
+*   --- function groups (composite) ---------------------------------
+    WHEN 'FUGR'.
+      lv_v = 'FUNC'. APPEND lv_v TO pt_vtypes.   " function modules
+      lv_v = 'REPS'. APPEND lv_v TO pt_vtypes.   " group includes
+
 *   --- interface ---------------------------------------------------
-    WHEN 'INTF'.  p_vtype = 'INTD'.
+    WHEN 'INTF'.
+      lv_v = 'INTD'. APPEND lv_v TO pt_vtypes.
+
 *   --- dictionary --------------------------------------------------
-    WHEN 'TABL'.  p_vtype = 'TABD'.
-    WHEN 'VIEW'.  p_vtype = 'VIED'.
-    WHEN 'VIED'.  p_vtype = 'VIED'.
-    WHEN 'DTEL'.  p_vtype = 'DTED'.
-    WHEN 'DOMA'.  p_vtype = 'DOMD'.
-    WHEN 'SHLP'.  p_vtype = 'SHLD'.
-    WHEN 'TTYP'.  p_vtype = 'TTYD'.
-    WHEN 'ENQU'.  p_vtype = 'ENQD'.
-    WHEN 'MSAG'.  p_vtype = 'MSAD'.
-    WHEN OTHERS.  CLEAR p_vtype.
+    WHEN 'TABL'.
+      lv_v = 'TABD'. APPEND lv_v TO pt_vtypes.   " definition
+      lv_v = 'TABT'. APPEND lv_v TO pt_vtypes.   " technical settings
+    WHEN 'VIEW' OR 'VIED'.
+      lv_v = 'VIED'. APPEND lv_v TO pt_vtypes.
+    WHEN 'DTEL'.
+      lv_v = 'DTED'. APPEND lv_v TO pt_vtypes.
+    WHEN 'DOMA'.
+      lv_v = 'DOMD'. APPEND lv_v TO pt_vtypes.
+    WHEN 'SHLP'.
+      lv_v = 'SHLD'. APPEND lv_v TO pt_vtypes.
+    WHEN 'TTYP'.
+      lv_v = 'TTYD'. APPEND lv_v TO pt_vtypes.
+    WHEN 'ENQU'.
+      lv_v = 'ENQD'. APPEND lv_v TO pt_vtypes.
+    WHEN 'MSAG'.
+      lv_v = 'MSAD'. APPEND lv_v TO pt_vtypes.   " message class
+      lv_v = 'MESS'. APPEND lv_v TO pt_vtypes.   " single messages
+
+*   --- enhancements ------------------------------------------------
+    WHEN 'ENHO'.
+      lv_v = 'ENHO'. APPEND lv_v TO pt_vtypes.
+    WHEN 'ENHS'.
+      lv_v = 'ENHS'. APPEND lv_v TO pt_vtypes.
+
+*   --- transaction -------------------------------------------------
+    WHEN 'TRAN'.
+      lv_v = 'TRAN'. APPEND lv_v TO pt_vtypes.
+
+    WHEN OTHERS.
+*     Not mapped.
   ENDCASE.
 
-ENDFORM.                    "f_map_vtype
+ENDFORM.                    "f_map_components
 
 *&---------------------------------------------------------------------*
 *&      Form  F_SAVE_LOG
