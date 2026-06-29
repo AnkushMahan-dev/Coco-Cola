@@ -190,7 +190,7 @@ FORM f_process_object USING ps_object TYPE ty_object.
       PERFORM f_expand_prog USING ps_object-obj_name.
 
     WHEN 'FUGR'.
-      CONCATENATE 'SAPL' ps_object-obj_name INTO lv_pool.
+      PERFORM f_ns_build USING ps_object-obj_name 'SAPL' space CHANGING lv_pool.
       lv_vname = lv_pool.
       lv_rname = lv_pool.
       REFRESH lt_v.
@@ -247,6 +247,7 @@ FORM f_expand_prog USING p_prog TYPE tadir-obj_name.
         lv_inc    TYPE d010inc-include,
         lv_master TYPE d010inc-master,
         lt_v      TYPE ty_vtype_tab,
+        lv_cust   TYPE abap_bool,
         lv_iname  TYPE tadir-obj_name.
 
   lv_master = p_prog.
@@ -256,6 +257,11 @@ FORM f_expand_prog USING p_prog TYPE tadir-obj_name.
 
   LOOP AT lt_inc INTO lv_inc.
     IF lv_inc = p_prog OR lv_inc IS INITIAL.
+      CONTINUE.
+    ENDIF.
+*   Only custom includes - skip SAP system includes (%_*, <...>, CL_*...).
+    PERFORM f_is_custom USING lv_inc CHANGING lv_cust.
+    IF lv_cust = abap_false.
       CONTINUE.
     ENDIF.
     lv_iname = lv_inc.
@@ -268,27 +274,98 @@ FORM f_expand_prog USING p_prog TYPE tadir-obj_name.
 ENDFORM.                    "f_expand_prog
 
 *&---------------------------------------------------------------------*
+*&      Form  F_IS_CUSTOM
+*&---------------------------------------------------------------------*
+*  True for customer objects: name starts with Z, Y, or a namespace
+*  prefix ('/...'). Everything else (SAP %_*, <...>, CL_*, DB_*, ...) is
+*  treated as standard and skipped.
+*----------------------------------------------------------------------*
+FORM f_is_custom USING    p_name TYPE clike
+                 CHANGING p_cust TYPE abap_bool.
+
+  DATA lv_first TYPE c.
+
+  CLEAR p_cust.
+  IF strlen( p_name ) = 0.
+    RETURN.
+  ENDIF.
+  lv_first = p_name(1).
+  IF lv_first = 'Z' OR lv_first = 'Y' OR lv_first = '/'.
+    p_cust = abap_true.
+  ENDIF.
+
+ENDFORM.                    "f_is_custom
+
+*&---------------------------------------------------------------------*
+*&      Form  F_NS_BUILD
+*&---------------------------------------------------------------------*
+*  Builds a function-group program / include name, inserting the prefix
+*  AFTER the namespace. e.g. ('/CCBJI/PRICE','SAPL','') -> /CCBJI/SAPLPRICE
+*  ('ZFG','SAPL','') -> SAPLZFG ; ('/CCBJI/PRICE','L','U01') -> /CCBJI/LPRICEU01
+*----------------------------------------------------------------------*
+FORM f_ns_build USING    p_name   TYPE clike
+                         p_prefix TYPE clike
+                         p_suffix TYPE clike
+                CHANGING p_res    TYPE clike.
+
+  DATA: lv_str   TYPE string,
+        lv_pos   TYPE i,
+        lv_nslen TYPE i,
+        lv_ns    TYPE string,
+        lv_base  TYPE string.
+
+  lv_str = p_name.
+
+  IF strlen( lv_str ) > 0 AND lv_str(1) = '/'.
+    FIND FIRST OCCURRENCE OF '/' IN lv_str+1 MATCH OFFSET lv_pos.
+    IF sy-subrc = 0.
+      lv_nslen = lv_pos + 2.                 " include both slashes
+      lv_ns    = lv_str(lv_nslen).
+      lv_base  = lv_str+lv_nslen.
+      CONCATENATE lv_ns p_prefix lv_base p_suffix INTO p_res.
+      RETURN.
+    ENDIF.
+  ENDIF.
+
+  CONCATENATE p_prefix lv_str p_suffix INTO p_res.
+
+ENDFORM.                    "f_ns_build
+
+*&---------------------------------------------------------------------*
 *&      Form  F_EXPAND_FUGR
 *&---------------------------------------------------------------------*
 *  One row per function module of the group (table TFDIR, local read).
 *----------------------------------------------------------------------*
 FORM f_expand_fugr USING p_area TYPE tadir-obj_name.
 
-  DATA: lv_pname TYPE tfdir-pname,
-        lt_fm    TYPE STANDARD TABLE OF tfdir-funcname,
-        lv_fm    TYPE tfdir-funcname,
-        lt_v     TYPE ty_vtype_tab,
-        lv_fname TYPE tadir-obj_name.
+  TYPES: BEGIN OF ty_fm,
+           funcname TYPE tfdir-funcname,
+           include  TYPE tfdir-include,
+         END OF ty_fm.
 
-  CONCATENATE 'SAPL' p_area INTO lv_pname.
-  SELECT funcname FROM tfdir INTO TABLE lt_fm WHERE pname = lv_pname.
+  DATA: lv_pname  TYPE tfdir-pname,
+        lt_fm     TYPE STANDARD TABLE OF ty_fm,
+        ls_fm     TYPE ty_fm,
+        lt_v      TYPE ty_vtype_tab,
+        lv_fname  TYPE tadir-obj_name,
+        lv_suffix TYPE string,
+        lv_incl   TYPE programm,
+        lv_iname  TYPE tadir-obj_name.
 
-  LOOP AT lt_fm INTO lv_fm.
-    lv_fname = lv_fm.
+* Function-group main program (namespace-aware): SAPL<grp> / <ns>SAPL<base>
+  PERFORM f_ns_build USING p_area 'SAPL' space CHANGING lv_pname.
+  SELECT funcname include FROM tfdir INTO TABLE lt_fm WHERE pname = lv_pname.
+
+  LOOP AT lt_fm INTO ls_fm.
+    lv_fname = ls_fm-funcname.
+*   Active source of the FM lives in include L<grp>U<nn> (for REPOSRC fallback)
+    CONCATENATE 'U' ls_fm-include INTO lv_suffix.
+    PERFORM f_ns_build USING p_area 'L' lv_suffix CHANGING lv_incl.
+    lv_iname = lv_incl.
     REFRESH lt_v.
     APPEND 'FUNC' TO lt_v.
     PERFORM f_add_result USING 'FUNC' lv_fname p_area 'FUNCTION'
-                               lt_v lv_fname space.
+                               lt_v lv_fname lv_iname.
   ENDLOOP.
 
 ENDFORM.                    "f_expand_fugr
