@@ -23,14 +23,23 @@ system reached through an **RFC destination**.
    * locally for the **development** version, and
    * via the RFC destination (`DESTINATION p_rfc`) for the **production** version.
 
-   The active (latest) version of each object is identified by the **last
-   transport request (`KORRNUM`)** stamped by version management.
-4. The **Mismatch** column is derived from the last transport request, the
-   reliable cross-system key:
-   * request differs between the two systems &rarr; `YES`
-   * request identical in both systems &rarr; `NO`
-   * version info present in only one system &rarr; `YES`
-   * no version info in either system &rarr; `NO`
+   Version management is keyed at **LIMU level**, so the TADIR (R3TR) object
+   type is first mapped to its version-management object type(s) in form
+   `F_MAP_VERSION_TYPES` (e.g. `PROG` &rarr; `REPS`/`REPT`, `TABL` &rarr;
+   `TABD`/`TABT`, `CLAS` &rarr; `CLSD`/`CPUB`/`CPRO`/`CPRI`/`CINC`/`METH`).
+   All mapped types are queried and the most recent entry across them is taken
+   as the **active version**, identified by its last transport request
+   (`KORRNUM`).
+4. The **Mismatch** and **Remarks** columns are derived from the last transport
+   request, the reliable cross-system key:
+
+   | Condition | Mismatch | Remarks |
+   |-----------|----------|---------|
+   | Request differs between dev and prod | `YES` | Last transport request differs between Dev and Prod |
+   | Request identical in both | `NO` | Last transport request identical in both systems |
+   | Version info in dev only | `YES` | Version exists in Dev only - missing in Production |
+   | Version info in prod only | `YES` | Version exists in Production only - missing in Dev |
+   | No version info in either | `NO` | No version information in either system |
 
    Timestamps are **not** used for the decision because the production system
    records the *import* time rather than the original save time, which would
@@ -46,14 +55,19 @@ A standard ALV grid (`REUSE_ALV_GRID_DISPLAY`) with the columns:
 * Dev Version, Dev Last Request, Dev Date, Dev Author
 * Prod Version, Prod Last Request, Prod Date, Prod Author
 * Mismatch (`YES` / `NO`)
+* Remarks (reason behind the flag)
 
 The standard ALV toolbar provides filter, sort, download to spreadsheet /
 local file, layout management and print.
 
-## Assumptions / notes
+## Object-type coverage
 
-* The active version is identified by the last transport request (`KORRNUM`)
-  recorded in the version directory. For object types that are versioned at
-  LIMU level a type mapping can be added in form `F_GET_ACTIVE_VERSION`.
+`F_MAP_VERSION_TYPES` maps the common R3TR object types (programs, function
+groups, classes, interfaces and the dictionary objects) to their version
+object types. The R3TR type itself is always added as a fallback candidate, so
+any type already accepted by the function module keeps working and unmapped
+types degrade gracefully to a direct lookup (returning "no version
+information" rather than failing). Add further `WHEN` branches to the `CASE`
+for custom object types.
 * The RFC destination must be a trusted/authorised connection to the production
   system (transaction `SM59`).

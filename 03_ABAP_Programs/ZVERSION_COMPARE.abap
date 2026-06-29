@@ -16,13 +16,15 @@
 *&                    and the target system when a change is delivered,
 *&                    so the request number is a reliable cross-system
 *&                    key (timestamps drift because the target records
-*&                    the import time). The mismatch flag is therefore
-*&                    derived from the last request; version number,
-*&                    date and author are shown for transparency.
+*&                    the import time). The mismatch flag and the remarks
+*&                    are therefore derived from the last request;
+*&                    version number, date and author are shown for
+*&                    transparency.
 *&           Output : ALV grid with object type, object name, the dev /
-*&                    production version details and a Mismatch column
+*&                    production version details, a Mismatch column
 *&                    ('YES' when the active versions differ, 'NO' when
-*&                    they are identical).
+*&                    they are identical) and a Remarks column that
+*&                    explains the reason.
 *&
 *& Release : Classic ABAP, compatible with SAP ECC 6.x.
 *&---------------------------------------------------------------------*
@@ -60,6 +62,7 @@ TYPES: BEGIN OF ty_output,
          prd_date   TYPE vrsd-datum,        " Prod - version date
          prd_author TYPE vrsd-author,       " Prod - author
          mismatch   TYPE char3,             " 'YES' / 'NO'
+         remarks    TYPE char60,            " Reason behind the flag
        END OF ty_output.
 
 *&---------------------------------------------------------------------*
@@ -139,7 +142,8 @@ ENDFORM.                    "f_read_tadir
 *&---------------------------------------------------------------------*
 *  For every object read the active-version key (last transport request,
 *  version number, date, author) both locally (development) and in the
-*  remote production system (via RFC), then evaluate the mismatch flag.
+*  remote production system (via RFC), then evaluate the mismatch flag
+*  and the remarks.
 *----------------------------------------------------------------------*
 FORM f_collect_versions.
 
@@ -181,7 +185,8 @@ FORM f_collect_versions.
 
     PERFORM f_evaluate_mismatch USING    ls_dev
                                          ls_prd
-                                CHANGING ls_output-mismatch.
+                                CHANGING ls_output-mismatch
+                                         ls_output-remarks.
 
     APPEND ls_output TO gt_output.
 
@@ -192,25 +197,40 @@ ENDFORM.                    "f_collect_versions
 *&---------------------------------------------------------------------*
 *&      Form  F_EVALUATE_MISMATCH
 *&---------------------------------------------------------------------*
-*  Derive the mismatch flag from the active-version key. The last
-*  transport request (KORRNUM) is the reliable cross-system identifier:
-*    - both systems carry version info and the request differs  -> YES
-*    - the request is identical in both systems                 -> NO
-*    - version info exists in only one of the systems           -> YES
-*    - no version info in either system                         -> NO
+*  Derive the mismatch flag and the remarks from the active-version key.
+*  The last transport request (KORRNUM) is the reliable cross-system
+*  identifier:
+*    Condition                                  Mismatch  Remarks
+*    Request differs between dev and prod       YES       reason text
+*    Request identical in both                  NO        reason text
+*    Version info in only one system            YES       reason text
+*    No version info in either                  NO        reason text
 *----------------------------------------------------------------------*
-FORM f_evaluate_mismatch USING    ps_dev TYPE ty_version
-                                  ps_prd TYPE ty_version
-                         CHANGING pv_flag TYPE char3.
+FORM f_evaluate_mismatch USING    ps_dev  TYPE ty_version
+                                  ps_prd  TYPE ty_version
+                         CHANGING pv_flag TYPE char3
+                                  pv_rem  TYPE char60.
 
   IF ps_dev-found = abap_false AND ps_prd-found = abap_false.
     pv_flag = gc_no.
-  ELSEIF ps_dev-found <> ps_prd-found.
+    pv_rem  = 'No version information in either system'.
+
+  ELSEIF ps_dev-found = abap_true AND ps_prd-found = abap_false.
     pv_flag = gc_yes.
+    pv_rem  = 'Version exists in Dev only - missing in Production'.
+
+  ELSEIF ps_dev-found = abap_false AND ps_prd-found = abap_true.
+    pv_flag = gc_yes.
+    pv_rem  = 'Version exists in Production only - missing in Dev'.
+
   ELSEIF ps_dev-korr = ps_prd-korr.
     pv_flag = gc_no.
+    pv_rem  = 'Last transport request identical in both systems'.
+
   ELSE.
     pv_flag = gc_yes.
+    pv_rem  = 'Last transport request differs between Dev and Prod'.
+
   ENDIF.
 
 ENDFORM.                    "f_evaluate_mismatch
@@ -223,62 +243,79 @@ ENDFORM.                    "f_evaluate_mismatch
 *  in the local system, otherwise it is executed in the target system
 *  through the RFC destination.
 *
-*  Note: SVRS_GET_VERSION_DIRECTORY_46 returns the version directory for
-*  the object. For object types that are versioned at LIMU level a type
-*  mapping can be added in this form before the call.
+*  Version management is keyed at LIMU level, so the TADIR (R3TR) object
+*  type is mapped to its version-management object type(s) first (see
+*  F_MAP_VERSION_TYPES). All mapped types are queried and the most recent
+*  entry across them is treated as the active version of the object.
 *----------------------------------------------------------------------*
 FORM f_get_active_version USING    p_objtype TYPE tadir-object
                                    p_objname TYPE tadir-obj_name
                                    p_dest    TYPE rfcdest
                           CHANGING ps_ver    TYPE ty_version.
 
-  DATA: lt_vrsd  TYPE STANDARD TABLE OF vrsd,
+  DATA: lt_types TYPE STANDARD TABLE OF vrsd-objtype,
+        lv_type  TYPE vrsd-objtype,
+        lt_vrsd  TYPE STANDARD TABLE OF vrsd,
+        lt_all   TYPE STANDARD TABLE OF vrsd,
         ls_vrsd  TYPE vrsd,
         lv_subrc TYPE sy-subrc.
 
   CLEAR ps_ver.
 
-  IF p_dest IS INITIAL.
+* Map the R3TR object type to its version-management object type(s).
+  PERFORM f_map_version_types USING p_objtype CHANGING lt_types.
 
-*   --- Local (development) system ------------------------------------
-    CALL FUNCTION 'SVRS_GET_VERSION_DIRECTORY_46'
-      EXPORTING
-        objname      = p_objname
-        objtype      = p_objtype
-      TABLES
-        lversno_list = lt_vrsd
-      EXCEPTIONS
-        no_entry     = 1
-        OTHERS       = 2.
-    lv_subrc = sy-subrc.
+  LOOP AT lt_types INTO lv_type.
 
-  ELSE.
+    CLEAR: lt_vrsd, lv_subrc.
 
-*   --- Remote (production) system via RFC destination ----------------
-    CALL FUNCTION 'SVRS_GET_VERSION_DIRECTORY_46'
-      DESTINATION p_dest
-      EXPORTING
-        objname               = p_objname
-        objtype               = p_objtype
-      TABLES
-        lversno_list          = lt_vrsd
-      EXCEPTIONS
-        no_entry              = 1
-        communication_failure = 3
-        system_failure        = 4
-        OTHERS                = 2.
-    lv_subrc = sy-subrc.
+    IF p_dest IS INITIAL.
 
-  ENDIF.
+*     --- Local (development) system ----------------------------------
+      CALL FUNCTION 'SVRS_GET_VERSION_DIRECTORY_46'
+        EXPORTING
+          objname      = p_objname
+          objtype      = lv_type
+        TABLES
+          lversno_list = lt_vrsd
+        EXCEPTIONS
+          no_entry     = 1
+          OTHERS       = 2.
+      lv_subrc = sy-subrc.
 
-  IF lv_subrc <> 0 OR lt_vrsd IS INITIAL.
+    ELSE.
+
+*     --- Remote (production) system via RFC destination --------------
+      CALL FUNCTION 'SVRS_GET_VERSION_DIRECTORY_46'
+        DESTINATION p_dest
+        EXPORTING
+          objname               = p_objname
+          objtype               = lv_type
+        TABLES
+          lversno_list          = lt_vrsd
+        EXCEPTIONS
+          no_entry              = 1
+          communication_failure = 3
+          system_failure        = 4
+          OTHERS                = 2.
+      lv_subrc = sy-subrc.
+
+    ENDIF.
+
+    IF lv_subrc = 0 AND lt_vrsd IS NOT INITIAL.
+      APPEND LINES OF lt_vrsd TO lt_all.
+    ENDIF.
+
+  ENDLOOP.
+
+  IF lt_all IS INITIAL.
     RETURN.
   ENDIF.
 
 * Newest version first (highest version number / most recent stamp).
-  SORT lt_vrsd BY versno DESCENDING datum DESCENDING zeit DESCENDING.
+  SORT lt_all BY versno DESCENDING datum DESCENDING zeit DESCENDING.
 
-  READ TABLE lt_vrsd INTO ls_vrsd INDEX 1.
+  READ TABLE lt_all INTO ls_vrsd INDEX 1.
   IF sy-subrc = 0.
     ps_ver-versno = ls_vrsd-versno.
     ps_ver-korr   = ls_vrsd-korrnum.
@@ -289,6 +326,82 @@ FORM f_get_active_version USING    p_objtype TYPE tadir-object
   ENDIF.
 
 ENDFORM.                    "f_get_active_version
+
+*&---------------------------------------------------------------------*
+*&      Form  F_MAP_VERSION_TYPES
+*&---------------------------------------------------------------------*
+*  Maps a TADIR (R3TR) object type to the version-management object
+*  type(s) under which its versions are stored (table VRSD). The object
+*  name is used unchanged for these types. The R3TR type itself is also
+*  added as a candidate so that any object type already accepted by the
+*  function module keeps working. Unmapped types therefore degrade
+*  gracefully to a direct lookup.
+*
+*  Extend the CASE statement for additional / custom object types.
+*----------------------------------------------------------------------*
+FORM f_map_version_types USING    p_objtype TYPE tadir-object
+                         CHANGING pt_types  TYPE STANDARD TABLE.
+
+  DATA: lv_type TYPE vrsd-objtype.
+
+  REFRESH pt_types.
+
+  CASE p_objtype.
+
+*   --- Programs / includes -----------------------------------------
+    WHEN 'PROG' OR 'REPS'.            " Report source / include
+      lv_type = 'REPS'. APPEND lv_type TO pt_types.
+      lv_type = 'REPT'. APPEND lv_type TO pt_types.   " text elements
+    WHEN 'FUGR' OR 'FUNC'.            " Function group / module
+      lv_type = 'FUNC'. APPEND lv_type TO pt_types.
+      lv_type = 'REPS'. APPEND lv_type TO pt_types.
+
+*   --- Classes / interfaces ----------------------------------------
+    WHEN 'CLAS'.                      " Class
+      lv_type = 'CLSD'. APPEND lv_type TO pt_types.   " definition
+      lv_type = 'CPUB'. APPEND lv_type TO pt_types.   " public section
+      lv_type = 'CPRO'. APPEND lv_type TO pt_types.   " protected section
+      lv_type = 'CPRI'. APPEND lv_type TO pt_types.   " private section
+      lv_type = 'CINC'. APPEND lv_type TO pt_types.   " class includes
+      lv_type = 'METH'. APPEND lv_type TO pt_types.   " methods
+    WHEN 'INTF'.                      " Interface
+      lv_type = 'INTD'. APPEND lv_type TO pt_types.
+
+*   --- Dictionary objects ------------------------------------------
+    WHEN 'TABL'.                      " Table / structure
+      lv_type = 'TABD'. APPEND lv_type TO pt_types.   " definition
+      lv_type = 'TABT'. APPEND lv_type TO pt_types.   " technical settings
+    WHEN 'VIEW'.                      " View
+      lv_type = 'VIED'. APPEND lv_type TO pt_types.
+    WHEN 'DTEL'.                      " Data element
+      lv_type = 'DTED'. APPEND lv_type TO pt_types.
+    WHEN 'DOMA'.                      " Domain
+      lv_type = 'DOMD'. APPEND lv_type TO pt_types.
+    WHEN 'SHLP'.                      " Search help
+      lv_type = 'SHLD'. APPEND lv_type TO pt_types.
+    WHEN 'TTYP'.                      " Table type
+      lv_type = 'TTYD'. APPEND lv_type TO pt_types.
+    WHEN 'ENQU'.                      " Lock object
+      lv_type = 'ENQD'. APPEND lv_type TO pt_types.
+    WHEN 'TYPE'.                      " Type group / pool
+      lv_type = 'TYPD'. APPEND lv_type TO pt_types.
+    WHEN 'MSAG'.                      " Message class
+      lv_type = 'MSAD'. APPEND lv_type TO pt_types.   " definition
+      lv_type = 'MESS'. APPEND lv_type TO pt_types.   " single messages
+
+*   --- Other / unmapped --------------------------------------------
+    WHEN OTHERS.
+*     No specific mapping: rely on the direct lookup below.
+  ENDCASE.
+
+* Always try the R3TR type itself as well (deduplicated).
+  lv_type = p_objtype.
+  READ TABLE pt_types WITH KEY table_line = lv_type TRANSPORTING NO FIELDS.
+  IF sy-subrc <> 0.
+    APPEND lv_type TO pt_types.
+  ENDIF.
+
+ENDFORM.                    "f_map_version_types
 
 *&---------------------------------------------------------------------*
 *&      Form  F_DISPLAY_ALV
@@ -342,6 +455,7 @@ FORM f_build_fieldcat.
   PERFORM f_add_field USING 'PRD_DATE'   'Prod Date'          10.
   PERFORM f_add_field USING 'PRD_AUTHOR' 'Prod Author'        12.
   PERFORM f_add_field USING 'MISMATCH'   'Mismatch'            8.
+  PERFORM f_add_field USING 'REMARKS'    'Remarks'            60.
 
 ENDFORM.                    "f_build_fieldcat
 
