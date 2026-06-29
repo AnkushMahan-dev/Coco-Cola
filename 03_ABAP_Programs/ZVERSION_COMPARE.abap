@@ -802,8 +802,8 @@ ENDFORM.                    "f_get_reposrc
 *  Used as a fallback when RFC_READ_TABLE is blocked in the target.
 *  NO_ENTRY is reported as success-empty (p_rc = 0).
 *----------------------------------------------------------------------*
-FORM f_svrs_dir USING    p_objtype TYPE vrsd-objtype
-                         p_objname TYPE tadir-obj_name
+FORM f_svrs_dir USING    p_objtype TYPE clike
+                         p_objname TYPE clike
                          p_dest    TYPE rfcdest
                 CHANGING pt_vrsd   TYPE ty_vrsd_tab
                          p_rc      TYPE sysubrc
@@ -861,7 +861,7 @@ ENDFORM.                    "f_svrs_dir
 *  VRSD fallback: latest HISTORIC version (versno <> 0) via the FM.
 *----------------------------------------------------------------------*
 FORM f_get_vrsd_svrs USING    p_vtype   TYPE vrsd-objtype
-                              p_objname TYPE tadir-obj_name
+                              p_objname TYPE clike
                               p_dest    TYPE rfcdest
                      CHANGING ps_ver    TYPE ty_ver.
 
