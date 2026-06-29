@@ -1,11 +1,14 @@
 *&---------------------------------------------------------------------*
 *& Report  ZVERSION_COMPARE
 *&---------------------------------------------------------------------*
-*& Purpose : Compare the active version of repository objects in the
-*&           current (development) system against a remote production
-*&           system that is reached through an RFC destination.
+*& Purpose : Compare the active version of repository objects between two
+*&           systems, a SOURCE system (e.g. development) and a TARGET
+*&           system (e.g. production), each reached through its own RFC
+*&           destination - so any two systems can be compared without
+*&           hardcoding either side.
 *&
-*&           Input  : Range of object type and object name (no interval).
+*&           Input  : Range of object type and object name (no interval),
+*&                    plus the source and target RFC destinations.
 *&                    Object name is mandatory - the mandatory check is
 *&                    raised in START-OF-SELECTION (not via OBLIGATORY).
 *&           Source : Object list is read from table TADIR.
@@ -88,8 +91,10 @@ SELECT-OPTIONS: s_objnam FOR tadir-obj_name NO INTERVALS.
 SELECTION-SCREEN END OF BLOCK b1.
 
 SELECTION-SCREEN BEGIN OF BLOCK b2 WITH FRAME TITLE text-002.
-* RFC destination pointing to the production system
-PARAMETERS: p_rfc TYPE rfcdest OBLIGATORY.
+* RFC destination of the SOURCE system (e.g. development)
+PARAMETERS: p_srfc TYPE rfcdest OBLIGATORY.
+* RFC destination of the TARGET system (e.g. production)
+PARAMETERS: p_trfc TYPE rfcdest OBLIGATORY.
 SELECTION-SCREEN END OF BLOCK b2.
 
 *&---------------------------------------------------------------------*
@@ -156,18 +161,18 @@ FORM f_collect_versions.
 
     CLEAR: ls_output, ls_dev, ls_prd.
 
-*   Active version in the local (development) system
+*   Active version in the SOURCE system (e.g. development)
     PERFORM f_get_active_version
             USING    ls_object-object
                      ls_object-obj_name
-                     space                 " no destination = local
+                     p_srfc                " source RFC destination
             CHANGING ls_dev.
 
-*   Active version in the remote (production) system
+*   Active version in the TARGET system (e.g. production)
     PERFORM f_get_active_version
             USING    ls_object-object
                      ls_object-obj_name
-                     p_rfc                 " RFC destination
+                     p_trfc                " target RFC destination
             CHANGING ls_prd.
 
     ls_output-object     = ls_object-object.

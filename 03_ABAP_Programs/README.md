@@ -10,7 +10,11 @@ system reached through an **RFC destination**.
 |-------|------|-------|
 | Object Type (`S_OBJECT`) | Select-option, **no interval** | Single values only (no low/high range). Filters `TADIR-OBJECT`. |
 | Object Name (`S_OBJNAM`) | Select-option, **no interval** | **Mandatory** – the mandatory check is raised in `START-OF-SELECTION` (not via `OBLIGATORY`), as requested. |
-| RFC Destination (`P_RFC`) | Parameter, obligatory | Points to the production system used for the remote version lookup. |
+| Source RFC Destination (`P_SRFC`) | Parameter, obligatory | RFC destination of the **source** system (e.g. development). |
+| Target RFC Destination (`P_TRFC`) | Parameter, obligatory | RFC destination of the **target** system (e.g. production). |
+
+Both sides are read through an RFC destination, so any two systems can be
+compared without hardcoding either one.
 
 ## Processing
 
@@ -19,9 +23,9 @@ system reached through an **RFC destination**.
 2. Objects are read from **TADIR** (`PGMID = 'R3TR'`, not deleted) for the
    given object type / object name selection.
 3. For every object the version directory is read with function module
-   `SVRS_GET_VERSION_DIRECTORY_46`:
-   * locally for the **development** version, and
-   * via the RFC destination (`DESTINATION p_rfc`) for the **production** version.
+   `SVRS_GET_VERSION_DIRECTORY_46` via `DESTINATION`:
+   * through the source RFC destination (`P_SRFC`) for the **dev** version, and
+   * through the target RFC destination (`P_TRFC`) for the **production** version.
 
    Version management is keyed at **LIMU level**, so the TADIR (R3TR) object
    type is first mapped to its version-management object type(s) in form
