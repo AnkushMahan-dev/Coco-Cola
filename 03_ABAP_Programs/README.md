@@ -16,24 +16,34 @@ reached through its own **RFC destination**.
 Both sides are read through an RFC destination, so any two systems can be
 compared without hardcoding either one.
 
+## Prerequisite – create the remote-enabled helper module
+
+The report fetches each program's active source through a small
+**remote-enabled** function module, **`Z_VERCMP_GET_SOURCE`**
+(see `Z_VERCMP_GET_SOURCE.abap`). Create it in SE37 as a *Remote-Enabled
+Module* in **both** the local system and every remote target system (e.g.
+`QJR`). Standard source readers such as `RPY_PROGRAM_READ` are **not**
+remote-enabled, so they fail when called with `DESTINATION` (this was the cause
+of the earlier empty / "does not exist" results). The helper wraps
+`READ REPORT`, which works for namespaced programs (`/CCBJI/...`).
+
 ## How the comparison works
 
 The active version is compared by its **actual source code** – the same signal
 the standard *Compare Programs: Differences* tool uses.
 
-> Why not the transport request? The earlier version of this report compared
-> the last transport request (`KORRNUM`) from the version directory
+> Why not the transport request? An earlier approach compared the last
+> transport request (`KORRNUM`) from the version directory
 > (`SVRS_GET_VERSION_DIRECTORY_46`). That directory returns the **numbered
 > historical** versions, not the **active** version, and the active version
-> frequently carries **no transport request** at all. The result was a false
-> "identical" verdict with empty columns. Comparing the active source avoids
-> this entirely.
+> frequently carries **no transport request** at all – producing a false
+> "identical" verdict. Comparing the active source avoids this entirely.
 
 1. The mandatory check for **Object Name** runs in `START-OF-SELECTION`.
 2. Objects are read from **TADIR** (`PGMID = 'R3TR'`, not deleted).
-3. For every object the active source is read from both systems via RFC
-   (`RPY_PROGRAM_READ DESTINATION ...`), together with the last-changed
-   date / user from `TRDIR` (via `RFC_READ_TABLE`).
+3. For every object the active source + last-changed data is read from both
+   systems by calling `Z_VERCMP_GET_SOURCE` with `DESTINATION p_srfc` /
+   `DESTINATION p_trfc` (`NONE` = local logon system).
 4. The two sources are compared line by line:
 
    | Condition | Mismatch | Remarks |
@@ -66,16 +76,18 @@ standard program-comparison tool. Other object types are listed in the output
 with the remark *"Object type not supported"* rather than producing a
 misleading verdict.
 
-To extend coverage, add a reader for the type in form `F_READ_SOURCE`:
+To extend coverage, add the read logic for the type inside the helper module
+`Z_VERCMP_GET_SOURCE` and a matching `WHEN` branch in `F_READ_SOURCE`:
 
-| Object type | Reader to add |
-|-------------|---------------|
-| Function module | `RPY_FUNCTIONMODULE_READ` (read the function source) |
-| Class / methods | `SEO_*` reads or `RPY_CLASS_READ` |
+| Object type | Read logic to add in the helper |
+|-------------|---------------------------------|
+| Function module | read the function include source (`READ REPORT` of the FUNCTION-POOL include) |
+| Class / methods | serialize the class source (`SEO_*` / class include reads) |
 | DDIC objects (tables, data elements, …) | structural compare (definitions are not "source") |
 
 ## Notes
 
 * The RFC destinations must be trusted / authorised connections (`SM59`).
-* `RPY_PROGRAM_READ` and `RFC_READ_TABLE` are both remote-enabled and are
-  called with `DESTINATION` for each system (`NONE` runs locally).
+* `Z_VERCMP_GET_SOURCE` must exist in the local system (so the call compiles)
+  **and** in every remote target system (so it executes there). `NONE` runs it
+  in the local logon system.

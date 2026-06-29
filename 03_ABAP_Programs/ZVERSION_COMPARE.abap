@@ -14,21 +14,26 @@
 *&           Source : Object list is read from table TADIR.
 *&           Compare: The ACTIVE version is compared by its actual source
 *&                    code (the same signal the standard "Compare
-*&                    Programs: Differences" tool uses). The previous
-*&                    request-number approach was unreliable, because the
-*&                    active version often carries no transport request,
-*&                    so the source is read from both systems via RFC and
-*&                    compared line by line.
+*&                    Programs: Differences" tool uses). The source of
+*&                    each system is fetched through the remote-enabled
+*&                    helper module Z_VERCMP_GET_SOURCE (standard source
+*&                    readers such as RPY_PROGRAM_READ are NOT remote-
+*&                    enabled and therefore cannot be called with
+*&                    DESTINATION).
 *&           Output : ALV grid with object type, object name, the source
 *&                    line counts per system, last-changed information, a
 *&                    Mismatch column ('YES' when the active sources
 *&                    differ, 'NO' when they are identical) and a Remarks
 *&                    column that explains the reason.
 *&
-*&           Scope  : Source comparison is implemented for source-based
-*&                    program objects (PROG / report includes). Other
-*&                    object types are listed with a remark; add their
-*&                    readers in F_READ_SOURCE to extend coverage.
+*&           Scope  : Source comparison is implemented for program
+*&                    objects (PROG / report includes). Other object
+*&                    types are listed with a remark; extend the helper
+*&                    module and F_READ_SOURCE for further coverage.
+*&
+*& PREREQUISITE : Create remote-enabled function module
+*&                Z_VERCMP_GET_SOURCE (see Z_VERCMP_GET_SOURCE.abap) in
+*&                BOTH the local system and every remote target system.
 *&
 *& Release : Classic ABAP, compatible with SAP ECC 6.x.
 *&---------------------------------------------------------------------*
@@ -39,6 +44,8 @@ TABLES: tadir.
 *&---------------------------------------------------------------------*
 *& Types
 *&---------------------------------------------------------------------*
+TYPES: ty_src_tab TYPE STANDARD TABLE OF abaptxt255 WITH DEFAULT KEY.
+
 TYPES: BEGIN OF ty_object,
          object   TYPE tadir-object,        " Object type
          obj_name TYPE tadir-obj_name,      " Object name
@@ -46,10 +53,10 @@ TYPES: BEGIN OF ty_object,
 
 * Active-version source + metadata for a single object / system
 TYPES: BEGIN OF ty_source,
-         source    TYPE rswsourcet,         " active source lines
+         source    TYPE ty_src_tab,         " active source lines
          lines     TYPE i,                  " number of source lines
-         chg_date  TYPE trdir-udat,         " last changed on
-         chg_user  TYPE trdir-unam,         " last changed by
+         chg_date  TYPE sydatum,            " last changed on
+         chg_user  TYPE syuname,            " last changed by
          found     TYPE abap_bool,          " object exists in system
          supported TYPE abap_bool,          " type supported for compare
        END OF ty_source.
@@ -57,12 +64,12 @@ TYPES: BEGIN OF ty_source,
 TYPES: BEGIN OF ty_output,
          object     TYPE tadir-object,      " Object type
          obj_name   TYPE tadir-obj_name,    " Object name
-         dev_lines  TYPE i,                 " Dev  - source line count
-         dev_date   TYPE trdir-udat,        " Dev  - last changed on
-         dev_user   TYPE trdir-unam,        " Dev  - last changed by
-         prd_lines  TYPE i,                 " Prod - source line count
-         prd_date   TYPE trdir-udat,        " Prod - last changed on
-         prd_user   TYPE trdir-unam,        " Prod - last changed by
+         dev_lines  TYPE i,                 " Source - source line count
+         dev_date   TYPE sydatum,           " Source - last changed on
+         dev_user   TYPE syuname,           " Source - last changed by
+         prd_lines  TYPE i,                 " Target - source line count
+         prd_date   TYPE sydatum,           " Target - last changed on
+         prd_user   TYPE syuname,           " Target - last changed by
          mismatch   TYPE char3,             " 'YES' / 'NO'
          remarks    TYPE char100,           " Reason behind the flag
        END OF ty_output.
@@ -203,7 +210,7 @@ ENDFORM.                    "f_collect_versions
 *  of the two systems:
 *    Condition                                  Mismatch  Remarks
 *    Object type not supported for compare      (blank)   reason text
-*    Source differs between dev and prod        YES       reason text
+*    Source differs between source and target   YES       reason text
 *    Source identical in both                   NO        reason text
 *    Object exists in only one system           YES       reason text
 *    Object missing in both systems             NO        reason text
@@ -256,20 +263,25 @@ ENDFORM.                    "f_evaluate_mismatch
 *&      Form  F_READ_SOURCE
 *&---------------------------------------------------------------------*
 *  Reads the active source and last-changed data of a single object in
-*  the system addressed by P_DEST ('NONE' = local logon system).
+*  the system addressed by P_DEST ('NONE' = local logon system) by
+*  calling the remote-enabled helper module Z_VERCMP_GET_SOURCE.
 *
 *  Source comparison is implemented for program objects (report source).
 *  For other object types SUPPORTED is returned as false so the row is
-*  reported with an explanatory remark. Add further readers (function
-*  modules, classes, ...) in the CASE statement to widen coverage.
+*  reported with an explanatory remark. Extend the helper module and the
+*  CASE statement to widen coverage (function modules, classes, ...).
 *----------------------------------------------------------------------*
 FORM f_read_source USING    p_objtype TYPE tadir-object
                             p_objname TYPE tadir-obj_name
                             p_dest    TYPE rfcdest
                    CHANGING ps_src    TYPE ty_source.
 
-  DATA: lv_prog TYPE programm,
-        lv_subc TYPE trdir-subc.
+  DATA: lv_prog  TYPE programm,
+        lv_found TYPE flag,
+        lv_lines TYPE i,
+        lv_date  TYPE sydatum,
+        lv_user  TYPE syuname,
+        lv_msg   TYPE char200.
 
   CLEAR ps_src.
 
@@ -279,32 +291,27 @@ FORM f_read_source USING    p_objtype TYPE tadir-object
       ps_src-supported = abap_true.
       lv_prog          = p_objname.
 
-      CALL FUNCTION 'RPY_PROGRAM_READ'
+      CALL FUNCTION 'Z_VERCMP_GET_SOURCE'
         DESTINATION p_dest
         EXPORTING
-          program_name           = lv_prog
-          with_includelist       = space
-          only_source            = 'X'
+          iv_program            = lv_prog
         IMPORTING
-          program_subc           = lv_subc
+          ev_found              = lv_found
+          ev_lines              = lv_lines
+          ev_chg_date           = lv_date
+          ev_chg_user           = lv_user
         TABLES
-          source_extended        = ps_src-source
+          et_source             = ps_src-source
         EXCEPTIONS
-          cancelled              = 1
-          not_found              = 2
-          permission_error       = 3
-          communication_failure  = 4
-          system_failure         = 5
-          OTHERS                 = 6.
+          communication_failure = 1 MESSAGE lv_msg
+          system_failure        = 2 MESSAGE lv_msg
+          OTHERS                = 3.
 
-      IF sy-subrc = 0.
-        ps_src-found = abap_true.
-        ps_src-lines = lines( ps_src-source ).
-*       Last-changed data from the program directory (TRDIR).
-        PERFORM f_read_trdir USING    lv_prog
-                                      p_dest
-                             CHANGING ps_src-chg_date
-                                      ps_src-chg_user.
+      IF sy-subrc = 0 AND lv_found = abap_true.
+        ps_src-found    = abap_true.
+        ps_src-lines    = lv_lines.
+        ps_src-chg_date = lv_date.
+        ps_src-chg_user = lv_user.
       ENDIF.
 
     WHEN OTHERS.
@@ -314,61 +321,6 @@ FORM f_read_source USING    p_objtype TYPE tadir-object
   ENDCASE.
 
 ENDFORM.                    "f_read_source
-
-*&---------------------------------------------------------------------*
-*&      Form  F_READ_TRDIR
-*&---------------------------------------------------------------------*
-*  Reads the last-changed date / user of a program from TRDIR in the
-*  system addressed by P_DEST, using the remote-enabled RFC_READ_TABLE.
-*  Purely informational - failures are ignored.
-*----------------------------------------------------------------------*
-FORM f_read_trdir USING    p_prog TYPE programm
-                           p_dest TYPE rfcdest
-                  CHANGING p_date TYPE trdir-udat
-                           p_user TYPE trdir-unam.
-
-  DATA: lt_options TYPE STANDARD TABLE OF rfc_db_opt,
-        lt_fields  TYPE STANDARD TABLE OF rfc_db_fld,
-        lt_data    TYPE STANDARD TABLE OF tab512,
-        ls_options TYPE rfc_db_opt,
-        ls_fields  TYPE rfc_db_fld,
-        ls_data    TYPE tab512.
-
-  CLEAR: p_date, p_user.
-
-  CONCATENATE 'NAME = ''' p_prog '''' INTO ls_options-text.
-  APPEND ls_options TO lt_options.
-
-  ls_fields-fieldname = 'UDAT'. APPEND ls_fields TO lt_fields.
-  ls_fields-fieldname = 'UNAM'. APPEND ls_fields TO lt_fields.
-
-  CALL FUNCTION 'RFC_READ_TABLE'
-    DESTINATION p_dest
-    EXPORTING
-      query_table           = 'TRDIR'
-      delimiter             = '|'
-    TABLES
-      options               = lt_options
-      fields                = lt_fields
-      data                  = lt_data
-    EXCEPTIONS
-      table_not_available   = 1
-      option_not_valid      = 2
-      field_not_valid       = 3
-      not_authorized        = 4
-      data_buffer_exceeded  = 5
-      communication_failure = 6
-      system_failure        = 7
-      OTHERS                = 8.
-
-  IF sy-subrc = 0.
-    READ TABLE lt_data INTO ls_data INDEX 1.
-    IF sy-subrc = 0.
-      SPLIT ls_data-wa AT '|' INTO p_date p_user.
-    ENDIF.
-  ENDIF.
-
-ENDFORM.                    "f_read_trdir
 
 *&---------------------------------------------------------------------*
 *&      Form  F_DISPLAY_ALV
