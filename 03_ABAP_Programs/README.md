@@ -1,79 +1,70 @@
 # ZVERSION_COMPARE
 
-ECC 6.x compatible ABAP report that compares the version of repository objects
+ECC 6.x compatible ABAP report that compares the **active version** of programs
 between two systems (a **source** and a **target**), each reached through its
 own **RFC destination** – using only the standard remote-enabled module
-`RFC_READ_TABLE` (no custom function module needs to be created in the target
-system).
+`RFC_READ_TABLE` (no custom function module in the target system).
 
 ## Selection screen
 
 | Field | Type | Notes |
 |-------|------|-------|
-| Object Type (`S_OBJECT`) | Select-option, **no interval** | Single values only (no low/high range). Filters `TADIR-OBJECT`. |
-| Object Name (`S_OBJNAM`) | Select-option, **no interval** | **Mandatory** – the mandatory check is raised in `START-OF-SELECTION` (not via `OBLIGATORY`). |
-| Source RFC Destination (`P_SRFC`) | Parameter, obligatory, default `NONE` | RFC destination of the **source** system. `NONE` = the local logon system. |
-| Target RFC Destination (`P_TRFC`) | Parameter, obligatory | RFC destination of the **target** system. |
+| Object Type (`S_OBJECT`) | Select-option, **no interval** | Single values only. Filters `TADIR-OBJECT`. |
+| Object Name (`S_OBJNAM`) | Select-option, **no interval** | **Mandatory** – checked in `START-OF-SELECTION` (not `OBLIGATORY`). |
+| Source RFC Destination (`P_SRFC`) | Parameter, obligatory, default `NONE` | `NONE` = local logon system. |
+| Target RFC Destination (`P_TRFC`) | Parameter, obligatory | The remote system. |
 
 ## How the comparison works
 
-1. The mandatory check for **Object Name** runs in `START-OF-SELECTION`.
-2. Objects are read from **TADIR** (`PGMID = 'R3TR'`, not deleted).
-3. The TADIR (R3TR) object type is mapped to its version-management object type
-   in `F_MAP_VRSD_TYPE` (e.g. `PROG` &rarr; `REPS`, `TABL` &rarr; `TABD`).
-4. An object can be made of several version-managed **components**. For a
-   program these are the **source code** (VRSD type `REPS`) and the
-   **text elements / text pool** (VRSD type `REPT`).
-5. For each component and each system the version directory table **`VRSD`** is
-   read directly with **`RFC_READ_TABLE`** (`DESTINATION p_srfc` /
-   `DESTINATION p_trfc`), and the **latest** entry (by date / time / version
-   number) is taken. The **latest transport request (`KORRNUM`)** is the
-   cross-system key.
-6. The object is flagged **mismatched if ANY component differs**, and the
-   Remarks name which component(s) differ:
+> **Why not the version directory (`VRSD`)?** The active version is **not** held
+> in `VRSD` – that table only holds numbered *historical* snapshots. A target
+> system can have **none** of them while the active object exists (confirmed in
+> the field: the target showed *"There are no versions in the version
+> database"* even though the active code was present). Reading `VRSD` therefore
+> reported "missing in Target" incorrectly.
+
+The active version is identified from the source table **`REPOSRC`**
+(`R3STATE = 'A'`). Its **last-changed date + author are preserved across
+transport** – the target shows the original developer and date, not the import
+time – so they are a reliable cross-system key for "is the same version active".
+
+1. Mandatory **Object Name** check in `START-OF-SELECTION`.
+2. Objects read from **TADIR** (`PGMID = 'R3TR'`, not deleted).
+3. For each system the active source last-changed date / author is read from
+   `REPOSRC` with `RFC_READ_TABLE` (`DESTINATION p_srfc` / `DESTINATION p_trfc`).
+4. The verdict:
 
    | Condition | Mismatch | Remarks |
    |-----------|----------|---------|
-   | Object type not mapped for compare | *(blank)* | Object type not mapped for version compare |
-   | A component's latest request differs | `YES` | Difference in: Source / Text elements / Source, Text elements |
-   | All components identical | `NO` | Identical in both systems |
-   | Object present in target, none in source | `YES` | No version history in Source - present in Target |
-   | Object present in source, none in target | `YES` | No version history in Target - present in Source |
-   | No version history in either | `NO` | No version history in either system |
-
-   So a program whose **text elements** changed (but not its source) is now
-   reported as `Mismatch = YES` with `Remarks = Difference in: Text elements`.
-
-> **Why `VRSD` directly?** An earlier attempt used
-> `SVRS_GET_VERSION_DIRECTORY_46`, which prepends a blank "active version" entry
-> – making both systems look blank/equal (false match). Reading `VRSD` directly
-> returns only the real numbered version entries. Version management stamps the
-> **same transport request number in both systems on import**, so the latest
-> `KORRNUM` is a reliable cross-system key. (An earlier source-comparison
-> attempt used `RPY_PROGRAM_READ`, which is **not** remote-enabled and failed
-> over RFC; `RFC_READ_TABLE` is remote-enabled and ships with every system.)
+   | Object type not supported | *(blank)* | active compare covers programs (PROG) |
+   | Active last-change differs | `YES` | Active version differs (different last change) |
+   | Active last-change identical | `NO` | Active version identical (same last change in both systems) |
+   | Program exists in source only | `YES` | Program exists in Source only - missing in Target |
+   | Program exists in target only | `YES` | Program exists in Target only - missing in Source |
+   | Program missing in both | `NO` | Program does not exist in either system |
 
 ## Output
 
 A standard ALV grid (`REUSE_ALV_GRID_DISPLAY`) with the columns:
 
 * Object Type, Object Name
-* Source Request, Source Version, Source Date, Source Author
-* Target Request, Target Version, Target Date, Target Author
+* Source Changed On, Source Changed By
+* Target Changed On, Target Changed By
 * Mismatch (`YES` / `NO`)
-* Remarks (reason behind the flag)
+* Remarks
 
 The standard ALV toolbar provides filter, sort, download to spreadsheet /
 local file, layout management and print.
 
-## Prerequisites & notes
+## Scope & notes
 
+* Implemented for **programs (`PROG`)** – reports / includes – via `REPOSRC`.
+  Other object types are listed with a "not supported" remark (their active
+  definitions live in different DDIC tables).
 * The **target** RFC destination's user needs read authorisation for
-  `RFC_READ_TABLE` on table `VRSD` (`S_RFC` + `S_TABU_DIS`/`S_TABU_NAM`).
-* **Version logging on import** must be active in both systems (standard for
-  QA / production) so that imported changes create `VRSD` entries carrying the
-  original transport request.
-* Object-type coverage is driven by `F_MAP_VRSD_TYPE`. Mapped today: `PROG`,
-  `TABL`, `VIEW`, `DTEL`, `DOMA`, `SHLP`, `TTYP`, `ENQU`, `MSAG`. Composite
-  objects (function groups, classes) version their parts under structured names
-  and need dedicated handling – add them to the `CASE` when required.
+  `RFC_READ_TABLE` on table `REPOSRC` (`S_RFC` + table-read auth).
+* The comparison key is the active source last-changed **date + author**. This
+  matches what the standard *Versions / Compare Programs* tool shows for the
+  active version. A pure line-by-line source diff would additionally require
+  reading the source itself, which over RFC needs either a custom remote-enabled
+  module (not allowed in the target) or the version-management remote APIs.
