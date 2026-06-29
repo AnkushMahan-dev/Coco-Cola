@@ -22,9 +22,20 @@ system reached through an **RFC destination**.
    `SVRS_GET_VERSION_DIRECTORY_46`:
    * locally for the **development** version, and
    * via the RFC destination (`DESTINATION p_rfc`) for the **production** version.
-4. The number of version entries returned per system is used as the comparable
-   version figure. When the two figures differ the **Mismatch** column is set
-   to `YES`, otherwise `NO`.
+
+   The active (latest) version of each object is identified by the **last
+   transport request (`KORRNUM`)** stamped by version management.
+4. The **Mismatch** column is derived from the last transport request, the
+   reliable cross-system key:
+   * request differs between the two systems &rarr; `YES`
+   * request identical in both systems &rarr; `NO`
+   * version info present in only one system &rarr; `YES`
+   * no version info in either system &rarr; `NO`
+
+   Timestamps are **not** used for the decision because the production system
+   records the *import* time rather than the original save time, which would
+   produce false mismatches. The version number, date and author are still
+   shown for transparency.
 
 ## Output
 
@@ -32,8 +43,8 @@ A standard ALV grid (`REUSE_ALV_GRID_DISPLAY`) with the columns:
 
 * Object Type
 * Object Name
-* Dev Version
-* Production Version
+* Dev Version, Dev Last Request, Dev Date, Dev Author
+* Prod Version, Prod Last Request, Prod Date, Prod Author
 * Mismatch (`YES` / `NO`)
 
 The standard ALV toolbar provides filter, sort, download to spreadsheet /
@@ -41,8 +52,8 @@ local file, layout management and print.
 
 ## Assumptions / notes
 
-* The "version" figure compared between the systems is the count of entries in
-  the version directory. For object types that are versioned at LIMU level a
-  type mapping can be added in form `F_GET_VERSION_COUNT`.
+* The active version is identified by the last transport request (`KORRNUM`)
+  recorded in the version directory. For object types that are versioned at
+  LIMU level a type mapping can be added in form `F_GET_ACTIVE_VERSION`.
 * The RFC destination must be a trusted/authorised connection to the production
   system (transaction `SM59`).

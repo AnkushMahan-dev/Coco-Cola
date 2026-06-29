@@ -9,9 +9,19 @@
 *&                    Object name is mandatory - the mandatory check is
 *&                    raised in START-OF-SELECTION (not via OBLIGATORY).
 *&           Source : Object list is read from table TADIR.
-*&           Output : ALV grid with Object Type, Object Name,
-*&                    Dev Version, Production Version and a Mismatch
-*&                    column ('YES' when the versions differ, 'NO' when
+*&           Compare: The active (latest) version of every object is
+*&                    identified by the last transport request (KORRNUM)
+*&                    recorded by version management. Version management
+*&                    stamps the SAME request number in both the source
+*&                    and the target system when a change is delivered,
+*&                    so the request number is a reliable cross-system
+*&                    key (timestamps drift because the target records
+*&                    the import time). The mismatch flag is therefore
+*&                    derived from the last request; version number,
+*&                    date and author are shown for transparency.
+*&           Output : ALV grid with object type, object name, the dev /
+*&                    production version details and a Mismatch column
+*&                    ('YES' when the active versions differ, 'NO' when
 *&                    they are identical).
 *&
 *& Release : Classic ABAP, compatible with SAP ECC 6.x.
@@ -28,12 +38,28 @@ TYPES: BEGIN OF ty_object,
          obj_name TYPE tadir-obj_name,      " Object name
        END OF ty_object.
 
+* Active-version key returned for a single object / system
+TYPES: BEGIN OF ty_version,
+         versno TYPE vrsd-versno,           " Latest version number
+         korr   TYPE vrsd-korrnum,          " Last transport request
+         date   TYPE vrsd-datum,            " Version date
+         time   TYPE vrsd-zeit,             " Version time
+         author TYPE vrsd-author,           " Last author
+         found  TYPE abap_bool,             " Version info available
+       END OF ty_version.
+
 TYPES: BEGIN OF ty_output,
-         object   TYPE tadir-object,        " Object type
-         obj_name TYPE tadir-obj_name,      " Object name
-         dev_ver  TYPE i,                   " Version count in dev system
-         prd_ver  TYPE i,                   " Version count in production
-         mismatch TYPE char3,               " 'YES' / 'NO'
+         object     TYPE tadir-object,      " Object type
+         obj_name   TYPE tadir-obj_name,    " Object name
+         dev_versno TYPE vrsd-versno,       " Dev  - version number
+         dev_korr   TYPE vrsd-korrnum,      " Dev  - last request
+         dev_date   TYPE vrsd-datum,        " Dev  - version date
+         dev_author TYPE vrsd-author,       " Dev  - author
+         prd_versno TYPE vrsd-versno,       " Prod - version number
+         prd_korr   TYPE vrsd-korrnum,      " Prod - last request
+         prd_date   TYPE vrsd-datum,        " Prod - version date
+         prd_author TYPE vrsd-author,       " Prod - author
+         mismatch   TYPE char3,             " 'YES' / 'NO'
        END OF ty_output.
 
 *&---------------------------------------------------------------------*
@@ -111,41 +137,51 @@ ENDFORM.                    "f_read_tadir
 *&---------------------------------------------------------------------*
 *&      Form  F_COLLECT_VERSIONS
 *&---------------------------------------------------------------------*
-*  For every object read the number of versions held by version
-*  management both locally (development) and in the remote production
-*  system (via the RFC destination), then evaluate the mismatch flag.
+*  For every object read the active-version key (last transport request,
+*  version number, date, author) both locally (development) and in the
+*  remote production system (via RFC), then evaluate the mismatch flag.
 *----------------------------------------------------------------------*
 FORM f_collect_versions.
 
   DATA: ls_object TYPE ty_object,
-        ls_output TYPE ty_output.
+        ls_output TYPE ty_output,
+        ls_dev    TYPE ty_version,
+        ls_prd    TYPE ty_version.
 
   LOOP AT gt_object INTO ls_object.
 
-    CLEAR ls_output.
-    ls_output-object   = ls_object-object.
-    ls_output-obj_name = ls_object-obj_name.
+    CLEAR: ls_output, ls_dev, ls_prd.
 
 *   Active version in the local (development) system
-    PERFORM f_get_version_count
+    PERFORM f_get_active_version
             USING    ls_object-object
                      ls_object-obj_name
                      space                 " no destination = local
-            CHANGING ls_output-dev_ver.
+            CHANGING ls_dev.
 
 *   Active version in the remote (production) system
-    PERFORM f_get_version_count
+    PERFORM f_get_active_version
             USING    ls_object-object
                      ls_object-obj_name
                      p_rfc                 " RFC destination
-            CHANGING ls_output-prd_ver.
+            CHANGING ls_prd.
 
-*   Evaluate the mismatch column
-    IF ls_output-dev_ver = ls_output-prd_ver.
-      ls_output-mismatch = gc_no.
-    ELSE.
-      ls_output-mismatch = gc_yes.
-    ENDIF.
+    ls_output-object     = ls_object-object.
+    ls_output-obj_name   = ls_object-obj_name.
+
+    ls_output-dev_versno = ls_dev-versno.
+    ls_output-dev_korr   = ls_dev-korr.
+    ls_output-dev_date   = ls_dev-date.
+    ls_output-dev_author = ls_dev-author.
+
+    ls_output-prd_versno = ls_prd-versno.
+    ls_output-prd_korr   = ls_prd-korr.
+    ls_output-prd_date   = ls_prd-date.
+    ls_output-prd_author = ls_prd-author.
+
+    PERFORM f_evaluate_mismatch USING    ls_dev
+                                         ls_prd
+                                CHANGING ls_output-mismatch.
 
     APPEND ls_output TO gt_output.
 
@@ -154,26 +190,53 @@ FORM f_collect_versions.
 ENDFORM.                    "f_collect_versions
 
 *&---------------------------------------------------------------------*
-*&      Form  F_GET_VERSION_COUNT
+*&      Form  F_EVALUATE_MISMATCH
 *&---------------------------------------------------------------------*
-*  Returns the number of version-management entries for a single object.
-*  When P_DEST is initial the lookup runs in the local system, otherwise
-*  it is executed in the target system through the RFC destination.
+*  Derive the mismatch flag from the active-version key. The last
+*  transport request (KORRNUM) is the reliable cross-system identifier:
+*    - both systems carry version info and the request differs  -> YES
+*    - the request is identical in both systems                 -> NO
+*    - version info exists in only one of the systems           -> YES
+*    - no version info in either system                         -> NO
+*----------------------------------------------------------------------*
+FORM f_evaluate_mismatch USING    ps_dev TYPE ty_version
+                                  ps_prd TYPE ty_version
+                         CHANGING pv_flag TYPE char3.
+
+  IF ps_dev-found = abap_false AND ps_prd-found = abap_false.
+    pv_flag = gc_no.
+  ELSEIF ps_dev-found <> ps_prd-found.
+    pv_flag = gc_yes.
+  ELSEIF ps_dev-korr = ps_prd-korr.
+    pv_flag = gc_no.
+  ELSE.
+    pv_flag = gc_yes.
+  ENDIF.
+
+ENDFORM.                    "f_evaluate_mismatch
+
+*&---------------------------------------------------------------------*
+*&      Form  F_GET_ACTIVE_VERSION
+*&---------------------------------------------------------------------*
+*  Reads the version directory of a single object and returns the key of
+*  the active (latest) version. When P_DEST is initial the lookup runs
+*  in the local system, otherwise it is executed in the target system
+*  through the RFC destination.
 *
 *  Note: SVRS_GET_VERSION_DIRECTORY_46 returns the version directory for
-*  the object. The number of returned entries is used as the comparable
-*  "version" figure between the two systems. For object types that are
-*  versioned at LIMU level a type mapping can be added in this form.
+*  the object. For object types that are versioned at LIMU level a type
+*  mapping can be added in this form before the call.
 *----------------------------------------------------------------------*
-FORM f_get_version_count USING    p_objtype TYPE tadir-object
-                                  p_objname TYPE tadir-obj_name
-                                  p_dest    TYPE rfcdest
-                         CHANGING p_count   TYPE i.
+FORM f_get_active_version USING    p_objtype TYPE tadir-object
+                                   p_objname TYPE tadir-obj_name
+                                   p_dest    TYPE rfcdest
+                          CHANGING ps_ver    TYPE ty_version.
 
-  DATA: lt_vrsd TYPE STANDARD TABLE OF vrsd,
+  DATA: lt_vrsd  TYPE STANDARD TABLE OF vrsd,
+        ls_vrsd  TYPE vrsd,
         lv_subrc TYPE sy-subrc.
 
-  CLEAR p_count.
+  CLEAR ps_ver.
 
   IF p_dest IS INITIAL.
 
@@ -208,11 +271,24 @@ FORM f_get_version_count USING    p_objtype TYPE tadir-object
 
   ENDIF.
 
-  IF lv_subrc = 0.
-    p_count = lines( lt_vrsd ).
+  IF lv_subrc <> 0 OR lt_vrsd IS INITIAL.
+    RETURN.
   ENDIF.
 
-ENDFORM.                    "f_get_version_count
+* Newest version first (highest version number / most recent stamp).
+  SORT lt_vrsd BY versno DESCENDING datum DESCENDING zeit DESCENDING.
+
+  READ TABLE lt_vrsd INTO ls_vrsd INDEX 1.
+  IF sy-subrc = 0.
+    ps_ver-versno = ls_vrsd-versno.
+    ps_ver-korr   = ls_vrsd-korrnum.
+    ps_ver-date   = ls_vrsd-datum.
+    ps_ver-time   = ls_vrsd-zeit.
+    ps_ver-author = ls_vrsd-author.
+    ps_ver-found  = abap_true.
+  ENDIF.
+
+ENDFORM.                    "f_get_active_version
 
 *&---------------------------------------------------------------------*
 *&      Form  F_DISPLAY_ALV
@@ -255,11 +331,17 @@ FORM f_build_fieldcat.
 
   CLEAR gt_fieldc.
 
-  PERFORM f_add_field USING 'OBJECT'   'Object Type'       10.
-  PERFORM f_add_field USING 'OBJ_NAME' 'Object Name'       40.
-  PERFORM f_add_field USING 'DEV_VER'  'Dev Version'       12.
-  PERFORM f_add_field USING 'PRD_VER'  'Production Version' 18.
-  PERFORM f_add_field USING 'MISMATCH' 'Mismatch'           8.
+  PERFORM f_add_field USING 'OBJECT'     'Object Type'        10.
+  PERFORM f_add_field USING 'OBJ_NAME'   'Object Name'        40.
+  PERFORM f_add_field USING 'DEV_VERSNO' 'Dev Version'        10.
+  PERFORM f_add_field USING 'DEV_KORR'   'Dev Last Request'   20.
+  PERFORM f_add_field USING 'DEV_DATE'   'Dev Date'           10.
+  PERFORM f_add_field USING 'DEV_AUTHOR' 'Dev Author'         12.
+  PERFORM f_add_field USING 'PRD_VERSNO' 'Prod Version'       10.
+  PERFORM f_add_field USING 'PRD_KORR'   'Prod Last Request'  20.
+  PERFORM f_add_field USING 'PRD_DATE'   'Prod Date'          10.
+  PERFORM f_add_field USING 'PRD_AUTHOR' 'Prod Author'        12.
+  PERFORM f_add_field USING 'MISMATCH'   'Mismatch'            8.
 
 ENDFORM.                    "f_build_fieldcat
 
