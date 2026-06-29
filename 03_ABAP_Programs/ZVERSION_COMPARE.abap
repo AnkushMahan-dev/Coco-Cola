@@ -715,7 +715,7 @@ FORM f_get_vrsd USING    p_vtype   TYPE vrsd-objtype
       PERFORM f_rc_text USING sy-subrc 'VRSD' CHANGING ps_ver-rctext.
     ENDIF.
 *   Fallback: RFC_READ_TABLE blocked -> try the remote-enabled FM.
-    PERFORM f_get_vrsd_svrs USING p_vtype lv_name p_dest CHANGING ps_ver.
+    PERFORM f_get_vrsd_svrs USING p_vtype p_objname p_dest CHANGING ps_ver.
     RETURN.
   ENDIF.
 
