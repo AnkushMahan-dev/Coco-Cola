@@ -1,38 +1,36 @@
 *&---------------------------------------------------------------------*
 *& Report  ZVERSION_COMPARE
 *&---------------------------------------------------------------------*
-*& Purpose : Compare the ACTIVE version of programs between two systems,
-*&           a SOURCE system (e.g. development) and a TARGET system (e.g.
-*&           production), each reached through its own RFC destination -
-*&           so any two systems can be compared without hardcoding either
-*&           side.
+*& Purpose : Compare the version of programs between two systems, a
+*&           SOURCE system (e.g. development) and a TARGET system (e.g.
+*&           production), each reached through its own RFC destination.
 *&
 *&           Input  : Range of object type and object name (no interval),
 *&                    plus the source and target RFC destinations.
 *&                    Object name is mandatory - the mandatory check is
 *&                    raised in START-OF-SELECTION (not via OBLIGATORY).
 *&           Source : Object list is read from table TADIR.
-*&           Compare: The ACTIVE version of an object is NOT held in the
-*&                    version directory (VRSD): VRSD only holds numbered
-*&                    historical snapshots, and a target system may have
-*&                    none of them even though the active object exists.
-*&                    Therefore the active version is identified from the
-*&                    source table REPOSRC (R3STATE = 'A'), whose last-
-*&                    changed date / author are PRESERVED across transport
-*&                    (the target shows the original developer + date, not
-*&                    the import time). Both systems are read with the
-*&                    standard remote-enabled module RFC_READ_TABLE (no
-*&                    custom function module is needed in the target).
-*&           Output : ALV grid with object type, object name, the active
-*&                    source last-changed date / author per system, a
-*&                    Mismatch column ('YES' when the active versions
-*&                    differ, 'NO' when identical) and a Remarks column.
+*&           Compare: Two methods are used with an automatic fallback
+*&                    (both read with the standard remote-enabled module
+*&                    RFC_READ_TABLE - no custom FM in the target):
+*&                      1. VRSD    - latest numbered version (transport
+*&                                   request KORRNUM). Used when BOTH
+*&                                   systems have version-directory rows.
+*&                      2. REPOSRC - active version (last-changed date /
+*&                                   author, preserved across transport).
+*&                                   Fallback when VRSD is not available
+*&                                   in both systems (a target often has
+*&                                   no version database while the active
+*&                                   object exists).
+*&                    The chosen method is shown per row.
+*&           Log    : Every run is logged to table ZVERSION_CMP_LOG.
+*&           Output : ALV grid (object type, name, method, request / date
+*&                    / author per system, Mismatch, Remarks).
 *&
-*& Scope   : Implemented for programs (PROG - reports / includes). Other
-*&           object types are listed with a remark.
-*&
-*& Prereq  : The target RFC destination's user needs read authorisation
-*&           for RFC_READ_TABLE on table REPOSRC.
+*& Prereq  : - Create transparent table ZVERSION_CMP_LOG (see
+*&             ZVERSION_CMP_LOG.txt).
+*&           - The target RFC user needs RFC_READ_TABLE read auth on
+*&             VRSD and REPOSRC.
 *&
 *& Release : Classic ABAP, compatible with SAP ECC 6.x.
 *&---------------------------------------------------------------------*
@@ -44,39 +42,54 @@ TABLES: tadir.
 *& Types
 *&---------------------------------------------------------------------*
 TYPES: BEGIN OF ty_object,
-         object   TYPE tadir-object,        " Object type
-         obj_name TYPE tadir-obj_name,      " Object name
+         object   TYPE tadir-object,
+         obj_name TYPE tadir-obj_name,
        END OF ty_object.
 
-* Active-version key for a single object / system
-TYPES: BEGIN OF ty_active,
-         chg_date  TYPE sydatum,            " active source last changed on
-         chg_user  TYPE syuname,            " active source last changed by
-         found     TYPE abap_bool,          " active object exists
-         supported TYPE abap_bool,          " object type supported
-       END OF ty_active.
+* One parsed VRSD row (as returned by RFC_READ_TABLE)
+TYPES: BEGIN OF ty_vrsd_row,
+         versno TYPE vrsd-versno,
+         korr   TYPE vrsd-korrnum,
+         author TYPE vrsd-author,
+         datum  TYPE vrsd-datum,
+         zeit   TYPE vrsd-zeit,
+       END OF ty_vrsd_row.
+
+* Normalised version key for one object / system
+TYPES: BEGIN OF ty_ver,
+         req   TYPE vrsd-korrnum,           " transport request (VRSD)
+         date  TYPE sydatum,                " last-changed date
+         user  TYPE syuname,                " last-changed author
+         found TYPE abap_bool,              " object/version present
+       END OF ty_ver.
 
 TYPES: BEGIN OF ty_output,
-         object     TYPE tadir-object,      " Object type
-         obj_name   TYPE tadir-obj_name,    " Object name
-         dev_date   TYPE sydatum,           " Source - active changed on
-         dev_user   TYPE syuname,           " Source - active changed by
-         prd_date   TYPE sydatum,           " Target - active changed on
-         prd_user   TYPE syuname,           " Target - active changed by
-         mismatch   TYPE char3,             " 'YES' / 'NO'
-         remarks    TYPE char100,           " Reason behind the flag
+         object     TYPE tadir-object,
+         obj_name   TYPE tadir-obj_name,
+         method     TYPE char10,            " 'VRSD' / 'REPOSRC'
+         dev_req    TYPE vrsd-korrnum,
+         dev_date   TYPE sydatum,
+         dev_user   TYPE syuname,
+         prd_req    TYPE vrsd-korrnum,
+         prd_date   TYPE sydatum,
+         prd_user   TYPE syuname,
+         mismatch   TYPE char3,
+         remarks    TYPE char100,
        END OF ty_output.
 
 *&---------------------------------------------------------------------*
 *& Global data
 *&---------------------------------------------------------------------*
-DATA: gt_object  TYPE STANDARD TABLE OF ty_object,
-      gt_output  TYPE STANDARD TABLE OF ty_output,
-      gt_fieldc  TYPE slis_t_fieldcat_alv,
-      gs_layout  TYPE slis_layout_alv.
+DATA: gt_object TYPE STANDARD TABLE OF ty_object,
+      gt_output TYPE STANDARD TABLE OF ty_output,
+      gt_log    TYPE STANDARD TABLE OF zversion_cmp_log,
+      gt_fieldc TYPE slis_t_fieldcat_alv,
+      gs_layout TYPE slis_layout_alv.
 
-CONSTANTS: gc_yes TYPE char3 VALUE 'YES',
-           gc_no  TYPE char3 VALUE 'NO'.
+CONSTANTS: gc_yes     TYPE char3  VALUE 'YES',
+           gc_no      TYPE char3  VALUE 'NO',
+           gc_vrsd    TYPE char10 VALUE 'VRSD',
+           gc_reposrc TYPE char10 VALUE 'REPOSRC'.
 
 *&---------------------------------------------------------------------*
 *& Selection screen
@@ -110,6 +123,7 @@ START-OF-SELECTION.
   ENDIF.
 
   PERFORM f_collect_versions.
+  PERFORM f_save_log.
 
 END-OF-SELECTION.
 
@@ -139,99 +153,255 @@ FORM f_collect_versions.
 
   DATA: ls_object TYPE ty_object,
         ls_output TYPE ty_output,
-        ls_dev    TYPE ty_active,
-        ls_prd    TYPE ty_active.
+        ls_log    TYPE zversion_cmp_log.
 
   LOOP AT gt_object INTO ls_object.
 
-    CLEAR: ls_output, ls_dev, ls_prd.
-
-*   Active version in the SOURCE system
-    PERFORM f_get_active USING ls_object-object ls_object-obj_name p_srfc
-                         CHANGING ls_dev.
-*   Active version in the TARGET system
-    PERFORM f_get_active USING ls_object-object ls_object-obj_name p_trfc
-                         CHANGING ls_prd.
-
-    ls_output-object   = ls_object-object.
-    ls_output-obj_name = ls_object-obj_name.
-    ls_output-dev_date = ls_dev-chg_date.
-    ls_output-dev_user = ls_dev-chg_user.
-    ls_output-prd_date = ls_prd-chg_date.
-    ls_output-prd_user = ls_prd-chg_user.
-
-    PERFORM f_evaluate_mismatch USING ls_dev ls_prd
-                                CHANGING ls_output-mismatch ls_output-remarks.
-
+    CLEAR ls_output.
+    PERFORM f_compare_object USING ls_object CHANGING ls_output.
     APPEND ls_output TO gt_output.
+
+*   Build the log record for this object
+    CLEAR ls_log.
+    CALL FUNCTION 'GUID_CREATE'
+      IMPORTING
+        ev_guid_32 = ls_log-logid.
+    ls_log-run_date = sy-datum.
+    ls_log-run_time = sy-uzeit.
+    ls_log-run_user = sy-uname.
+    ls_log-src_dest = p_srfc.
+    ls_log-tgt_dest = p_trfc.
+    ls_log-object   = ls_output-object.
+    ls_log-obj_name = ls_output-obj_name.
+    ls_log-method   = ls_output-method.
+    ls_log-src_req  = ls_output-dev_req.
+    ls_log-src_date = ls_output-dev_date.
+    ls_log-src_user = ls_output-dev_user.
+    ls_log-tgt_req  = ls_output-prd_req.
+    ls_log-tgt_date = ls_output-prd_date.
+    ls_log-tgt_user = ls_output-prd_user.
+    ls_log-mismatch = ls_output-mismatch.
+    ls_log-remarks  = ls_output-remarks.
+    APPEND ls_log TO gt_log.
 
   ENDLOOP.
 
 ENDFORM.                    "f_collect_versions
 
 *&---------------------------------------------------------------------*
-*&      Form  F_EVALUATE_MISMATCH
+*&      Form  F_COMPARE_OBJECT
 *&---------------------------------------------------------------------*
-*  Compares the active version (last-changed date + author) of the two
-*  systems:
-*    Condition                                  Mismatch  Remarks
-*    Object type not supported                  (blank)   reason text
-*    Active source differs                      YES       reason text
-*    Active source identical                    NO        reason text
-*    Object exists in only one system           YES       reason text
-*    Object missing in both systems             NO        reason text
+*  Compares one object using VRSD first, falling back to REPOSRC when the
+*  version directory is not available in both systems.
 *----------------------------------------------------------------------*
-FORM f_evaluate_mismatch USING    ps_dev  TYPE ty_active
-                                  ps_prd  TYPE ty_active
-                         CHANGING pv_flag TYPE char3
-                                  pv_rem  TYPE char100.
+FORM f_compare_object USING    ps_object TYPE ty_object
+                      CHANGING ps_output TYPE ty_output.
 
-  CLEAR: pv_flag, pv_rem.
+  DATA: lv_vtype     TYPE vrsd-objtype,
+        lv_reposr_ok TYPE abap_bool,
+        ls_dev       TYPE ty_ver,
+        ls_prd       TYPE ty_ver,
+        lv_method    TYPE char10.
 
-  IF ps_dev-supported = abap_false.
-    pv_flag = space.
-    pv_rem  = 'Object type not supported - active compare covers programs (PROG)'.
+  ps_output-object   = ps_object-object.
+  ps_output-obj_name = ps_object-obj_name.
+
+* Map object type -> VRSD type and whether REPOSRC fallback applies
+  PERFORM f_map_vtype USING ps_object-object
+                      CHANGING lv_vtype lv_reposr_ok.
+
+  IF lv_vtype IS INITIAL AND lv_reposr_ok = abap_false.
+    ps_output-mismatch = space.
+    ps_output-remarks  = 'Object type not supported - extend F_MAP_VTYPE'.
     RETURN.
   ENDIF.
 
-  IF ps_dev-found = abap_false AND ps_prd-found = abap_false.
-    pv_flag = gc_no.
-    pv_rem  = 'Program does not exist in either system'.
+  CLEAR lv_method.
 
-  ELSEIF ps_dev-found = abap_true AND ps_prd-found = abap_false.
-    pv_flag = gc_yes.
-    pv_rem  = 'Program exists in Source only - missing in Target'.
-
-  ELSEIF ps_dev-found = abap_false AND ps_prd-found = abap_true.
-    pv_flag = gc_yes.
-    pv_rem  = 'Program exists in Target only - missing in Source'.
-
-  ELSEIF ps_dev-chg_date = ps_prd-chg_date AND ps_dev-chg_user = ps_prd-chg_user.
-    pv_flag = gc_no.
-    pv_rem  = 'Active version identical (same last change in both systems)'.
-
-  ELSE.
-    pv_flag = gc_yes.
-    pv_rem  = 'Active version differs (different last change)'.
-
+* --- Method 1: VRSD (only when usable in BOTH systems) ----------------
+  IF lv_vtype IS NOT INITIAL.
+    PERFORM f_get_vrsd USING lv_vtype ps_object-obj_name p_srfc CHANGING ls_dev.
+    PERFORM f_get_vrsd USING lv_vtype ps_object-obj_name p_trfc CHANGING ls_prd.
+    IF ls_dev-found = abap_true AND ls_prd-found = abap_true.
+      lv_method = gc_vrsd.
+    ENDIF.
   ENDIF.
 
-ENDFORM.                    "f_evaluate_mismatch
+* --- Method 2: REPOSRC fallback (active version) ----------------------
+  IF lv_method IS INITIAL AND lv_reposr_ok = abap_true.
+    PERFORM f_get_reposrc USING ps_object-obj_name p_srfc CHANGING ls_dev.
+    PERFORM f_get_reposrc USING ps_object-obj_name p_trfc CHANGING ls_prd.
+    lv_method = gc_reposrc.
+  ENDIF.
+
+* If still unset, keep the VRSD result for an existence-based verdict.
+  IF lv_method IS INITIAL.
+    lv_method = gc_vrsd.
+  ENDIF.
+
+  ps_output-method   = lv_method.
+  ps_output-dev_req  = ls_dev-req.
+  ps_output-dev_date = ls_dev-date.
+  ps_output-dev_user = ls_dev-user.
+  ps_output-prd_req  = ls_prd-req.
+  ps_output-prd_date = ls_prd-date.
+  ps_output-prd_user = ls_prd-user.
+
+  PERFORM f_evaluate USING ls_dev ls_prd lv_method
+                     CHANGING ps_output-mismatch ps_output-remarks.
+
+ENDFORM.                    "f_compare_object
 
 *&---------------------------------------------------------------------*
-*&      Form  F_GET_ACTIVE
+*&      Form  F_EVALUATE
 *&---------------------------------------------------------------------*
-*  Reads the active source last-changed date / author of an object from
-*  the system addressed by P_DEST ('NONE' = local) using the standard
-*  remote-enabled module RFC_READ_TABLE on REPOSRC (R3STATE = 'A').
-*
-*  Implemented for programs (PROG). For other object types SUPPORTED is
-*  returned as false so the row carries an explanatory remark.
+*  Mismatch / remarks. VRSD method compares the transport request;
+*  REPOSRC method compares the active last-changed date + author.
 *----------------------------------------------------------------------*
-FORM f_get_active USING    p_objtype TYPE tadir-object
-                           p_objname TYPE tadir-obj_name
-                           p_dest    TYPE rfcdest
-                  CHANGING ps_act    TYPE ty_active.
+FORM f_evaluate USING    ps_dev    TYPE ty_ver
+                         ps_prd    TYPE ty_ver
+                         p_method  TYPE char10
+                CHANGING pv_flag   TYPE char3
+                         pv_rem    TYPE char100.
+
+  DATA: lv_same TYPE abap_bool.
+
+  CLEAR: pv_flag, pv_rem.
+
+  IF ps_dev-found = abap_false AND ps_prd-found = abap_false.
+    pv_flag = gc_no.
+    pv_rem  = 'Object does not exist in either system'.
+    RETURN.
+  ELSEIF ps_dev-found = abap_true AND ps_prd-found = abap_false.
+    pv_flag = gc_yes.
+    pv_rem  = 'Object exists in Source only - missing in Target'.
+    RETURN.
+  ELSEIF ps_dev-found = abap_false AND ps_prd-found = abap_true.
+    pv_flag = gc_yes.
+    pv_rem  = 'Object exists in Target only - missing in Source'.
+    RETURN.
+  ENDIF.
+
+* Both present - compare per method
+  IF p_method = gc_vrsd.
+    IF ps_dev-req = ps_prd-req.
+      lv_same = abap_true.
+    ENDIF.
+  ELSE.
+    IF ps_dev-date = ps_prd-date AND ps_dev-user = ps_prd-user.
+      lv_same = abap_true.
+    ENDIF.
+  ENDIF.
+
+  IF lv_same = abap_true.
+    pv_flag = gc_no.
+    IF p_method = gc_vrsd.
+      pv_rem = 'Latest transport request identical in both systems'.
+    ELSE.
+      pv_rem = 'Active version identical in both systems'.
+    ENDIF.
+  ELSE.
+    pv_flag = gc_yes.
+    IF p_method = gc_vrsd.
+      pv_rem = 'Latest transport request differs between Source and Target'.
+    ELSE.
+      pv_rem = 'Active version differs between Source and Target'.
+    ENDIF.
+  ENDIF.
+
+ENDFORM.                    "f_evaluate
+
+*&---------------------------------------------------------------------*
+*&      Form  F_GET_VRSD
+*&---------------------------------------------------------------------*
+*  Latest VRSD entry of one version type for an object in P_DEST.
+*----------------------------------------------------------------------*
+FORM f_get_vrsd USING    p_vtype   TYPE vrsd-objtype
+                         p_objname TYPE tadir-obj_name
+                         p_dest    TYPE rfcdest
+                CHANGING ps_ver    TYPE ty_ver.
+
+  DATA: lv_name    TYPE vrsd-objname,
+        lt_options TYPE STANDARD TABLE OF rfc_db_opt,
+        lt_fields  TYPE STANDARD TABLE OF rfc_db_fld,
+        lt_data    TYPE STANDARD TABLE OF tab512,
+        ls_options TYPE rfc_db_opt,
+        ls_fields  TYPE rfc_db_fld,
+        ls_data    TYPE tab512,
+        lt_rows    TYPE STANDARD TABLE OF ty_vrsd_row,
+        ls_row     TYPE ty_vrsd_row,
+        lv_msg     TYPE char200.
+
+  CLEAR ps_ver.
+  lv_name = p_objname.
+
+  CONCATENATE `OBJTYPE = '` p_vtype `'` INTO ls_options-text.
+  APPEND ls_options TO lt_options.
+  CLEAR ls_options.
+  CONCATENATE `AND OBJNAME = '` lv_name `'` INTO ls_options-text.
+  APPEND ls_options TO lt_options.
+
+  ls_fields-fieldname = 'VERSNO'.  APPEND ls_fields TO lt_fields.
+  ls_fields-fieldname = 'KORRNUM'. APPEND ls_fields TO lt_fields.
+  ls_fields-fieldname = 'AUTHOR'.  APPEND ls_fields TO lt_fields.
+  ls_fields-fieldname = 'DATUM'.   APPEND ls_fields TO lt_fields.
+  ls_fields-fieldname = 'ZEIT'.    APPEND ls_fields TO lt_fields.
+
+  CALL FUNCTION 'RFC_READ_TABLE'
+    DESTINATION p_dest
+    EXPORTING
+      query_table           = 'VRSD'
+      delimiter             = '|'
+    TABLES
+      options               = lt_options
+      fields                = lt_fields
+      data                  = lt_data
+    EXCEPTIONS
+      table_not_available   = 1
+      option_not_valid      = 2
+      field_not_valid       = 3
+      not_authorized        = 4
+      data_buffer_exceeded  = 5
+      communication_failure = 6 MESSAGE lv_msg
+      system_failure        = 7 MESSAGE lv_msg
+      OTHERS                = 8.
+
+  IF sy-subrc <> 0.
+    RETURN.
+  ENDIF.
+
+  LOOP AT lt_data INTO ls_data.
+    CLEAR ls_row.
+    SPLIT ls_data-wa AT '|'
+          INTO ls_row-versno ls_row-korr ls_row-author
+               ls_row-datum  ls_row-zeit.
+    APPEND ls_row TO lt_rows.
+  ENDLOOP.
+
+  IF lt_rows IS INITIAL.
+    RETURN.
+  ENDIF.
+
+  SORT lt_rows BY datum DESCENDING zeit DESCENDING versno DESCENDING.
+  READ TABLE lt_rows INTO ls_row INDEX 1.
+  IF sy-subrc = 0.
+    ps_ver-found = abap_true.
+    ps_ver-req   = ls_row-korr.
+    ps_ver-date  = ls_row-datum.
+    ps_ver-user  = ls_row-author.
+  ENDIF.
+
+ENDFORM.                    "f_get_vrsd
+
+*&---------------------------------------------------------------------*
+*&      Form  F_GET_REPOSRC
+*&---------------------------------------------------------------------*
+*  Active source last-changed date / author from REPOSRC (R3STATE='A')
+*  for a program in P_DEST.
+*----------------------------------------------------------------------*
+FORM f_get_reposrc USING    p_objname TYPE tadir-obj_name
+                            p_dest    TYPE rfcdest
+                   CHANGING ps_ver    TYPE ty_ver.
 
   DATA: lv_name    TYPE reposrc-progname,
         lt_options TYPE STANDARD TABLE OF rfc_db_opt,
@@ -242,16 +412,9 @@ FORM f_get_active USING    p_objtype TYPE tadir-object
         ls_data    TYPE tab512,
         lv_msg     TYPE char200.
 
-  CLEAR ps_act.
+  CLEAR ps_ver.
+  lv_name = p_objname.
 
-  IF p_objtype <> 'PROG'.
-    ps_act-supported = abap_false.
-    RETURN.
-  ENDIF.
-  ps_act-supported = abap_true.
-  lv_name          = p_objname.
-
-* WHERE PROGNAME = '<name>' AND R3STATE = 'A'
   CONCATENATE `PROGNAME = '` lv_name `'` INTO ls_options-text.
   APPEND ls_options TO lt_options.
   CLEAR ls_options.
@@ -286,11 +449,58 @@ FORM f_get_active USING    p_objtype TYPE tadir-object
 
   READ TABLE lt_data INTO ls_data INDEX 1.
   IF sy-subrc = 0.
-    ps_act-found = abap_true.
-    SPLIT ls_data-wa AT '|' INTO ps_act-chg_user ps_act-chg_date.
+    ps_ver-found = abap_true.
+    SPLIT ls_data-wa AT '|' INTO ps_ver-user ps_ver-date.
   ENDIF.
 
-ENDFORM.                    "f_get_active
+ENDFORM.                    "f_get_reposrc
+
+*&---------------------------------------------------------------------*
+*&      Form  F_MAP_VTYPE
+*&---------------------------------------------------------------------*
+*  Maps a TADIR (R3TR) type to its VRSD type and flags whether the
+*  REPOSRC active-version fallback applies (programs only).
+*----------------------------------------------------------------------*
+FORM f_map_vtype USING    p_objtype  TYPE tadir-object
+                 CHANGING p_vtype    TYPE vrsd-objtype
+                          p_reposrok TYPE abap_bool.
+
+  CLEAR: p_vtype, p_reposrok.
+
+  CASE p_objtype.
+    WHEN 'PROG'.  p_vtype = 'REPS'. p_reposrok = abap_true.
+    WHEN 'TABL'.  p_vtype = 'TABD'.
+    WHEN 'VIEW'.  p_vtype = 'VIED'.
+    WHEN 'DTEL'.  p_vtype = 'DTED'.
+    WHEN 'DOMA'.  p_vtype = 'DOMD'.
+    WHEN 'SHLP'.  p_vtype = 'SHLD'.
+    WHEN 'TTYP'.  p_vtype = 'TTYD'.
+    WHEN 'ENQU'.  p_vtype = 'ENQD'.
+    WHEN 'MSAG'.  p_vtype = 'MSAD'.
+    WHEN OTHERS.  CLEAR p_vtype.
+  ENDCASE.
+
+ENDFORM.                    "f_map_vtype
+
+*&---------------------------------------------------------------------*
+*&      Form  F_SAVE_LOG
+*&---------------------------------------------------------------------*
+*  Persists the run results into table ZVERSION_CMP_LOG.
+*----------------------------------------------------------------------*
+FORM f_save_log.
+
+  IF gt_log IS INITIAL.
+    RETURN.
+  ENDIF.
+
+  INSERT zversion_cmp_log FROM TABLE gt_log ACCEPTING DUPLICATE KEYS.
+  IF sy-subrc = 0.
+    COMMIT WORK.
+  ELSE.
+    ROLLBACK WORK.
+  ENDIF.
+
+ENDFORM.                    "f_save_log
 
 *&---------------------------------------------------------------------*
 *&      Form  F_DISPLAY_ALV
@@ -327,14 +537,17 @@ FORM f_build_fieldcat.
 
   CLEAR gt_fieldc.
 
-  PERFORM f_add_field USING 'OBJECT'   'Object Type'        10.
-  PERFORM f_add_field USING 'OBJ_NAME' 'Object Name'        40.
-  PERFORM f_add_field USING 'DEV_DATE' 'Source Changed On'  14.
-  PERFORM f_add_field USING 'DEV_USER' 'Source Changed By'  14.
-  PERFORM f_add_field USING 'PRD_DATE' 'Target Changed On'  14.
-  PERFORM f_add_field USING 'PRD_USER' 'Target Changed By'  14.
-  PERFORM f_add_field USING 'MISMATCH' 'Mismatch'            8.
-  PERFORM f_add_field USING 'REMARKS'  'Remarks'            70.
+  PERFORM f_add_field USING 'OBJECT'   'Object Type'      10.
+  PERFORM f_add_field USING 'OBJ_NAME' 'Object Name'      40.
+  PERFORM f_add_field USING 'METHOD'   'Method'           10.
+  PERFORM f_add_field USING 'DEV_REQ'  'Source Request'   20.
+  PERFORM f_add_field USING 'DEV_DATE' 'Source Date'      14.
+  PERFORM f_add_field USING 'DEV_USER' 'Source By'        14.
+  PERFORM f_add_field USING 'PRD_REQ'  'Target Request'   20.
+  PERFORM f_add_field USING 'PRD_DATE' 'Target Date'      14.
+  PERFORM f_add_field USING 'PRD_USER' 'Target By'        14.
+  PERFORM f_add_field USING 'MISMATCH' 'Mismatch'          8.
+  PERFORM f_add_field USING 'REMARKS'  'Remarks'          70.
 
 ENDFORM.                    "f_build_fieldcat
 

@@ -14,6 +14,21 @@ own **RFC destination** – using only the standard remote-enabled module
 | Source RFC Destination (`P_SRFC`) | Parameter, obligatory, default `NONE` | `NONE` = local logon system. |
 | Target RFC Destination (`P_TRFC`) | Parameter, obligatory | The remote system. |
 
+## Comparison method (with fallback) + logging
+
+Two methods are used with an **automatic fallback**, both read via the standard
+remote-enabled `RFC_READ_TABLE` (nothing to deploy in the target):
+
+1. **`VRSD`** – latest numbered version (transport request `KORRNUM`). Used when
+   **both** systems have version-directory rows.
+2. **`REPOSRC`** – active version (last-changed date + author, preserved across
+   transport). **Fallback** when `VRSD` is not available in both systems – e.g.
+   a target that has no version database while the active object still exists.
+
+The chosen method is shown in the **Method** column per row. Every run is
+**logged** to transparent table **`ZVERSION_CMP_LOG`** (see
+`ZVERSION_CMP_LOG.txt` – create it before activating the report).
+
 ## How the comparison works
 
 > **Why not the version directory (`VRSD`)?** The active version is **not** held

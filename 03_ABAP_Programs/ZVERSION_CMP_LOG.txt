@@ -1,0 +1,50 @@
+================================================================================
+ Transparent table  ZVERSION_CMP_LOG   (create in SE11 before activating the
+ report ZVERSION_COMPARE - the report writes one row per compared object)
+================================================================================
+
+ SE11 -> Database table -> ZVERSION_CMP_LOG
+ Delivery Class : A (Application table, master & transaction data)
+ Data Browser/Table View Maint. : Display/Maintenance Allowed
+
+ Technical settings (Goto -> Technical settings):
+   Data class      : APPL1  (transaction data)
+   Size category   : 1 (adjust to expected volume)
+   Buffering       : not allowed (log table)
+
+--------------------------------------------------------------------------------
+ Fields  (Key = X)
+--------------------------------------------------------------------------------
+ Field      Key  Data element / Type     Description
+ ---------  ---  ----------------------  --------------------------------------
+ MANDT       X   MANDT                   Client
+ LOGID       X   GUID_32  (CHAR 32)      Unique log row id (GUID)
+ RUN_DATE        DATUM    (DATS)         Run date
+ RUN_TIME        UZEIT    (TIMS)         Run time
+ RUN_USER        XUBNAME  (CHAR 12)      Executed by
+ SRC_DEST        RFCDEST  (CHAR 32)      Source RFC destination
+ TGT_DEST        RFCDEST  (CHAR 32)      Target RFC destination
+ OBJECT          TROBJTYPE(CHAR 4)       Object type (TADIR-OBJECT)
+ OBJ_NAME        SOBJ_NAME(CHAR 40)      Object name
+ METHOD          CHAR10                  Compare method ('VRSD' / 'REPOSRC')
+ SRC_REQ         TRKORR   (CHAR 20)      Source latest request (VRSD method)
+ SRC_DATE        DATUM    (DATS)         Source last-changed date
+ SRC_USER        XUBNAME  (CHAR 12)      Source last-changed by
+ TGT_REQ         TRKORR   (CHAR 20)      Target latest request (VRSD method)
+ TGT_DATE        DATUM    (DATS)         Target last-changed date
+ TGT_USER        XUBNAME  (CHAR 12)      Target last-changed by
+ MISMATCH        CHAR3                   'YES' / 'NO'
+ REMARKS         CHAR100                 Reason / details
+
+--------------------------------------------------------------------------------
+ Notes
+--------------------------------------------------------------------------------
+ - For fields typed as a raw length (CHAR10, CHAR3, CHAR100) you can either use
+   the predefined data elements CHAR10 / CHAR3 / CHAR100 (they exist in standard
+   ECC) or create a domain/data element. The report work area uses the table
+   structure directly, so the field NAMES must match exactly.
+ - The report fills LOGID with FUNCTION 'GUID_CREATE' (EV_GUID_32), so one row
+   per (run, object) is always unique - INSERT ... ACCEPTING DUPLICATE KEYS.
+ - Activate this table BEFORE activating ZVERSION_COMPARE, otherwise the report
+   will not compile (it references the table type directly).
+================================================================================
