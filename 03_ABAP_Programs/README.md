@@ -10,11 +10,13 @@ system reached through an **RFC destination**.
 |-------|------|-------|
 | Object Type (`S_OBJECT`) | Select-option, **no interval** | Single values only (no low/high range). Filters `TADIR-OBJECT`. |
 | Object Name (`S_OBJNAM`) | Select-option, **no interval** | **Mandatory** – the mandatory check is raised in `START-OF-SELECTION` (not via `OBLIGATORY`), as requested. |
-| Source RFC Destination (`P_SRFC`) | Parameter, obligatory | RFC destination of the **source** system (e.g. development). |
+| Source RFC Destination (`P_SRFC`) | Parameter, obligatory, default `NONE` | RFC destination of the **source** system (e.g. development). Defaults to `NONE`, the self-referencing destination = the local logon system. |
 | Target RFC Destination (`P_TRFC`) | Parameter, obligatory | RFC destination of the **target** system (e.g. production). |
 
 Both sides are read through an RFC destination, so any two systems can be
-compared without hardcoding either one.
+compared without hardcoding either one. With `P_SRFC = NONE` the source side
+runs in the local logon system, while the target side is read from the remote
+system through `P_TRFC`.
 
 ## Processing
 

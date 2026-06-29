@@ -91,8 +91,9 @@ SELECT-OPTIONS: s_objnam FOR tadir-obj_name NO INTERVALS.
 SELECTION-SCREEN END OF BLOCK b1.
 
 SELECTION-SCREEN BEGIN OF BLOCK b2 WITH FRAME TITLE text-002.
-* RFC destination of the SOURCE system (e.g. development)
-PARAMETERS: p_srfc TYPE rfcdest OBLIGATORY.
+* RFC destination of the SOURCE system (e.g. development).
+* 'NONE' is the self-referencing destination = the local logon system.
+PARAMETERS: p_srfc TYPE rfcdest OBLIGATORY DEFAULT 'NONE'.
 * RFC destination of the TARGET system (e.g. production)
 PARAMETERS: p_trfc TYPE rfcdest OBLIGATORY.
 SELECTION-SCREEN END OF BLOCK b2.
