@@ -60,7 +60,7 @@ TYPES: BEGIN OF ty_ver,
          user   TYPE syuname,
          found  TYPE abap_bool,
          rc     TYPE sysubrc,
-         rctext TYPE char40,
+         rctext TYPE char80,
        END OF ty_ver.
 
 TYPES: BEGIN OF ty_output,
@@ -545,11 +545,13 @@ FORM f_evaluate USING    ps_dev   TYPE ty_ver
 
   CLEAR: pv_flag, pv_rem.
 
-  IF ps_dev-rc <> 0 OR ps_prd-rc <> 0.
+  IF ps_prd-rc <> 0.
     pv_flag = space.
-    CONCATENATE 'Read error - Source:' ps_dev-rctext
-                'Target:' ps_prd-rctext
-                INTO pv_rem SEPARATED BY space.
+    CONCATENATE 'Target read error:' ps_prd-rctext INTO pv_rem SEPARATED BY space.
+    RETURN.
+  ELSEIF ps_dev-rc <> 0.
+    pv_flag = space.
+    CONCATENATE 'Source read error:' ps_dev-rctext INTO pv_rem SEPARATED BY space.
     RETURN.
   ENDIF.
 
@@ -701,7 +703,11 @@ FORM f_get_vrsd USING    p_vtype   TYPE vrsd-objtype
 
   ps_ver-rc = sy-subrc.
   IF sy-subrc <> 0.
-    PERFORM f_rc_text USING sy-subrc 'VRSD' CHANGING ps_ver-rctext.
+    IF lv_msg IS NOT INITIAL.
+      CONCATENATE 'VRSD:' lv_msg INTO ps_ver-rctext SEPARATED BY space.
+    ELSE.
+      PERFORM f_rc_text USING sy-subrc 'VRSD' CHANGING ps_ver-rctext.
+    ENDIF.
     RETURN.
   ENDIF.
 
@@ -788,7 +794,11 @@ FORM f_get_reposrc USING    p_objname TYPE tadir-obj_name
 
   ps_ver-rc = sy-subrc.
   IF sy-subrc <> 0.
-    PERFORM f_rc_text USING sy-subrc 'REPOSRC' CHANGING ps_ver-rctext.
+    IF lv_msg IS NOT INITIAL.
+      CONCATENATE 'REPOSRC:' lv_msg INTO ps_ver-rctext SEPARATED BY space.
+    ELSE.
+      PERFORM f_rc_text USING sy-subrc 'REPOSRC' CHANGING ps_ver-rctext.
+    ENDIF.
     RETURN.
   ENDIF.
 
@@ -805,7 +815,7 @@ ENDFORM.                    "f_get_reposrc
 *&---------------------------------------------------------------------*
 FORM f_rc_text USING    p_rc    TYPE sysubrc
                         p_table TYPE c
-               CHANGING p_text  TYPE char40.
+               CHANGING p_text  TYPE char80.
 
   DATA lv_reason TYPE char30.
 
