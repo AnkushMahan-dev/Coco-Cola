@@ -1,42 +1,33 @@
 *&---------------------------------------------------------------------*
 *& Report  ZVERSION_COMPARE
 *&---------------------------------------------------------------------*
-*& Purpose : Compare the version of objects between two systems, a
-*&           SOURCE system (e.g. development) and a TARGET system (e.g.
-*&           production), each reached through its own RFC destination.
+*& Purpose : Compare the version of objects between two systems (SOURCE
+*&           vs TARGET) via two RFC destinations. For composite objects
+*&           the sub-objects are expanded and compared individually:
+*&             PROG -> its includes (table D010INC)
+*&             FUGR -> its function modules (table TFDIR) + main pool
+*&             CLAS -> class sections / pool ; INTF -> interface pool
 *&
-*&           Input  : Range of object type and object name (no interval),
-*&                    plus the source and target RFC destinations.
-*&                    Object name is mandatory - checked in
-*&                    START-OF-SELECTION (not via OBLIGATORY).
-*&           Source : Object list is read from table TADIR (R3TR + LIMU).
-*&           Read   : LOCAL system (destination NONE / blank) is read with
-*&                    a direct SELECT; a REMOTE system with the standard
-*&                    remote-enabled module RFC_READ_TABLE. Remote read
-*&                    errors (authorisation, field, ...) are reported in
-*&                    Remarks instead of being mistaken for "missing".
-*&           Compare: Each object type maps to a LIST of version
-*&                    components (VRSD object types). All are queried and
-*&                    the latest is aggregated. Two methods with fallback:
-*&                      1. VRSD    - latest version (KORRNUM), used when
-*&                                   BOTH systems have version rows.
-*&                      2. REPOSRC - active source (last-changed date /
-*&                                   author, preserved across transport),
-*&                                   fallback for program-source objects
-*&                                   when VRSD is not available in both.
-*&           Log    : Every run is logged to table ZVERSION_CMP_LOG.
-*&           Output : ALV grid (object type, name, method, request / date
-*&                    / author per system, Mismatch, Remarks).
+*&           Read : LOCAL system (destination NONE / blank) via direct
+*&                  SELECT; REMOTE via the standard remote-enabled module
+*&                  RFC_READ_TABLE (no custom FM in the target). Remote
+*&                  read errors are reported in Remarks.
+*&           Two methods with fallback:
+*&             1. VRSD    - latest version directory entry (KORRNUM).
+*&             2. REPOSRC - active source (last-changed date / author,
+*&                          preserved across transport). For programs and
+*&                          for the generated pool of FUGR (SAPL<area>),
+*&                          CLAS (<class>...CP) and INTF (<intf>...IU).
+*&           Log  : Every run is logged to table ZVERSION_CMP_LOG.
+*&           Output: ALV (parent, kind, object, name, method, request /
+*&                   date / author per system, Mismatch, Remarks).
 *&
-*& Coverage: PROG, REPS, DYNP, VIED/VIEW, CLAS, FUGR, INTF, DOMA, DTEL,
-*&           ENQU, SHLP, TABL, TTYP, ENHO, ENHS, TRAN, MSAG.
-*&           Only program source (PROG/REPS) has the REPOSRC active
-*&           fallback; other types rely on the version directory VRSD
-*&           being present in both systems.
+*& Note    : Sub-object expansion (includes / function modules) reads the
+*&           structure from the LOCAL system, so run with the SOURCE as
+*&           the local logon system (P_SRFC = NONE).
 *&
-*& Prereq  : - Create transparent table ZVERSION_CMP_LOG (see the .txt).
-*&           - The target RFC user needs RFC_READ_TABLE read auth on
-*&             VRSD and REPOSRC.
+*& Prereq  : Create table ZVERSION_CMP_LOG (see the .txt). The target RFC
+*&           user needs RFC_READ_TABLE auth on VRSD and REPOSRC.
 *&
 *& Release : Classic ABAP, compatible with SAP ECC 6.x.
 *&---------------------------------------------------------------------*
@@ -63,7 +54,6 @@ TYPES: BEGIN OF ty_vrsd_row,
          zeit   TYPE vrsd-zeit,
        END OF ty_vrsd_row.
 
-* Normalised version key for one object / system
 TYPES: BEGIN OF ty_ver,
          req    TYPE vrsd-korrnum,
          date   TYPE sydatum,
@@ -74,6 +64,8 @@ TYPES: BEGIN OF ty_ver,
        END OF ty_ver.
 
 TYPES: BEGIN OF ty_output,
+         parent     TYPE tadir-obj_name,
+         kind       TYPE char10,            " MAIN / INCLUDE / FUNCTION
          object     TYPE tadir-object,
          obj_name   TYPE tadir-obj_name,
          method     TYPE char10,
@@ -162,100 +154,255 @@ ENDFORM.                    "f_read_tadir
 *&---------------------------------------------------------------------*
 FORM f_collect_versions.
 
-  DATA: ls_object TYPE ty_object,
-        ls_output TYPE ty_output,
-        ls_log    TYPE zversion_cmp_log.
+  DATA: ls_object TYPE ty_object.
 
   LOOP AT gt_object INTO ls_object.
-
-    CLEAR ls_output.
-    PERFORM f_compare_object USING ls_object CHANGING ls_output.
-    APPEND ls_output TO gt_output.
-
-    CLEAR ls_log.
-    CALL FUNCTION 'GUID_CREATE'
-      IMPORTING
-        ev_guid_32 = ls_log-logid.
-    ls_log-run_date = sy-datum.
-    ls_log-run_time = sy-uzeit.
-    ls_log-run_user = sy-uname.
-    ls_log-src_dest = p_srfc.
-    ls_log-tgt_dest = p_trfc.
-    ls_log-object   = ls_output-object.
-    ls_log-obj_name = ls_output-obj_name.
-    ls_log-method   = ls_output-method.
-    ls_log-src_req  = ls_output-dev_req.
-    ls_log-src_date = ls_output-dev_date.
-    ls_log-src_user = ls_output-dev_user.
-    ls_log-tgt_req  = ls_output-prd_req.
-    ls_log-tgt_date = ls_output-prd_date.
-    ls_log-tgt_user = ls_output-prd_user.
-    ls_log-mismatch = ls_output-mismatch.
-    ls_log-remarks  = ls_output-remarks.
-    APPEND ls_log TO gt_log.
-
+    PERFORM f_process_object USING ls_object.
   ENDLOOP.
+
+  PERFORM f_build_log.
 
 ENDFORM.                    "f_collect_versions
 
 *&---------------------------------------------------------------------*
-*&      Form  F_COMPARE_OBJECT
+*&      Form  F_PROCESS_OBJECT
 *&---------------------------------------------------------------------*
-FORM f_compare_object USING    ps_object TYPE ty_object
-                      CHANGING ps_output TYPE ty_output.
+*  Builds the main row for an object and, for composite objects, the
+*  sub-object rows (includes / function modules).
+*----------------------------------------------------------------------*
+FORM f_process_object USING ps_object TYPE ty_object.
 
-  DATA: lt_vtypes    TYPE ty_vtype_tab,
-        lv_reposr_ok TYPE abap_bool,
-        ls_dev       TYPE ty_ver,
-        ls_prd       TYPE ty_ver,
-        lv_method    TYPE char10.
+  DATA: lt_v     TYPE ty_vtype_tab,
+        lv_pool  TYPE programm,
+        lv_vname TYPE tadir-obj_name,
+        lv_rname TYPE tadir-obj_name,
+        lv_repsok TYPE abap_bool.
 
-  ps_output-object   = ps_object-object.
-  ps_output-obj_name = ps_object-obj_name.
+  CASE ps_object-object.
 
-  PERFORM f_map_components USING ps_object-object
-                           CHANGING lt_vtypes lv_reposr_ok.
+    WHEN 'PROG' OR 'REPS'.
+      REFRESH lt_v.
+      APPEND 'REPS' TO lt_v.
+      APPEND 'REPT' TO lt_v.
+      PERFORM f_add_result USING ps_object-object ps_object-obj_name
+                                 ps_object-obj_name 'MAIN'
+                                 lt_v ps_object-obj_name ps_object-obj_name.
+      PERFORM f_expand_prog USING ps_object-obj_name.
 
-  IF lt_vtypes IS INITIAL AND lv_reposr_ok = abap_false.
-    ps_output-mismatch = space.
-    ps_output-remarks  = 'Object type not supported - extend F_MAP_COMPONENTS'.
+    WHEN 'FUGR'.
+      CONCATENATE 'SAPL' ps_object-obj_name INTO lv_pool.
+      lv_vname = lv_pool.
+      lv_rname = lv_pool.
+      REFRESH lt_v.
+      APPEND 'REPS' TO lt_v.
+      PERFORM f_add_result USING 'FUGR' ps_object-obj_name
+                                 ps_object-obj_name 'MAIN'
+                                 lt_v lv_vname lv_rname.
+      PERFORM f_expand_fugr USING ps_object-obj_name.
+
+    WHEN 'CLAS'.
+      PERFORM f_pool_name USING ps_object-obj_name 'CP' CHANGING lv_pool.
+      lv_vname = ps_object-obj_name.
+      lv_rname = lv_pool.
+      REFRESH lt_v.
+      APPEND 'CLSD' TO lt_v.
+      APPEND 'CPUB' TO lt_v.
+      APPEND 'CPRO' TO lt_v.
+      APPEND 'CPRI' TO lt_v.
+      APPEND 'CINC' TO lt_v.
+      APPEND 'METH' TO lt_v.
+      PERFORM f_add_result USING 'CLAS' ps_object-obj_name
+                                 ps_object-obj_name 'MAIN'
+                                 lt_v lv_vname lv_rname.
+
+    WHEN 'INTF'.
+      PERFORM f_pool_name USING ps_object-obj_name 'IU' CHANGING lv_pool.
+      lv_vname = ps_object-obj_name.
+      lv_rname = lv_pool.
+      REFRESH lt_v.
+      APPEND 'INTD' TO lt_v.
+      PERFORM f_add_result USING 'INTF' ps_object-obj_name
+                                 ps_object-obj_name 'MAIN'
+                                 lt_v lv_vname lv_rname.
+
+    WHEN OTHERS.
+      PERFORM f_map_components USING ps_object-object
+                              CHANGING lt_v lv_repsok.
+      PERFORM f_add_result USING ps_object-object ps_object-obj_name
+                                 ps_object-obj_name 'MAIN'
+                                 lt_v ps_object-obj_name space.
+
+  ENDCASE.
+
+ENDFORM.                    "f_process_object
+
+*&---------------------------------------------------------------------*
+*&      Form  F_EXPAND_PROG
+*&---------------------------------------------------------------------*
+*  One row per include used by the program (table D010INC, local read).
+*----------------------------------------------------------------------*
+FORM f_expand_prog USING p_prog TYPE tadir-obj_name.
+
+  DATA: lt_inc    TYPE STANDARD TABLE OF d010inc-include,
+        lv_inc    TYPE d010inc-include,
+        lv_master TYPE d010inc-master,
+        lt_v      TYPE ty_vtype_tab,
+        lv_iname  TYPE tadir-obj_name.
+
+  lv_master = p_prog.
+  SELECT include FROM d010inc INTO TABLE lt_inc WHERE master = lv_master.
+  SORT lt_inc.
+  DELETE ADJACENT DUPLICATES FROM lt_inc.
+
+  LOOP AT lt_inc INTO lv_inc.
+    IF lv_inc = p_prog OR lv_inc IS INITIAL.
+      CONTINUE.
+    ENDIF.
+    lv_iname = lv_inc.
+    REFRESH lt_v.
+    APPEND 'REPS' TO lt_v.
+    PERFORM f_add_result USING 'INCL' lv_iname p_prog 'INCLUDE'
+                               lt_v lv_iname lv_iname.
+  ENDLOOP.
+
+ENDFORM.                    "f_expand_prog
+
+*&---------------------------------------------------------------------*
+*&      Form  F_EXPAND_FUGR
+*&---------------------------------------------------------------------*
+*  One row per function module of the group (table TFDIR, local read).
+*----------------------------------------------------------------------*
+FORM f_expand_fugr USING p_area TYPE tadir-obj_name.
+
+  DATA: lv_pname TYPE tfdir-pname,
+        lt_fm    TYPE STANDARD TABLE OF tfdir-funcname,
+        lv_fm    TYPE tfdir-funcname,
+        lt_v     TYPE ty_vtype_tab,
+        lv_fname TYPE tadir-obj_name.
+
+  CONCATENATE 'SAPL' p_area INTO lv_pname.
+  SELECT funcname FROM tfdir INTO TABLE lt_fm WHERE pname = lv_pname.
+
+  LOOP AT lt_fm INTO lv_fm.
+    lv_fname = lv_fm.
+    REFRESH lt_v.
+    APPEND 'FUNC' TO lt_v.
+    PERFORM f_add_result USING 'FUNC' lv_fname p_area 'FUNCTION'
+                               lt_v lv_fname space.
+  ENDLOOP.
+
+ENDFORM.                    "f_expand_fugr
+
+*&---------------------------------------------------------------------*
+*&      Form  F_POOL_NAME
+*&---------------------------------------------------------------------*
+*  Builds the generated pool program name: object name padded to 30 with
+*  '=' plus the 2-char suffix ('CP' class pool / 'IU' interface pool).
+*----------------------------------------------------------------------*
+FORM f_pool_name USING    p_name   TYPE tadir-obj_name
+                          p_suffix TYPE c
+                 CHANGING p_pool   TYPE programm.
+
+  DATA: lv_len TYPE i,
+        lv_cnt TYPE i,
+        lv_p   TYPE string,
+        lv_pad TYPE string.
+
+  lv_p   = p_name.
+  lv_len = strlen( p_name ).
+  lv_cnt = 30 - lv_len.
+  IF lv_cnt > 0.
+    DO lv_cnt TIMES.
+      CONCATENATE lv_pad '=' INTO lv_pad.
+    ENDDO.
+    CONCATENATE lv_p lv_pad INTO lv_p.
+  ENDIF.
+  CONCATENATE lv_p p_suffix INTO lv_p.
+  p_pool = lv_p.
+
+ENDFORM.                    "f_pool_name
+
+*&---------------------------------------------------------------------*
+*&      Form  F_ADD_RESULT
+*&---------------------------------------------------------------------*
+*  Compares one (sub-)object and appends an output row.
+*----------------------------------------------------------------------*
+FORM f_add_result USING p_objtype   TYPE tadir-object
+                        p_objname   TYPE tadir-obj_name
+                        p_parent    TYPE tadir-obj_name
+                        p_kind      TYPE char10
+                        pt_vtypes   TYPE ty_vtype_tab
+                        p_vrsdname  TYPE tadir-obj_name
+                        p_reposname TYPE tadir-obj_name.
+
+  DATA: ls_out    TYPE ty_output,
+        ls_dev    TYPE ty_ver,
+        ls_prd    TYPE ty_ver,
+        lv_method TYPE char10.
+
+  ls_out-parent   = p_parent.
+  ls_out-kind     = p_kind.
+  ls_out-object   = p_objtype.
+  ls_out-obj_name = p_objname.
+
+  IF pt_vtypes IS INITIAL AND p_reposname IS INITIAL.
+    ls_out-mismatch = space.
+    ls_out-remarks  = 'Object type not supported'.
+    APPEND ls_out TO gt_output.
     RETURN.
   ENDIF.
 
-  CLEAR lv_method.
+  PERFORM f_compare_core USING pt_vtypes p_vrsdname p_reposname
+                         CHANGING ls_dev ls_prd lv_method.
 
-* --- Method 1: VRSD (only when usable in BOTH systems) ----------------
-  IF lt_vtypes IS NOT INITIAL.
-    PERFORM f_get_vrsd_agg USING ps_object-obj_name lt_vtypes p_srfc CHANGING ls_dev.
-    PERFORM f_get_vrsd_agg USING ps_object-obj_name lt_vtypes p_trfc CHANGING ls_prd.
-    IF ls_dev-found = abap_true AND ls_prd-found = abap_true.
-      lv_method = gc_vrsd.
+  ls_out-method   = lv_method.
+  ls_out-dev_req  = ls_dev-req.
+  ls_out-dev_date = ls_dev-date.
+  ls_out-dev_user = ls_dev-user.
+  ls_out-prd_req  = ls_prd-req.
+  ls_out-prd_date = ls_prd-date.
+  ls_out-prd_user = ls_prd-user.
+
+  PERFORM f_evaluate USING ls_dev ls_prd lv_method
+                     CHANGING ls_out-mismatch ls_out-remarks.
+
+  APPEND ls_out TO gt_output.
+
+ENDFORM.                    "f_add_result
+
+*&---------------------------------------------------------------------*
+*&      Form  F_COMPARE_CORE
+*&---------------------------------------------------------------------*
+*  VRSD first (when usable in both systems), REPOSRC active fallback.
+*----------------------------------------------------------------------*
+FORM f_compare_core USING    pt_vtypes   TYPE ty_vtype_tab
+                             p_vrsdname  TYPE tadir-obj_name
+                             p_reposname TYPE tadir-obj_name
+                    CHANGING ps_dev      TYPE ty_ver
+                             ps_prd      TYPE ty_ver
+                             p_method    TYPE char10.
+
+  CLEAR: ps_dev, ps_prd, p_method.
+
+  IF pt_vtypes IS NOT INITIAL.
+    PERFORM f_get_vrsd_agg USING p_vrsdname pt_vtypes p_srfc CHANGING ps_dev.
+    PERFORM f_get_vrsd_agg USING p_vrsdname pt_vtypes p_trfc CHANGING ps_prd.
+    IF ps_dev-found = abap_true AND ps_prd-found = abap_true.
+      p_method = gc_vrsd.
     ENDIF.
   ENDIF.
 
-* --- Method 2: REPOSRC fallback (active source) -----------------------
-  IF lv_method IS INITIAL AND lv_reposr_ok = abap_true.
-    PERFORM f_get_reposrc USING ps_object-obj_name p_srfc CHANGING ls_dev.
-    PERFORM f_get_reposrc USING ps_object-obj_name p_trfc CHANGING ls_prd.
-    lv_method = gc_reposrc.
+  IF p_method IS INITIAL AND p_reposname IS NOT INITIAL.
+    PERFORM f_get_reposrc USING p_reposname p_srfc CHANGING ps_dev.
+    PERFORM f_get_reposrc USING p_reposname p_trfc CHANGING ps_prd.
+    p_method = gc_reposrc.
   ENDIF.
 
-  IF lv_method IS INITIAL.
-    lv_method = gc_vrsd.
+  IF p_method IS INITIAL.
+    p_method = gc_vrsd.
   ENDIF.
 
-  ps_output-method   = lv_method.
-  ps_output-dev_req  = ls_dev-req.
-  ps_output-dev_date = ls_dev-date.
-  ps_output-dev_user = ls_dev-user.
-  ps_output-prd_req  = ls_prd-req.
-  ps_output-prd_date = ls_prd-date.
-  ps_output-prd_user = ls_prd-user.
-
-  PERFORM f_evaluate USING ls_dev ls_prd lv_method
-                     CHANGING ps_output-mismatch ps_output-remarks.
-
-ENDFORM.                    "f_compare_object
+ENDFORM.                    "f_compare_core
 
 *&---------------------------------------------------------------------*
 *&      Form  F_EVALUATE
@@ -323,9 +470,6 @@ ENDFORM.                    "f_evaluate
 *&---------------------------------------------------------------------*
 *&      Form  F_GET_VRSD_AGG
 *&---------------------------------------------------------------------*
-*  Reads every version component (VRSD object type) and keeps the latest
-*  entry across them. A read error on any component is propagated.
-*----------------------------------------------------------------------*
 FORM f_get_vrsd_agg USING    p_objname TYPE tadir-obj_name
                              pt_vtypes TYPE ty_vtype_tab
                              p_dest    TYPE rfcdest
@@ -337,7 +481,6 @@ FORM f_get_vrsd_agg USING    p_objname TYPE tadir-obj_name
   CLEAR ps_agg.
 
   LOOP AT pt_vtypes INTO lv_vtype.
-
     PERFORM f_get_vrsd USING lv_vtype p_objname p_dest CHANGING ls_one.
 
     IF ls_one-rc <> 0 AND ps_agg-rc = 0.
@@ -353,7 +496,6 @@ FORM f_get_vrsd_agg USING    p_objname TYPE tadir-obj_name
         ps_agg-user  = ls_one-user.
       ENDIF.
     ENDIF.
-
   ENDLOOP.
 
 ENDFORM.                    "f_get_vrsd_agg
@@ -361,9 +503,6 @@ ENDFORM.                    "f_get_vrsd_agg
 *&---------------------------------------------------------------------*
 *&      Form  F_GET_VRSD
 *&---------------------------------------------------------------------*
-*  Latest VRSD entry of one version type. Local = direct SELECT;
-*  remote = RFC_READ_TABLE.
-*----------------------------------------------------------------------*
 FORM f_get_vrsd USING    p_vtype   TYPE vrsd-objtype
                          p_objname TYPE tadir-obj_name
                          p_dest    TYPE rfcdest
@@ -386,8 +525,6 @@ FORM f_get_vrsd USING    p_vtype   TYPE vrsd-objtype
   lv_name = p_objname.
 
   IF p_dest IS INITIAL OR p_dest = gc_none.
-
-*   --- Local: direct SELECT ----------------------------------------
     SELECT * FROM vrsd INTO TABLE lt_vrsd
       WHERE objtype = p_vtype
         AND objname = lv_name.
@@ -401,10 +538,8 @@ FORM f_get_vrsd USING    p_vtype   TYPE vrsd-objtype
     ps_ver-date  = ls_vrsd-datum.
     ps_ver-user  = ls_vrsd-author.
     RETURN.
-
   ENDIF.
 
-* --- Remote: RFC_READ_TABLE -----------------------------------------
   CONCATENATE `OBJTYPE = '` p_vtype `'` INTO ls_options-text.
   APPEND ls_options TO lt_options.
   CLEAR ls_options.
@@ -468,9 +603,6 @@ ENDFORM.                    "f_get_vrsd
 *&---------------------------------------------------------------------*
 *&      Form  F_GET_REPOSRC
 *&---------------------------------------------------------------------*
-*  Active source last-changed date / author. Local = direct SELECT;
-*  remote = RFC_READ_TABLE.
-*----------------------------------------------------------------------*
 FORM f_get_reposrc USING    p_objname TYPE tadir-obj_name
                             p_dest    TYPE rfcdest
                    CHANGING ps_ver    TYPE ty_ver.
@@ -488,8 +620,6 @@ FORM f_get_reposrc USING    p_objname TYPE tadir-obj_name
   lv_name = p_objname.
 
   IF p_dest IS INITIAL OR p_dest = gc_none.
-
-*   --- Local: direct SELECT ----------------------------------------
     SELECT SINGLE unam udat FROM reposrc
       INTO (ps_ver-user, ps_ver-date)
       WHERE progname = lv_name
@@ -498,10 +628,8 @@ FORM f_get_reposrc USING    p_objname TYPE tadir-obj_name
       ps_ver-found = abap_true.
     ENDIF.
     RETURN.
-
   ENDIF.
 
-* --- Remote: RFC_READ_TABLE -----------------------------------------
   CONCATENATE `PROGNAME = '` lv_name `'` INTO ls_options-text.
   APPEND ls_options TO lt_options.
   CLEAR ls_options.
@@ -571,9 +699,8 @@ ENDFORM.                    "f_rc_text
 *&---------------------------------------------------------------------*
 *&      Form  F_MAP_COMPONENTS
 *&---------------------------------------------------------------------*
-*  Returns the VRSD version component(s) of an object type and whether
-*  the REPOSRC active-source fallback applies (program-source objects).
-*  Composite objects (CLAS, FUGR) map to several components.
+*  VRSD components for non-composite object types (composite types are
+*  handled directly in F_PROCESS_OBJECT).
 *----------------------------------------------------------------------*
 FORM f_map_components USING    p_objtype  TYPE tadir-object
                       CHANGING pt_vtypes  TYPE ty_vtype_tab
@@ -585,73 +712,58 @@ FORM f_map_components USING    p_objtype  TYPE tadir-object
   CLEAR p_reposrok.
 
   CASE p_objtype.
-
-*   --- programs / report source ------------------------------------
-    WHEN 'PROG'.
-      lv_v = 'REPS'. APPEND lv_v TO pt_vtypes.
-      lv_v = 'REPT'. APPEND lv_v TO pt_vtypes.   " text elements
-      p_reposrok = abap_true.
-    WHEN 'REPS'.
-      lv_v = 'REPS'. APPEND lv_v TO pt_vtypes.
-      p_reposrok = abap_true.
-
-*   --- screens -----------------------------------------------------
-    WHEN 'DYNP'.
-      lv_v = 'DYNP'. APPEND lv_v TO pt_vtypes.
-
-*   --- classes (composite) -----------------------------------------
-    WHEN 'CLAS'.
-      lv_v = 'CLSD'. APPEND lv_v TO pt_vtypes.   " definition
-      lv_v = 'CPUB'. APPEND lv_v TO pt_vtypes.   " public section
-      lv_v = 'CPRO'. APPEND lv_v TO pt_vtypes.   " protected section
-      lv_v = 'CPRI'. APPEND lv_v TO pt_vtypes.   " private section
-      lv_v = 'CINC'. APPEND lv_v TO pt_vtypes.   " class includes
-      lv_v = 'METH'. APPEND lv_v TO pt_vtypes.   " methods
-
-*   --- function groups (composite) ---------------------------------
-    WHEN 'FUGR'.
-      lv_v = 'FUNC'. APPEND lv_v TO pt_vtypes.   " function modules
-      lv_v = 'REPS'. APPEND lv_v TO pt_vtypes.   " group includes
-
-*   --- interface ---------------------------------------------------
-    WHEN 'INTF'.
-      lv_v = 'INTD'. APPEND lv_v TO pt_vtypes.
-
-*   --- dictionary --------------------------------------------------
-    WHEN 'TABL'.
-      lv_v = 'TABD'. APPEND lv_v TO pt_vtypes.   " definition
-      lv_v = 'TABT'. APPEND lv_v TO pt_vtypes.   " technical settings
-    WHEN 'VIEW' OR 'VIED'.
-      lv_v = 'VIED'. APPEND lv_v TO pt_vtypes.
-    WHEN 'DTEL'.
-      lv_v = 'DTED'. APPEND lv_v TO pt_vtypes.
-    WHEN 'DOMA'.
-      lv_v = 'DOMD'. APPEND lv_v TO pt_vtypes.
-    WHEN 'SHLP'.
-      lv_v = 'SHLD'. APPEND lv_v TO pt_vtypes.
-    WHEN 'TTYP'.
-      lv_v = 'TTYD'. APPEND lv_v TO pt_vtypes.
-    WHEN 'ENQU'.
-      lv_v = 'ENQD'. APPEND lv_v TO pt_vtypes.
-    WHEN 'MSAG'.
-      lv_v = 'MSAD'. APPEND lv_v TO pt_vtypes.   " message class
-      lv_v = 'MESS'. APPEND lv_v TO pt_vtypes.   " single messages
-
-*   --- enhancements ------------------------------------------------
-    WHEN 'ENHO'.
-      lv_v = 'ENHO'. APPEND lv_v TO pt_vtypes.
-    WHEN 'ENHS'.
-      lv_v = 'ENHS'. APPEND lv_v TO pt_vtypes.
-
-*   --- transaction -------------------------------------------------
-    WHEN 'TRAN'.
-      lv_v = 'TRAN'. APPEND lv_v TO pt_vtypes.
-
-    WHEN OTHERS.
-*     Not mapped.
+    WHEN 'DYNP'.  lv_v = 'DYNP'. APPEND lv_v TO pt_vtypes.
+    WHEN 'TABL'.  lv_v = 'TABD'. APPEND lv_v TO pt_vtypes.
+                  lv_v = 'TABT'. APPEND lv_v TO pt_vtypes.
+    WHEN 'VIEW' OR 'VIED'. lv_v = 'VIED'. APPEND lv_v TO pt_vtypes.
+    WHEN 'DTEL'.  lv_v = 'DTED'. APPEND lv_v TO pt_vtypes.
+    WHEN 'DOMA'.  lv_v = 'DOMD'. APPEND lv_v TO pt_vtypes.
+    WHEN 'SHLP'.  lv_v = 'SHLD'. APPEND lv_v TO pt_vtypes.
+    WHEN 'TTYP'.  lv_v = 'TTYD'. APPEND lv_v TO pt_vtypes.
+    WHEN 'ENQU'.  lv_v = 'ENQD'. APPEND lv_v TO pt_vtypes.
+    WHEN 'MSAG'.  lv_v = 'MSAD'. APPEND lv_v TO pt_vtypes.
+                  lv_v = 'MESS'. APPEND lv_v TO pt_vtypes.
+    WHEN 'ENHO'.  lv_v = 'ENHO'. APPEND lv_v TO pt_vtypes.
+    WHEN 'ENHS'.  lv_v = 'ENHS'. APPEND lv_v TO pt_vtypes.
+    WHEN 'TRAN'.  lv_v = 'TRAN'. APPEND lv_v TO pt_vtypes.
+    WHEN OTHERS.  CLEAR pt_vtypes.
   ENDCASE.
 
 ENDFORM.                    "f_map_components
+
+*&---------------------------------------------------------------------*
+*&      Form  F_BUILD_LOG
+*&---------------------------------------------------------------------*
+FORM f_build_log.
+
+  DATA: ls_output TYPE ty_output,
+        ls_log    TYPE zversion_cmp_log.
+
+  LOOP AT gt_output INTO ls_output.
+    CLEAR ls_log.
+    CALL FUNCTION 'GUID_CREATE'
+      IMPORTING
+        ev_guid_32 = ls_log-logid.
+    ls_log-run_date = sy-datum.
+    ls_log-run_time = sy-uzeit.
+    ls_log-run_user = sy-uname.
+    ls_log-src_dest = p_srfc.
+    ls_log-tgt_dest = p_trfc.
+    ls_log-object   = ls_output-object.
+    ls_log-obj_name = ls_output-obj_name.
+    ls_log-method   = ls_output-method.
+    ls_log-src_req  = ls_output-dev_req.
+    ls_log-src_date = ls_output-dev_date.
+    ls_log-src_user = ls_output-dev_user.
+    ls_log-tgt_req  = ls_output-prd_req.
+    ls_log-tgt_date = ls_output-prd_date.
+    ls_log-tgt_user = ls_output-prd_user.
+    ls_log-mismatch = ls_output-mismatch.
+    ls_log-remarks  = ls_output-remarks.
+    APPEND ls_log TO gt_log.
+  ENDLOOP.
+
+ENDFORM.                    "f_build_log
 
 *&---------------------------------------------------------------------*
 *&      Form  F_SAVE_LOG
@@ -706,6 +818,8 @@ FORM f_build_fieldcat.
 
   CLEAR gt_fieldc.
 
+  PERFORM f_add_field USING 'PARENT'   'Parent Object'    30.
+  PERFORM f_add_field USING 'KIND'     'Kind'             10.
   PERFORM f_add_field USING 'OBJECT'   'Object Type'      10.
   PERFORM f_add_field USING 'OBJ_NAME' 'Object Name'      40.
   PERFORM f_add_field USING 'METHOD'   'Method'           10.
