@@ -215,7 +215,10 @@ FORM f_process_object USING ps_object TYPE ty_object.
       PERFORM f_add_result USING 'CLAS' ps_object-obj_name
                                  ps_object-obj_name 'MAIN'
                                  lt_v lv_vname lv_rname.
-      PERFORM f_expand_clas USING ps_object-obj_name.
+*     Method changes are covered by the class includes (CINC) above.
+*     Per-method rows are not produced: methods are not reliably keyed
+*     in version management and a target without a version database has
+*     nothing to read for them.
 
     WHEN 'INTF'.
       PERFORM f_pool_name USING ps_object-obj_name 'IU' CHANGING lv_pool.
