@@ -1,0 +1,37 @@
+================================================================================
+ Text elements for report ZVERSION_COMPARE
+ (SE38 / SE80 -> Goto -> Text Elements)
+================================================================================
+
+--------------------------------------------------------------------------------
+ Text Symbols  (Text Elements -> Text Symbols tab)
+--------------------------------------------------------------------------------
+ Sym   Text
+ ----  --------------------------------
+ 001   Object Selection
+ 002   RFC Destinations
+
+--------------------------------------------------------------------------------
+ Selection Texts  (Text Elements -> Selection Texts tab)
+ Leave the "Dictionary reference" checkbox UNticked so these texts are used.
+--------------------------------------------------------------------------------
+ Name       Text
+ ---------  ----------------------------
+ S_OBJECT   Object Type
+ S_OBJNAM   Object Name
+ P_SRFC     Source RFC Destination
+ P_TRFC     Target RFC Destination
+
+--------------------------------------------------------------------------------
+ Program title  (Attributes screen -> Title field)
+--------------------------------------------------------------------------------
+ Object Version Compare across Systems (Source vs Target via RFC)
+
+--------------------------------------------------------------------------------
+ Note
+--------------------------------------------------------------------------------
+ The ALV column headers (Parent Object, Kind, Object Type, Object Name,
+ Method, Source/Target Request/Date/By, Mismatch, Remarks) are set in the
+ field catalogue (form F_BUILD_FIELDCAT) and are NOT text elements - no
+ maintenance needed for them.
+================================================================================

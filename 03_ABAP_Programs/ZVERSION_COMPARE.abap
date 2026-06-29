@@ -210,10 +210,10 @@ FORM f_process_object USING ps_object TYPE ty_object.
       APPEND 'CPRO' TO lt_v.
       APPEND 'CPRI' TO lt_v.
       APPEND 'CINC' TO lt_v.
-      APPEND 'METH' TO lt_v.
       PERFORM f_add_result USING 'CLAS' ps_object-obj_name
                                  ps_object-obj_name 'MAIN'
                                  lt_v lv_vname lv_rname.
+      PERFORM f_expand_clas USING ps_object-obj_name.
 
     WHEN 'INTF'.
       PERFORM f_pool_name USING ps_object-obj_name 'IU' CHANGING lv_pool.
@@ -369,6 +369,57 @@ FORM f_expand_fugr USING p_area TYPE tadir-obj_name.
   ENDLOOP.
 
 ENDFORM.                    "f_expand_fugr
+
+*&---------------------------------------------------------------------*
+*&      Form  F_EXPAND_CLAS
+*&---------------------------------------------------------------------*
+*  One row per class method. The method's source include is resolved with
+*  CL_OO_CLASSNAME_SERVICE=>GET_METHOD_INCLUDE and compared like any other
+*  source (REPS + REPOSRC active), so no METH naming assumptions are made.
+*----------------------------------------------------------------------*
+FORM f_expand_clas USING p_class TYPE tadir-obj_name.
+
+  DATA: lt_m       TYPE STANDARD TABLE OF seocompo-cmpname,
+        lv_m       TYPE seocompo-cmpname,
+        lv_clsname TYPE seoclsname,
+        ls_key     TYPE seocpdkey,
+        lv_incl    TYPE programm,
+        lt_v       TYPE ty_vtype_tab,
+        lv_mname   TYPE tadir-obj_name,
+        lv_iname   TYPE tadir-obj_name.
+
+  lv_clsname = p_class.
+
+* Methods of the class (SEOCOMPO-CMPTYPE = 1).
+  SELECT cmpname FROM seocompo INTO TABLE lt_m
+    WHERE clsname = lv_clsname
+      AND cmptype = 1.
+
+  LOOP AT lt_m INTO lv_m.
+
+    CLEAR lv_incl.
+    ls_key-clsname = lv_clsname.
+    ls_key-cpdname = lv_m.
+    TRY.
+        lv_incl = cl_oo_classname_service=>get_method_include( mtdkey = ls_key ).
+      CATCH cx_root.
+        CLEAR lv_incl.
+    ENDTRY.
+
+    IF lv_incl IS INITIAL.
+      CONTINUE.
+    ENDIF.
+
+    lv_mname = lv_m.
+    lv_iname = lv_incl.
+    REFRESH lt_v.
+    APPEND 'REPS' TO lt_v.
+    PERFORM f_add_result USING 'METH' lv_mname p_class 'METHOD'
+                               lt_v lv_iname lv_iname.
+
+  ENDLOOP.
+
+ENDFORM.                    "f_expand_clas
 
 *&---------------------------------------------------------------------*
 *&      Form  F_POOL_NAME
