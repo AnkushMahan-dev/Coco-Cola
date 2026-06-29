@@ -39,6 +39,7 @@ TABLES: tadir.
 *& Types
 *&---------------------------------------------------------------------*
 TYPES: ty_vtype_tab TYPE STANDARD TABLE OF vrsd-objtype WITH DEFAULT KEY.
+TYPES: ty_vrsd_tab  TYPE STANDARD TABLE OF vrsd          WITH DEFAULT KEY.
 
 TYPES: BEGIN OF ty_object,
          pgmid    TYPE tadir-pgmid,
@@ -708,6 +709,8 @@ FORM f_get_vrsd USING    p_vtype   TYPE vrsd-objtype
     ELSE.
       PERFORM f_rc_text USING sy-subrc 'VRSD' CHANGING ps_ver-rctext.
     ENDIF.
+*   Fallback: RFC_READ_TABLE blocked -> try the remote-enabled FM.
+    PERFORM f_get_vrsd_svrs USING p_vtype lv_name p_dest CHANGING ps_ver.
     RETURN.
   ENDIF.
 
@@ -799,6 +802,8 @@ FORM f_get_reposrc USING    p_objname TYPE tadir-obj_name
     ELSE.
       PERFORM f_rc_text USING sy-subrc 'REPOSRC' CHANGING ps_ver-rctext.
     ENDIF.
+*   Fallback: RFC_READ_TABLE blocked -> active version via remote-enabled FM.
+    PERFORM f_get_reposrc_svrs USING lv_name p_dest CHANGING ps_ver.
     RETURN.
   ENDIF.
 
@@ -809,6 +814,147 @@ FORM f_get_reposrc USING    p_objname TYPE tadir-obj_name
   ENDIF.
 
 ENDFORM.                    "f_get_reposrc
+
+*&---------------------------------------------------------------------*
+*&      Form  F_SVRS_DIR
+*&---------------------------------------------------------------------*
+*  Reads the version directory of an object with the remote-enabled FM
+*  SVRS_GET_VERSION_DIRECTORY_46 (works locally and via DESTINATION).
+*  Used as a fallback when RFC_READ_TABLE is blocked in the target.
+*  NO_ENTRY is reported as success-empty (p_rc = 0).
+*----------------------------------------------------------------------*
+FORM f_svrs_dir USING    p_objtype TYPE vrsd-objtype
+                         p_objname TYPE tadir-obj_name
+                         p_dest    TYPE rfcdest
+                CHANGING pt_vrsd   TYPE ty_vrsd_tab
+                         p_rc      TYPE sysubrc
+                         p_msg     TYPE char80.
+
+  DATA: lt_vrsn    TYPE STANDARD TABLE OF vrsn,
+        lv_objname TYPE vrsd-objname,
+        lv_objtype TYPE vrsd-objtype,
+        lv_msg     TYPE char200.
+
+  REFRESH pt_vrsd.
+  CLEAR: p_rc, p_msg.
+  lv_objname = p_objname.
+  lv_objtype = p_objtype.
+
+  IF p_dest IS INITIAL OR p_dest = gc_none.
+    CALL FUNCTION 'SVRS_GET_VERSION_DIRECTORY_46'
+      EXPORTING
+        objname      = lv_objname
+        objtype      = lv_objtype
+      TABLES
+        lversno_list = lt_vrsn
+        version_list = pt_vrsd
+      EXCEPTIONS
+        no_entry     = 1
+        OTHERS       = 2.
+    p_rc = sy-subrc.
+  ELSE.
+    CALL FUNCTION 'SVRS_GET_VERSION_DIRECTORY_46'
+      DESTINATION p_dest
+      EXPORTING
+        objname               = lv_objname
+        objtype               = lv_objtype
+      TABLES
+        lversno_list          = lt_vrsn
+        version_list          = pt_vrsd
+      EXCEPTIONS
+        no_entry              = 1
+        communication_failure = 3 MESSAGE lv_msg
+        system_failure        = 4 MESSAGE lv_msg
+        OTHERS                = 2.
+    p_rc  = sy-subrc.
+    p_msg = lv_msg.
+  ENDIF.
+
+  IF p_rc = 1.                       " no versions = legitimate empty
+    p_rc = 0.
+  ENDIF.
+
+ENDFORM.                    "f_svrs_dir
+
+*&---------------------------------------------------------------------*
+*&      Form  F_GET_VRSD_SVRS
+*&---------------------------------------------------------------------*
+*  VRSD fallback: latest HISTORIC version (versno <> 0) via the FM.
+*----------------------------------------------------------------------*
+FORM f_get_vrsd_svrs USING    p_vtype   TYPE vrsd-objtype
+                              p_objname TYPE tadir-obj_name
+                              p_dest    TYPE rfcdest
+                     CHANGING ps_ver    TYPE ty_ver.
+
+  DATA: lt_svrs TYPE ty_vrsd_tab,
+        ls_vrsd TYPE vrsd,
+        lv_rc   TYPE sysubrc,
+        lv_msg  TYPE char80.
+
+  PERFORM f_svrs_dir USING p_vtype p_objname p_dest
+                     CHANGING lt_svrs lv_rc lv_msg.
+
+  IF lv_rc <> 0.
+    RETURN.                          " keep the RFC error already set
+  ENDIF.
+
+  CLEAR: ps_ver-rc, ps_ver-rctext.   " FM worked -> not an error any more
+  DELETE lt_svrs WHERE versno IS INITIAL.   " skip the active (no request)
+  IF lt_svrs IS INITIAL.
+    RETURN.                          " no historic versions -> not found
+  ENDIF.
+
+  SORT lt_svrs BY datum DESCENDING zeit DESCENDING versno DESCENDING.
+  READ TABLE lt_svrs INTO ls_vrsd INDEX 1.
+  ps_ver-found = abap_true.
+  ps_ver-req   = ls_vrsd-korrnum.
+  ps_ver-date  = ls_vrsd-datum.
+  ps_ver-user  = ls_vrsd-author.
+
+ENDFORM.                    "f_get_vrsd_svrs
+
+*&---------------------------------------------------------------------*
+*&      Form  F_GET_REPOSRC_SVRS
+*&---------------------------------------------------------------------*
+*  Active-source fallback: the ACTIVE version entry (versno 0) via the FM
+*  gives the active last-changed date / author (objtype REPS).
+*----------------------------------------------------------------------*
+FORM f_get_reposrc_svrs USING    p_objname TYPE tadir-obj_name
+                                 p_dest    TYPE rfcdest
+                        CHANGING ps_ver    TYPE ty_ver.
+
+  DATA: lt_svrs TYPE ty_vrsd_tab,
+        ls_vrsd TYPE vrsd,
+        lv_rc   TYPE sysubrc,
+        lv_msg  TYPE char80.
+
+  PERFORM f_svrs_dir USING 'REPS' p_objname p_dest
+                     CHANGING lt_svrs lv_rc lv_msg.
+
+  IF lv_rc <> 0.
+    RETURN.                          " keep the RFC error already set
+  ENDIF.
+
+  CLEAR: ps_ver-rc, ps_ver-rctext.
+  IF lt_svrs IS INITIAL.
+    RETURN.                          " object not versioned -> not found
+  ENDIF.
+
+* Prefer the active entry (versno 0); else the most recent one.
+  CLEAR ls_vrsd.
+  LOOP AT lt_svrs INTO ls_vrsd WHERE versno IS INITIAL.
+    EXIT.
+  ENDLOOP.
+  IF sy-subrc <> 0.
+    SORT lt_svrs BY datum DESCENDING zeit DESCENDING versno DESCENDING.
+    READ TABLE lt_svrs INTO ls_vrsd INDEX 1.
+  ENDIF.
+
+  ps_ver-found = abap_true.
+  ps_ver-date  = ls_vrsd-datum.
+  ps_ver-user  = ls_vrsd-author.
+
+ENDFORM.                    "f_get_reposrc_svrs
 
 *&---------------------------------------------------------------------*
 *&      Form  F_RC_TEXT
