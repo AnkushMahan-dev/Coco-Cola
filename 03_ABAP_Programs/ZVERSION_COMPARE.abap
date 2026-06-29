@@ -40,6 +40,7 @@ TABLES: tadir.
 *&---------------------------------------------------------------------*
 TYPES: ty_vtype_tab TYPE STANDARD TABLE OF vrsd-objtype WITH DEFAULT KEY.
 TYPES: ty_vrsd_tab  TYPE STANDARD TABLE OF vrsd          WITH DEFAULT KEY.
+TYPES: ty_src_tab   TYPE STANDARD TABLE OF abaptxt255    WITH DEFAULT KEY.
 
 TYPES: BEGIN OF ty_object,
          pgmid    TYPE tadir-pgmid,
@@ -464,10 +465,11 @@ FORM f_add_result USING p_objtype   TYPE tadir-object
                         p_vrsdname  TYPE tadir-obj_name
                         p_reposname TYPE tadir-obj_name.
 
-  DATA: ls_out    TYPE ty_output,
-        ls_dev    TYPE ty_ver,
-        ls_prd    TYPE ty_ver,
-        lv_method TYPE char10.
+  DATA: ls_out     TYPE ty_output,
+        ls_dev     TYPE ty_ver,
+        ls_prd     TYPE ty_ver,
+        lv_method  TYPE char10,
+        lv_srcstat TYPE char1.            " Y=differ N=same space=not compared
 
   ls_out-parent   = p_parent.
   ls_out-kind     = p_kind.
@@ -482,9 +484,15 @@ FORM f_add_result USING p_objtype   TYPE tadir-object
   ENDIF.
 
   PERFORM f_compare_core USING pt_vtypes p_vrsdname p_reposname
-                         CHANGING ls_dev ls_prd lv_method.
+                         CHANGING ls_dev ls_prd lv_method lv_srcstat.
 
-  ls_out-method   = lv_method.
+* Method column reflects how the verdict was made.
+  IF lv_srcstat = 'Y' OR lv_srcstat = 'N'.
+    ls_out-method = 'SOURCE'.
+  ELSE.
+    ls_out-method = lv_method.
+  ENDIF.
+
   ls_out-dev_req  = ls_dev-req.
   ls_out-dev_date = ls_dev-date.
   ls_out-dev_user = ls_dev-user.
@@ -492,7 +500,7 @@ FORM f_add_result USING p_objtype   TYPE tadir-object
   ls_out-prd_date = ls_prd-date.
   ls_out-prd_user = ls_prd-user.
 
-  PERFORM f_evaluate USING ls_dev ls_prd lv_method
+  PERFORM f_evaluate USING ls_dev ls_prd lv_method lv_srcstat
                      CHANGING ls_out-mismatch ls_out-remarks.
 
   APPEND ls_out TO gt_output.
@@ -509,18 +517,129 @@ FORM f_compare_core USING    pt_vtypes   TYPE ty_vtype_tab
                              p_reposname TYPE tadir-obj_name
                     CHANGING ps_dev      TYPE ty_ver
                              ps_prd      TYPE ty_ver
-                             p_method    TYPE char10.
+                             p_method    TYPE char10
+                             p_srcstat   TYPE char1.
 
-  CLEAR: ps_dev, ps_prd, p_method.
+  CLEAR: ps_dev, ps_prd, p_method, p_srcstat.
 
-* Active version of every component via SVRS_GET_VERSION_DIRECTORY_46
-* (remote-enabled FM; uses the correct version object type per component
-* - REPS, METH, FUNC, CLSD, TABD, ...). P_REPOSNAME is no longer needed.
+* Metadata (request / date / author) of the active version per component
+* via SVRS_GET_VERSION_DIRECTORY_46 (correct object type per component).
   p_method = gc_reposrc.
   PERFORM f_get_active_agg USING p_vrsdname pt_vtypes p_srfc CHANGING ps_dev.
   PERFORM f_get_active_agg USING p_vrsdname pt_vtypes p_trfc CHANGING ps_prd.
 
+* Verdict by ACTUAL SOURCE when a report-source name is available
+* (program / include / method-include / FM-include / pool). Same source
+* counts as identical even if request / date / author differ.
+  IF p_reposname IS NOT INITIAL.
+    PERFORM f_compare_source USING p_reposname CHANGING p_srcstat.
+  ENDIF.
+
 ENDFORM.                    "f_compare_core
+
+*&---------------------------------------------------------------------*
+*&      Form  F_COMPARE_SOURCE
+*&---------------------------------------------------------------------*
+*  Compares the active source of a report-source object between the two
+*  systems. 'N' = identical, 'Y' = differ, space = could not compare
+*  (source unavailable on one side -> caller falls back to metadata).
+*----------------------------------------------------------------------*
+FORM f_compare_source USING    p_name    TYPE tadir-obj_name
+                      CHANGING p_srcstat TYPE char1.
+
+  DATA: lt_dev  TYPE ty_src_tab,
+        lt_prd  TYPE ty_src_tab,
+        lv_fdev TYPE abap_bool,
+        lv_fprd TYPE abap_bool.
+
+  CLEAR p_srcstat.
+
+  PERFORM f_get_source USING p_name p_srfc CHANGING lt_dev lv_fdev.
+  PERFORM f_get_source USING p_name p_trfc CHANGING lt_prd lv_fprd.
+
+  IF lv_fdev = abap_false OR lv_fprd = abap_false.
+    RETURN.                            " incomplete -> metadata fallback
+  ENDIF.
+
+* Drop trailing blank lines so padding does not cause a false difference.
+  PERFORM f_trim_source CHANGING lt_dev.
+  PERFORM f_trim_source CHANGING lt_prd.
+
+  IF lt_dev = lt_prd.
+    p_srcstat = 'N'.
+  ELSE.
+    p_srcstat = 'Y'.
+  ENDIF.
+
+ENDFORM.                    "f_compare_source
+
+*&---------------------------------------------------------------------*
+*&      Form  F_GET_SOURCE
+*&---------------------------------------------------------------------*
+*  Active source of a report-source object. Local = READ REPORT; remote
+*  = SVRS_GET_VERSION_REPS_40 DESTINATION (versno 0 = active). No custom
+*  function module is needed in the target.
+*----------------------------------------------------------------------*
+FORM f_get_source USING    p_name  TYPE tadir-obj_name
+                           p_dest  TYPE rfcdest
+                  CHANGING ct_src  TYPE ty_src_tab
+                           cv_found TYPE abap_bool.
+
+  DATA: lv_prog TYPE programm,
+        lv_msg  TYPE char200.
+
+  CLEAR: ct_src, cv_found.
+  lv_prog = p_name.
+
+  IF p_dest IS INITIAL OR p_dest = gc_none.
+    READ REPORT lv_prog INTO ct_src.
+    IF sy-subrc = 0.
+      cv_found = abap_true.
+    ENDIF.
+    RETURN.
+  ENDIF.
+
+  CALL FUNCTION 'SVRS_GET_VERSION_REPS_40'
+    DESTINATION p_dest
+    EXPORTING
+      object_name           = lv_prog
+      versno                = '00000'
+    TABLES
+      repos_tab             = ct_src
+    EXCEPTIONS
+      no_version            = 1
+      system_failure        = 2 MESSAGE lv_msg
+      communication_failure = 3 MESSAGE lv_msg
+      OTHERS                = 4.
+
+  IF sy-subrc = 0 AND ct_src IS NOT INITIAL.
+    cv_found = abap_true.
+  ENDIF.
+
+ENDFORM.                    "f_get_source
+
+*&---------------------------------------------------------------------*
+*&      Form  F_TRIM_SOURCE
+*&---------------------------------------------------------------------*
+*  Removes trailing blank lines from a source table.
+*----------------------------------------------------------------------*
+FORM f_trim_source CHANGING ct_src TYPE ty_src_tab.
+
+  DATA: lv_idx  TYPE i,
+        ls_line TYPE abaptxt255.
+
+  lv_idx = lines( ct_src ).
+  WHILE lv_idx > 0.
+    READ TABLE ct_src INTO ls_line INDEX lv_idx.
+    IF ls_line IS INITIAL.
+      DELETE ct_src INDEX lv_idx.
+      lv_idx = lv_idx - 1.
+    ELSE.
+      EXIT.
+    ENDIF.
+  ENDWHILE.
+
+ENDFORM.                    "f_trim_source
 
 *&---------------------------------------------------------------------*
 *&      Form  F_GET_ACTIVE_AGG
@@ -611,16 +730,29 @@ ENDFORM.                    "f_get_active_one
 *&---------------------------------------------------------------------*
 *&      Form  F_EVALUATE
 *&---------------------------------------------------------------------*
-FORM f_evaluate USING    ps_dev   TYPE ty_ver
-                         ps_prd   TYPE ty_ver
-                         p_method TYPE char10
-                CHANGING pv_flag  TYPE char3
-                         pv_rem   TYPE char100.
+FORM f_evaluate USING    ps_dev    TYPE ty_ver
+                         ps_prd    TYPE ty_ver
+                         p_method  TYPE char10
+                         p_srcstat TYPE char1
+                CHANGING pv_flag   TYPE char3
+                         pv_rem    TYPE char100.
 
   DATA: lv_same TYPE abap_bool.
 
   CLEAR: pv_flag, pv_rem.
 
+* Preferred verdict: actual source comparison.
+  IF p_srcstat = 'N'.
+    pv_flag = gc_no.
+    pv_rem  = 'Active source identical in both systems'.
+    RETURN.
+  ELSEIF p_srcstat = 'Y'.
+    pv_flag = gc_yes.
+    pv_rem  = 'Active source differs between Source and Target'.
+    RETURN.
+  ENDIF.
+
+* Fallback: metadata (request / date / author).
   IF ps_prd-rc <> 0.
     pv_flag = space.
     CONCATENATE 'Target read error:' ps_prd-rctext INTO pv_rem SEPARATED BY space.
