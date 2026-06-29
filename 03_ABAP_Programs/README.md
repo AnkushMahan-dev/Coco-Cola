@@ -75,5 +75,17 @@ any type already accepted by the function module keeps working and unmapped
 types degrade gracefully to a direct lookup (returning "no version
 information" rather than failing). Add further `WHEN` branches to the `CASE`
 for custom object types.
+
+### Web Dynpro, Smart Forms and Adobe Forms
+
+| Object | R3TR type | Version handling |
+|--------|-----------|------------------|
+| Web Dynpro ABAP component | `WDYN` (+ `WDYA` app) | Versioned at LIMU level (`WDYD` / `WDYV` / `WDYC`); handled like classes. |
+| Smart Form / Style | `SSFO` / `SSST` | Standard version-directory coverage is partial / release-dependent; attempted via the R3TR fallback - verify in-system. |
+| Adobe / Interactive Form | `SFPF` / `SFPI` | Same caveat as Smart Forms - verify whether the version directory returns entries. |
+
+Where standard version management does not track these objects, they report
+"No version information in either system" and can be compared by other means
+(e.g. last-changed data from their administration tables) if required.
 * The RFC destination must be a trusted/authorised connection to the production
   system (transaction `SM59`).

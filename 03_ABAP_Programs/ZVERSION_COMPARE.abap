@@ -395,6 +395,30 @@ FORM f_map_version_types USING    p_objtype TYPE tadir-object
       lv_type = 'MSAD'. APPEND lv_type TO pt_types.   " definition
       lv_type = 'MESS'. APPEND lv_type TO pt_types.   " single messages
 
+*   --- Web Dynpro ABAP ---------------------------------------------
+    WHEN 'WDYN'.                      " Web Dynpro component
+      lv_type = 'WDYD'. APPEND lv_type TO pt_types.   " component definition
+      lv_type = 'WDYV'. APPEND lv_type TO pt_types.   " views
+      lv_type = 'WDYC'. APPEND lv_type TO pt_types.   " controllers
+    WHEN 'WDYA'.                      " Web Dynpro application
+      lv_type = 'WDYA'. APPEND lv_type TO pt_types.
+
+*   --- Forms (Smart Forms / Adobe) ---------------------------------
+*   Standard version-management coverage for these is partial and
+*   release-dependent. The R3TR type is attempted (also added as the
+*   fallback below); verify in your system whether the version
+*   directory returns entries - otherwise they report "no version
+*   information" and can be compared by other means (e.g. last-changed
+*   data from their administration tables).
+    WHEN 'SSFO'.                      " Smart Form
+      lv_type = 'SSFO'. APPEND lv_type TO pt_types.
+    WHEN 'SSST'.                      " Smart Style
+      lv_type = 'SSST'. APPEND lv_type TO pt_types.
+    WHEN 'SFPF'.                      " Adobe / Interactive Form
+      lv_type = 'SFPF'. APPEND lv_type TO pt_types.
+    WHEN 'SFPI'.                      " Adobe form interface
+      lv_type = 'SFPI'. APPEND lv_type TO pt_types.
+
 *   --- Other / unmapped --------------------------------------------
     WHEN OTHERS.
 *     No specific mapping: rely on the direct lookup below.
