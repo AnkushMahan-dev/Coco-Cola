@@ -575,7 +575,12 @@ FORM f_evaluate USING    ps_dev   TYPE ty_ver
       lv_same = abap_true.
     ENDIF.
   ELSE.
-    IF ps_dev-date = ps_prd-date AND ps_dev-user = ps_prd-user.
+*   Active version: compare the request when available, else date + author.
+    IF ps_dev-req IS NOT INITIAL OR ps_prd-req IS NOT INITIAL.
+      IF ps_dev-req = ps_prd-req.
+        lv_same = abap_true.
+      ENDIF.
+    ELSEIF ps_dev-date = ps_prd-date AND ps_dev-user = ps_prd-user.
       lv_same = abap_true.
     ENDIF.
   ENDIF.
@@ -740,78 +745,52 @@ ENDFORM.                    "f_get_vrsd
 *&---------------------------------------------------------------------*
 *&      Form  F_GET_REPOSRC
 *&---------------------------------------------------------------------*
+*  Active version of a report source (REPS) via the remote-enabled FM
+*  SVRS_GET_VERSION_DIRECTORY_46 - works locally and via DESTINATION, so
+*  it is not affected by RFC_READ_TABLE table-authorisation / UCON blocks.
+*  Returns the ACTIVE entry (versno 0): its request / date / author.
 FORM f_get_reposrc USING    p_objname TYPE tadir-obj_name
                             p_dest    TYPE rfcdest
                    CHANGING ps_ver    TYPE ty_ver.
 
-  DATA: lv_name    TYPE reposrc-progname,
-        lt_options TYPE STANDARD TABLE OF rfc_db_opt,
-        lt_fields  TYPE STANDARD TABLE OF rfc_db_fld,
-        lt_data    TYPE STANDARD TABLE OF tab512,
-        ls_options TYPE rfc_db_opt,
-        ls_fields  TYPE rfc_db_fld,
-        ls_data    TYPE tab512,
-        lv_msg     TYPE char200.
+  DATA: lt_svrs TYPE ty_vrsd_tab,
+        ls_vrsd TYPE vrsd,
+        lv_rc   TYPE sysubrc,
+        lv_msg  TYPE char80.
 
   CLEAR ps_ver.
-  lv_name = p_objname.
 
-  IF p_dest IS INITIAL OR p_dest = gc_none.
-    SELECT SINGLE unam udat FROM reposrc
-      INTO (ps_ver-user, ps_ver-date)
-      WHERE progname = lv_name
-        AND r3state  = 'A'.
-    IF sy-subrc = 0.
-      ps_ver-found = abap_true.
-    ENDIF.
-    RETURN.
-  ENDIF.
+  PERFORM f_svrs_dir USING 'REPS' p_objname p_dest
+                     CHANGING lt_svrs lv_rc lv_msg.
 
-  CONCATENATE `PROGNAME = '` lv_name `'` INTO ls_options-text.
-  APPEND ls_options TO lt_options.
-  CLEAR ls_options.
-  ls_options-text = `AND R3STATE = 'A'`.
-  APPEND ls_options TO lt_options.
-
-  ls_fields-fieldname = 'UNAM'. APPEND ls_fields TO lt_fields.
-  ls_fields-fieldname = 'UDAT'. APPEND ls_fields TO lt_fields.
-
-  CALL FUNCTION 'RFC_READ_TABLE'
-    DESTINATION p_dest
-    EXPORTING
-      query_table           = 'REPOSRC'
-      delimiter             = '|'
-    TABLES
-      options               = lt_options
-      fields                = lt_fields
-      data                  = lt_data
-    EXCEPTIONS
-      table_not_available   = 1
-      option_not_valid      = 2
-      field_not_valid       = 3
-      not_authorized        = 4
-      data_buffer_exceeded  = 5
-      communication_failure = 6 MESSAGE lv_msg
-      system_failure        = 7 MESSAGE lv_msg
-      OTHERS                = 8.
-
-  ps_ver-rc = sy-subrc.
-  IF sy-subrc <> 0.
+  IF lv_rc <> 0.
+    ps_ver-rc = lv_rc.
     IF lv_msg IS NOT INITIAL.
-      CONCATENATE 'REPOSRC:' lv_msg INTO ps_ver-rctext SEPARATED BY space.
+      CONCATENATE 'SVRS:' lv_msg INTO ps_ver-rctext SEPARATED BY space.
     ELSE.
-      PERFORM f_rc_text USING sy-subrc 'REPOSRC' CHANGING ps_ver-rctext.
+      ps_ver-rctext = 'SVRS read error'.
     ENDIF.
-*   Fallback: RFC_READ_TABLE blocked -> active version via remote-enabled FM.
-    PERFORM f_get_reposrc_svrs USING lv_name p_dest CHANGING ps_ver.
     RETURN.
   ENDIF.
 
-  READ TABLE lt_data INTO ls_data INDEX 1.
-  IF sy-subrc = 0.
-    ps_ver-found = abap_true.
-    SPLIT ls_data-wa AT '|' INTO ps_ver-user ps_ver-date.
+  IF lt_svrs IS INITIAL.
+    RETURN.                          " object not versioned -> not found
   ENDIF.
+
+* Prefer the active entry (versno 0); else the most recent one.
+  CLEAR ls_vrsd.
+  LOOP AT lt_svrs INTO ls_vrsd WHERE versno IS INITIAL.
+    EXIT.
+  ENDLOOP.
+  IF sy-subrc <> 0.
+    SORT lt_svrs BY datum DESCENDING zeit DESCENDING versno DESCENDING.
+    READ TABLE lt_svrs INTO ls_vrsd INDEX 1.
+  ENDIF.
+
+  ps_ver-found = abap_true.
+  ps_ver-req   = ls_vrsd-korrnum.
+  ps_ver-date  = ls_vrsd-datum.
+  ps_ver-user  = ls_vrsd-author.
 
 ENDFORM.                    "f_get_reposrc
 
@@ -912,49 +891,6 @@ FORM f_get_vrsd_svrs USING    p_vtype   TYPE vrsd-objtype
   ps_ver-user  = ls_vrsd-author.
 
 ENDFORM.                    "f_get_vrsd_svrs
-
-*&---------------------------------------------------------------------*
-*&      Form  F_GET_REPOSRC_SVRS
-*&---------------------------------------------------------------------*
-*  Active-source fallback: the ACTIVE version entry (versno 0) via the FM
-*  gives the active last-changed date / author (objtype REPS).
-*----------------------------------------------------------------------*
-FORM f_get_reposrc_svrs USING    p_objname TYPE tadir-obj_name
-                                 p_dest    TYPE rfcdest
-                        CHANGING ps_ver    TYPE ty_ver.
-
-  DATA: lt_svrs TYPE ty_vrsd_tab,
-        ls_vrsd TYPE vrsd,
-        lv_rc   TYPE sysubrc,
-        lv_msg  TYPE char80.
-
-  PERFORM f_svrs_dir USING 'REPS' p_objname p_dest
-                     CHANGING lt_svrs lv_rc lv_msg.
-
-  IF lv_rc <> 0.
-    RETURN.                          " keep the RFC error already set
-  ENDIF.
-
-  CLEAR: ps_ver-rc, ps_ver-rctext.
-  IF lt_svrs IS INITIAL.
-    RETURN.                          " object not versioned -> not found
-  ENDIF.
-
-* Prefer the active entry (versno 0); else the most recent one.
-  CLEAR ls_vrsd.
-  LOOP AT lt_svrs INTO ls_vrsd WHERE versno IS INITIAL.
-    EXIT.
-  ENDLOOP.
-  IF sy-subrc <> 0.
-    SORT lt_svrs BY datum DESCENDING zeit DESCENDING versno DESCENDING.
-    READ TABLE lt_svrs INTO ls_vrsd INDEX 1.
-  ENDIF.
-
-  ps_ver-found = abap_true.
-  ps_ver-date  = ls_vrsd-datum.
-  ps_ver-user  = ls_vrsd-author.
-
-ENDFORM.                    "f_get_reposrc_svrs
 
 *&---------------------------------------------------------------------*
 *&      Form  F_RC_TEXT
