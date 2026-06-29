@@ -21,19 +21,28 @@ system).
 2. Objects are read from **TADIR** (`PGMID = 'R3TR'`, not deleted).
 3. The TADIR (R3TR) object type is mapped to its version-management object type
    in `F_MAP_VRSD_TYPE` (e.g. `PROG` &rarr; `REPS`, `TABL` &rarr; `TABD`).
-4. For each system the version directory table **`VRSD`** is read directly with
-   **`RFC_READ_TABLE`** (`DESTINATION p_srfc` / `DESTINATION p_trfc`), and the
-   **latest** entry (by date / time / version number) is taken.
-5. The **latest transport request (`KORRNUM`)** is compared:
+4. An object can be made of several version-managed **components**. For a
+   program these are the **source code** (VRSD type `REPS`) and the
+   **text elements / text pool** (VRSD type `REPT`).
+5. For each component and each system the version directory table **`VRSD`** is
+   read directly with **`RFC_READ_TABLE`** (`DESTINATION p_srfc` /
+   `DESTINATION p_trfc`), and the **latest** entry (by date / time / version
+   number) is taken. The **latest transport request (`KORRNUM`)** is the
+   cross-system key.
+6. The object is flagged **mismatched if ANY component differs**, and the
+   Remarks name which component(s) differ:
 
    | Condition | Mismatch | Remarks |
    |-----------|----------|---------|
    | Object type not mapped for compare | *(blank)* | Object type not mapped for version compare |
-   | Latest request differs | `YES` | Latest transport request differs between Source and Target |
-   | Latest request identical | `NO` | Latest transport request identical in both systems |
-   | Version history in source only | `YES` | Version history in Source only - missing in Target |
-   | Version history in target only | `YES` | Version history in Target only - missing in Source |
+   | A component's latest request differs | `YES` | Difference in: Source / Text elements / Source, Text elements |
+   | All components identical | `NO` | Identical in both systems |
+   | Object present in target, none in source | `YES` | No version history in Source - present in Target |
+   | Object present in source, none in target | `YES` | No version history in Target - present in Source |
    | No version history in either | `NO` | No version history in either system |
+
+   So a program whose **text elements** changed (but not its source) is now
+   reported as `Mismatch = YES` with `Remarks = Difference in: Text elements`.
 
 > **Why `VRSD` directly?** An earlier attempt used
 > `SVRS_GET_VERSION_DIRECTORY_46`, which prepends a blank "active version" entry

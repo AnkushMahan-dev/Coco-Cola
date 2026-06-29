@@ -17,18 +17,19 @@
 *&                    module RFC_READ_TABLE (no custom function module
 *&                    needs to be created in the target system). The
 *&                    latest version entry's transport request (KORRNUM)
-*&                    is the cross-system key: version management stamps
-*&                    the same request number in both the source and the
-*&                    target system when a change is delivered.
+*&                    is the cross-system key.
 *&
-*&                    Reading VRSD directly avoids the blank "active
-*&                    version" entry that SVRS_GET_VERSION_DIRECTORY_46
-*&                    returns, which previously caused a false match.
+*&                    An object can be made up of several version-managed
+*&                    components. For a program these are the source code
+*&                    (VRSD type REPS) and the text elements / text pool
+*&                    (VRSD type REPT). Every component is compared and
+*&                    the object is flagged as mismatched if ANY of them
+*&                    differs; the Remarks state which component differs.
 *&           Output : ALV grid with object type, object name, the latest
-*&                    version / request / date / author per system, a
-*&                    Mismatch column ('YES' when the latest requests
-*&                    differ, 'NO' when they are identical) and a Remarks
-*&                    column that explains the reason.
+*&                    version / request / date / author per system (the
+*&                    most recent component shown as headline), a
+*&                    Mismatch column ('YES' / 'NO') and a Remarks column
+*&                    naming the differing component(s).
 *&
 *& Prereq  : The target RFC destination's user needs read authorisation
 *&           for RFC_READ_TABLE on table VRSD. Version logging on import
@@ -48,38 +49,44 @@ TYPES: BEGIN OF ty_object,
          obj_name TYPE tadir-obj_name,      " Object name
        END OF ty_object.
 
+* A version-managed component of an object (e.g. source / text elements)
+TYPES: BEGIN OF ty_comp,
+         vtype TYPE vrsd-objtype,           " VRSD object type
+         label TYPE char20,                 " 'Source' / 'Text elements'
+       END OF ty_comp.
+
 * One parsed VRSD row (as returned by RFC_READ_TABLE)
 TYPES: BEGIN OF ty_vrsd_row,
-         versno TYPE vrsd-versno,           " version number
-         korr   TYPE vrsd-korrnum,          " transport request
-         author TYPE vrsd-author,           " author
-         datum  TYPE vrsd-datum,            " date
-         zeit   TYPE vrsd-zeit,             " time
+         versno TYPE vrsd-versno,
+         korr   TYPE vrsd-korrnum,
+         author TYPE vrsd-author,
+         datum  TYPE vrsd-datum,
+         zeit   TYPE vrsd-zeit,
        END OF ty_vrsd_row.
 
-* Latest-version key returned for a single object / system
+* Latest-version key returned for a single component / system
 TYPES: BEGIN OF ty_version,
-         versno    TYPE vrsd-versno,        " latest version number
-         korr      TYPE vrsd-korrnum,       " latest transport request
-         author    TYPE vrsd-author,        " author of latest version
-         datum     TYPE vrsd-datum,         " date of latest version
-         found     TYPE abap_bool,          " version history available
-         supported TYPE abap_bool,          " type mapped for compare
+         versno TYPE vrsd-versno,
+         korr   TYPE vrsd-korrnum,
+         author TYPE vrsd-author,
+         datum  TYPE vrsd-datum,
+         zeit   TYPE vrsd-zeit,
+         found  TYPE abap_bool,
        END OF ty_version.
 
 TYPES: BEGIN OF ty_output,
-         object     TYPE tadir-object,      " Object type
-         obj_name   TYPE tadir-obj_name,    " Object name
-         dev_korr   TYPE vrsd-korrnum,      " Source - latest request
-         dev_versno TYPE vrsd-versno,       " Source - latest version no
-         dev_date   TYPE vrsd-datum,        " Source - latest date
-         dev_author TYPE vrsd-author,       " Source - latest author
-         prd_korr   TYPE vrsd-korrnum,      " Target - latest request
-         prd_versno TYPE vrsd-versno,       " Target - latest version no
-         prd_date   TYPE vrsd-datum,        " Target - latest date
-         prd_author TYPE vrsd-author,       " Target - latest author
-         mismatch   TYPE char3,             " 'YES' / 'NO'
-         remarks    TYPE char100,           " Reason behind the flag
+         object     TYPE tadir-object,
+         obj_name   TYPE tadir-obj_name,
+         dev_korr   TYPE vrsd-korrnum,       " Source - latest request
+         dev_versno TYPE vrsd-versno,        " Source - latest version no
+         dev_date   TYPE vrsd-datum,         " Source - latest date
+         dev_author TYPE vrsd-author,        " Source - latest author
+         prd_korr   TYPE vrsd-korrnum,       " Target - latest request
+         prd_versno TYPE vrsd-versno,        " Target - latest version no
+         prd_date   TYPE vrsd-datum,         " Target - latest date
+         prd_author TYPE vrsd-author,        " Target - latest author
+         mismatch   TYPE char3,              " 'YES' / 'NO'
+         remarks    TYPE char100,            " Reason behind the flag
        END OF ty_output.
 
 *&---------------------------------------------------------------------*
@@ -97,18 +104,13 @@ CONSTANTS: gc_yes TYPE char3 VALUE 'YES',
 *& Selection screen
 *&---------------------------------------------------------------------*
 SELECTION-SCREEN BEGIN OF BLOCK b1 WITH FRAME TITLE text-001.
-* Object type range - single values only (no interval / no high value)
 SELECT-OPTIONS: s_object FOR tadir-object   NO INTERVALS.
-* Object name range - single values only (no interval / no high value)
-* Mandatory check is performed in START-OF-SELECTION (not OBLIGATORY).
 SELECT-OPTIONS: s_objnam FOR tadir-obj_name NO INTERVALS.
 SELECTION-SCREEN END OF BLOCK b1.
 
 SELECTION-SCREEN BEGIN OF BLOCK b2 WITH FRAME TITLE text-002.
-* RFC destination of the SOURCE system (e.g. development).
 * 'NONE' is the self-referencing destination = the local logon system.
 PARAMETERS: p_srfc TYPE rfcdest OBLIGATORY DEFAULT 'NONE'.
-* RFC destination of the TARGET system (e.g. production)
 PARAMETERS: p_trfc TYPE rfcdest OBLIGATORY.
 SELECTION-SCREEN END OF BLOCK b2.
 
@@ -117,10 +119,8 @@ SELECTION-SCREEN END OF BLOCK b2.
 *&---------------------------------------------------------------------*
 START-OF-SELECTION.
 
-* --- Mandatory check for object name (handled here as requested) ------
   IF s_objnam[] IS INITIAL.
     MESSAGE 'Object name is mandatory' TYPE 'E'.
-*   Processing stops and the user is returned to the selection screen.
   ENDIF.
 
   PERFORM f_read_tadir.
@@ -140,9 +140,6 @@ END-OF-SELECTION.
 *&---------------------------------------------------------------------*
 *&      Form  F_READ_TADIR
 *&---------------------------------------------------------------------*
-*  Read the object directory (TADIR) for the requested object types and
-*  object names. Only original, non-deleted R3TR objects are considered.
-*----------------------------------------------------------------------*
 FORM f_read_tadir.
 
   SELECT object obj_name
@@ -160,122 +157,152 @@ ENDFORM.                    "f_read_tadir
 *&---------------------------------------------------------------------*
 *&      Form  F_COLLECT_VERSIONS
 *&---------------------------------------------------------------------*
-*  For every object read the latest version key from the source and the
-*  target systems via RFC, then evaluate the mismatch flag and remarks.
-*----------------------------------------------------------------------*
 FORM f_collect_versions.
 
   DATA: ls_object TYPE ty_object,
-        ls_output TYPE ty_output,
-        ls_dev    TYPE ty_version,
-        ls_prd    TYPE ty_version.
+        ls_output TYPE ty_output.
 
   LOOP AT gt_object INTO ls_object.
-
-    CLEAR: ls_output, ls_dev, ls_prd.
-
-*   Latest version in the SOURCE system (e.g. development)
-    PERFORM f_get_version
-            USING    ls_object-object
-                     ls_object-obj_name
-                     p_srfc                " source RFC destination
-            CHANGING ls_dev.
-
-*   Latest version in the TARGET system (e.g. production)
-    PERFORM f_get_version
-            USING    ls_object-object
-                     ls_object-obj_name
-                     p_trfc                " target RFC destination
-            CHANGING ls_prd.
-
-    ls_output-object     = ls_object-object.
-    ls_output-obj_name   = ls_object-obj_name.
-
-    ls_output-dev_korr   = ls_dev-korr.
-    ls_output-dev_versno = ls_dev-versno.
-    ls_output-dev_date   = ls_dev-datum.
-    ls_output-dev_author = ls_dev-author.
-
-    ls_output-prd_korr   = ls_prd-korr.
-    ls_output-prd_versno = ls_prd-versno.
-    ls_output-prd_date   = ls_prd-datum.
-    ls_output-prd_author = ls_prd-author.
-
-    PERFORM f_evaluate_mismatch USING    ls_dev
-                                         ls_prd
-                                CHANGING ls_output-mismatch
-                                         ls_output-remarks.
-
+    CLEAR ls_output.
+    PERFORM f_compare_object USING ls_object CHANGING ls_output.
     APPEND ls_output TO gt_output.
-
   ENDLOOP.
 
 ENDFORM.                    "f_collect_versions
 
 *&---------------------------------------------------------------------*
-*&      Form  F_EVALUATE_MISMATCH
+*&      Form  F_COMPARE_OBJECT
 *&---------------------------------------------------------------------*
-*  Derive the mismatch flag and remarks from the latest version key:
-*    Condition                                  Mismatch  Remarks
-*    Object type not mapped for compare         (blank)   reason text
-*    Latest request differs                     YES       reason text
-*    Latest request identical                   NO        reason text
-*    Version history in only one system         YES       reason text
-*    No version history in either system        NO        reason text
+*  Compares every version-managed component of one object between the
+*  source and target systems and builds one output row. Mismatch is YES
+*  if ANY component differs; Remarks name the differing component(s).
 *----------------------------------------------------------------------*
-FORM f_evaluate_mismatch USING    ps_dev  TYPE ty_version
-                                  ps_prd  TYPE ty_version
-                         CHANGING pv_flag TYPE char3
-                                  pv_rem  TYPE char100.
+FORM f_compare_object USING    ps_object TYPE ty_object
+                      CHANGING ps_output TYPE ty_output.
 
-  CLEAR: pv_flag, pv_rem.
+  DATA: lt_comp   TYPE STANDARD TABLE OF ty_comp,
+        ls_comp   TYPE ty_comp,
+        ls_dev    TYPE ty_version,
+        ls_prd    TYPE ty_version,
+        ls_devhd  TYPE ty_version,          " headline (latest) - source
+        ls_prdhd  TYPE ty_version,          " headline (latest) - target
+        lv_cdiff  TYPE abap_bool,
+        lv_anyhit TYPE abap_bool,           " any component found anywhere
+        lv_devany TYPE abap_bool,           " any component found in source
+        lv_prdany TYPE abap_bool,           " any component found in target
+        lv_labels TYPE string.
 
-* Object type not mapped to a version-management type
-  IF ps_dev-supported = abap_false.
-    pv_flag = space.
-    pv_rem  = 'Object type not mapped for version compare - extend F_MAP_VRSD_TYPE'.
+  ps_output-object   = ps_object-object.
+  ps_output-obj_name = ps_object-obj_name.
+
+* Which version-managed components make up this object type?
+  PERFORM f_map_vrsd_types USING ps_object-object CHANGING lt_comp.
+  IF lt_comp IS INITIAL.
+    ps_output-mismatch = space.
+    ps_output-remarks  = 'Object type not mapped for version compare - extend F_MAP_VRSD_TYPES'.
     RETURN.
   ENDIF.
 
-  IF ps_dev-found = abap_false AND ps_prd-found = abap_false.
-    pv_flag = gc_no.
-    pv_rem  = 'No version history in either system'.
+  LOOP AT lt_comp INTO ls_comp.
 
-  ELSEIF ps_dev-found = abap_true AND ps_prd-found = abap_false.
-    pv_flag = gc_yes.
-    pv_rem  = 'Version history in Source only - missing in Target'.
+    PERFORM f_get_version USING ls_comp-vtype ps_object-obj_name p_srfc
+                          CHANGING ls_dev.
+    PERFORM f_get_version USING ls_comp-vtype ps_object-obj_name p_trfc
+                          CHANGING ls_prd.
 
-  ELSEIF ps_dev-found = abap_false AND ps_prd-found = abap_true.
-    pv_flag = gc_yes.
-    pv_rem  = 'Version history in Target only - missing in Source'.
+    IF ls_dev-found = abap_true.
+      lv_devany = abap_true. lv_anyhit = abap_true.
+      PERFORM f_keep_latest USING ls_dev CHANGING ls_devhd.
+    ENDIF.
+    IF ls_prd-found = abap_true.
+      lv_prdany = abap_true. lv_anyhit = abap_true.
+      PERFORM f_keep_latest USING ls_prd CHANGING ls_prdhd.
+    ENDIF.
 
-  ELSEIF ps_dev-korr = ps_prd-korr.
-    pv_flag = gc_no.
-    pv_rem  = 'Latest transport request identical in both systems'.
+*   Component-level difference?
+    CLEAR lv_cdiff.
+    IF ls_dev-found <> ls_prd-found.
+      lv_cdiff = abap_true.                 " present in one system only
+    ELSEIF ls_dev-found = abap_true AND ls_dev-korr <> ls_prd-korr.
+      lv_cdiff = abap_true.                 " latest request differs
+    ENDIF.
+
+    IF lv_cdiff = abap_true.
+      IF lv_labels IS INITIAL.
+        lv_labels = ls_comp-label.
+      ELSE.
+        CONCATENATE lv_labels ls_comp-label INTO lv_labels SEPARATED BY ', '.
+      ENDIF.
+    ENDIF.
+
+  ENDLOOP.
+
+* Headline columns = most recent component in each system
+  ps_output-dev_korr   = ls_devhd-korr.
+  ps_output-dev_versno = ls_devhd-versno.
+  ps_output-dev_date   = ls_devhd-datum.
+  ps_output-dev_author = ls_devhd-author.
+  ps_output-prd_korr   = ls_prdhd-korr.
+  ps_output-prd_versno = ls_prdhd-versno.
+  ps_output-prd_date   = ls_prdhd-datum.
+  ps_output-prd_author = ls_prdhd-author.
+
+* Verdict
+  IF lv_anyhit = abap_false.
+    ps_output-mismatch = gc_no.
+    ps_output-remarks  = 'No version history in either system'.
+
+  ELSEIF lv_devany = abap_false.
+    ps_output-mismatch = gc_yes.
+    ps_output-remarks  = 'No version history in Source - present in Target'.
+
+  ELSEIF lv_prdany = abap_false.
+    ps_output-mismatch = gc_yes.
+    ps_output-remarks  = 'No version history in Target - present in Source'.
+
+  ELSEIF lv_labels IS NOT INITIAL.
+    ps_output-mismatch = gc_yes.
+    CONCATENATE 'Difference in:' lv_labels INTO ps_output-remarks
+                SEPARATED BY space.
 
   ELSE.
-    pv_flag = gc_yes.
-    pv_rem  = 'Latest transport request differs between Source and Target'.
-
+    ps_output-mismatch = gc_no.
+    ps_output-remarks  = 'Identical in both systems'.
   ENDIF.
 
-ENDFORM.                    "f_evaluate_mismatch
+ENDFORM.                    "f_compare_object
+
+*&---------------------------------------------------------------------*
+*&      Form  F_KEEP_LATEST
+*&---------------------------------------------------------------------*
+*  Keeps the more recent of the current headline and a new component
+*  version (by date / time / version number).
+*----------------------------------------------------------------------*
+FORM f_keep_latest USING    ps_new  TYPE ty_version
+                   CHANGING ps_head TYPE ty_version.
+
+  IF ps_head-found = abap_false
+     OR ps_new-datum > ps_head-datum
+     OR ( ps_new-datum = ps_head-datum AND ps_new-zeit > ps_head-zeit ).
+    ps_head = ps_new.
+  ENDIF.
+
+ENDFORM.                    "f_keep_latest
 
 *&---------------------------------------------------------------------*
 *&      Form  F_GET_VERSION
 *&---------------------------------------------------------------------*
-*  Reads the version directory (VRSD) of a single object from the system
-*  addressed by P_DEST ('NONE' = local logon system) using the standard
-*  remote-enabled module RFC_READ_TABLE, and returns the latest version
-*  entry (by date / time / version number).
+*  Reads VRSD for one version-management object type (P_VTYPE) of an
+*  object from the system addressed by P_DEST ('NONE' = local) using the
+*  standard remote-enabled module RFC_READ_TABLE, returning the latest
+*  version entry.
 *----------------------------------------------------------------------*
-FORM f_get_version USING    p_objtype TYPE tadir-object
+FORM f_get_version USING    p_vtype   TYPE vrsd-objtype
                             p_objname TYPE tadir-obj_name
                             p_dest    TYPE rfcdest
                    CHANGING ps_ver    TYPE ty_version.
 
-  DATA: lv_vtype   TYPE vrsd-objtype,
-        lv_name    TYPE vrsd-objname,
+  DATA: lv_name    TYPE vrsd-objname,
         lt_options TYPE STANDARD TABLE OF rfc_db_opt,
         lt_fields  TYPE STANDARD TABLE OF rfc_db_fld,
         lt_data    TYPE STANDARD TABLE OF tab512,
@@ -287,24 +314,14 @@ FORM f_get_version USING    p_objtype TYPE tadir-object
         lv_msg     TYPE char200.
 
   CLEAR ps_ver.
+  lv_name = p_objname.
 
-* Map the R3TR object type to its version-management (VRSD) object type.
-  PERFORM f_map_vrsd_type USING p_objtype CHANGING lv_vtype.
-  IF lv_vtype IS INITIAL.
-    ps_ver-supported = abap_false.
-    RETURN.
-  ENDIF.
-  ps_ver-supported = abap_true.
-  lv_name          = p_objname.
-
-* WHERE OBJTYPE = '<vtype>' AND OBJNAME = '<name>'
-  CONCATENATE `OBJTYPE = '` lv_vtype `'` INTO ls_options-text.
+  CONCATENATE `OBJTYPE = '` p_vtype `'` INTO ls_options-text.
   APPEND ls_options TO lt_options.
   CLEAR ls_options.
   CONCATENATE `AND OBJNAME = '` lv_name `'` INTO ls_options-text.
   APPEND ls_options TO lt_options.
 
-* Requested fields - the data rows are delimited in this same order.
   ls_fields-fieldname = 'VERSNO'.  APPEND ls_fields TO lt_fields.
   ls_fields-fieldname = 'KORRNUM'. APPEND ls_fields TO lt_fields.
   ls_fields-fieldname = 'AUTHOR'.  APPEND ls_fields TO lt_fields.
@@ -334,7 +351,6 @@ FORM f_get_version USING    p_objtype TYPE tadir-object
     RETURN.
   ENDIF.
 
-* Parse the delimited rows into a typed table.
   LOOP AT lt_data INTO ls_data.
     CLEAR ls_row.
     SPLIT ls_data-wa AT '|'
@@ -347,7 +363,6 @@ FORM f_get_version USING    p_objtype TYPE tadir-object
     RETURN.
   ENDIF.
 
-* Latest entry first (most recent date / time / version number).
   SORT lt_rows BY datum DESCENDING zeit DESCENDING versno DESCENDING.
 
   READ TABLE lt_rows INTO ls_row INDEX 1.
@@ -357,49 +372,58 @@ FORM f_get_version USING    p_objtype TYPE tadir-object
     ps_ver-korr   = ls_row-korr.
     ps_ver-author = ls_row-author.
     ps_ver-datum  = ls_row-datum.
+    ps_ver-zeit   = ls_row-zeit.
   ENDIF.
 
 ENDFORM.                    "f_get_version
 
 *&---------------------------------------------------------------------*
-*&      Form  F_MAP_VRSD_TYPE
+*&      Form  F_MAP_VRSD_TYPES
 *&---------------------------------------------------------------------*
-*  Maps a TADIR (R3TR) object type to the version-management (VRSD)
-*  object type under which the object's source / definition versions are
-*  stored, using the object name unchanged. Returns space when the type
-*  is not mapped (the row is then flagged "not mapped" in the output).
+*  Returns the version-managed component(s) of a TADIR (R3TR) object type
+*  and a readable label per component. A program is compared on both its
+*  source code (REPS) and its text elements / text pool (REPT). Returns
+*  an empty list when the type is not mapped.
 *
-*  Extend the CASE for further object types. Composite objects (function
-*  groups, classes) version their parts under structured names and need
-*  dedicated handling - add them here when required.
+*  Extend the CASE for further object types.
 *----------------------------------------------------------------------*
-FORM f_map_vrsd_type USING    p_objtype TYPE tadir-object
-                     CHANGING p_vtype   TYPE vrsd-objtype.
+FORM f_map_vrsd_types USING    p_objtype TYPE tadir-object
+                      CHANGING pt_comp   TYPE STANDARD TABLE.
 
-  CLEAR p_vtype.
+  DATA: ls_comp TYPE ty_comp.
+
+  REFRESH pt_comp.
 
   CASE p_objtype.
-    WHEN 'PROG'.  p_vtype = 'REPS'.   " report / include source
-    WHEN 'TABL'.  p_vtype = 'TABD'.   " table / structure definition
-    WHEN 'VIEW'.  p_vtype = 'VIED'.   " view
-    WHEN 'DTEL'.  p_vtype = 'DTED'.   " data element
-    WHEN 'DOMA'.  p_vtype = 'DOMD'.   " domain
-    WHEN 'SHLP'.  p_vtype = 'SHLD'.   " search help
-    WHEN 'TTYP'.  p_vtype = 'TTYD'.   " table type
-    WHEN 'ENQU'.  p_vtype = 'ENQD'.   " lock object
-    WHEN 'MSAG'.  p_vtype = 'MSAD'.   " message class
-    WHEN OTHERS.  CLEAR p_vtype.      " not mapped
+    WHEN 'PROG'.
+      ls_comp-vtype = 'REPS'. ls_comp-label = 'Source'.        APPEND ls_comp TO pt_comp.
+      ls_comp-vtype = 'REPT'. ls_comp-label = 'Text elements'. APPEND ls_comp TO pt_comp.
+    WHEN 'TABL'.
+      ls_comp-vtype = 'TABD'. ls_comp-label = 'Definition'.    APPEND ls_comp TO pt_comp.
+    WHEN 'VIEW'.
+      ls_comp-vtype = 'VIED'. ls_comp-label = 'Definition'.    APPEND ls_comp TO pt_comp.
+    WHEN 'DTEL'.
+      ls_comp-vtype = 'DTED'. ls_comp-label = 'Definition'.    APPEND ls_comp TO pt_comp.
+    WHEN 'DOMA'.
+      ls_comp-vtype = 'DOMD'. ls_comp-label = 'Definition'.    APPEND ls_comp TO pt_comp.
+    WHEN 'SHLP'.
+      ls_comp-vtype = 'SHLD'. ls_comp-label = 'Definition'.    APPEND ls_comp TO pt_comp.
+    WHEN 'TTYP'.
+      ls_comp-vtype = 'TTYD'. ls_comp-label = 'Definition'.    APPEND ls_comp TO pt_comp.
+    WHEN 'ENQU'.
+      ls_comp-vtype = 'ENQD'. ls_comp-label = 'Definition'.    APPEND ls_comp TO pt_comp.
+    WHEN 'MSAG'.
+      ls_comp-vtype = 'MSAD'. ls_comp-label = 'Definition'.    APPEND ls_comp TO pt_comp.
+      ls_comp-vtype = 'MESS'. ls_comp-label = 'Messages'.      APPEND ls_comp TO pt_comp.
+    WHEN OTHERS.
+*     Not mapped.
   ENDCASE.
 
-ENDFORM.                    "f_map_vrsd_type
+ENDFORM.                    "f_map_vrsd_types
 
 *&---------------------------------------------------------------------*
 *&      Form  F_DISPLAY_ALV
 *&---------------------------------------------------------------------*
-*  Builds the field catalogue and shows the result in a standard ALV
-*  grid. The standard ALV toolbar provides filter, sort, download to
-*  spreadsheet / local file, layout management and print.
-*----------------------------------------------------------------------*
 FORM f_display_alv.
 
   PERFORM f_build_fieldcat.
@@ -428,8 +452,6 @@ ENDFORM.                    "f_display_alv
 *&---------------------------------------------------------------------*
 *&      Form  F_BUILD_FIELDCAT
 *&---------------------------------------------------------------------*
-*  Assembles the ALV field catalogue for the output table.
-*----------------------------------------------------------------------*
 FORM f_build_fieldcat.
 
   CLEAR gt_fieldc.
@@ -452,8 +474,6 @@ ENDFORM.                    "f_build_fieldcat
 *&---------------------------------------------------------------------*
 *&      Form  F_ADD_FIELD
 *&---------------------------------------------------------------------*
-*  Helper to append a single column definition to the field catalogue.
-*----------------------------------------------------------------------*
 FORM f_add_field USING p_field  TYPE c
                        p_text   TYPE c
                        p_length TYPE i.
