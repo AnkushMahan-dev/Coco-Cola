@@ -78,6 +78,7 @@ TYPES: BEGIN OF ty_output,
          prd_date   TYPE sydatum,
          prd_user   TYPE syuname,
          mismatch   TYPE char15,           " Status (Match / TR Mismatch...)
+         tr_mism    TYPE char3,            " 'YES' only when TR differs
          remarks    TYPE char100,
        END OF ty_output.
 
@@ -505,6 +506,11 @@ FORM f_add_result USING p_objtype   TYPE tadir-object
 
   PERFORM f_evaluate USING ls_dev ls_prd lv_method lv_srcstat
                      CHANGING ls_out-mismatch ls_out-remarks.
+
+* Dedicated TR-mismatch flag (filled only when the requests differ).
+  IF ls_out-mismatch = 'TR Mismatch'.
+    ls_out-tr_mism = 'YES'.
+  ENDIF.
 
   APPEND ls_out TO gt_output.
 
@@ -1257,6 +1263,7 @@ FORM f_build_fieldcat.
   PERFORM f_add_field USING 'PRD_DATE' 'Target Date'      14.
   PERFORM f_add_field USING 'PRD_USER' 'Target By'        14.
   PERFORM f_add_field USING 'MISMATCH' 'Status'           15.
+  PERFORM f_add_field USING 'TR_MISM'  'TR Mismatch'      12.
   PERFORM f_add_field USING 'REMARKS'  'Remarks'          70.
 
 ENDFORM.                    "f_build_fieldcat
