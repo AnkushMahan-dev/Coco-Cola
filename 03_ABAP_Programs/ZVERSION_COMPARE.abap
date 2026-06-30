@@ -77,7 +77,7 @@ TYPES: BEGIN OF ty_output,
          prd_req    TYPE vrsd-korrnum,
          prd_date   TYPE sydatum,
          prd_user   TYPE syuname,
-         mismatch   TYPE char3,
+         mismatch   TYPE char15,           " Status (Match / TR Mismatch...)
          remarks    TYPE char100,
        END OF ty_output.
 
@@ -714,6 +714,9 @@ FORM f_get_active_one USING    p_objtype TYPE clike
     RETURN.
   ENDIF.
 
+  DATA lv_active TYPE vrsd-versno.
+
+* Date / author from the active entry (versno 0); else the newest entry.
   CLEAR ls_vrsd.
   LOOP AT lt_svrs INTO ls_vrsd WHERE versno IS INITIAL.
     EXIT.
@@ -724,9 +727,19 @@ FORM f_get_active_one USING    p_objtype TYPE clike
   ENDIF.
 
   ps_ver-found = abap_true.
-  ps_ver-req   = ls_vrsd-korrnum.
   ps_ver-date  = ls_vrsd-datum.
   ps_ver-user  = ls_vrsd-author.
+  ps_ver-req   = ls_vrsd-korrnum.
+
+* The active entry often carries no request - take the request from the
+* most recent version entry that actually has one.
+  IF ps_ver-req IS INITIAL.
+    SORT lt_svrs BY datum DESCENDING zeit DESCENDING versno DESCENDING.
+    LOOP AT lt_svrs INTO ls_vrsd WHERE korrnum IS NOT INITIAL.
+      ps_ver-req = ls_vrsd-korrnum.
+      EXIT.
+    ENDLOOP.
+  ENDIF.
 
 ENDFORM.                    "f_get_active_one
 
@@ -737,78 +750,56 @@ FORM f_evaluate USING    ps_dev    TYPE ty_ver
                          ps_prd    TYPE ty_ver
                          p_method  TYPE char10
                          p_srcstat TYPE char1
-                CHANGING pv_flag   TYPE char3
+                CHANGING pv_flag   TYPE char15
                          pv_rem    TYPE char100.
-
-  DATA: lv_same TYPE abap_bool.
 
   CLEAR: pv_flag, pv_rem.
 
-* Preferred verdict: actual source comparison.
+* Preferred verdict: actual source comparison (when available).
   IF p_srcstat = 'N'.
-    pv_flag = gc_no.
+    pv_flag = 'Match'.
     pv_rem  = 'Active source identical in both systems'.
     RETURN.
   ELSEIF p_srcstat = 'Y'.
-    pv_flag = gc_yes.
+    pv_flag = 'Source Mismatch'.
     pv_rem  = 'Active source differs between Source and Target'.
     RETURN.
   ENDIF.
 
-* Fallback: metadata (request / date / author).
+* Read errors.
   IF ps_prd-rc <> 0.
-    pv_flag = space.
+    pv_flag = 'Read Error'.
     CONCATENATE 'Target read error:' ps_prd-rctext INTO pv_rem SEPARATED BY space.
     RETURN.
   ELSEIF ps_dev-rc <> 0.
-    pv_flag = space.
+    pv_flag = 'Read Error'.
     CONCATENATE 'Source read error:' ps_dev-rctext INTO pv_rem SEPARATED BY space.
     RETURN.
   ENDIF.
 
+* Existence.
   IF ps_dev-found = abap_false AND ps_prd-found = abap_false.
-    pv_flag = gc_no.
+    pv_flag = 'Not Found'.
     pv_rem  = 'Object does not exist in either system'.
     RETURN.
   ELSEIF ps_dev-found = abap_true AND ps_prd-found = abap_false.
-    pv_flag = gc_yes.
+    pv_flag = 'Missing Target'.
     pv_rem  = 'Object exists in Source only - missing in Target'.
     RETURN.
   ELSEIF ps_dev-found = abap_false AND ps_prd-found = abap_true.
-    pv_flag = gc_yes.
+    pv_flag = 'Missing Source'.
     pv_rem  = 'Object exists in Target only - missing in Source'.
     RETURN.
   ENDIF.
 
-  IF p_method = gc_vrsd.
-    IF ps_dev-req = ps_prd-req.
-      lv_same = abap_true.
-    ENDIF.
+* Both present - compare the transport request.
+  IF ps_dev-req = ps_prd-req.
+    pv_flag = 'Match'.
+    pv_rem  = 'Transport request identical in both systems'.
   ELSE.
-*   Active version: compare the request when available, else date + author.
-    IF ps_dev-req IS NOT INITIAL OR ps_prd-req IS NOT INITIAL.
-      IF ps_dev-req = ps_prd-req.
-        lv_same = abap_true.
-      ENDIF.
-    ELSEIF ps_dev-date = ps_prd-date AND ps_dev-user = ps_prd-user.
-      lv_same = abap_true.
-    ENDIF.
-  ENDIF.
-
-  IF lv_same = abap_true.
-    pv_flag = gc_no.
-    IF p_method = gc_vrsd.
-      pv_rem = 'Latest transport request identical in both systems'.
-    ELSE.
-      pv_rem = 'Active version identical in both systems'.
-    ENDIF.
-  ELSE.
-    pv_flag = gc_yes.
-    IF p_method = gc_vrsd.
-      pv_rem = 'Latest transport request differs between Source and Target'.
-    ELSE.
-      pv_rem = 'Active version differs between Source and Target'.
-    ENDIF.
+    pv_flag = 'TR Mismatch'.
+    CONCATENATE 'TR differs - Source:' ps_dev-req 'Target:' ps_prd-req
+                INTO pv_rem SEPARATED BY space.
   ENDIF.
 
 ENDFORM.                    "f_evaluate
@@ -1188,7 +1179,13 @@ FORM f_build_log.
     ls_log-tgt_req  = ls_output-prd_req.
     ls_log-tgt_date = ls_output-prd_date.
     ls_log-tgt_user = ls_output-prd_user.
-    ls_log-mismatch = ls_output-mismatch.
+*   Log MISMATCH is YES/NO (CHAR3); the full status is kept in REMARKS.
+    IF ls_output-mismatch = 'Match' OR ls_output-mismatch = 'Not Found'
+       OR ls_output-mismatch IS INITIAL.
+      ls_log-mismatch = 'NO'.
+    ELSE.
+      ls_log-mismatch = 'YES'.
+    ENDIF.
     ls_log-remarks  = ls_output-remarks.
     APPEND ls_log TO gt_log.
   ENDLOOP.
@@ -1259,7 +1256,7 @@ FORM f_build_fieldcat.
   PERFORM f_add_field USING 'PRD_REQ'  'Target Request'   20.
   PERFORM f_add_field USING 'PRD_DATE' 'Target Date'      14.
   PERFORM f_add_field USING 'PRD_USER' 'Target By'        14.
-  PERFORM f_add_field USING 'MISMATCH' 'Mismatch'          8.
+  PERFORM f_add_field USING 'MISMATCH' 'Status'           15.
   PERFORM f_add_field USING 'REMARKS'  'Remarks'          70.
 
 ENDFORM.                    "f_build_fieldcat
