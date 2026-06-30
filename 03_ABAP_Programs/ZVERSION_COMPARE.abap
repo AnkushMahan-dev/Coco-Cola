@@ -265,6 +265,12 @@ FORM f_expand_prog USING p_prog TYPE tadir-obj_name.
     IF lv_inc = p_prog OR lv_inc IS INITIAL.
       CONTINUE.
     ENDIF.
+*   Skip generated class / interface section includes (padded with '=',
+*   e.g. ...=======CU / ...=======IU) - they belong to a class/interface
+*   the program merely uses, not to the program itself.
+    IF lv_inc CA '='.
+      CONTINUE.
+    ENDIF.
 *   Only custom includes - skip SAP system includes (%_*, <...>, CL_*...).
     PERFORM f_is_custom USING lv_inc CHANGING lv_cust.
     IF lv_cust = abap_false.
