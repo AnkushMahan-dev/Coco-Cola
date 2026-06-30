@@ -507,8 +507,10 @@ FORM f_add_result USING p_objtype   TYPE tadir-object
   PERFORM f_evaluate USING ls_dev ls_prd lv_method lv_srcstat
                      CHANGING ls_out-mismatch ls_out-remarks.
 
-* Dedicated TR-mismatch flag (filled only when the requests differ).
-  IF ls_out-mismatch = 'TR Mismatch'.
+* Dedicated TR-mismatch flag - set whenever both requests are present and
+* differ, independent of the Status (which may be driven by source compare).
+  IF ls_out-dev_req IS NOT INITIAL AND ls_out-prd_req IS NOT INITIAL
+     AND ls_out-dev_req <> ls_out-prd_req.
     ls_out-tr_mism = 'YES'.
   ENDIF.
 
