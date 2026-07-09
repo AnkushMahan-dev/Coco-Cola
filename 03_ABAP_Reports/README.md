@@ -22,8 +22,14 @@ fully featured ALV grid.
 1. Every object entered is read and treated as / resolved to its **main
    program**:
    - If the input is an **include** (`TRDIR-SUBC = 'I'`), its main
-     program is resolved via `RS_GET_MAINPROGRAMS`. An orphan include
-     with no master is reported on its own.
+     program is resolved by `RESOLVE_MAIN_PROGRAMS`: it first calls
+     `RS_GET_MAINPROGRAMS` and, if that function module is unavailable
+     or returns nothing, falls back to the standard include-index table
+     `D010INC` (`MASTER` / `INCLUDE`). An orphan include with no master
+     is reported on its own.
+   - A **fan-out guard** (`GC_MAX_MAINPROGRAMS`, default 50) caps how
+     many main programs a single shared include is expanded into; the
+     excess is logged rather than processed.
    - Otherwise the input is treated directly as the main program.
 2. All includes of the main program are retrieved via
    `RS_GET_ALL_INCLUDES`.

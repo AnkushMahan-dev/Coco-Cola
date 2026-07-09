@@ -34,6 +34,9 @@ TABLES trdir.
 *&---------------------------------------------------------------------*
 *& Global type definitions
 *&---------------------------------------------------------------------*
+* Plain list of program / object names
+TYPES tt_program TYPE STANDARD TABLE OF programm.
+
 TYPES: BEGIN OF ty_output,
          main_program TYPE programm,      " Original / actual main program
          object_name  TYPE programm,      " Program or include name
@@ -53,6 +56,12 @@ TYPES: BEGIN OF ty_message,
 CONSTANTS: gc_type_prog    TYPE char10      VALUE 'PROG',
            gc_type_include TYPE char10      VALUE 'INCLUDE',
            gc_subc_include TYPE trdir-subc  VALUE 'I'.
+
+* Fan-out guard: a widely shared include can belong to a very large
+* number of main programs. Resolving and fully expanding all of them
+* would be extremely expensive, so the number of main programs that a
+* single include is expanded into is capped. Excess mains are logged.
+CONSTANTS gc_max_mainprograms TYPE i VALUE 50.
 
 *&---------------------------------------------------------------------*
 *& Selection screen
@@ -92,6 +101,14 @@ CLASS lcl_line_counter DEFINITION FINAL.
       "! Determines the main program(s) and collects all rows.
       process_object
         IMPORTING iv_object TYPE programm,
+
+      "! Resolves the main program(s) that a given include belongs to.
+      "! Uses RS_GET_MAINPROGRAMS and falls back to table D010INC when the
+      "! function module is unavailable or returns nothing. Returns an
+      "! empty table for an orphan include (no master program).
+      resolve_main_programs
+        IMPORTING iv_include     TYPE programm
+        RETURNING VALUE(rt_main) TYPE tt_program,
 
       "! Collects the main program and all of its includes for output.
       collect_main_and_includes
@@ -185,10 +202,12 @@ CLASS lcl_line_counter IMPLEMENTATION.
 
   METHOD process_object.
 
-    DATA: lv_subc TYPE trdir-subc,
-          lt_main TYPE STANDARD TABLE OF programm,
-          lv_main TYPE programm,
-          lv_text TYPE string.
+    DATA: lv_subc  TYPE trdir-subc,
+          lt_main  TYPE tt_program,
+          lv_main  TYPE programm,
+          lv_count TYPE i,
+          lv_num   TYPE char10,
+          lv_text  TYPE string.
 
     " Authorization check before touching the source.
     IF is_authorized( iv_object ) = abap_false.
@@ -209,15 +228,9 @@ CLASS lcl_line_counter IMPLEMENTATION.
 
     IF lv_subc = gc_subc_include.
       " The input is an include -> determine its main program(s).
-      CALL FUNCTION 'RS_GET_MAINPROGRAMS'
-        EXPORTING
-          name         = iv_object
-        TABLES
-          mainprograms = lt_main
-        EXCEPTIONS
-          OTHERS       = 1.
+      lt_main = resolve_main_programs( iv_object ).
 
-      IF sy-subrc <> 0 OR lt_main IS INITIAL.
+      IF lt_main IS INITIAL.
         " Orphan include without a master program: report the include
         " itself as its own object so that its lines are still counted.
         add_output_row( iv_main_program = iv_object
@@ -227,7 +240,24 @@ CLASS lcl_line_counter IMPLEMENTATION.
         RETURN.
       ENDIF.
 
+      " Fan-out guard: cap the number of main programs a single include
+      " is expanded into (a shared include may be used by thousands).
+      lv_count = lines( lt_main ).
+      IF lv_count > gc_max_mainprograms.
+        WRITE lv_count TO lv_num LEFT-JUSTIFIED.
+        CONCATENATE 'Include' iv_object 'is used by' lv_num
+                    'main programs - only the first'
+                    INTO lv_text SEPARATED BY space.
+        WRITE gc_max_mainprograms TO lv_num LEFT-JUSTIFIED.
+        CONCATENATE lv_text lv_num 'are expanded'
+                    INTO lv_text SEPARATED BY space.
+        add_message( iv_object = iv_object iv_text = lv_text ).
+      ENDIF.
+
       LOOP AT lt_main INTO lv_main.
+        IF sy-tabix > gc_max_mainprograms.
+          EXIT.
+        ENDIF.
         collect_main_and_includes( lv_main ).
       ENDLOOP.
 
@@ -238,6 +268,49 @@ CLASS lcl_line_counter IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.                    "process_object
+
+  METHOD resolve_main_programs.
+
+    DATA: lt_d010inc TYPE STANDARD TABLE OF d010inc,
+          ls_d010inc TYPE d010inc,
+          lv_master  TYPE programm.
+
+    " Primary path: standard function module. It resolves the master
+    " program(s) of an include (including function-group main programs).
+    CALL FUNCTION 'RS_GET_MAINPROGRAMS'
+      EXPORTING
+        name         = iv_include
+      TABLES
+        mainprograms = rt_main
+      EXCEPTIONS
+        OTHERS       = 1.
+
+    " De-duplicate and drop empty entries returned by the FM.
+    DELETE rt_main WHERE table_line IS INITIAL.
+    SORT rt_main.
+    DELETE ADJACENT DUPLICATES FROM rt_main.
+
+    IF rt_main IS NOT INITIAL.
+      RETURN.
+    ENDIF.
+
+    " Fallback path: the include-index table D010INC holds the
+    " MASTER (main program) / INCLUDE relationship directly. This is
+    " used when the function module is unavailable or returned nothing.
+    SELECT * FROM d010inc INTO TABLE lt_d010inc
+             WHERE include = iv_include.
+
+    LOOP AT lt_d010inc INTO ls_d010inc.
+      lv_master = ls_d010inc-master.
+      IF lv_master IS NOT INITIAL AND lv_master <> iv_include.
+        APPEND lv_master TO rt_main.
+      ENDIF.
+    ENDLOOP.
+
+    SORT rt_main.
+    DELETE ADJACENT DUPLICATES FROM rt_main.
+
+  ENDMETHOD.                    "resolve_main_programs
 
   METHOD collect_main_and_includes.
 
