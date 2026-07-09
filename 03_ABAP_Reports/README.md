@@ -22,17 +22,16 @@ fully featured ALV grid.
 1. Every object entered is read and treated as / resolved to its **main
    program**:
    - If the input is an **include** (`TRDIR-SUBC = 'I'`), its main
-     program is resolved by `RESOLVE_MAIN_PROGRAMS`: it first calls
-     `RS_GET_MAINPROGRAMS` and, if that function module is unavailable
-     or returns nothing, falls back to the standard include-index table
-     `D010INC` (`MASTER` / `INCLUDE`). An orphan include with no master
-     is reported on its own.
+     program is resolved by `RESOLVE_MAIN_PROGRAMS`, which reads the
+     standard program include index table `D010INC` (`MASTER` /
+     `INCLUDE`) directly — no function module. An orphan include with no
+     master is reported on its own.
    - A **fan-out guard** (`GC_MAX_MAINPROGRAMS`, default 50) caps how
      many main programs a single shared include is expanded into; the
      excess is logged rather than processed.
    - Otherwise the input is treated directly as the main program.
-2. All includes of the main program are retrieved via
-   `RS_GET_ALL_INCLUDES`.
+2. All includes of the main program are read from table `D010INC`
+   (`SELECT include ... WHERE master = <main>`).
 3. The complete active source of the main program and of each include is
    read with `READ REPORT`, and its line count is taken with `lines( )`.
 4. Rows are de-duplicated so the same object is not counted twice.
@@ -52,8 +51,10 @@ total** of the line count are provided.
 
 - Targets SAP ECC 6.0 (NetWeaver 7.0x+). No S/4HANA-only syntax or
   classes are used.
-- Uses standard, ECC-available components: `TRDIR`, `RS_GET_MAINPROGRAMS`,
-  `RS_GET_ALL_INCLUDES`, `READ REPORT`, `CL_SALV_TABLE`.
+- Uses standard, ECC-available components only: tables `TRDIR` and
+  `D010INC`, the `READ REPORT` statement, and `CL_SALV_TABLE`. The
+  object relationships are read from database tables rather than
+  function modules.
 
 ## Error handling
 

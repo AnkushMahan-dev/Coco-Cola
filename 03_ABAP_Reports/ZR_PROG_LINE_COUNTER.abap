@@ -102,10 +102,10 @@ CLASS lcl_line_counter DEFINITION FINAL.
       process_object
         IMPORTING iv_object TYPE programm,
 
-      "! Resolves the main program(s) that a given include belongs to.
-      "! Uses RS_GET_MAINPROGRAMS and falls back to table D010INC when the
-      "! function module is unavailable or returns nothing. Returns an
-      "! empty table for an orphan include (no master program).
+      "! Resolves the main program(s) that a given include belongs to by
+      "! reading the program include index table D010INC directly (no
+      "! function module). Returns an empty table for an orphan include
+      "! (no master program).
       resolve_main_programs
         IMPORTING iv_include     TYPE programm
         RETURNING VALUE(rt_main) TYPE tt_program,
@@ -271,42 +271,17 @@ CLASS lcl_line_counter IMPLEMENTATION.
 
   METHOD resolve_main_programs.
 
-    DATA: lt_d010inc TYPE STANDARD TABLE OF d010inc,
-          ls_d010inc TYPE d010inc,
-          lv_master  TYPE programm.
+    " Resolve the master (main program) of an include directly from the
+    " program include index table D010INC (MASTER / INCLUDE). No function
+    " module is required - the relationship is read straight from the
+    " table, which is available in ECC.
+    SELECT master FROM d010inc INTO TABLE rt_main
+           WHERE include = iv_include.
 
-    " Primary path: standard function module. It resolves the master
-    " program(s) of an include (including function-group main programs).
-    CALL FUNCTION 'RS_GET_MAINPROGRAMS'
-      EXPORTING
-        name         = iv_include
-      TABLES
-        mainprograms = rt_main
-      EXCEPTIONS
-        OTHERS       = 1.
-
-    " De-duplicate and drop empty entries returned by the FM.
-    DELETE rt_main WHERE table_line IS INITIAL.
-    SORT rt_main.
-    DELETE ADJACENT DUPLICATES FROM rt_main.
-
-    IF rt_main IS NOT INITIAL.
-      RETURN.
-    ENDIF.
-
-    " Fallback path: the include-index table D010INC holds the
-    " MASTER (main program) / INCLUDE relationship directly. This is
-    " used when the function module is unavailable or returned nothing.
-    SELECT * FROM d010inc INTO TABLE lt_d010inc
-             WHERE include = iv_include.
-
-    LOOP AT lt_d010inc INTO ls_d010inc.
-      lv_master = ls_d010inc-master.
-      IF lv_master IS NOT INITIAL AND lv_master <> iv_include.
-        APPEND lv_master TO rt_main.
-      ENDIF.
-    ENDLOOP.
-
+    " Drop empty rows and self-references, then de-duplicate: an include
+    " may be used by several main programs, each of which is returned.
+    DELETE rt_main WHERE table_line IS INITIAL
+                      OR table_line = iv_include.
     SORT rt_main.
     DELETE ADJACENT DUPLICATES FROM rt_main.
 
@@ -314,9 +289,8 @@ CLASS lcl_line_counter IMPLEMENTATION.
 
   METHOD collect_main_and_includes.
 
-    DATA: lt_includes TYPE STANDARD TABLE OF rs38l_incl,
-          lv_include  TYPE rs38l_incl,
-          lv_obj      TYPE programm,
+    DATA: lt_includes TYPE tt_program,
+          lv_include  TYPE programm,
           lv_lines    TYPE i,
           lv_text     TYPE string.
 
@@ -333,43 +307,29 @@ CLASS lcl_line_counter IMPLEMENTATION.
       add_message( iv_object = iv_main_program iv_text = lv_text ).
     ENDIF.
 
-    " Retrieve all includes belonging to the main program.
-    " RS_GET_ALL_INCLUDES is a standard, ECC-compatible function module.
-    CALL FUNCTION 'RS_GET_ALL_INCLUDES'
-      EXPORTING
-        program      = iv_main_program
-      TABLES
-        includetab   = lt_includes
-      EXCEPTIONS
-        not_existent = 1
-        no_program   = 2
-        OTHERS       = 3.
+    " Retrieve all includes belonging to the main program directly from
+    " the program include index table D010INC (MASTER / INCLUDE). No
+    " function module is required.
+    SELECT include FROM d010inc INTO TABLE lt_includes
+           WHERE master = iv_main_program.
 
-    IF sy-subrc <> 0.
-      " Main program has no resolvable includes - not an error, simply
-      " nothing more to add.
-      RETURN.
-    ENDIF.
-
+    " Drop empty rows and the main program itself, then de-duplicate.
+    DELETE lt_includes WHERE table_line IS INITIAL
+                          OR table_line = iv_main_program.
     SORT lt_includes.
     DELETE ADJACENT DUPLICATES FROM lt_includes.
 
     LOOP AT lt_includes INTO lv_include.
-      IF lv_include IS INITIAL OR lv_include = iv_main_program.
-        CONTINUE.
-      ENDIF.
-
-      lv_obj   = lv_include.
-      lv_lines = get_line_count( lv_obj ).
+      lv_lines = get_line_count( lv_include ).
       IF lv_lines >= 0.
         add_output_row( iv_main_program = iv_main_program
-                        iv_object_name  = lv_obj
+                        iv_object_name  = lv_include
                         iv_object_type  = gc_type_include
                         iv_lines        = lv_lines ).
       ELSE.
-        CONCATENATE 'Include' lv_obj 'of' iv_main_program
+        CONCATENATE 'Include' lv_include 'of' iv_main_program
                     'could not be read' INTO lv_text SEPARATED BY space.
-        add_message( iv_object = lv_obj iv_text = lv_text ).
+        add_message( iv_object = lv_include iv_text = lv_text ).
       ENDIF.
     ENDLOOP.
 
