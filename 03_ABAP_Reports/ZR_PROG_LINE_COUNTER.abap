@@ -434,7 +434,8 @@ CLASS lcl_line_counter IMPLEMENTATION.
           lo_layout       TYPE REF TO cl_salv_layout,
           ls_layout_key   TYPE salv_s_layout_key,
           lx_msg          TYPE REF TO cx_salv_msg,
-          lx_not_found    TYPE REF TO cx_salv_not_found.
+          lx_not_found    TYPE REF TO cx_salv_not_found,
+          lv_msg          TYPE string.
 
     " Sort GT_OUTPUT so that each main program is followed by its
     " includes; this also drives the ALV subtotal grouping.
@@ -483,7 +484,10 @@ CLASS lcl_line_counter IMPLEMENTATION.
             lo_column->set_medium_text( 'No. of Lines' ).
             lo_column->set_short_text( 'Lines' ).
           CATCH cx_salv_not_found INTO lx_not_found.
-            MESSAGE lx_not_found->get_text( ) TYPE 'S' DISPLAY LIKE 'W'.
+            " Assign the exception text to a variable first; a functional
+            " method call is not allowed as the MESSAGE text operand.
+            lv_msg = lx_not_found->get_text( ).
+            MESSAGE lv_msg TYPE 'S' DISPLAY LIKE 'W'.
         ENDTRY.
 
         " Subtotal by main program and grand total of the line count.
@@ -514,7 +518,8 @@ CLASS lcl_line_counter IMPLEMENTATION.
         lo_alv->display( ).
 
       CATCH cx_salv_msg INTO lx_msg.
-        MESSAGE lx_msg->get_text( ) TYPE 'E'.
+        lv_msg = lx_msg->get_text( ).
+        MESSAGE lv_msg TYPE 'E'.
     ENDTRY.
 
   ENDMETHOD.                    "display_alv
