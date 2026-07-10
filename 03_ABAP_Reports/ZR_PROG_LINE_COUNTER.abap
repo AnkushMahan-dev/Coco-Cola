@@ -35,7 +35,7 @@ TABLES trdir.
 *& Global type definitions
 *&---------------------------------------------------------------------*
 * Plain list of program / object names
-TYPES tt_program TYPE STANDARD TABLE OF programm.
+TYPES tt_program TYPE STANDARD TABLE OF programm WITH DEFAULT KEY.
 
 TYPES: BEGIN OF ty_output,
          main_program TYPE programm,      " Original / actual main program
@@ -43,14 +43,14 @@ TYPES: BEGIN OF ty_output,
          object_type  TYPE char10,        " PROG / INCLUDE
          no_of_lines  TYPE i,             " Total source code lines
        END OF ty_output,
-       tt_output TYPE STANDARD TABLE OF ty_output.
+       tt_output TYPE STANDARD TABLE OF ty_output WITH DEFAULT KEY.
 
 * Message log for objects that could not be processed
 TYPES: BEGIN OF ty_message,
          object_name TYPE programm,
          text        TYPE string,
        END OF ty_message,
-       tt_message TYPE STANDARD TABLE OF ty_message.
+       tt_message TYPE STANDARD TABLE OF ty_message WITH DEFAULT KEY.
 
 * Constants for the object type column and program sub-type
 CONSTANTS: gc_type_prog    TYPE char10      VALUE 'PROG',
