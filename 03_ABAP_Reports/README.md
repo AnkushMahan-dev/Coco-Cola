@@ -38,7 +38,8 @@ dictionary for each type — `SEOCLASS` (class/interface), `TFDIR`
 | Function module | `FUNC` | `SAPL…` main program | the FM's source include |
 | Function group | `FUGR` | `SAPL…` main program | main program + all group includes |
 | Smartform | `SSFO` | generated FM's program | generated function module source |
-| Enhancement impl. | `ENHO` | — | recognised, not counted (see notes) |
+| Enhancement impl. | `ENHO` | the enhancement itself | source-code (hook) plug-in lines |
+| Enh. spot / composite | `ENHS`/`ENHC` | — | recognised, no source to count |
 
 - **Class / interface / function-group includes** are listed from
   `D010INC` and summed; the class pool name is obtained from
@@ -58,10 +59,13 @@ row, not listed individually.
 - **Smartforms** have no editable ABAP source of their own; the report
   counts the **generated function module**, which only exists once the
   form has been generated in the system. Otherwise a message is logged.
-- **Enhancement objects (`ENHO` implementation, `ENHS` spot, `ENHC`
-  composite)** store code in the enhancement framework in several
-  different shapes; this version recognises them but logs that a generic
-  line count is not available.
+- **Enhancement implementations (`ENHO`)** are counted for their
+  **source-code (hook) plug-ins** via the enhancement framework API
+  (`CL_ENH_FACTORY` → `CL_ENH_TOOL_HOOK_IMPL`). Non-source enhancement
+  kinds (class/BAdI enhancements) yield "no readable source-code plug-in".
+- **Enhancement spots (`ENHS`)** and **composite enhancements (`ENHC`)**
+  are definitions with no source plug-in, so they are recognised but not
+  counted.
 
 ## Output (ALV grid — `CL_SALV_TABLE`)
 

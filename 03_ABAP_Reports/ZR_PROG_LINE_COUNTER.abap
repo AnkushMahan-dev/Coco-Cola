@@ -136,6 +136,18 @@ CLASS lcl_line_counter DEFINITION FINAL.
       process_include
         IMPORTING iv_object TYPE programm,
 
+      "! Handles an entered enhancement implementation (ENHO): counts the
+      "! ABAP source lines of its source-code (hook) plug-ins.
+      process_enho
+        IMPORTING iv_object TYPE programm,
+
+      "! Returns the total source-plug-in line count of an enhancement
+      "! implementation via the enhancement framework API.
+      get_enho_lines
+        IMPORTING iv_enh    TYPE clike
+        EXPORTING ev_lines  TYPE i
+                  ev_ok     TYPE abap_bool,
+
       "! Resolves the set of source includes to be counted for the
       "! non-program object kinds (class, interface, function group,
       "! function module, smartform). ev_message is filled when the object
@@ -284,6 +296,12 @@ CLASS lcl_line_counter IMPLEMENTATION.
       RETURN.
     ENDIF.
 
+    " An enhancement implementation is counted via the enhancement API.
+    IF lv_kind = gc_type_enho.
+      process_enho( iv_object ).
+      RETURN.
+    ENDIF.
+
     " Build the list of source includes to be counted for this object.
     IF lv_kind = gc_type_prog.
       " A plain program: its own source is the only source.
@@ -369,6 +387,66 @@ CLASS lcl_line_counter IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.                    "process_include
+
+  METHOD process_enho.
+
+    DATA: lv_lines TYPE i,
+          lv_ok    TYPE abap_bool,
+          lv_text  TYPE string.
+
+    " Count the source-code (hook) plug-in lines of the enhancement
+    " implementation. OBJECT NAME and MAIN PROGRAM both show the
+    " enhancement implementation name.
+    get_enho_lines( EXPORTING iv_enh   = iv_object
+                    IMPORTING ev_lines = lv_lines
+                              ev_ok    = lv_ok ).
+
+    IF lv_ok = abap_false.
+      CONCATENATE 'Enhancement' iv_object
+                  'has no readable source-code plug-in'
+                  INTO lv_text SEPARATED BY space.
+      add_message( iv_object = iv_object iv_text = lv_text ).
+      RETURN.
+    ENDIF.
+
+    add_output_row( iv_main_program = iv_object
+                    iv_object_name  = iv_object
+                    iv_object_type  = gc_type_enho
+                    iv_lines        = lv_lines ).
+
+  ENDMETHOD.                    "process_enho
+
+  METHOD get_enho_lines.
+
+    DATA: lv_enhname TYPE enhname,
+          lo_enh     TYPE REF TO if_enh_tool,
+          lo_hook    TYPE REF TO cl_enh_tool_hook_impl,
+          lt_hooks   TYPE enh_hook_impl_it,
+          ls_hook    TYPE enh_hook_impl,
+          lv_total   TYPE i,
+          lx_root    TYPE REF TO cx_root.
+
+    ev_ok = abap_false.
+    lv_enhname = iv_enh.
+
+    " Read the enhancement implementation and, if it is a source-code
+    " (hook) plug-in, sum the source lines of all its implementations.
+    " Any framework exception (not found / not a hook implementation) is
+    " caught and reported as "no readable source".
+    TRY.
+        lo_enh = cl_enh_factory=>get_enhancement( lv_enhname ).
+        lo_hook ?= lo_enh.
+        lt_hooks = lo_hook->get_hook_impls( ).
+        LOOP AT lt_hooks INTO ls_hook.
+          lv_total = lv_total + lines( ls_hook-source ).
+        ENDLOOP.
+        ev_lines = lv_total.
+        ev_ok    = abap_true.
+      CATCH cx_root INTO lx_root.
+        ev_ok = abap_false.
+    ENDTRY.
+
+  ENDMETHOD.                    "get_enho_lines
 
   METHOD get_object_kind.
 
@@ -527,12 +605,11 @@ CLASS lcl_line_counter IMPLEMENTATION.
         ev_main = lv_prog.
         APPEND lv_inc TO et_includes.
 
-      WHEN gc_type_enho OR gc_type_enhs OR gc_type_enhc.
-        " Enhancement objects (implementation / spot / composite) store
-        " their code in the enhancement framework, not as a plain source
-        " include, so a generic line count is not available in this
-        " version.
-        ev_message = 'Enhancement object recognised - source-line counting is not supported'.
+      WHEN gc_type_enhs OR gc_type_enhc.
+        " Enhancement spots / composite enhancements are definitions and
+        " carry no source-code plug-in, so there is nothing to count.
+        " (Enhancement implementations, ENHO, are counted in PROCESS_ENHO.)
+        ev_message = 'Enhancement spot / composite - no source plug-in to count'.
         RETURN.
 
     ENDCASE.
