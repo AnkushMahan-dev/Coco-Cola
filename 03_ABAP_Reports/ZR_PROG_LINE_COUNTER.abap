@@ -645,14 +645,16 @@ CLASS lcl_line_counter IMPLEMENTATION.
 
     lv_funcname = iv_func.
 
-    " FUNCTION_INCLUDE_INFO returns the source include and the main
-    " program (SAPL...) that a function module belongs to. The optional
-    " GROUP / NAMESPACE parameters are not requested.
+    " FUNCTION_INCLUDE_INFO returns the source INCLUDE (CHANGING) and the
+    " main program via the EXPORTING parameter PNAME. There is no PROGRAM
+    " parameter. FUNCNAME is passed in as CHANGING; GROUP is optional and
+    " not requested.
     CALL FUNCTION 'FUNCTION_INCLUDE_INFO'
+      IMPORTING
+        pname    = lv_program
       CHANGING
         funcname = lv_funcname
         include  = lv_include
-        program  = lv_program
       EXCEPTIONS
         OTHERS   = 1.
 
