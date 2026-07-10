@@ -1,8 +1,10 @@
 # ZR_PROG_LINE_COUNTER — Source Code Line Counter
 
-ECC-compatible ABAP report that counts the source-code lines of a main
-program and all of its associated includes, and displays the result in a
-fully featured ALV grid.
+ECC-compatible ABAP report that counts the source-code lines of each
+program / include entered on the selection screen and displays it, next
+to its main program, in a fully featured ALV grid. Only the objects that
+are actually entered appear in the output — includes of a main program
+are **not** expanded.
 
 ## Files
 
@@ -19,28 +21,32 @@ fully featured ALV grid.
 
 ## Processing logic
 
-1. Every object entered is read and treated as / resolved to its **main
-   program**:
-   - If the input is an **include** (`TRDIR-SUBC = 'I'`), its main
-     program is resolved by `RESOLVE_MAIN_PROGRAMS`, which reads the
-     standard program include index table `D010INC` (`MASTER` /
-     `INCLUDE`) directly — no function module. An orphan include with no
-     master is reported on its own.
-   - A **fan-out guard** (`GC_MAX_MAINPROGRAMS`, default 50) caps how
-     many main programs a single shared include is expanded into; the
-     excess is logged rather than processed.
-   - Otherwise the input is treated directly as the main program.
-2. All includes of the main program are read from table `D010INC`
-   (`SELECT include ... WHERE master = <main>`).
-3. The complete active source of the main program and of each include is
-   read with `READ REPORT`, and its line count is taken with `lines( )`.
-4. Rows are de-duplicated so the same object is not counted twice.
+For **each object entered** on the selection screen exactly one entry is
+produced (the entered object is always what appears in *Object Name*):
+
+1. The object's type is read from `TRDIR-SUBC` (`I` = include).
+2. Its own source lines are counted with `READ REPORT` + `lines( )`.
+3. **Main program input** (report, module pool, function-group main,
+   ...): one row with *Main Program* = *Object Name* = the entered
+   program, type `PROG`.
+4. **Include input** (`SUBC = 'I'`): the main program(s) it belongs to
+   are resolved from table `D010INC` (`SELECT master WHERE include = …`,
+   no function module). One row per main program is produced with
+   *Main Program* = that main program, *Object Name* = the entered
+   include, type `INCLUDE`. An orphan include (no master) is shown with
+   itself as the main program.
+5. A **fan-out guard** (`GC_MAX_MAINPROGRAMS`, default 50) caps how many
+   rows a single widely shared include can produce.
+6. Rows are de-duplicated so the same combination is not listed twice.
+
+Includes of a main program are deliberately **not** listed — only the
+objects entered in the selection screen appear in the result.
 
 ## Output (ALV grid — `CL_SALV_TABLE`)
 
 | Main Program | Object Name | Object Type | Number of Lines |
 |--------------|-------------|-------------|-----------------|
-| Resolved main program | Program / include name | `PROG` / `INCLUDE` | Total source lines |
+| Entered program, or the include's main program | The entered object | `PROG` / `INCLUDE` | Source lines of the entered object |
 
 All standard ALV features are enabled (`set_all`): sorting, multiple
 sorting, filtering, layout variants, Excel export, print, find/search,
@@ -53,8 +59,8 @@ total** of the line count are provided.
   classes are used.
 - Uses standard, ECC-available components only: tables `TRDIR` and
   `D010INC`, the `READ REPORT` statement, and `CL_SALV_TABLE`. The
-  object relationships are read from database tables rather than
-  function modules.
+  include → main-program relationship is read from a database table
+  rather than a function module.
 
 ## Error handling
 

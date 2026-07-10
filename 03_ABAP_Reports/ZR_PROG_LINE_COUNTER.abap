@@ -5,10 +5,15 @@
 *& Application : SAP ECC 6.0 - compatible (NetWeaver 7.00 and higher,
 *&               no S/4HANA-only syntax or classes are used)
 *& Purpose     : For every program / object entered on the selection
-*&               screen, determine the corresponding MAIN program,
-*&               read the complete source code of the main program and
-*&               all of its associated includes, and count the number of
-*&               source-code lines of each object separately.
+*&               screen, count the number of source-code lines of THAT
+*&               object and display it together with its main program:
+*&                 - Object Name  = always the entered object itself
+*&                 - Main Program = the entered program (when a main
+*&                                  program is entered) or the main
+*&                                  program the include belongs to (when
+*&                                  an include is entered)
+*&               Includes of a main program are NOT expanded - only the
+*&               objects actually entered appear in the output.
 *&
 *&               The result is presented in a standard ALV grid that
 *&               supports the full set of ALV features (sort, filter,
@@ -58,9 +63,9 @@ CONSTANTS: gc_type_prog    TYPE char10      VALUE 'PROG',
            gc_subc_include TYPE trdir-subc  VALUE 'I'.
 
 * Fan-out guard: a widely shared include can belong to a very large
-* number of main programs. Resolving and fully expanding all of them
-* would be extremely expensive, so the number of main programs that a
-* single include is expanded into is capped. Excess mains are logged.
+* number of main programs. When an include is entered, one output row is
+* produced per main program it belongs to; this caps that number so the
+* output stays manageable for a common / shared include.
 CONSTANTS gc_max_mainprograms TYPE i VALUE 50.
 
 *&---------------------------------------------------------------------*
@@ -109,10 +114,6 @@ CLASS lcl_line_counter DEFINITION FINAL.
       resolve_main_programs
         IMPORTING iv_include     TYPE programm
         RETURNING VALUE(rt_main) TYPE tt_program,
-
-      "! Collects the main program and all of its includes for output.
-      collect_main_and_includes
-        IMPORTING iv_main_program TYPE programm,
 
       "! Reads the source of an object and returns its line count.
       "! Returns -1 when the source could not be read.
@@ -206,10 +207,9 @@ CLASS lcl_line_counter IMPLEMENTATION.
   METHOD process_object.
 
     DATA: lv_subc  TYPE trdir-subc,
+          lv_lines TYPE i,
           lt_main  TYPE tt_program,
           lv_main  TYPE programm,
-          lv_count TYPE i,
-          lv_num   TYPE char10,
           lv_text  TYPE string.
 
     " Authorization check before touching the source.
@@ -229,45 +229,51 @@ CLASS lcl_line_counter IMPLEMENTATION.
       RETURN.
     ENDIF.
 
+    " Count the source lines of the ENTERED object only. The entered
+    " object is always what appears in the OBJECT NAME column - includes
+    " of a main program are NOT expanded.
+    lv_lines = get_line_count( iv_object ).
+    IF lv_lines < 0.
+      CONCATENATE 'Source of' iv_object 'could not be read'
+                  INTO lv_text SEPARATED BY space.
+      add_message( iv_object = iv_object iv_text = lv_text ).
+      RETURN.
+    ENDIF.
+
     IF lv_subc = gc_subc_include.
-      " The input is an include -> determine its main program(s).
+      " Input is an include:
+      "   OBJECT NAME  = the entered include itself
+      "   MAIN PROGRAM = the main program(s) the include belongs to
       lt_main = resolve_main_programs( iv_object ).
 
       IF lt_main IS INITIAL.
-        " Orphan include without a master program: report the include
-        " itself as its own object so that its lines are still counted.
+        " Orphan include with no master: the include is its own main
+        " program reference.
         add_output_row( iv_main_program = iv_object
                         iv_object_name  = iv_object
                         iv_object_type  = gc_type_include
-                        iv_lines        = get_line_count( iv_object ) ).
-        RETURN.
+                        iv_lines        = lv_lines ).
+      ELSE.
+        " One row per main program the include belongs to (normally one).
+        LOOP AT lt_main INTO lv_main.
+          IF sy-tabix > gc_max_mainprograms.
+            EXIT.
+          ENDIF.
+          add_output_row( iv_main_program = lv_main
+                          iv_object_name  = iv_object
+                          iv_object_type  = gc_type_include
+                          iv_lines        = lv_lines ).
+        ENDLOOP.
       ENDIF.
-
-      " Fan-out guard: cap the number of main programs a single include
-      " is expanded into (a shared include may be used by thousands).
-      lv_count = lines( lt_main ).
-      IF lv_count > gc_max_mainprograms.
-        WRITE lv_count TO lv_num LEFT-JUSTIFIED.
-        CONCATENATE 'Include' iv_object 'is used by' lv_num
-                    'main programs - only the first'
-                    INTO lv_text SEPARATED BY space.
-        WRITE gc_max_mainprograms TO lv_num LEFT-JUSTIFIED.
-        CONCATENATE lv_text lv_num 'are expanded'
-                    INTO lv_text SEPARATED BY space.
-        add_message( iv_object = iv_object iv_text = lv_text ).
-      ENDIF.
-
-      LOOP AT lt_main INTO lv_main.
-        IF sy-tabix > gc_max_mainprograms.
-          EXIT.
-        ENDIF.
-        collect_main_and_includes( lv_main ).
-      ENDLOOP.
 
     ELSE.
-      " The input is a main program (executable report, module pool,
-      " function group main program, ...). Treat it as the main program.
-      collect_main_and_includes( iv_object ).
+      " Input is a main program:
+      "   OBJECT NAME  = the entered program
+      "   MAIN PROGRAM = the entered program itself
+      add_output_row( iv_main_program = iv_object
+                      iv_object_name  = iv_object
+                      iv_object_type  = gc_type_prog
+                      iv_lines        = lv_lines ).
     ENDIF.
 
   ENDMETHOD.                    "process_object
@@ -289,54 +295,6 @@ CLASS lcl_line_counter IMPLEMENTATION.
     DELETE ADJACENT DUPLICATES FROM rt_main.
 
   ENDMETHOD.                    "resolve_main_programs
-
-  METHOD collect_main_and_includes.
-
-    DATA: lt_includes TYPE tt_program,
-          lv_include  TYPE programm,
-          lv_lines    TYPE i,
-          lv_text     TYPE string.
-
-    " Row for the main program itself.
-    lv_lines = get_line_count( iv_main_program ).
-    IF lv_lines >= 0.
-      add_output_row( iv_main_program = iv_main_program
-                      iv_object_name  = iv_main_program
-                      iv_object_type  = gc_type_prog
-                      iv_lines        = lv_lines ).
-    ELSE.
-      CONCATENATE 'Source of main program' iv_main_program
-                  'could not be read' INTO lv_text SEPARATED BY space.
-      add_message( iv_object = iv_main_program iv_text = lv_text ).
-    ENDIF.
-
-    " Retrieve all includes belonging to the main program directly from
-    " the program include index table D010INC (MASTER / INCLUDE). No
-    " function module is required.
-    SELECT include FROM d010inc INTO TABLE lt_includes
-           WHERE master = iv_main_program.
-
-    " Drop empty rows and the main program itself, then de-duplicate.
-    DELETE lt_includes WHERE table_line IS INITIAL
-                          OR table_line = iv_main_program.
-    SORT lt_includes.
-    DELETE ADJACENT DUPLICATES FROM lt_includes.
-
-    LOOP AT lt_includes INTO lv_include.
-      lv_lines = get_line_count( lv_include ).
-      IF lv_lines >= 0.
-        add_output_row( iv_main_program = iv_main_program
-                        iv_object_name  = lv_include
-                        iv_object_type  = gc_type_include
-                        iv_lines        = lv_lines ).
-      ELSE.
-        CONCATENATE 'Include' lv_include 'of' iv_main_program
-                    'could not be read' INTO lv_text SEPARATED BY space.
-        add_message( iv_object = lv_include iv_text = lv_text ).
-      ENDIF.
-    ENDLOOP.
-
-  ENDMETHOD.                    "collect_main_and_includes
 
   METHOD get_line_count.
 
