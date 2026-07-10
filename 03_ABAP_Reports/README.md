@@ -23,8 +23,11 @@ are **not** expanded.
 
 For **each object entered** on the selection screen exactly one entry is
 produced (the entered object is always what appears in *Object Name*).
-The object kind is detected (`GET_OBJECT_KIND`) from `TFDIR` → `TADIR` →
-`TRDIR`, then its source is resolved and its lines summed:
+The object kind is detected (`GET_OBJECT_KIND`) against the authoritative
+dictionary for each type — `SEOCLASS` (class/interface), `TFDIR`
+(function module), `STXFADM` (smartform), the `SAPL…` pool in `TRDIR`
+(function group), then `TADIR` (enhancements) and `TRDIR`
+(program/include) — then its source is resolved and its lines summed:
 
 | Entered object | Object Type | Main Program column | Lines counted |
 |----------------|-------------|---------------------|---------------|
@@ -55,9 +58,10 @@ row, not listed individually.
 - **Smartforms** have no editable ABAP source of their own; the report
   counts the **generated function module**, which only exists once the
   form has been generated in the system. Otherwise a message is logged.
-- **Enhancement implementations (`ENHO`)** store code in the enhancement
-  framework in several different shapes; this version recognises them but
-  logs that a generic line count is not available.
+- **Enhancement objects (`ENHO` implementation, `ENHS` spot, `ENHC`
+  composite)** store code in the enhancement framework in several
+  different shapes; this version recognises them but logs that a generic
+  line count is not available.
 
 ## Output (ALV grid — `CL_SALV_TABLE`)
 

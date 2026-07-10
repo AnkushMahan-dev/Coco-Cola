@@ -75,6 +75,8 @@ CONSTANTS: gc_type_prog    TYPE char10      VALUE 'PROG',
            gc_type_fugr    TYPE char10      VALUE 'FUGR',
            gc_type_form    TYPE char10      VALUE 'SSFO',
            gc_type_enho    TYPE char10      VALUE 'ENHO',
+           gc_type_enhs    TYPE char10      VALUE 'ENHS',
+           gc_type_enhc    TYPE char10      VALUE 'ENHC',
            gc_subc_include TYPE trdir-subc  VALUE 'I'.
 
 * Fan-out guard: a widely shared include can belong to a very large
@@ -373,9 +375,30 @@ CLASS lcl_line_counter IMPLEMENTATION.
     DATA: lv_subc TYPE trdir-subc,
           lv_obj  TYPE tadir-obj_name,
           lv_type TYPE tadir-object,
-          lv_func TYPE tfdir-funcname.
+          lv_func TYPE tfdir-funcname,
+          lv_cls  TYPE seoclsname,
+          lv_form TYPE tdsfname,
+          lv_pool TYPE programm.
 
-    " 1) Function module? (stored in TFDIR, not under its own name in TRDIR)
+    lv_obj = iv_object.
+
+    " 1) Global class / interface - authoritative check against SEOCLASS
+    "    (works for namespaced names; TADIR is used only to label the
+    "    exact type, defaulting to class).
+    SELECT SINGLE clsname FROM seoclass INTO lv_cls
+           WHERE clsname = iv_object.
+    IF sy-subrc = 0.
+      SELECT SINGLE object FROM tadir INTO lv_type
+             WHERE pgmid = 'R3TR' AND obj_name = lv_obj.
+      IF sy-subrc = 0 AND lv_type = 'INTF'.
+        rv_kind = gc_type_intf.
+      ELSE.
+        rv_kind = gc_type_class.
+      ENDIF.
+      RETURN.
+    ENDIF.
+
+    " 2) Function module (stored in TFDIR).
     SELECT SINGLE funcname FROM tfdir INTO lv_func
            WHERE funcname = iv_object.
     IF sy-subrc = 0.
@@ -383,24 +406,41 @@ CLASS lcl_line_counter IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    " 2) Repository object via TADIR (class / interface / function group /
-    "    smartform / enhancement / program).
-    lv_obj = iv_object.
+    " 3) Smartform (stored in STXFADM).
+    SELECT SINGLE formname FROM stxfadm INTO lv_form
+           WHERE formname = iv_object.
+    IF sy-subrc = 0.
+      rv_kind = gc_type_form.
+      RETURN.
+    ENDIF.
+
+    " 4) Function group - detected when its main program (SAPL...) exists.
+    lv_pool = build_pool_name( iv_object ).
+    SELECT SINGLE subc FROM trdir INTO lv_subc
+           WHERE name = lv_pool.
+    IF sy-subrc = 0.
+      rv_kind = gc_type_fugr.
+      RETURN.
+    ENDIF.
+
+    " 5) Enhancement objects (and any remaining repository object) via TADIR.
     SELECT SINGLE object FROM tadir INTO lv_type
            WHERE pgmid = 'R3TR' AND obj_name = lv_obj.
     IF sy-subrc = 0.
       CASE lv_type.
+        WHEN 'ENHO'. rv_kind = gc_type_enho.  RETURN.
+        WHEN 'ENHS'. rv_kind = gc_type_enhs.  RETURN.
+        WHEN 'ENHC'. rv_kind = gc_type_enhc.  RETURN.
         WHEN 'CLAS'. rv_kind = gc_type_class. RETURN.
         WHEN 'INTF'. rv_kind = gc_type_intf.  RETURN.
         WHEN 'FUGR'. rv_kind = gc_type_fugr.  RETURN.
         WHEN 'SSFO'. rv_kind = gc_type_form.  RETURN.
-        WHEN 'ENHO'. rv_kind = gc_type_enho.  RETURN.
         WHEN OTHERS.
           " 'PROG' and anything else: refine via TRDIR below.
       ENDCASE.
     ENDIF.
 
-    " 3) Program or include via TRDIR-SUBC.
+    " 6) Program or include via TRDIR-SUBC.
     SELECT SINGLE subc FROM trdir INTO lv_subc
            WHERE name = iv_object.
     IF sy-subrc = 0.
@@ -487,12 +527,12 @@ CLASS lcl_line_counter IMPLEMENTATION.
         ev_main = lv_prog.
         APPEND lv_inc TO et_includes.
 
-      WHEN gc_type_enho.
-        " Enhancement implementations store their code in the enhancement
-        " framework (source plug-in / class enhancement / BAdI, ...), not
-        " as a plain source include, so a generic line count is not
-        " available in this version.
-        ev_message = 'Enhancement recognised - source-line counting is not supported'.
+      WHEN gc_type_enho OR gc_type_enhs OR gc_type_enhc.
+        " Enhancement objects (implementation / spot / composite) store
+        " their code in the enhancement framework, not as a plain source
+        " include, so a generic line count is not available in this
+        " version.
+        ev_message = 'Enhancement object recognised - source-line counting is not supported'.
         RETURN.
 
     ENDCASE.
