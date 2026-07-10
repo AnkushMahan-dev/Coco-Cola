@@ -175,7 +175,8 @@ CLASS lcl_line_counter IMPLEMENTATION.
   METHOD collect_data.
 
     DATA: lt_objects TYPE STANDARD TABLE OF programm,
-          lv_object  TYPE programm.
+          lv_object  TYPE programm,
+          ls_prog    LIKE LINE OF so_prog.
 
     " Read all program / object names matching the entered single values.
     " TRDIR is available in ECC and holds all reportable program objects
@@ -188,8 +189,10 @@ CLASS lcl_line_counter IMPLEMENTATION.
     IF sy-subrc <> 0.
       " Nothing matched in TRDIR - fall back to the literal input values
       " so that a clear "not found" message is raised per object.
-      LOOP AT so_prog WHERE low IS NOT INITIAL.
-        lv_object = so_prog-low.
+      " An explicit work area is used because the select-option header
+      " line is not available in the OO (method) context.
+      LOOP AT so_prog INTO ls_prog WHERE low IS NOT INITIAL.
+        lv_object = ls_prog-low.
         APPEND lv_object TO lt_objects.
       ENDLOOP.
     ENDIF.
