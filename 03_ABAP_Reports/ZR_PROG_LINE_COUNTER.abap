@@ -4,16 +4,25 @@
 *& Title       : Source Code Line Counter (Main Program + Includes)
 *& Application : SAP ECC 6.0 - compatible (NetWeaver 7.00 and higher,
 *&               no S/4HANA-only syntax or classes are used)
-*& Purpose     : For every program / object entered on the selection
-*&               screen, count the number of source-code lines of THAT
-*&               object and display it together with its main program:
+*& Purpose     : For every object entered on the selection screen, count
+*&               the number of source-code lines of THAT object and
+*&               display it together with its main program:
 *&                 - Object Name  = always the entered object itself
-*&                 - Main Program = the entered program (when a main
-*&                                  program is entered) or the main
-*&                                  program the include belongs to (when
-*&                                  an include is entered)
+*&                 - Main Program = the entered program itself, or the
+*&                                  underlying main program / pool of the
+*&                                  entered object
 *&               Includes of a main program are NOT expanded - only the
 *&               objects actually entered appear in the output.
+*&
+*&               Supported object types (Object Type column):
+*&                 PROG    - report / module pool / subroutine pool
+*&                 INCLUDE - include (one row per main program)
+*&                 CLAS    - global class  (all class includes summed)
+*&                 INTF    - global interface
+*&                 FUNC    - function module (its source include)
+*&                 FUGR    - function group (all group includes summed)
+*&                 SSFO    - smartform (its generated function module)
+*&                 ENHO    - enhancement (recognised; see notes)
 *&
 *&               The result is presented in a standard ALV grid that
 *&               supports the full set of ALV features (sort, filter,
@@ -60,6 +69,12 @@ TYPES: BEGIN OF ty_message,
 * Constants for the object type column and program sub-type
 CONSTANTS: gc_type_prog    TYPE char10      VALUE 'PROG',
            gc_type_include TYPE char10      VALUE 'INCLUDE',
+           gc_type_class   TYPE char10      VALUE 'CLAS',
+           gc_type_intf    TYPE char10      VALUE 'INTF',
+           gc_type_func    TYPE char10      VALUE 'FUNC',
+           gc_type_fugr    TYPE char10      VALUE 'FUGR',
+           gc_type_form    TYPE char10      VALUE 'SSFO',
+           gc_type_enho    TYPE char10      VALUE 'ENHO',
            gc_subc_include TYPE trdir-subc  VALUE 'I'.
 
 * Fan-out guard: a widely shared include can belong to a very large
@@ -102,10 +117,46 @@ CLASS lcl_line_counter DEFINITION FINAL.
           gt_messages TYPE tt_message.
 
     METHODS:
-      "! Processes a single object entered on the selection screen.
-      "! Determines the main program(s) and collects all rows.
+      "! Processes a single object entered on the selection screen:
+      "! determines its type, resolves its source and adds the output row.
       process_object
         IMPORTING iv_object TYPE programm,
+
+      "! Determines the object kind (PROG / INCLUDE / CLAS / INTF / FUNC /
+      "! FUGR / SSFO / ENHO) of the entered name using TFDIR, TADIR and
+      "! TRDIR. Returns space when the object is unknown / unsupported.
+      get_object_kind
+        IMPORTING iv_object      TYPE programm
+        RETURNING VALUE(rv_kind) TYPE char10,
+
+      "! Handles an entered INCLUDE: one row per main program it belongs
+      "! to (the include itself is what appears in the OBJECT NAME column).
+      process_include
+        IMPORTING iv_object TYPE programm,
+
+      "! Resolves the set of source includes to be counted for the
+      "! non-program object kinds (class, interface, function group,
+      "! function module, smartform). ev_message is filled when the object
+      "! is recognised but its source cannot be counted.
+      collect_source_by_kind
+        IMPORTING iv_object    TYPE programm
+                  iv_kind      TYPE char10
+        EXPORTING ev_main      TYPE programm
+                  et_includes  TYPE tt_program
+                  ev_message   TYPE string,
+
+      "! Builds the function-group main program name (SAPL...) from the
+      "! group name, handling namespaces (/NS/GRP -> /NS/SAPLGRP).
+      build_pool_name
+        IMPORTING iv_group      TYPE programm
+        RETURNING VALUE(rv_pool) TYPE programm,
+
+      "! Returns the source include (and its program) of a function module.
+      get_func_details
+        IMPORTING iv_func     TYPE programm
+        EXPORTING ev_program  TYPE programm
+                  ev_include  TYPE programm
+                  ev_ok       TYPE abap_bool,
 
       "! Resolves the main program(s) that a given include belongs to by
       "! reading the program include index table D010INC directly (no
@@ -127,12 +178,6 @@ CLASS lcl_line_counter DEFINITION FINAL.
                   iv_object_name  TYPE programm
                   iv_object_type  TYPE char10
                   iv_lines        TYPE i,
-
-      "! Reads the technical program sub-type (TRDIR-SUBC).
-      "! Returns space when the object does not exist.
-      get_program_subc
-        IMPORTING iv_object      TYPE programm
-        RETURNING VALUE(rv_subc) TYPE trdir-subc,
 
       "! Central authority check for reading development sources.
       is_authorized
@@ -175,28 +220,23 @@ CLASS lcl_line_counter IMPLEMENTATION.
 
   METHOD collect_data.
 
-    DATA: lt_objects TYPE STANDARD TABLE OF programm,
+    DATA: lt_objects TYPE tt_program,
           lv_object  TYPE programm,
           ls_prog    LIKE LINE OF so_prog.
 
-    " Read all program / object names matching the entered single values.
-    " TRDIR is available in ECC and holds all reportable program objects
-    " (main programs as well as includes).
-    SELECT name FROM trdir
-           INTO TABLE lt_objects
-           WHERE name IN so_prog
-           ORDER BY name.
+    " Collect the object names entered as single values. The entered
+    " names are used directly (not filtered through TRDIR) so that all
+    " supported object types - classes, function modules, smartforms,
+    " etc., which are not stored in TRDIR under their own name - are
+    " processed. An explicit work area is used because the select-option
+    " header line is not available in the OO (method) context.
+    LOOP AT so_prog INTO ls_prog WHERE low IS NOT INITIAL.
+      lv_object = ls_prog-low.
+      APPEND lv_object TO lt_objects.
+    ENDLOOP.
 
-    IF sy-subrc <> 0.
-      " Nothing matched in TRDIR - fall back to the literal input values
-      " so that a clear "not found" message is raised per object.
-      " An explicit work area is used because the select-option header
-      " line is not available in the OO (method) context.
-      LOOP AT so_prog INTO ls_prog WHERE low IS NOT INITIAL.
-        lv_object = ls_prog-low.
-        APPEND lv_object TO lt_objects.
-      ENDLOOP.
-    ENDIF.
+    SORT lt_objects.
+    DELETE ADJACENT DUPLICATES FROM lt_objects.
 
     LOOP AT lt_objects INTO lv_object.
       process_object( lv_object ).
@@ -206,11 +246,14 @@ CLASS lcl_line_counter IMPLEMENTATION.
 
   METHOD process_object.
 
-    DATA: lv_subc  TYPE trdir-subc,
-          lv_lines TYPE i,
-          lt_main  TYPE tt_program,
-          lv_main  TYPE programm,
-          lv_text  TYPE string.
+    DATA: lv_kind    TYPE char10,
+          lv_main    TYPE programm,
+          lt_incl    TYPE tt_program,
+          lv_incl    TYPE programm,
+          lv_lines   TYPE i,
+          lv_total   TYPE i,
+          lv_message TYPE string,
+          lv_text    TYPE string.
 
     " Authorization check before touching the source.
     IF is_authorized( iv_object ) = abap_false.
@@ -220,63 +263,292 @@ CLASS lcl_line_counter IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lv_subc = get_program_subc( iv_object ).
+    " Determine what kind of object was entered.
+    lv_kind = get_object_kind( iv_object ).
 
-    IF lv_subc IS INITIAL.
-      CONCATENATE 'Object' iv_object 'does not exist or has no active source'
+    IF lv_kind IS INITIAL.
+      CONCATENATE 'Object' iv_object
+                  'does not exist or is not a supported object type'
                   INTO lv_text SEPARATED BY space.
       add_message( iv_object = iv_object iv_text = lv_text ).
       RETURN.
     ENDIF.
 
-    " Count the source lines of the ENTERED object only. The entered
-    " object is always what appears in the OBJECT NAME column - includes
-    " of a main program are NOT expanded.
-    lv_lines = get_line_count( iv_object ).
-    IF lv_lines < 0.
-      CONCATENATE 'Source of' iv_object 'could not be read'
-                  INTO lv_text SEPARATED BY space.
-      add_message( iv_object = iv_object iv_text = lv_text ).
+    " An include yields one row per main program - handle separately.
+    IF lv_kind = gc_type_include.
+      process_include( iv_object ).
       RETURN.
     ENDIF.
 
-    IF lv_subc = gc_subc_include.
-      " Input is an include:
-      "   OBJECT NAME  = the entered include itself
-      "   MAIN PROGRAM = the main program(s) the include belongs to
-      lt_main = resolve_main_programs( iv_object ).
-
-      IF lt_main IS INITIAL.
-        " Orphan include with no master: the include is its own main
-        " program reference.
-        add_output_row( iv_main_program = iv_object
-                        iv_object_name  = iv_object
-                        iv_object_type  = gc_type_include
-                        iv_lines        = lv_lines ).
-      ELSE.
-        " One row per main program the include belongs to (normally one).
-        LOOP AT lt_main INTO lv_main.
-          IF sy-tabix > gc_max_mainprograms.
-            EXIT.
-          ENDIF.
-          add_output_row( iv_main_program = lv_main
-                          iv_object_name  = iv_object
-                          iv_object_type  = gc_type_include
-                          iv_lines        = lv_lines ).
-        ENDLOOP.
-      ENDIF.
-
+    " Build the list of source includes to be counted for this object.
+    IF lv_kind = gc_type_prog.
+      " A plain program: its own source is the only source.
+      lv_main = iv_object.
+      APPEND iv_object TO lt_incl.
     ELSE.
-      " Input is a main program:
-      "   OBJECT NAME  = the entered program
-      "   MAIN PROGRAM = the entered program itself
-      add_output_row( iv_main_program = iv_object
-                      iv_object_name  = iv_object
-                      iv_object_type  = gc_type_prog
-                      iv_lines        = lv_lines ).
+      " Class / interface / function group / function module / smartform
+      " / enhancement - resolve the underlying source include(s).
+      collect_source_by_kind(
+        EXPORTING iv_object   = iv_object
+                  iv_kind     = lv_kind
+        IMPORTING ev_main     = lv_main
+                  et_includes = lt_incl
+                  ev_message  = lv_message ).
+
+      IF lv_message IS NOT INITIAL.
+        add_message( iv_object = iv_object iv_text = lv_message ).
+        RETURN.
+      ENDIF.
     ENDIF.
+
+    IF lt_incl IS INITIAL.
+      CONCATENATE 'No source could be read for' iv_object
+                  INTO lv_text SEPARATED BY space.
+      add_message( iv_object = iv_object iv_text = lv_text ).
+      RETURN.
+    ENDIF.
+
+    " Sum the source lines across all includes that make up the object.
+    " The entered object is always what appears in the OBJECT NAME column.
+    CLEAR lv_total.
+    LOOP AT lt_incl INTO lv_incl.
+      lv_lines = get_line_count( lv_incl ).
+      IF lv_lines > 0.
+        lv_total = lv_total + lv_lines.
+      ENDIF.
+    ENDLOOP.
+
+    add_output_row( iv_main_program = lv_main
+                    iv_object_name  = iv_object
+                    iv_object_type  = lv_kind
+                    iv_lines        = lv_total ).
 
   ENDMETHOD.                    "process_object
+
+  METHOD process_include.
+
+    DATA: lt_main  TYPE tt_program,
+          lv_main  TYPE programm,
+          lv_lines TYPE i,
+          lv_text  TYPE string.
+
+    " Line count of the include itself.
+    lv_lines = get_line_count( iv_object ).
+    IF lv_lines < 0.
+      CONCATENATE 'Source of include' iv_object 'could not be read'
+                  INTO lv_text SEPARATED BY space.
+      add_message( iv_object = iv_object iv_text = lv_text ).
+      RETURN.
+    ENDIF.
+
+    " Resolve the main program(s) the include belongs to. OBJECT NAME is
+    " always the entered include; MAIN PROGRAM is its master program.
+    lt_main = resolve_main_programs( iv_object ).
+
+    IF lt_main IS INITIAL.
+      " Orphan include with no master: it is its own main-program reference.
+      add_output_row( iv_main_program = iv_object
+                      iv_object_name  = iv_object
+                      iv_object_type  = gc_type_include
+                      iv_lines        = lv_lines ).
+      RETURN.
+    ENDIF.
+
+    LOOP AT lt_main INTO lv_main.
+      IF sy-tabix > gc_max_mainprograms.
+        EXIT.
+      ENDIF.
+      add_output_row( iv_main_program = lv_main
+                      iv_object_name  = iv_object
+                      iv_object_type  = gc_type_include
+                      iv_lines        = lv_lines ).
+    ENDLOOP.
+
+  ENDMETHOD.                    "process_include
+
+  METHOD get_object_kind.
+
+    DATA: lv_subc TYPE trdir-subc,
+          lv_obj  TYPE tadir-obj_name,
+          lv_type TYPE tadir-object,
+          lv_func TYPE tfdir-funcname.
+
+    " 1) Function module? (stored in TFDIR, not under its own name in TRDIR)
+    SELECT SINGLE funcname FROM tfdir INTO lv_func
+           WHERE funcname = iv_object.
+    IF sy-subrc = 0.
+      rv_kind = gc_type_func.
+      RETURN.
+    ENDIF.
+
+    " 2) Repository object via TADIR (class / interface / function group /
+    "    smartform / enhancement / program).
+    lv_obj = iv_object.
+    SELECT SINGLE object FROM tadir INTO lv_type
+           WHERE pgmid = 'R3TR' AND obj_name = lv_obj.
+    IF sy-subrc = 0.
+      CASE lv_type.
+        WHEN 'CLAS'. rv_kind = gc_type_class. RETURN.
+        WHEN 'INTF'. rv_kind = gc_type_intf.  RETURN.
+        WHEN 'FUGR'. rv_kind = gc_type_fugr.  RETURN.
+        WHEN 'SSFO'. rv_kind = gc_type_form.  RETURN.
+        WHEN 'ENHO'. rv_kind = gc_type_enho.  RETURN.
+        WHEN OTHERS.
+          " 'PROG' and anything else: refine via TRDIR below.
+      ENDCASE.
+    ENDIF.
+
+    " 3) Program or include via TRDIR-SUBC.
+    SELECT SINGLE subc FROM trdir INTO lv_subc
+           WHERE name = iv_object.
+    IF sy-subrc = 0.
+      IF lv_subc = gc_subc_include.
+        rv_kind = gc_type_include.
+      ELSE.
+        rv_kind = gc_type_prog.
+      ENDIF.
+      RETURN.
+    ENDIF.
+
+    " Unknown / unsupported.
+    CLEAR rv_kind.
+
+  ENDMETHOD.                    "get_object_kind
+
+  METHOD collect_source_by_kind.
+
+    DATA: lv_clsname  TYPE seoclsname,
+          lv_pool     TYPE programm,
+          lt_incl     TYPE tt_program,
+          lv_formname TYPE tdsfname,
+          lv_fmname   TYPE rs38l_fnam,
+          lv_prog     TYPE programm,
+          lv_inc      TYPE programm,
+          lv_ok       TYPE abap_bool.
+
+    CASE iv_kind.
+
+      WHEN gc_type_class OR gc_type_intf.
+        " The class pool program plus all of its generated includes
+        " (public / protected / private sections, methods, ...).
+        lv_clsname = iv_object.
+        lv_pool = cl_oo_classname_service=>get_classpool_name( lv_clsname ).
+        ev_main = lv_pool.
+        APPEND lv_pool TO et_includes.
+        SELECT include FROM d010inc INTO TABLE lt_incl WHERE master = lv_pool.
+        APPEND LINES OF lt_incl TO et_includes.
+
+      WHEN gc_type_fugr.
+        " The function-group main program plus all of its includes.
+        lv_pool = build_pool_name( iv_object ).
+        ev_main = lv_pool.
+        APPEND lv_pool TO et_includes.
+        SELECT include FROM d010inc INTO TABLE lt_incl WHERE master = lv_pool.
+        APPEND LINES OF lt_incl TO et_includes.
+
+      WHEN gc_type_func.
+        " The single source include of the function module.
+        get_func_details( EXPORTING iv_func    = iv_object
+                          IMPORTING ev_program = lv_prog
+                                    ev_include = lv_inc
+                                    ev_ok      = lv_ok ).
+        IF lv_ok = abap_false.
+          ev_message = 'Function module source include could not be determined'.
+          RETURN.
+        ENDIF.
+        ev_main = lv_prog.
+        APPEND lv_inc TO et_includes.
+
+      WHEN gc_type_form.
+        " Smartforms have no editable ABAP source; count the generated
+        " function module (only available once the form is generated).
+        lv_formname = iv_object.
+        CALL FUNCTION 'SSF_FUNCTION_MODULE_NAME'
+          EXPORTING
+            formname = lv_formname
+          IMPORTING
+            fm_name  = lv_fmname
+          EXCEPTIONS
+            OTHERS   = 1.
+        IF sy-subrc <> 0 OR lv_fmname IS INITIAL.
+          ev_message = 'Smartform is not generated - no ABAP source to count'.
+          RETURN.
+        ENDIF.
+        get_func_details( EXPORTING iv_func    = lv_fmname
+                          IMPORTING ev_program = lv_prog
+                                    ev_include = lv_inc
+                                    ev_ok      = lv_ok ).
+        IF lv_ok = abap_false.
+          ev_message = 'Generated smartform function module source not found'.
+          RETURN.
+        ENDIF.
+        ev_main = lv_prog.
+        APPEND lv_inc TO et_includes.
+
+      WHEN gc_type_enho.
+        " Enhancement implementations store their code in the enhancement
+        " framework (source plug-in / class enhancement / BAdI, ...), not
+        " as a plain source include, so a generic line count is not
+        " available in this version.
+        ev_message = 'Enhancement recognised - source-line counting is not supported'.
+        RETURN.
+
+    ENDCASE.
+
+    " Clean the include list.
+    DELETE et_includes WHERE table_line IS INITIAL.
+    SORT et_includes.
+    DELETE ADJACENT DUPLICATES FROM et_includes.
+
+  ENDMETHOD.                    "collect_source_by_kind
+
+  METHOD build_pool_name.
+
+    DATA: lv_ns   TYPE string,
+          lv_name TYPE string.
+
+    " Namespaced group  /NS/GRP  ->  /NS/SAPLGRP
+    " Standard group    GRP      ->  SAPLGRP
+    IF iv_group(1) = '/'.
+      SPLIT iv_group+1 AT '/' INTO lv_ns lv_name.
+      CONCATENATE '/' lv_ns '/SAPL' lv_name INTO rv_pool.
+    ELSE.
+      CONCATENATE 'SAPL' iv_group INTO rv_pool.
+    ENDIF.
+
+  ENDMETHOD.                    "build_pool_name
+
+  METHOD get_func_details.
+
+    DATA: lv_funcname  TYPE rs38l_fnam,
+          lv_include   TYPE programm,
+          lv_program   TYPE programm,
+          lv_group     TYPE rs38l_area,
+          lv_namespace TYPE rs38l_ns.
+
+    lv_funcname = iv_func.
+
+    " FUNCTION_INCLUDE_INFO returns the source include and the main
+    " program (SAPL...) that a function module belongs to.
+    CALL FUNCTION 'FUNCTION_INCLUDE_INFO'
+      CHANGING
+        funcname  = lv_funcname
+        include   = lv_include
+        program   = lv_program
+        group     = lv_group
+        namespace = lv_namespace
+      EXCEPTIONS
+        OTHERS    = 1.
+
+    IF sy-subrc = 0 AND lv_include IS NOT INITIAL.
+      ev_program = lv_program.
+      ev_include = lv_include.
+      ev_ok      = abap_true.
+    ELSE.
+      ev_ok      = abap_false.
+    ENDIF.
+
+  ENDMETHOD.                    "get_func_details
 
   METHOD resolve_main_programs.
 
@@ -313,22 +585,6 @@ CLASS lcl_line_counter IMPLEMENTATION.
     rv_lines = lines( lt_source ).
 
   ENDMETHOD.                    "get_line_count
-
-  METHOD get_program_subc.
-
-    " TRDIR holds the technical attributes of every program object.
-    " SUBC = 'I' identifies an include; other values identify main
-    " program types (1 = executable, M = module pool, F = function
-    " group, K = class pool, S = subroutine pool, ...).
-    SELECT SINGLE subc FROM trdir
-           INTO rv_subc
-           WHERE name = iv_object.
-
-    IF sy-subrc <> 0.
-      CLEAR rv_subc.
-    ENDIF.
-
-  ENDMETHOD.                    "get_program_subc
 
   METHOD is_authorized.
 

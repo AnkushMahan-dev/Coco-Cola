@@ -22,31 +22,48 @@ are **not** expanded.
 ## Processing logic
 
 For **each object entered** on the selection screen exactly one entry is
-produced (the entered object is always what appears in *Object Name*):
+produced (the entered object is always what appears in *Object Name*).
+The object kind is detected (`GET_OBJECT_KIND`) from `TFDIR` → `TADIR` →
+`TRDIR`, then its source is resolved and its lines summed:
 
-1. The object's type is read from `TRDIR-SUBC` (`I` = include).
-2. Its own source lines are counted with `READ REPORT` + `lines( )`.
-3. **Main program input** (report, module pool, function-group main,
-   ...): one row with *Main Program* = *Object Name* = the entered
-   program, type `PROG`.
-4. **Include input** (`SUBC = 'I'`): the main program(s) it belongs to
-   are resolved from table `D010INC` (`SELECT master WHERE include = …`,
-   no function module). One row per main program is produced with
-   *Main Program* = that main program, *Object Name* = the entered
-   include, type `INCLUDE`. An orphan include (no master) is shown with
-   itself as the main program.
-5. A **fan-out guard** (`GC_MAX_MAINPROGRAMS`, default 50) caps how many
-   rows a single widely shared include can produce.
-6. Rows are de-duplicated so the same combination is not listed twice.
+| Entered object | Object Type | Main Program column | Lines counted |
+|----------------|-------------|---------------------|---------------|
+| Report / module pool / subroutine pool | `PROG` | the program itself | its own source |
+| Include | `INCLUDE` | main program(s) from `D010INC` (one row each) | the include's source |
+| Global class | `CLAS` | class pool (`…====CP`) | class pool + all class includes |
+| Global interface | `INTF` | interface pool | interface pool + all includes |
+| Function module | `FUNC` | `SAPL…` main program | the FM's source include |
+| Function group | `FUGR` | `SAPL…` main program | main program + all group includes |
+| Smartform | `SSFO` | generated FM's program | generated function module source |
+| Enhancement impl. | `ENHO` | — | recognised, not counted (see notes) |
 
-Includes of a main program are deliberately **not** listed — only the
-objects entered in the selection screen appear in the result.
+- **Class / interface / function-group includes** are listed from
+  `D010INC` and summed; the class pool name is obtained from
+  `CL_OO_CLASSNAME_SERVICE=>GET_CLASSPOOL_NAME` (namespace-safe).
+- **Function module / smartform** use `FUNCTION_INCLUDE_INFO` (and
+  `SSF_FUNCTION_MODULE_NAME` for the smartform's generated FM).
+- A **fan-out guard** (`GC_MAX_MAINPROGRAMS`, default 50) caps how many
+  rows a single widely shared include can produce.
+- Rows are de-duplicated so the same combination is not listed twice.
+
+Only the objects entered in the selection screen appear in the result —
+the includes/members that make up an object are summed into its single
+row, not listed individually.
+
+## Notes / limitations
+
+- **Smartforms** have no editable ABAP source of their own; the report
+  counts the **generated function module**, which only exists once the
+  form has been generated in the system. Otherwise a message is logged.
+- **Enhancement implementations (`ENHO`)** store code in the enhancement
+  framework in several different shapes; this version recognises them but
+  logs that a generic line count is not available.
 
 ## Output (ALV grid — `CL_SALV_TABLE`)
 
 | Main Program | Object Name | Object Type | Number of Lines |
 |--------------|-------------|-------------|-----------------|
-| Entered program, or the include's main program | The entered object | `PROG` / `INCLUDE` | Source lines of the entered object |
+| Program / pool of the entered object | The entered object | `PROG`/`INCLUDE`/`CLAS`/`INTF`/`FUNC`/`FUGR`/`SSFO`/`ENHO` | Total source lines of the entered object |
 
 All standard ALV features are enabled (`set_all`): sorting, multiple
 sorting, filtering, layout variants, Excel export, print, find/search,
@@ -57,10 +74,12 @@ total** of the line count are provided.
 
 - Targets SAP ECC 6.0 (NetWeaver 7.0x+). No S/4HANA-only syntax or
   classes are used.
-- Uses standard, ECC-available components only: tables `TRDIR` and
-  `D010INC`, the `READ REPORT` statement, and `CL_SALV_TABLE`. The
-  include → main-program relationship is read from a database table
-  rather than a function module.
+- Uses standard, ECC-available components only: tables `TRDIR`, `TADIR`,
+  `TFDIR`, `D010INC`; the `READ REPORT` statement; `CL_SALV_TABLE`;
+  `CL_OO_CLASSNAME_SERVICE`; and the standard function modules
+  `FUNCTION_INCLUDE_INFO` and `SSF_FUNCTION_MODULE_NAME` (all present in
+  ECC 6.0). The include → main-program relationship is read from a
+  database table.
 
 ## Error handling
 
