@@ -152,8 +152,10 @@ CLASS lcl_line_counter DEFINITION FINAL.
         RETURNING VALUE(rv_pool) TYPE programm,
 
       "! Returns the source include (and its program) of a function module.
+      "! iv_func is generic so both a 30-char function name and a 40-char
+      "! program-name field can be passed.
       get_func_details
-        IMPORTING iv_func     TYPE programm
+        IMPORTING iv_func     TYPE clike
         EXPORTING ev_program  TYPE programm
                   ev_include  TYPE programm
                   ev_ok       TYPE abap_bool,
@@ -520,25 +522,22 @@ CLASS lcl_line_counter IMPLEMENTATION.
 
   METHOD get_func_details.
 
-    DATA: lv_funcname  TYPE rs38l_fnam,
-          lv_include   TYPE programm,
-          lv_program   TYPE programm,
-          lv_group     TYPE rs38l_area,
-          lv_namespace TYPE rs38l_ns.
+    DATA: lv_funcname TYPE rs38l_fnam,
+          lv_include  TYPE programm,
+          lv_program  TYPE programm.
 
     lv_funcname = iv_func.
 
     " FUNCTION_INCLUDE_INFO returns the source include and the main
-    " program (SAPL...) that a function module belongs to.
+    " program (SAPL...) that a function module belongs to. The optional
+    " GROUP / NAMESPACE parameters are not requested.
     CALL FUNCTION 'FUNCTION_INCLUDE_INFO'
       CHANGING
-        funcname  = lv_funcname
-        include   = lv_include
-        program   = lv_program
-        group     = lv_group
-        namespace = lv_namespace
+        funcname = lv_funcname
+        include  = lv_include
+        program  = lv_program
       EXCEPTIONS
-        OTHERS    = 1.
+        OTHERS   = 1.
 
     IF sy-subrc = 0 AND lv_include IS NOT INITIAL.
       ev_program = lv_program.
