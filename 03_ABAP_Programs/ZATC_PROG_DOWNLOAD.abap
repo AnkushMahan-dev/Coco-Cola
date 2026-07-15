@@ -1323,57 +1323,50 @@ FORM get_previous_version USING    p_objname LIKE vrsd-objname
 ENDFORM.
 
 *&---------------------------------------------------------------------*
-*& Form write_manifest  (frontend mode - SAP_CONVERT_TO_XLS_FORMAT)
+*& Form write_manifest  (frontend mode - CSV via GUI_DOWNLOAD)
+*&  Written as a semicolon-separated CSV (the same layout the background
+*&  ZIP mode uses). This avoids SAP_CONVERT_TO_XLS_FORMAT, which relies
+*&  on OLE / Excel automation and fails on many systems. Excel opens the
+*&  resulting .csv directly.
+*&  Columns: Object Type;Object Name;Sub Object;File Name;Version Number
 *&---------------------------------------------------------------------*
 FORM write_manifest.
 
-  TYPES: BEGIN OF ty_flat,
-           objtype  TYPE c LENGTH 12,
-           objname  TYPE c LENGTH 40,
-           sobjname TYPE c LENGTH 40,
-           filename TYPE c LENGTH 128,
-           versno   TYPE c LENGTH 14,
-         END OF ty_flat.
-
-  DATA: lt_flat  TYPE STANDARD TABLE OF ty_flat,
-        ls_flat  TYPE ty_flat,
+  DATA: lt_lines TYPE STANDARD TABLE OF string,
+        lv_row   TYPE string,
         lv_file  TYPE string,
-        lv_full  TYPE rlgrap-filename,
+        lv_full  TYPE string,
         lv_stamp TYPE char14.
 
-  ls_flat-objtype  = 'Object Type'.
-  ls_flat-objname  = 'Object Name'.
-  ls_flat-sobjname = 'Sub Object'.
-  ls_flat-filename = 'File Name'.
-  ls_flat-versno   = 'Version Number'.
-  APPEND ls_flat TO lt_flat.
+  " Header row.
+  CONCATENATE 'Object Type' 'Object Name' 'Sub Object' 'File Name' 'Version Number'
+    INTO lv_row SEPARATED BY ';'.
+  APPEND lv_row TO lt_lines.
 
+  " Data rows.
   LOOP AT gt_manifest INTO DATA(ls_man).
-    CLEAR ls_flat.
-    ls_flat-objtype  = ls_man-objtype.
-    ls_flat-objname  = ls_man-objname.
-    ls_flat-sobjname = ls_man-sobjname.
-    ls_flat-filename = ls_man-filename.
-    ls_flat-versno   = ls_man-versno.
-    APPEND ls_flat TO lt_flat.
+    CONCATENATE ls_man-objtype ls_man-objname ls_man-sobjname
+                ls_man-filename ls_man-versno
+      INTO lv_row SEPARATED BY ';'.
+    APPEND lv_row TO lt_lines.
   ENDLOOP.
 
   CONCATENATE sy-datum sy-uzeit INTO lv_stamp.
   IF p_prev = abap_true.
-    CONCATENATE 'ZATC_DOWNLOAD_PREV_MANIFEST_' lv_stamp '.xls' INTO lv_file.
+    CONCATENATE 'ZATC_DOWNLOAD_PREV_MANIFEST_' lv_stamp '.csv' INTO lv_file.
   ELSE.
-    CONCATENATE 'ZATC_DOWNLOAD_MANIFEST_' lv_stamp '.xls' INTO lv_file.
+    CONCATENATE 'ZATC_DOWNLOAD_MANIFEST_' lv_stamp '.csv' INTO lv_file.
   ENDIF.
   CONCATENATE p_dir lv_file INTO lv_full.
 
-  CALL FUNCTION 'SAP_CONVERT_TO_XLS_FORMAT'
+  cl_gui_frontend_services=>gui_download(
     EXPORTING
-      i_filename        = lv_full
-    TABLES
-      i_tab_sap_data    = lt_flat
+      filename = lv_full
+      filetype = 'ASC'
+    CHANGING
+      data_tab = lt_lines
     EXCEPTIONS
-      conversion_failed = 1
-      OTHERS            = 2.
+      OTHERS   = 1 ).
 
   IF sy-subrc = 0.
     MESSAGE |Manifest written: { lv_file }| TYPE 'S'.
