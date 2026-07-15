@@ -35,6 +35,16 @@
 *&      and background ZIP modes. The manifest / log carry a Version
 *&      Number column (0 / blank in current-version mode), and previous-
 *&      version output files are prefixed ZATC_DOWNLOAD_PREV_*.
+*&
+*&   SMART FORMS (SSFO):
+*&      A Smart Form has no REPS source. On activation it is compiled
+*&      into a generated function module, so for SSFO findings the
+*&      program resolves that FM (SSF_FUNCTION_MODULE_NAME), locates the
+*&      include that carries its code (FUNCTION_INCLUDE_INFO) and reads
+*&      the generated source via READ REPORT. Handled in FORM
+*&      read_smartform_source and used by both the frontend and the
+*&      background ZIP mode. The generated FM is not version-managed, so
+*&      previous-version mode also downloads the current generated code.
 *&---------------------------------------------------------------------*
 REPORT zatc_prog_download.
 
@@ -877,7 +887,11 @@ ENDFORM.
 FORM read_source USING ps_obj TYPE ty_obj.
 
   CASE ps_obj-objtype.
-    WHEN 'PROG' OR 'FUGR' OR 'FUGS' OR 'SFPF' OR 'SSFO'.
+    WHEN 'SSFO'.
+      " Smart Form: resolve the generated function module and read it.
+      PERFORM read_smartform_source USING ps_obj.
+
+    WHEN 'PROG' OR 'FUGR' OR 'FUGS' OR 'SFPF'.
       object_name = ps_obj-sobjname.
       CALL FUNCTION 'SVRS_GET_VERSION_REPS_40'
         EXPORTING
@@ -980,6 +994,59 @@ FORM read_source USING ps_obj TYPE ty_obj.
 ENDFORM.
 
 *&---------------------------------------------------------------------*
+*& Form read_smartform_source
+*&  Smart Form (SSFO) source is NOT stored as REPS. A Smart Form is
+*&  compiled into a generated function module on activation, and its code
+*&  lives in that FM's include. Steps:
+*&    1) SSF_FUNCTION_MODULE_NAME - resolve the generated FM for the form
+*&    2) FUNCTION_INCLUDE_INFO    - resolve the include holding the FM body
+*&    3) READ REPORT              - read the generated source into REPOS_TAB
+*&---------------------------------------------------------------------*
+FORM read_smartform_source USING ps_obj TYPE ty_obj.
+
+  DATA: lv_formname TYPE tdsfname,
+        lv_fm_name  TYPE rs38l_fnam,
+        lv_group    TYPE rs38l_area,
+        lv_include  TYPE program.
+
+  " The main object of a Smart Form finding is the form name.
+  lv_formname = ps_obj-objname.
+  IF lv_formname IS INITIAL.
+    lv_formname = ps_obj-sobjname.
+  ENDIF.
+
+  " 1) Resolve the generated function module for this Smart Form.
+  CALL FUNCTION 'SSF_FUNCTION_MODULE_NAME'
+    EXPORTING
+      formname           = lv_formname
+    IMPORTING
+      fm_name            = lv_fm_name
+    EXCEPTIONS
+      no_form            = 1
+      no_function_module = 2
+      OTHERS             = 3.
+  IF sy-subrc <> 0 OR lv_fm_name IS INITIAL.
+    RETURN.
+  ENDIF.
+
+  " 2) Resolve the include that carries the generated FM source.
+  CALL FUNCTION 'FUNCTION_INCLUDE_INFO'
+    CHANGING
+      funcname = lv_fm_name
+      group    = lv_group
+      include  = lv_include
+    EXCEPTIONS
+      OTHERS   = 1.
+  IF sy-subrc <> 0 OR lv_include IS INITIAL.
+    RETURN.
+  ENDIF.
+
+  " 3) Read the generated function-module source code.
+  READ REPORT lv_include INTO repos_tab.
+
+ENDFORM.
+
+*&---------------------------------------------------------------------*
 *& Form fetch_previous_source
 *&  Resolves the PREVIOUS active version of one sub-object AND reads its
 *&  historical source into the global REPOS_TAB. Object-type aware.
@@ -996,7 +1063,16 @@ FORM fetch_previous_source USING    ps_obj    TYPE ty_obj
   CLEAR: p_versno, p_found, p_vinfo.
 
   CASE ps_obj-objtype.
-    WHEN 'PROG' OR 'FUGR' OR 'FUGS' OR 'SFPF' OR 'SSFO'.
+    WHEN 'SSFO'.
+      " Smart Form: the generated function module is not version-managed,
+      " so download its current generated source code.
+      PERFORM read_smartform_source USING ps_obj.
+      IF repos_tab IS NOT INITIAL.
+        p_found = abap_true.
+        p_vinfo = '(smartform generated FM)'.
+      ENDIF.
+
+    WHEN 'PROG' OR 'FUGR' OR 'FUGS' OR 'SFPF'.
       PERFORM get_previous_version USING ps_obj-sobjname 'REPS'
                                    CHANGING p_versno p_found.
       IF p_found = abap_true.
