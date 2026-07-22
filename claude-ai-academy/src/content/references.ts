@@ -83,6 +83,7 @@ const references: Record<string, Reference[]> = {
     { label: "Best practices", url: `${CC}/best-practices`, source: "Claude Docs" },
   ],
   "claude-code": [
+    { label: "Claude Code — official product page", url: "https://claude.com/product/claude-code", source: "Anthropic" },
     { label: "Claude Code — Overview", url: `${CC}/overview`, source: "Claude Docs" },
     { label: "Claude Code — Quickstart", url: `${CC}/quickstart`, source: "Claude Docs" },
     { label: "CLI reference", url: `${CC}/cli-reference`, source: "Claude Docs" },
@@ -125,10 +126,12 @@ const references: Record<string, Reference[]> = {
     { label: "Permission modes", url: `${CC}/permission-modes`, source: "Claude Docs" },
   ],
   skills: [
+    { label: "Skills — official product page", url: "https://claude.com/skills", source: "Anthropic" },
     { label: "Agent Skills", url: `${CC}/skills`, source: "Claude Docs" },
     { label: "Hooks", url: `${CC}/hooks`, source: "Claude Docs" },
   ],
   connectors: [
+    { label: "Connectors — official product page", url: "https://claude.com/connectors", source: "Anthropic" },
     { label: "Model Context Protocol (MCP)", url: `${CC}/mcp`, source: "Claude Docs" },
     mcpIntro,
     { label: "Third-party integrations", url: `${CC}/third-party-integrations`, source: "Claude Docs" },
@@ -151,10 +154,12 @@ const references: Record<string, Reference[]> = {
     { label: "Claude Code — Quickstart", url: `${CC}/quickstart`, source: "Claude Docs" },
   ],
   "chrome-extension": [
+    { label: "Claude for Chrome — official product page", url: "https://claude.com/claude-for-chrome", source: "Anthropic" },
     { label: "Claude in Chrome", url: `${CC}/chrome`, source: "Claude Docs" },
     { label: "Computer use / browsing", url: `${CC}/computer-use`, source: "Claude Docs" },
   ],
   "excel-extension": [
+    { label: "Claude for Microsoft 365 — official product page", url: "https://claude.com/claude-for-microsoft-365", source: "Anthropic" },
     { label: "Features overview", url: `${CC}/features-overview`, source: "Claude Docs" },
     { label: "Claude Desktop (Cowork with files)", url: `${CC}/desktop`, source: "Claude Docs" },
   ],

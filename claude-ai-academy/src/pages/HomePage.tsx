@@ -8,6 +8,7 @@ import {
   Clock,
   Database,
   Download,
+  ExternalLink,
   Gauge,
   GraduationCap,
   MessageSquare,
@@ -23,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { curriculum, totalLessonCount, findLesson } from "@/content/curriculum";
+import { ecosystem } from "@/content/ecosystem";
 import { useProgress } from "@/lib/progress";
 import { accentStyle } from "@/lib/moduleTheme";
 import { formatDuration } from "@/lib/utils";
@@ -230,6 +232,72 @@ export function HomePage() {
                 </motion.div>
               );
             })}
+          </div>
+        </div>
+      </section>
+
+      {/* Explore the Claude ecosystem — official claude.com topics */}
+      <section className="border-t">
+        <div className="mx-auto max-w-5xl px-4 py-14 lg:px-10">
+          <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold tracking-tight">
+                Explore the Claude ecosystem
+              </h2>
+              <p className="text-muted-foreground">
+                Official product pages from{" "}
+                <span className="font-medium text-foreground">claude.com</span> —
+                go straight to the source.
+              </p>
+            </div>
+            <Badge variant="secondary" className="gap-1.5 py-1">
+              <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+              Opens claude.com
+            </Badge>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {ecosystem.map((item, i) => (
+              <motion.a
+                key={item.url}
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ ["--ah" as string]: item.hue }}
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.3, delay: (i % 3) * 0.05 }}
+                className="group relative flex flex-col gap-2 overflow-hidden rounded-xl border accent-border bg-card p-5 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"
+              >
+                <span aria-hidden className="absolute inset-x-0 top-0 h-1 accent-bar" />
+                <div className="flex items-center gap-3">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl accent-chip text-xl transition-transform group-hover:scale-110">
+                    {item.icon}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold leading-tight group-hover:accent-text">
+                      {item.name}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {item.domain}
+                    </p>
+                  </div>
+                  <ExternalLink
+                    className="h-4 w-4 shrink-0 text-muted-foreground transition-all group-hover:accent-text group-hover:translate-x-0.5"
+                    aria-hidden
+                  />
+                </div>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  {item.blurb}
+                </p>
+                {item.lessonSlug && (
+                  <span className="mt-auto pt-1 text-xs font-medium accent-text">
+                    ✓ Covered in this Academy →
+                  </span>
+                )}
+              </motion.a>
+            ))}
           </div>
         </div>
       </section>
