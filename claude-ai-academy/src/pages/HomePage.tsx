@@ -245,9 +245,9 @@ export function HomePage() {
                 Explore the Claude ecosystem
               </h2>
               <p className="text-muted-foreground">
-                Official product pages from{" "}
-                <span className="font-medium text-foreground">claude.com</span> —
-                go straight to the source.
+                Every product &amp; feature from the{" "}
+                <span className="font-medium text-foreground">claude.com</span>{" "}
+                navigation — official pages, plus where each is covered here.
               </p>
             </div>
             <Badge variant="secondary" className="gap-1.5 py-1">
@@ -276,6 +276,9 @@ export function HomePage() {
                     {item.icon}
                   </span>
                   <div className="min-w-0 flex-1">
+                    <p className="text-[10px] font-bold uppercase tracking-wider accent-text">
+                      {item.group}
+                    </p>
                     <p className="font-semibold leading-tight group-hover:accent-text">
                       {item.name}
                     </p>
