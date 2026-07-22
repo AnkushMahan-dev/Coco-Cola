@@ -66,9 +66,9 @@ const videos: Record<string, LessonVideo> = {
     channel: "Anthropic",
   },
   agent: {
-    id: "kQmXtrmQ5Zg",
-    title: "Building Agents with Model Context Protocol — Full Workshop",
-    channel: "YouTube",
+    id: "eSP7PLTXNy8",
+    title: "Build a proactive agent workflow with Claude Code",
+    channel: "Claude (Anthropic)",
   },
   skills: {
     id: "mS5ojqQ7zzw",

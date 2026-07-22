@@ -25,6 +25,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { curriculum, totalLessonCount, findLesson } from "@/content/curriculum";
 import { ecosystem } from "@/content/ecosystem";
+import { Reels } from "@/components/Reels";
 import { useProgress } from "@/lib/progress";
 import { accentStyle } from "@/lib/moduleTheme";
 import { formatDuration } from "@/lib/utils";
@@ -158,6 +159,9 @@ export function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* Quick reels — short vertical YouTube clips */}
+      <Reels />
 
       {/* Curriculum overview */}
       <section className="border-t bg-muted/40">
