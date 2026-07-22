@@ -48,7 +48,9 @@ import { Quiz } from "@/components/lesson/Quiz";
 import { ScreenshotFrame, VideoFrame } from "@/components/lesson/MediaPlaceholders";
 import { findLesson, nextLesson, previousLesson } from "@/content/curriculum";
 import { getLessonReferences } from "@/content/references";
+import { QuickStart } from "@/components/lesson/QuickStart";
 import { useLessonProgress, progressStore } from "@/lib/progress";
+import { accentStyle } from "@/lib/moduleTheme";
 import { downloadTextFile, formatDuration } from "@/lib/utils";
 
 const levelVariant = {
@@ -82,8 +84,8 @@ function Section({
         id={`${id}-heading`}
         className="flex items-center gap-2.5 text-xl font-semibold tracking-tight"
       >
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-accent-foreground">
-          <Icon className="h-4.5 w-4.5 h-[18px] w-[18px]" aria-hidden />
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg accent-chip">
+          <Icon className="h-[18px] w-[18px]" aria-hidden />
         </span>
         {title}
       </h2>
@@ -109,7 +111,7 @@ export function LessonPage() {
   const references = getLessonReferences(slug);
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8 lg:px-10">
+    <div className="mx-auto max-w-4xl px-4 py-8 lg:px-10" style={accentStyle(module.slug)}>
       <Breadcrumbs
         items={[
           { label: "Curriculum", to: "/dashboard" },
@@ -168,32 +170,55 @@ export function LessonPage() {
       <Separator className="my-8" />
 
       <div className="space-y-12">
-        {/* Overview */}
-        <Section id="overview" icon={BookOpen} title="Overview">
-          <div className="space-y-3 leading-relaxed text-muted-foreground">
-            {lesson.overview.map((p, i) => (
-              <p key={i}>{p}</p>
-            ))}
-          </div>
-        </Section>
+        {/* Do this now — the practical quick start */}
+        <QuickStart steps={lesson.steps} />
 
-        {/* Learning objectives */}
-        <Section id="objectives" icon={Target} title="Learning Objectives">
-          <Card>
-            <CardContent className="pt-6">
-              <ul className="grid gap-3">
-                {lesson.objectives.map((o, i) => (
-                  <li key={i} className="flex items-start gap-3 text-sm leading-relaxed">
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden />
-                    {o}
-                  </li>
+        {/* Why this matters — background theory, collapsed by default */}
+        <Collapsible>
+          <CollapsibleTrigger asChild>
+            <button
+              type="button"
+              className="group flex w-full items-center gap-2.5 rounded-lg border bg-card px-4 py-3 text-left text-sm font-medium shadow-sm transition-colors hover:bg-muted"
+            >
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg accent-chip">
+                <BookOpen className="h-4 w-4" aria-hidden />
+              </span>
+              Why this matters &amp; what you'll learn
+              <ChevronDown
+                className="ml-auto h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180"
+                aria-hidden
+              />
+            </button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
+            <div className="mt-1 space-y-4 rounded-lg border bg-muted/30 p-4">
+              <div className="space-y-2 text-sm leading-relaxed text-muted-foreground">
+                {lesson.overview.map((p, i) => (
+                  <p key={i}>{p}</p>
                 ))}
-              </ul>
-            </CardContent>
-          </Card>
-        </Section>
+              </div>
+              <div>
+                <p className="mb-2 flex items-center gap-2 text-sm font-semibold">
+                  <Target className="h-4 w-4 accent-text" aria-hidden /> By the end
+                  you'll be able to:
+                </p>
+                <ul className="grid gap-2">
+                  {lesson.objectives.map((o, i) => (
+                    <li
+                      key={i}
+                      className="flex items-start gap-2.5 text-sm leading-relaxed text-muted-foreground"
+                    >
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden />
+                      {o}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
 
-        {/* Step-by-step instructions */}
+        {/* Step-by-step instructions — the main event */}
         <Section id="steps" icon={ListChecks} title="Step-by-Step Instructions">
           <ol className="space-y-6">
             {lesson.steps.map((step, i) => (
@@ -223,20 +248,6 @@ export function LessonPage() {
               </li>
             ))}
           </ol>
-        </Section>
-
-        {/* Screenshots */}
-        <Section id="screenshots" icon={ImageIcon} title="Screenshots">
-          <div className="grid gap-6 md:grid-cols-2">
-            {lesson.screenshots.map((s, i) => (
-              <ScreenshotFrame key={i} media={s} />
-            ))}
-          </div>
-        </Section>
-
-        {/* Video */}
-        <Section id="video" icon={Video} title="Video Walkthrough">
-          <VideoFrame video={lesson.video} lessonSlug={lesson.slug} />
         </Section>
 
         {/* Real SAP example */}
@@ -325,6 +336,20 @@ export function LessonPage() {
               </div>
             ))}
           </div>
+        </Section>
+
+        {/* Screenshots */}
+        <Section id="screenshots" icon={ImageIcon} title="Screenshots">
+          <div className="grid gap-6 md:grid-cols-2">
+            {lesson.screenshots.map((s, i) => (
+              <ScreenshotFrame key={i} media={s} />
+            ))}
+          </div>
+        </Section>
+
+        {/* Video */}
+        <Section id="video" icon={Video} title="Video Walkthrough">
+          <VideoFrame video={lesson.video} lessonSlug={lesson.slug} />
         </Section>
 
         {/* Practice exercise */}

@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/accordion";
 import { curriculum } from "@/content/curriculum";
 import { useProgress } from "@/lib/progress";
+import { accentStyle } from "@/lib/moduleTheme";
 import { cn } from "@/lib/utils";
 import type { ModuleIcon } from "@/content/types";
 
@@ -82,10 +83,13 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
                 key={module.slug}
                 value={module.slug}
                 className="border-none"
+                style={accentStyle(module.slug)}
               >
                 <AccordionTrigger className="rounded-md px-3 py-2 text-sm hover:bg-muted hover:no-underline">
                   <span className="flex min-w-0 items-center gap-2.5">
-                    <Icon className="h-4 w-4 shrink-0 text-primary" aria-hidden />
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md accent-chip">
+                      <Icon className="h-3.5 w-3.5" aria-hidden />
+                    </span>
                     <span className="truncate font-medium">
                       {mi + 1}. {module.shortTitle}
                     </span>

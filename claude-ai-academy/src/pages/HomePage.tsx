@@ -24,6 +24,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { curriculum, totalLessonCount, findLesson } from "@/content/curriculum";
 import { useProgress } from "@/lib/progress";
+import { accentStyle } from "@/lib/moduleTheme";
 import { formatDuration } from "@/lib/utils";
 import type { ModuleIcon } from "@/content/types";
 
@@ -77,10 +78,7 @@ export function HomePage() {
     <div>
       {/* Hero */}
       <section className="relative overflow-hidden border-b">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_60%_at_70%_20%,hsl(var(--primary)/0.12),transparent)]"
-        />
+        <div aria-hidden className="pointer-events-none absolute inset-0 hero-mesh" />
         <div className="relative mx-auto max-w-5xl px-4 py-16 lg:px-10 lg:py-24">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -94,7 +92,7 @@ export function HomePage() {
             </Badge>
             <h1 className="text-4xl font-bold tracking-tight lg:text-5xl">
               Master Claude AI for{" "}
-              <span className="text-primary">SAP development</span>
+              <span className="text-gradient">SAP development</span>
             </h1>
             <p className="text-lg leading-relaxed text-muted-foreground">
               A structured training platform and reference guide that takes SAP
@@ -186,19 +184,24 @@ export function HomePage() {
                   viewport={{ once: true }}
                   transition={{ duration: 0.3, delay: (i % 2) * 0.06 }}
                 >
-                  <Link to={`/modules/${module.slug}`} className="group block h-full">
-                    <Card className="h-full transition-all group-hover:border-primary/40 group-hover:shadow-md">
-                      <CardHeader className="flex-row items-start gap-4 space-y-0">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Link
+                    to={`/modules/${module.slug}`}
+                    className="group block h-full"
+                    style={accentStyle(module.slug)}
+                  >
+                    <Card className="relative h-full overflow-hidden transition-all accent-border group-hover:-translate-y-0.5 group-hover:shadow-lg">
+                      <span aria-hidden className="absolute inset-x-0 top-0 h-1 accent-bar" />
+                      <CardHeader className="flex-row items-start gap-4 space-y-0 pt-6">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg accent-chip">
                           <Icon className="h-5 w-5" aria-hidden />
                         </span>
                         <div className="min-w-0 flex-1 space-y-1.5">
                           <div className="flex items-center justify-between gap-2">
-                            <CardTitle className="text-base group-hover:text-primary">
+                            <CardTitle className="text-base transition-colors group-hover:accent-text">
                               {i + 1}. {module.title}
                             </CardTitle>
                             <ArrowRight
-                              className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary"
+                              className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
                               aria-hidden
                             />
                           </div>

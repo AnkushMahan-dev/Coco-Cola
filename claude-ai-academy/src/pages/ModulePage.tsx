@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { curriculum, findModule } from "@/content/curriculum";
 import { useProgress } from "@/lib/progress";
+import { accentStyle } from "@/lib/moduleTheme";
 import { formatDuration } from "@/lib/utils";
 
 const levelVariant = {
@@ -28,7 +29,10 @@ export function ModulePage() {
   const totalMinutes = module.lessons.reduce((s, l) => s + l.duration, 0);
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8 lg:px-10">
+    <div
+      className="mx-auto max-w-4xl px-4 py-8 lg:px-10"
+      style={accentStyle(module.slug)}
+    >
       <Breadcrumbs
         items={[{ label: "Curriculum", to: "/dashboard" }, { label: module.shortTitle }]}
       />
