@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
 import { Header } from "./Header";
 import { SidebarNav } from "./Sidebar";
 import { CommandPalette } from "@/components/search/CommandPalette";
@@ -51,7 +52,14 @@ export function AppShell() {
         </Dialog>
 
         <main className="min-w-0 flex-1">
-          <Outlet />
+          <motion.div
+            key={location.pathname}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+          >
+            <Outlet />
+          </motion.div>
         </main>
       </div>
 

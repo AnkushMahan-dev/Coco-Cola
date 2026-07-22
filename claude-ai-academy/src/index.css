@@ -92,17 +92,20 @@
     scrollbar-color: hsl(var(--border)) transparent;
   }
 
-  /* Colorful gradient text for hero + headings */
+  /* Colorful gradient text for hero + headings (slow animated sheen) */
   .text-gradient {
     background-image: linear-gradient(
       100deg,
       hsl(262 83% 58%),
       hsl(291 70% 55%),
-      hsl(199 89% 48%)
+      hsl(199 89% 48%),
+      hsl(262 83% 58%)
     );
+    background-size: 220% auto;
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+    animation: gradient-pan 9s linear infinite;
   }
   .dark .text-gradient {
     background-image: linear-gradient(
@@ -113,12 +116,25 @@
     );
   }
 
-  /* Vibrant multi-blob hero backdrop */
+  /* Vibrant multi-blob hero backdrop (slow drift) */
   .hero-mesh {
     background-image:
       radial-gradient(42% 55% at 12% 8%, hsl(262 83% 58% / 0.22), transparent 60%),
       radial-gradient(38% 50% at 88% 4%, hsl(291 75% 58% / 0.20), transparent 60%),
       radial-gradient(50% 60% at 70% 90%, hsl(199 89% 48% / 0.16), transparent 60%);
+    animation: hero-drift 22s ease-in-out infinite;
+    will-change: transform;
+  }
+
+  /* Reusable hover-lift for cards/links */
+  .hover-lift {
+    transition:
+      transform 0.18s ease,
+      box-shadow 0.18s ease,
+      border-color 0.18s ease;
+  }
+  .hover-lift:hover {
+    transform: translateY(-2px);
   }
 
   /* Accent helpers driven by --ah (set per module) */
@@ -138,6 +154,57 @@
       hsl(var(--ah)),
       hsl(var(--ah) / 0.4)
     );
+  }
+}
+
+/* ---- keyframes for small ambient animations ---- */
+@keyframes gradient-pan {
+  to {
+    background-position: 220% center;
+  }
+}
+
+@keyframes hero-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(0, -1.4%, 0) scale(1.05);
+  }
+}
+
+@keyframes pop-in {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-pop-in {
+  animation: pop-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Respect users who prefer reduced motion: kill ambient/looping motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .hero-mesh,
+  .text-gradient {
+    animation: none !important;
   }
 }
 

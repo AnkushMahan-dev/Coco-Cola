@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { Check, Copy, Rocket, ArrowDown } from "lucide-react";
 import type { Step } from "@/content/types";
 import { cn } from "@/lib/utils";
@@ -38,11 +39,21 @@ export function QuickStart({ steps }: { steps: Step[] }) {
   };
 
   return (
-    <div className="overflow-hidden rounded-xl border accent-border bg-gradient-to-br from-[hsl(var(--ah)/0.08)] to-transparent">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, ease: "easeOut" }}
+      className="overflow-hidden rounded-xl border accent-border bg-gradient-to-br from-[hsl(var(--ah)/0.08)] to-transparent"
+    >
       <div className="flex items-center gap-2.5 border-b accent-border px-5 py-3">
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg accent-chip">
+        <motion.span
+          initial={{ rotate: -12, scale: 0.8 }}
+          animate={{ rotate: 0, scale: 1 }}
+          transition={{ type: "spring", stiffness: 300, damping: 15, delay: 0.1 }}
+          className="flex h-8 w-8 items-center justify-center rounded-lg accent-chip"
+        >
           <Rocket className="h-4 w-4" aria-hidden />
-        </span>
+        </motion.span>
         <div>
           <p className="text-sm font-bold leading-tight">Do this now</p>
           <p className="text-xs text-muted-foreground">
@@ -85,7 +96,7 @@ export function QuickStart({ steps }: { steps: Step[] }) {
               >
                 {copied ? (
                   <>
-                    <Check className="h-3 w-3 text-success" /> Copied
+                    <Check className="h-3 w-3 text-success animate-pop-in" /> Copied
                   </>
                 ) : (
                   <>
@@ -108,8 +119,8 @@ export function QuickStart({ steps }: { steps: Step[] }) {
         )}
       >
         Full step-by-step guide
-        <ArrowDown className="h-3.5 w-3.5" aria-hidden />
+        <ArrowDown className="h-3.5 w-3.5 transition-transform group-hover:translate-y-0.5" aria-hidden />
       </a>
-    </div>
+    </motion.div>
   );
 }

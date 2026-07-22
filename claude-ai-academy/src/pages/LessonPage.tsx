@@ -142,7 +142,7 @@ export function LessonPage() {
           >
             {isComplete ? (
               <>
-                <CheckCircle2 className="text-success" /> Completed
+                <CheckCircle2 className="text-success animate-pop-in" /> Completed
               </>
             ) : (
               <>
@@ -222,7 +222,14 @@ export function LessonPage() {
         <Section id="steps" icon={ListChecks} title="Step-by-Step Instructions">
           <ol className="space-y-6">
             {lesson.steps.map((step, i) => (
-              <li key={i} className="relative rounded-lg border bg-card p-5 pl-14 shadow-sm">
+              <motion.li
+                key={i}
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-30px" }}
+                transition={{ duration: 0.3, delay: Math.min(i * 0.05, 0.25) }}
+                className="relative rounded-lg border bg-card p-5 pl-14 shadow-sm transition-shadow hover:shadow-md"
+              >
                 <span
                   aria-hidden
                   className="absolute left-4 top-5 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground"
@@ -245,7 +252,7 @@ export function LessonPage() {
                     {step.callout.body}
                   </Callout>
                 )}
-              </li>
+              </motion.li>
             ))}
           </ol>
         </Section>
