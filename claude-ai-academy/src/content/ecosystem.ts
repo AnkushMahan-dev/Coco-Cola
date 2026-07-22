@@ -63,6 +63,7 @@ export const ecosystem: EcosystemItem[] = [
     domain: "claude.com/product/tag",
     hue: "34 95% 48%",
     group: "Products",
+    lessonSlug: "claude-tag",
   },
   {
     icon: "🌐",
@@ -117,6 +118,7 @@ export const ecosystem: EcosystemItem[] = [
     domain: "claude.com/product/design",
     hue: "322 80% 58%",
     group: "Explore",
+    lessonSlug: "claude-design",
   },
   {
     icon: "🔗",

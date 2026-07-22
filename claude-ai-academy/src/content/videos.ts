@@ -80,6 +80,16 @@ const videos: Record<string, LessonVideo> = {
     title: "Model Context Protocol (MCP), clearly explained (why it matters)",
     channel: "YouTube",
   },
+  "claude-tag": {
+    id: "VojDzHaciKQ",
+    title: "Tag Claude in, right where you already work",
+    channel: "Claude (Anthropic)",
+  },
+  "claude-design": {
+    id: "ii9MJCBHqjM",
+    title: "Claude Design Tutorial for Beginners — Master 99% in under 20 min",
+    channel: "Kate Hayes",
+  },
 
   // Module 4 — Integrations & Extensions
   "mcp-servers": {

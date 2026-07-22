@@ -6,7 +6,7 @@ export const module3: Module = {
   shortTitle: "Advanced",
   icon: "sparkles",
   description:
-    "Master Claude Cowork, agentic workflows, Skills, and Connectors to automate SAP office work, codify team knowledge, and connect Claude to your corporate systems.",
+    "Master Cowork, agents, Skills, Connectors, @Claude in Slack, and Claude Design to automate SAP office work, codify team knowledge, collaborate, and turn ideas into visuals.",
   lessons: [
     // =====================================================================
     // Lesson 1: Claude Cowork for SAP Teams
@@ -1634,6 +1634,439 @@ open questions.
 `,
       },
       relatedSlugs: ["mcp-servers", "claude-web", "claude-desktop", "security-guidelines"],
+    },
+    {
+      slug: "claude-tag",
+      title: "@Claude in Slack",
+      description:
+        "Bring Claude into your SAP team's Slack: tag @Claude in any thread to summarize, pull answers, draft updates and move work forward right where the team already talks.",
+      duration: 22,
+      level: "Intermediate",
+      keywords: [
+        "claude in slack",
+        "@claude",
+        "claude tag",
+        "team collaboration",
+        "slack app",
+        "incident handover",
+        "microsoft teams",
+      ],
+      overview: [
+        "@Claude brings Claude directly into Slack. Tag @Claude in any thread and it reads the whole conversation, does the work, and posts back where everyone can see it. It uses the channel's context and your organization's connected tools, and it can keep working over days on longer tasks. It is available in beta for Claude Team and Enterprise plans, and Anthropic has said it is expanding to Microsoft Teams.",
+        "For SAP teams, most day-to-day decisions already happen in Slack channels like #abap-dev, #s4-migration or #incident-bridge. @Claude turns those threads into action: summarize a long incident thread for the next shift, pull the answer straight from a connected SharePoint spec, draft a status update, or turn a discussion into a task list - without anyone leaving Slack or copy-pasting into a separate window.",
+        "In this lesson you will enable the Claude app in Slack, learn to tag @Claude with clear, context-aware requests, and apply it to real SAP team scenarios. You will also learn the boundaries: it is a collaboration surface, it is admin-controlled, and - like all AI output - its answers are reviewed by a human before they drive a transport or a production change.",
+      ],
+      objectives: [
+        "Enable the Claude app in your Slack workspace with admin approval",
+        "Tag @Claude in a thread and give it a clear, context-aware request",
+        "Summarize a long incident or decision thread for a clean shift handover",
+        "Reference connected org tools (e.g. a SharePoint spec) from inside Slack",
+        "Decide when a task belongs in Slack (@Claude) versus the Claude app versus Claude Code",
+      ],
+      steps: [
+        {
+          title: "Enable the Claude app in Slack",
+          body: [
+            "@Claude needs the Claude app installed in your Slack workspace, and it requires a Claude Team or Enterprise plan. A workspace admin adds it from the Slack app directory (or via the guided install), approves the permissions, and chooses which channels it may join. If you are not an admin, ask yours - this is a one-time setup for the whole team.",
+          ],
+          code: {
+            language: "text",
+            filename: "in Slack",
+            code: "1. Admin installs the 'Claude' app from the Slack App Directory\n2. Approve scopes; choose channels @Claude may be added to\n3. In a channel, type: /invite @Claude\n4. Test it: @Claude are you connected?",
+          },
+          callout: {
+            type: "info",
+            title: "Admin & data governance",
+            body: "@Claude is controlled by your workspace admin, who decides which channels it can join. Agree with your team which channels are in scope before wide rollout - and remember @Claude can read the thread it is tagged in.",
+          },
+        },
+        {
+          title: "Tag @Claude with a clear ask",
+          body: [
+            "In any thread, mention @Claude and state exactly what you want. @Claude reads the full thread for context, so you rarely need to re-explain - but you do need to say what output you want (a summary, action items, a drafted message, an answer).",
+          ],
+          code: {
+            language: "text",
+            filename: "Slack thread",
+            code: "@Claude summarize this thread in 5 bullets, then list the open\naction items with an owner and a due date for each.",
+          },
+        },
+        {
+          title: "Use it for handovers and triage",
+          body: [
+            "The highest-value use for a follow-the-sun SAP support model is the shift handover. Instead of the night shift writing a manual summary at 6am, they tag @Claude in the incident thread and get a structured handover the day shift can act on immediately.",
+          ],
+        },
+        {
+          title: "Reference your connected tools",
+          body: [
+            "If your workspace has connectors enabled (see the Connectors lesson), @Claude can pull from approved sources - for example, fetch the current version of a functional spec from SharePoint and answer a question about it, right in the thread. Only connect sources your organization has approved.",
+          ],
+          callout: {
+            type: "warning",
+            title: "Keep secrets out of Slack",
+            body: "Never paste passwords, RFC credentials, or production customer/vendor data into a Slack thread for @Claude to process. Treat Slack as you would any shared channel - the Security Guidelines lesson has the full rules.",
+          },
+        },
+        {
+          title: "Let it carry longer tasks",
+          body: [
+            "@Claude can persist on a task over hours or days and come back when it is done or needs input - useful for jobs like 'draft the release notes once the last transport is listed in this thread'. Check back in the thread rather than expecting an instant reply for bigger asks.",
+          ],
+        },
+        {
+          title: "Know where Slack ends and SAP begins",
+          body: [
+            "@Claude works in Slack and your connected tools. It does not log into your SAP system or change ABAP. Use it to summarize, answer, draft and coordinate; the resulting change still goes through your normal transport, review and approval process.",
+          ],
+        },
+      ],
+      screenshots: [
+        {
+          caption: "@Claude summarizing an incident thread in Slack",
+          description:
+            "A Slack channel #incident-bridge where a user has tagged @Claude, and Claude has replied with a structured 5-bullet incident summary and an action-item list with owners.",
+        },
+        {
+          caption: "@Claude posting a drafted status update back to the channel",
+          description:
+            "A Slack thread showing @Claude returning a drafted stakeholder status message that the team can copy, edit and send.",
+        },
+      ],
+      video: {
+        caption: "Tag Claude in, right where you already work",
+        description:
+          "Anthropic's overview of @Claude in Slack: tagging Claude into a thread, using channel context and connected tools, and letting it carry work through over days.",
+        duration: "1:30",
+      },
+      sapExample: {
+        title: "Night-shift incident handover in #incident-bridge",
+        scenario:
+          "At a beverage bottling company, a production incident on the S/4HANA order-to-cash flow generates a 60-message thread overnight across three engineers. At shift change, instead of writing a manual summary, the on-call lead tags @Claude to produce a handover the day shift can act on.",
+        prompt:
+          "@Claude summarize this thread for the incoming day shift. Structure it as:\n1) What broke (business impact, since when)\n2) Current status\n3) What has already been tried and the result\n4) Root-cause hypotheses still open\n5) Action items with an owner\nKeep it under 200 words.",
+        explanation: [
+          "@Claude has already read every message in the thread, so it produces the handover from the real conversation - no one has to reconstruct the timeline from memory at 6am.",
+          "The day shift gets a consistent, structured summary in seconds. A human still owns the incident: the summary is a starting point for the standup, and any fix still travels through the normal transport and change process.",
+        ],
+      },
+      bestPractices: [
+        "Always pair the @Claude mention with a specific ask and the output format you want.",
+        "Use it for summaries, drafts, triage and Q&A - the things that eat team time in Slack.",
+        "Keep a human as the approver for anything that leads to a transport or production change.",
+        "Only connect and reference org sources your company has approved.",
+        "Agree as a team which channels @Claude belongs in before rolling it out widely.",
+        "Never paste credentials or production business data into a thread.",
+      ],
+      commonMistakes: [
+        {
+          mistake: "Tagging @Claude with no actual request ('@Claude?').",
+          fix: "State the task and the output you want. @Claude has the thread context, but it still needs to know what to produce.",
+        },
+        {
+          mistake: "Expecting @Claude to change something in SAP directly.",
+          fix: "It works in Slack and connected tools, not in your SAP system. Use it to coordinate; the change goes through your normal process.",
+        },
+        {
+          mistake: "Pasting an SE16 export with real customer data into a channel for analysis.",
+          fix: "Anonymize first, or use the desktop app on a local file. Slack channels are shared - treat them accordingly.",
+        },
+        {
+          mistake: "Treating a thread summary as authoritative without a glance at the source.",
+          fix: "Spot-check the summary against the thread for anything that will drive a decision - the same care you'd give a colleague's notes.",
+        },
+      ],
+      tips: [
+        "Pin @Claude's handover summary to the incident thread so the next shift finds it instantly.",
+        "Tag @Claude inside a thread (not just the channel) so it has the tightest context.",
+        "Combine with connectors: 'pull the latest CR-2231 spec from SharePoint and answer X'.",
+        "Microsoft Teams support is on the way - the same patterns will carry over.",
+      ],
+      exercise: {
+        title: "Turn a decision thread into a spec-ready summary",
+        scenario:
+          "Your #s4-migration channel has a long thread where the team debated how to handle MATNR extension for a custom table. The outcome needs to reach the technical spec.",
+        tasks: [
+          "In the thread, tag @Claude and ask for a decision summary: the question, the options discussed, the decision, and the rationale.",
+          "Ask it to list any open follow-ups with owners.",
+          "Ask it to draft a 3-sentence paragraph you can paste into the technical spec.",
+          "Copy the paragraph, review it against the thread, and adjust before pasting.",
+        ],
+        hint: "Ask for the exact artifact you need ('a 3-sentence paragraph for a technical spec'), not just 'summarize' - specificity is what makes the output pasteable.",
+        solution: {
+          language: "text",
+          filename: "slack-prompt.txt",
+          code: "@Claude from this thread, produce:\n1) Decision summary: the question, options considered, the decision, why.\n2) Open follow-ups with an owner each.\n3) A 3-sentence paragraph in a neutral technical-spec voice that I can\n   paste directly into the CR document.",
+        },
+      },
+      quiz: [
+        {
+          question: "What plan is required to use @Claude in Slack?",
+          options: [
+            "Any free account",
+            "Claude Team or Enterprise",
+            "A personal Pro account",
+            "Only the Claude API",
+          ],
+          correctIndex: 1,
+          explanation:
+            "@Claude in Slack is available in beta for Claude Team and Enterprise plans, and is set up by a workspace admin.",
+        },
+        {
+          question: "Why does @Claude usually not need you to re-explain the situation?",
+          options: [
+            "It has access to your SAP system",
+            "It reads the full thread it is tagged in for context",
+            "It remembers every past Slack conversation forever",
+            "It guesses from the channel name",
+          ],
+          correctIndex: 1,
+          explanation:
+            "@Claude reads the thread's context, so you focus on stating the ask and the output you want.",
+        },
+        {
+          question: "A teammate wants @Claude to apply a fix to an ABAP class in the system. What's true?",
+          options: [
+            "@Claude can edit and activate the class directly",
+            "@Claude works in Slack and connected tools, not in SAP - the change still goes through transports and review",
+            "@Claude can only do it on Enterprise",
+            "@Claude will open SAP GUI for them",
+          ],
+          correctIndex: 1,
+          explanation:
+            "@Claude is a collaboration surface. It can help draft or coordinate, but SAP changes still follow your normal development and transport process.",
+        },
+      ],
+      summary: [
+        "@Claude lives in Slack: tag it in a thread and it reads the context, does the work and posts back - Team/Enterprise, with Teams coming.",
+        "Best for the work that clogs Slack: incident handovers, thread summaries, drafts, Q&A against connected tools.",
+        "It coordinates; it doesn't change SAP. Keep secrets out of channels and a human on approvals.",
+      ],
+      download: {
+        name: "Claude-in-Slack playbook",
+        description:
+          "Prompt templates and a rollout checklist for using @Claude across an SAP team's Slack channels.",
+        filename: "claude-in-slack-playbook.md",
+        content:
+          "# @Claude in Slack - SAP Team Playbook\n\n## Rollout checklist\n- [ ] Team/Enterprise plan confirmed\n- [ ] Admin installed the Claude app in Slack\n- [ ] Channels in scope agreed (e.g. #abap-dev, #s4-migration, #incident-bridge)\n- [ ] Connectors approved (SharePoint, GitHub) if used\n- [ ] Team briefed: no credentials or production data in threads\n\n## Prompt templates\n\n### Incident handover\n@Claude summarize this thread for the incoming shift: what broke, current\nstatus, what's been tried, open hypotheses, and action items with owners.\n\n### Decision to spec\n@Claude produce a decision summary (question, options, decision, rationale)\nand a 3-sentence paragraph I can paste into the technical spec.\n\n### Status update\n@Claude draft a stakeholder status update from this thread: progress, risks,\nnext steps. Neutral tone, under 120 words.\n\n### Answer from a connected source\n@Claude using the connected SharePoint, what does the CR-XXXX spec say about\n<topic>? Cite the section.\n\n## Guardrails\n- Human reviews anything that leads to a transport or production change\n- Anonymize data before asking for analysis\n- Spot-check summaries against the source thread\n",
+      },
+      relatedSlugs: ["cowork", "connectors", "github-integration", "security-guidelines"],
+    },
+    {
+      slug: "claude-design",
+      title: "Claude Design",
+      description:
+        "Turn ideas into visuals with Claude Design: describe a prototype, deck or one-pager and Claude builds a draft you refine - great for Fiori mockups, architecture diagrams and stakeholder decks.",
+      duration: 20,
+      level: "Beginner",
+      keywords: [
+        "claude design",
+        "prototype",
+        "wireframe",
+        "fiori mockup",
+        "presentation",
+        "architecture diagram",
+        "one-pager",
+      ],
+      overview: [
+        "Claude Design turns a description into a visual draft - prototypes, wireframes, one-pagers, slide decks and marketing collateral. You describe what you want, Claude builds the first draft, and you refine it in plain language. It can align to a design system for brand consistency and export to tools like PowerPoint. As Anthropic puts it: you're the designer from start to finish; Claude does the heavy lifting of the first draft.",
+        "SAP developers aren't visual designers, but they constantly need visuals: a Fiori app wireframe to align with a functional consultant, an architecture diagram for a technical spec, a migration-approach slide for a steering committee, a one-page cutover runbook. Claude Design gets you from idea to a shareable draft in minutes instead of wrestling with PowerPoint or a diagramming tool.",
+        "In this lesson you'll generate three SAP-relevant assets, learn to iterate on a draft, and learn where design hands off to build: for a working Fiori/UI5 app you take the agreed concept into Claude Code or your dev tools. Claude Design is for the concept, the mockup and the communication - not the production app.",
+      ],
+      objectives: [
+        "Generate a first-draft visual (wireframe, diagram or deck) from a text description",
+        "Iterate on a draft using natural-language feedback",
+        "Produce a Fiori app wireframe to align with a functional consultant before build",
+        "Create a stakeholder slide (e.g. an S/4HANA migration approach) and export it",
+        "Decide when to hand a concept off to Claude Code or UI5 for a real build",
+      ],
+      steps: [
+        {
+          title: "Describe what you want",
+          body: [
+            "Open Claude Design and describe the asset: its type, its audience, the content it must show, and any style. The more specific you are, the closer the first draft lands. Think of it as briefing a designer.",
+          ],
+          code: {
+            language: "text",
+            filename: "prompt-to-claude.txt",
+            code: "Design a Fiori-style wireframe for a Plant Maintenance approval app.\nAudience: functional consultant sign-off (not final UI).\nScreens: (1) worklist of pending maintenance orders with status chips,\n(2) order detail with approve/reject actions and a comment field.\nStyle: SAP Fiori 3 look, light theme, clear labels. Low-fidelity is fine.",
+          },
+        },
+        {
+          title: "Review and iterate in plain language",
+          body: [
+            "Treat the first draft as a starting point. Refine it conversationally - move things, change emphasis, add a state - and watch it update. You stay in control of every decision.",
+          ],
+          code: {
+            language: "text",
+            filename: "follow-ups.txt",
+            code: "- Add a filter bar (plant, status, date) above the worklist.\n- Show an empty state for 'no orders pending'.\n- Make the approve button primary and reject secondary.\n- Add a small badge with the count of pending orders.",
+          },
+        },
+        {
+          title: "Apply a design system for consistency",
+          body: [
+            "If your team has brand or UI standards, tell Claude Design to follow them - colours, logo, spacing, component style - so drafts look consistent across the team and align to your Fiori theme.",
+          ],
+          callout: {
+            type: "tip",
+            title: "Keep a reusable brief",
+            body: "Save a short 'house style' brief (colours, font, Fiori version, do's and don'ts) and paste it at the start of each design session so every draft comes out on-brand.",
+          },
+        },
+        {
+          title: "Use it for technical diagrams",
+          body: [
+            "Beyond UI, describe a diagram and get a clean draft: a system landscape, an integration flow, or the object model for a RAP business object. Great for dropping into a technical spec.",
+          ],
+          code: {
+            language: "text",
+            filename: "diagram-prompt.txt",
+            code: "Create an architecture diagram for an OData integration:\nSAP S/4HANA (RAP service) -> SAP Gateway -> Azure API Management ->\na partner web app. Show the protocol on each hop (OData V4, HTTPS) and\nmark where authentication happens. Clean, left-to-right, presentation-ready.",
+          },
+        },
+        {
+          title: "Export, share, and hand off",
+          body: [
+            "Export the draft (for example to PowerPoint) to drop into a steering-committee deck, or share it to gather feedback. When the concept is agreed, hand the UI concept to Claude Code or your UI5 toolchain to build the real, working app.",
+          ],
+          callout: {
+            type: "info",
+            title: "Design vs build",
+            body: "Claude Design produces the concept and the mockup - not a deployable Fiori app. The agreed wireframe becomes the brief for the real build in Claude Code / SAP BAS / UI5.",
+          },
+        },
+      ],
+      screenshots: [
+        {
+          caption: "A generated Fiori app wireframe draft",
+          description:
+            "Claude Design showing a low-fidelity Fiori-style wireframe for a maintenance approval app: a worklist with status chips on the left and an order-detail panel with approve/reject actions on the right.",
+        },
+        {
+          caption: "An exported S/4HANA migration-approach slide",
+          description:
+            "A presentation slide generated by Claude Design outlining a brownfield S/4HANA migration approach with phases and milestones, ready to drop into a steering-committee deck.",
+        },
+      ],
+      video: {
+        caption: "Claude Design tutorial for beginners",
+        description:
+          "A hands-on walkthrough of Claude Design: describing an asset, iterating on the draft, applying a style, and exporting slides and prototypes.",
+        duration: "18:00",
+      },
+      sapExample: {
+        title: "Aligning a Fiori concept with a functional consultant before RAP build",
+        scenario:
+          "A developer at a bottling company needs to build a plant-maintenance approval app in RAP. Before writing any BDEF or CDS, they want the functional consultant to sign off on the screen flow. Rather than mock it in PowerPoint, they draft it in Claude Design in minutes.",
+        prompt:
+          "Design a two-screen Fiori wireframe for a maintenance-order approval app:\nScreen 1: worklist (columns: order, plant, description, status chip,\nrequested-by) with a filter bar. Screen 2: detail with an approve and a\nreject action, a mandatory comment on reject, and an approval history list.\nLow-fidelity, Fiori 3 style. Then list the fields the backend must expose.",
+        explanation: [
+          "In one prompt the developer gets a shareable wireframe AND a first cut of the data the RAP service must expose - a natural bridge from design into the CDS/BDEF work covered in the RAP lesson.",
+          "The functional consultant reviews and marks up the wireframe instead of imagining it from a text spec, so the team aligns before a line of ABAP is written. The agreed concept then becomes the brief for the real RAP build.",
+        ],
+      },
+      bestPractices: [
+        "Brief it like a designer: type, audience, content and style in the first prompt.",
+        "Iterate in small, specific steps rather than re-describing the whole asset.",
+        "Keep a reusable house-style brief so drafts stay on-brand and on-theme.",
+        "Use it to align stakeholders early - a wireframe beats a paragraph of spec.",
+        "Treat output as a concept/mockup; build the real Fiori app in your dev toolchain.",
+        "Label low-fidelity drafts clearly so no one mistakes a mockup for the final UI.",
+      ],
+      commonMistakes: [
+        {
+          mistake: "Expecting Claude Design to produce a deployable, working Fiori/UI5 app.",
+          fix: "It produces concepts, wireframes and decks. Hand the agreed concept to Claude Code / UI5 to build the real app.",
+        },
+        {
+          mistake: "Vague briefs ('design an SAP screen') that produce generic drafts.",
+          fix: "Specify screens, content, audience and style. Specific briefs produce useful first drafts.",
+        },
+        {
+          mistake: "Re-describing the entire asset for every tweak.",
+          fix: "Refine conversationally - 'make the approve button primary', 'add an empty state' - and let the draft update.",
+        },
+        {
+          mistake: "Presenting an early low-fidelity mockup as the signed-off final design.",
+          fix: "Label fidelity explicitly and confirm sign-off separately, so expectations stay aligned.",
+        },
+      ],
+      tips: [
+        "Ask for the backend fields alongside a UI mockup to jump-start the CDS/RAP work.",
+        "Generate two style options and pick - faster than describing the perfect one up front.",
+        "Use it for architecture and flow diagrams in technical specs, not just UI.",
+        "Export to PowerPoint for steering-committee decks; keep the source prompt to regenerate later.",
+      ],
+      exercise: {
+        title: "Build a steering-committee migration slide",
+        scenario:
+          "You need a single slide that explains your brownfield S/4HANA migration approach to a non-technical steering committee.",
+        tasks: [
+          "Ask Claude Design for a one-slide migration-approach visual with 4 phases (prepare, explore, realize, deploy) and 2-3 bullets each.",
+          "Iterate: add a timeline bar and highlight the cutover milestone.",
+          "Apply your company colours / a clean corporate style.",
+          "Export it and note how you'd hand the concept to the team.",
+        ],
+        hint: "State the audience ('non-technical steering committee') so the draft uses plain language and a clean layout rather than dense technical detail.",
+        solution: {
+          language: "text",
+          filename: "design-prompt.txt",
+          code: "Design a single presentation slide: 'S/4HANA Brownfield Migration -\nApproach'. Four phases left to right (Prepare, Explore, Realize, Deploy),\n2-3 plain-language bullets each, a timeline bar beneath, and the go-live/\ncutover milestone highlighted. Audience: non-technical steering committee.\nClean corporate style; export-ready for PowerPoint.",
+        },
+      },
+      quiz: [
+        {
+          question: "What does Claude Design produce?",
+          options: [
+            "A deployed, production Fiori app",
+            "Draft visuals - prototypes, wireframes, one-pagers and decks - that you refine",
+            "ABAP code only",
+            "A running OData service",
+          ],
+          correctIndex: 1,
+          explanation:
+            "Claude Design turns a description into a visual draft you refine. Building the real app is a separate step in your dev toolchain.",
+        },
+        {
+          question: "Where does Claude Design fit in a RAP app project?",
+          options: [
+            "It replaces CDS and BDEF development",
+            "It helps align the screen concept with stakeholders before the RAP build begins",
+            "It deploys the service binding",
+            "It runs ABAP Unit tests",
+          ],
+          correctIndex: 1,
+          explanation:
+            "Use it up front to agree the UI concept and even sketch the fields; the actual RAP build happens afterward in your development tools.",
+        },
+        {
+          question: "What most improves the first draft you get back?",
+          options: [
+            "Using as few words as possible",
+            "A specific brief: type, audience, content and style",
+            "Always asking for high fidelity",
+            "Never iterating",
+          ],
+          correctIndex: 1,
+          explanation:
+            "Like briefing a designer, specificity about type, audience, content and style produces a first draft that's close to what you need.",
+        },
+      ],
+      summary: [
+        "Claude Design turns a description into a visual draft - wireframes, diagrams, one-pagers and decks - that you refine in plain language.",
+        "For SAP work it's ideal for Fiori mockups, spec diagrams and stakeholder slides - align people fast, before you build.",
+        "It's for concepts and communication; the real Fiori app is built afterward in Claude Code / UI5.",
+      ],
+      download: {
+        name: "Claude Design prompt pack",
+        description:
+          "Ready-to-use prompts for the SAP visuals developers need most - Fiori wireframes, architecture diagrams and stakeholder slides.",
+        filename: "claude-design-prompt-pack.md",
+        content:
+          "# Claude Design - SAP Visuals Prompt Pack\n\n## Fiori app wireframe\nDesign a low-fidelity Fiori-style wireframe for <app>. Audience: functional\nsign-off. Screens: <list screens + key elements>. Fiori 3 style, light theme.\nThen list the backend fields each screen needs.\n\n## Architecture diagram\nCreate a presentation-ready architecture diagram: <systems and hops>. Show\nthe protocol on each connection and mark where authentication happens.\nLeft-to-right, clean.\n\n## Integration flow\nDraw an integration flow for <process>: trigger, systems involved, data at\neach step, error handling. Number the steps.\n\n## Steering-committee slide\nDesign one slide: '<topic>'. <N> phases left to right with 2-3 plain-language\nbullets each, a timeline bar, key milestone highlighted. Non-technical\naudience. Corporate style, export-ready.\n\n## One-page cutover runbook\nDesign a one-page cutover runbook: timeline, responsible teams per step,\ngo/no-go checkpoints, rollback trigger. Print-friendly.\n\n## House style (paste first each session)\nColours: <hex>. Font: <name>. Fiori version: <x>. Keep it clean and\nlow-fidelity unless I ask for high fidelity.\n",
+      },
+      relatedSlugs: ["cowork", "documentation-generation", "rap-development", "real-sap-project-examples"],
     },
   ],
 };

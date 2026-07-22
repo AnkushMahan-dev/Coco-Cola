@@ -130,6 +130,16 @@ const references: Record<string, Reference[]> = {
     { label: "Agent Skills", url: `${CC}/skills`, source: "Claude Docs" },
     { label: "Hooks", url: `${CC}/hooks`, source: "Claude Docs" },
   ],
+  "claude-tag": [
+    { label: "Claude in Slack (@Claude) — official product page", url: "https://claude.com/product/tag", source: "Anthropic", note: "Tag @Claude into any Slack thread; Team & Enterprise, with Teams coming." },
+    { label: "Claude in Slack", url: `${CC}/slack`, source: "Claude Docs" },
+    { label: "Connectors", url: "https://claude.com/connectors", source: "Anthropic" },
+  ],
+  "claude-design": [
+    { label: "Claude Design — official product page", url: "https://claude.com/product/design", source: "Anthropic", note: "Describe a prototype, deck or one-pager and Claude builds a draft." },
+    { label: "Claude apps, built for work (use cases)", url: "https://claude.com/resources/use-cases", source: "Anthropic" },
+    { label: "Meet Claude", url: "https://claude.com/product/overview", source: "Anthropic" },
+  ],
   connectors: [
     { label: "Connectors — official product page", url: "https://claude.com/connectors", source: "Anthropic" },
     { label: "Model Context Protocol (MCP)", url: `${CC}/mcp`, source: "Claude Docs" },
