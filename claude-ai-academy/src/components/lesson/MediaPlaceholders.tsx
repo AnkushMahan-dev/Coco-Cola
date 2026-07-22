@@ -1,48 +1,73 @@
-import { Image as ImageIcon, PlayCircle } from "lucide-react";
+import { PlayCircle, Youtube } from "lucide-react";
 import type { MediaPlaceholder, VideoPlaceholder } from "@/content/types";
+import { Illustration, inferVariant } from "./Illustration";
+import { getLessonVideo } from "@/content/videos";
 
 /**
- * Screenshot placeholder — swap for a real <img> once screenshots
- * are captured; the caption/description double as alt text guidance.
+ * Screenshot frame — renders a generated SVG UI illustration chosen from
+ * the screenshot's caption/description. Swap for a real <img> whenever
+ * actual screenshots are captured; the caption/description stay valid.
  */
 export function ScreenshotFrame({ media }: { media: MediaPlaceholder }) {
+  const variant = inferVariant(`${media.caption} ${media.description}`);
   return (
     <figure className="overflow-hidden rounded-lg border">
       <div
         role="img"
         aria-label={media.description}
-        className="flex aspect-video flex-col items-center justify-center gap-3 bg-gradient-to-br from-muted to-secondary px-6 text-center"
+        className="aspect-video bg-muted"
       >
-        <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-dashed border-muted-foreground/40">
-          <ImageIcon className="h-6 w-6 text-muted-foreground/70" aria-hidden />
-        </div>
-        <p className="max-w-md text-sm text-muted-foreground">
-          {media.description}
-        </p>
+        <Illustration variant={variant} />
       </div>
       <figcaption className="border-t bg-card px-4 py-2 text-xs text-muted-foreground">
-        📷 {media.caption}
+        📷 {media.caption}{" "}
+        <span className="opacity-70">(illustrative mockup)</span>
       </figcaption>
     </figure>
   );
 }
 
-/** Video placeholder or real embed when a URL is provided. */
-export function VideoFrame({ video }: { video: VideoPlaceholder }) {
-  if (video.url) {
+/**
+ * Video frame — renders a real YouTube embed when the lesson has a mapped
+ * video (src/content/videos.ts) or an explicit url in its data; otherwise
+ * a styled placeholder.
+ */
+export function VideoFrame({
+  video,
+  lessonSlug,
+}: {
+  video: VideoPlaceholder;
+  lessonSlug?: string;
+}) {
+  const mapped = lessonSlug ? getLessonVideo(lessonSlug) : undefined;
+  const url = mapped?.url ?? video.url;
+
+  if (url) {
     return (
       <figure className="overflow-hidden rounded-lg border">
-        <div className="aspect-video">
+        <div className="aspect-video bg-black">
           <iframe
-            src={video.url}
-            title={video.caption}
+            src={url}
+            title={mapped?.title ?? video.caption}
             className="h-full w-full"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
+            loading="lazy"
           />
         </div>
-        <figcaption className="border-t bg-card px-4 py-2 text-xs text-muted-foreground">
-          🎥 {video.caption} · {video.duration}
+        <figcaption className="flex items-start gap-2 border-t bg-card px-4 py-2 text-xs text-muted-foreground">
+          <Youtube className="mt-0.5 h-3.5 w-3.5 shrink-0 text-destructive" aria-hidden />
+          <span>
+            {mapped ? (
+              <>
+                <span className="font-medium text-foreground">{mapped.title}</span>
+                {" · "}
+                {mapped.channel} (YouTube)
+              </>
+            ) : (
+              video.caption
+            )}
+          </span>
         </figcaption>
       </figure>
     );

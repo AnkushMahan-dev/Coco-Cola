@@ -232,7 +232,7 @@ export function LessonPage() {
 
         {/* Video */}
         <Section id="video" icon={Video} title="Video Walkthrough">
-          <VideoFrame video={lesson.video} />
+          <VideoFrame video={lesson.video} lessonSlug={lesson.slug} />
         </Section>
 
         {/* Real SAP example */}
