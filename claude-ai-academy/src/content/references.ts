@@ -114,8 +114,10 @@ const references: Record<string, Reference[]> = {
 
   // Module 3 — Advanced Capabilities
   cowork: [
+    { label: "Claude Cowork — official product page", url: "https://claude.com/product/cowork", source: "Anthropic", note: "What Cowork is, core capabilities, plans and the intro video." },
+    { label: "Getting started with Cowork", url: "https://support.claude.com/en/articles/13345190-getting-started-with-cowork", source: "Anthropic" },
+    { label: "Using Cowork safely (permissions)", url: "https://support.claude.com/en/articles/13364135-using-cowork-safely", source: "Anthropic" },
     { label: "Claude Desktop", url: `${CC}/desktop`, source: "Claude Docs" },
-    { label: "Features overview", url: `${CC}/features-overview`, source: "Claude Docs" },
   ],
   agent: [
     { label: "Subagents", url: `${CC}/sub-agents`, source: "Claude Docs" },

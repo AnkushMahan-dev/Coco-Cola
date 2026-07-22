@@ -61,9 +61,9 @@ const videos: Record<string, LessonVideo> = {
 
   // Module 3 — Advanced Capabilities
   cowork: {
-    id: "vv09DHej6gg",
-    title: "Claude Cowork for Beginners — Complete Step-by-Step Tutorial",
-    channel: "Teacher's Tech",
+    id: "UAmKyyZ-b9E",
+    title: "Introducing Cowork: Claude Code for the rest of your work",
+    channel: "Anthropic",
   },
   agent: {
     id: "kQmXtrmQ5Zg",
