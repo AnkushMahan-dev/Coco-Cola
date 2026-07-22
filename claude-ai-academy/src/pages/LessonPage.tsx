@@ -23,6 +23,8 @@ import {
   XCircle,
   Database,
   FileText,
+  BookMarked,
+  ExternalLink,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -45,6 +47,7 @@ import { CodeBlock } from "@/components/lesson/CodeBlock";
 import { Quiz } from "@/components/lesson/Quiz";
 import { ScreenshotFrame, VideoFrame } from "@/components/lesson/MediaPlaceholders";
 import { findLesson, nextLesson, previousLesson } from "@/content/curriculum";
+import { getLessonReferences } from "@/content/references";
 import { useLessonProgress, progressStore } from "@/lib/progress";
 import { downloadTextFile, formatDuration } from "@/lib/utils";
 
@@ -103,6 +106,7 @@ export function LessonPage() {
   const { lesson, module } = ref;
   const next = nextLesson(slug);
   const prev = previousLesson(slug);
+  const references = getLessonReferences(slug);
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 lg:px-10">
@@ -380,6 +384,50 @@ export function LessonPage() {
             </CardContent>
           </Card>
         </Section>
+
+        {/* Official documentation & references */}
+        {references.length > 0 && (
+          <Section id="references" icon={BookMarked} title="Official Documentation & References">
+            <p className="text-sm text-muted-foreground">
+              Learn more straight from the source. These are the official docs
+              behind this lesson — bookmark them as your authoritative reference.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {references.map((r) => (
+                <a
+                  key={r.url}
+                  href={r.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-start gap-3 rounded-lg border bg-card p-4 shadow-sm transition-all hover:border-primary/40 hover:shadow-md"
+                >
+                  <ExternalLink
+                    className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary"
+                    aria-hidden
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="flex flex-wrap items-center gap-2">
+                      <span className="font-medium leading-snug group-hover:text-primary">
+                        {r.label}
+                      </span>
+                      <Badge variant="secondary" className="shrink-0 font-normal">
+                        {r.source}
+                      </Badge>
+                    </span>
+                    {r.note && (
+                      <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
+                        {r.note}
+                      </span>
+                    )}
+                    <span className="mt-1 block truncate text-xs text-muted-foreground/70">
+                      {r.url.replace(/^https?:\/\//, "")}
+                    </span>
+                  </span>
+                </a>
+              ))}
+            </div>
+          </Section>
+        )}
 
         {/* Related topics */}
         {lesson.relatedSlugs.length > 0 && (
