@@ -11,5 +11,17 @@ export default defineConfig({
   },
   build: {
     chunkSizeWarningLimit: 1200,
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          if (id.includes("src/content/modules")) return "content";
+          if (id.includes("node_modules")) {
+            if (id.includes("framer-motion")) return "motion";
+            return "vendor";
+          }
+          return undefined;
+        },
+      },
+    },
   },
 });
