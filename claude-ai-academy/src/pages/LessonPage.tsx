@@ -1,56 +1,37 @@
 import { useEffect, type ReactNode } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
   ArrowLeft,
   ArrowRight,
-  BookOpen,
+  BookMarked,
+  Check,
   CheckCircle2,
   ChevronDown,
   Circle,
-  ClipboardList,
   Clock,
   Download,
-  FlaskConical,
-  Image as ImageIcon,
-  Lightbulb,
-  Link2,
-  ListChecks,
-  Printer,
-  ShieldCheck,
-  Target,
-  Video,
-  XCircle,
-  Database,
-  FileText,
-  BookMarked,
   ExternalLink,
+  Printer,
+  Video as VideoIcon,
+  X,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { Callout } from "@/components/lesson/Callout";
 import { CodeBlock } from "@/components/lesson/CodeBlock";
 import { Quiz } from "@/components/lesson/Quiz";
+import { QuickStart } from "@/components/lesson/QuickStart";
 import { ScreenshotFrame, VideoFrame } from "@/components/lesson/MediaPlaceholders";
+import { OnThisPage, type TocItem } from "@/components/lesson/OnThisPage";
 import { findLesson, nextLesson, previousLesson } from "@/content/curriculum";
 import { getLessonReferences } from "@/content/references";
-import { QuickStart } from "@/components/lesson/QuickStart";
 import { useLessonProgress, progressStore } from "@/lib/progress";
-import { accentStyle } from "@/lib/moduleTheme";
 import { downloadTextFile, formatDuration } from "@/lib/utils";
 
 const levelVariant = {
@@ -59,38 +40,30 @@ const levelVariant = {
   Advanced: "warning",
 } as const;
 
+/** A docs-style section: heading + content, separated by a hairline rule. */
 function Section({
   id,
-  icon: Icon,
   title,
   children,
 }: {
   id: string;
-  icon: typeof Target;
   title: string;
   children: ReactNode;
 }) {
   return (
-    <motion.section
+    <section
       id={id}
-      aria-labelledby={`${id}-heading`}
-      initial={{ opacity: 0, y: 12 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{ duration: 0.3 }}
-      className="scroll-mt-20 space-y-4"
+      aria-labelledby={`${id}-h`}
+      className="scroll-mt-24 border-t border-border pt-10 first:border-0 first:pt-0"
     >
       <h2
-        id={`${id}-heading`}
-        className="flex items-center gap-2.5 text-xl font-semibold tracking-tight"
+        id={`${id}-h`}
+        className="mb-4 text-lg font-semibold tracking-tight text-foreground"
       >
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg accent-chip">
-          <Icon className="h-[18px] w-[18px]" aria-hidden />
-        </span>
         {title}
       </h2>
       {children}
-    </motion.section>
+    </section>
   );
 }
 
@@ -109,452 +82,428 @@ export function LessonPage() {
   const next = nextLesson(slug);
   const prev = previousLesson(slug);
   const references = getLessonReferences(slug);
+  const hasScreens = lesson.screenshots.some((s) => s.imageUrl);
+
+  const toc: TocItem[] = [
+    { id: "quickstart", label: "Quick start" },
+    { id: "overview", label: "Overview" },
+    { id: "steps", label: "Steps" },
+    { id: "sap-example", label: "SAP example" },
+    { id: "best-practices", label: "Best practices" },
+    { id: "common-mistakes", label: "Common mistakes" },
+    { id: "tips", label: "Tips" },
+    ...(hasScreens ? [{ id: "screenshots", label: "Screenshots" }] : []),
+    { id: "video", label: "Video" },
+    { id: "exercise", label: "Exercise" },
+    { id: "quiz", label: "Quiz" },
+    { id: "summary", label: "Summary" },
+    ...(references.length ? [{ id: "references", label: "References" }] : []),
+  ];
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8 lg:px-10" style={accentStyle(module.slug)}>
-      <Breadcrumbs
-        items={[
-          { label: "Curriculum", to: "/dashboard" },
-          { label: module.shortTitle, to: `/modules/${module.slug}` },
-          { label: lesson.title },
-        ]}
-      />
+    <div className="mx-auto flex w-full max-w-[1180px] gap-12 px-5 py-8 lg:px-8">
+      {/* Reading column */}
+      <article className="min-w-0 max-w-[720px] flex-1">
+        <Breadcrumbs
+          items={[
+            { label: module.shortTitle, to: `/modules/${module.slug}` },
+            { label: lesson.title },
+          ]}
+        />
 
-      {/* Lesson header */}
-      <header className="mt-6 space-y-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge variant={levelVariant[lesson.level]}>{lesson.level}</Badge>
-          <Badge variant="secondary" className="gap-1">
-            <Clock className="h-3 w-3" aria-hidden />
-            {formatDuration(lesson.duration)}
-          </Badge>
-          <Badge variant="outline">{module.title}</Badge>
-        </div>
-        <h1 className="text-3xl font-bold tracking-tight lg:text-4xl">
-          {lesson.title}
-        </h1>
-        <p className="text-lg text-muted-foreground">{lesson.description}</p>
-        <div className="no-print flex flex-wrap gap-2">
-          <Button
-            variant={isComplete ? "secondary" : "default"}
-            size="sm"
-            onClick={toggle}
-          >
-            {isComplete ? (
-              <>
-                <CheckCircle2 className="text-success animate-pop-in" /> Completed
-              </>
-            ) : (
-              <>
-                <Circle /> Mark as complete
-              </>
-            )}
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => window.print()}>
-            <Printer /> Print / Save as PDF
-          </Button>
-          {lesson.download && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                downloadTextFile(lesson.download!.filename, lesson.download!.content)
-              }
-            >
-              <Download /> {lesson.download.name}
-            </Button>
-          )}
-        </div>
-      </header>
-
-      <Separator className="my-8" />
-
-      <div className="space-y-12">
-        {/* Do this now — the practical quick start */}
-        <QuickStart steps={lesson.steps} />
-
-        {/* Why this matters — background theory, collapsed by default */}
-        <Collapsible>
-          <CollapsibleTrigger asChild>
-            <button
-              type="button"
-              className="group flex w-full items-center gap-2.5 rounded-lg border bg-card px-4 py-3 text-left text-sm font-medium shadow-sm transition-colors hover:bg-muted"
-            >
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg accent-chip">
-                <BookOpen className="h-4 w-4" aria-hidden />
-              </span>
-              Why this matters &amp; what you'll learn
-              <ChevronDown
-                className="ml-auto h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180"
-                aria-hidden
-              />
-            </button>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
-            <div className="mt-1 space-y-4 rounded-lg border bg-muted/30 p-4">
-              <div className="space-y-2 text-sm leading-relaxed text-muted-foreground">
-                {lesson.overview.map((p, i) => (
-                  <p key={i}>{p}</p>
-                ))}
-              </div>
-              <div>
-                <p className="mb-2 flex items-center gap-2 text-sm font-semibold">
-                  <Target className="h-4 w-4 accent-text" aria-hidden /> By the end
-                  you'll be able to:
-                </p>
-                <ul className="grid gap-2">
-                  {lesson.objectives.map((o, i) => (
-                    <li
-                      key={i}
-                      className="flex items-start gap-2.5 text-sm leading-relaxed text-muted-foreground"
-                    >
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden />
-                      {o}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
-
-        {/* Step-by-step instructions — the main event */}
-        <Section id="steps" icon={ListChecks} title="Step-by-Step Instructions">
-          <ol className="space-y-6">
-            {lesson.steps.map((step, i) => (
-              <motion.li
-                key={i}
-                initial={{ opacity: 0, y: 14 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-30px" }}
-                transition={{ duration: 0.3, delay: Math.min(i * 0.05, 0.25) }}
-                className="relative rounded-lg border bg-card p-5 pl-14 shadow-sm transition-shadow hover:shadow-md"
-              >
-                <span
-                  aria-hidden
-                  className="absolute left-4 top-5 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground"
-                >
-                  {i + 1}
-                </span>
-                <h3 className="font-semibold leading-snug">{step.title}</h3>
-                <div className="mt-2 space-y-2 text-sm leading-relaxed text-muted-foreground">
-                  {step.body.map((p, j) => (
-                    <p key={j}>{p}</p>
-                  ))}
-                </div>
-                {step.code && <CodeBlock snippet={step.code} className="mt-4" />}
-                {step.callout && (
-                  <Callout
-                    type={step.callout.type}
-                    title={step.callout.title}
-                    className="mt-4"
-                  >
-                    {step.callout.body}
-                  </Callout>
-                )}
-                {(() => {
-                  // Explicit per-step reference wins; otherwise fall back to
-                  // this lesson's verified official references, cycling so
-                  // steps surface different official docs. Guarantees every
-                  // step links to an authoritative source.
-                  const fallback = references.length
-                    ? references[i % references.length]
-                    : undefined;
-                  const sref =
-                    step.reference ??
-                    (fallback
-                      ? { label: fallback.label, url: fallback.url, kind: "doc" as const }
-                      : undefined);
-                  if (!sref) return null;
-                  const isVideo = sref.kind === "video";
-                  return (
-                    <a
-                      href={sref.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-4 inline-flex items-center gap-2 rounded-md border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
-                    >
-                      {isVideo ? (
-                        <Video className="h-3.5 w-3.5" aria-hidden />
-                      ) : (
-                        <BookMarked className="h-3.5 w-3.5" aria-hidden />
-                      )}
-                      {isVideo ? "Watch: " : "Reference: "}
-                      {sref.label}
-                      <ExternalLink className="h-3 w-3 opacity-60" aria-hidden />
-                    </a>
-                  );
-                })()}
-              </motion.li>
-            ))}
-          </ol>
-        </Section>
-
-        {/* Real SAP example */}
-        <Section id="sap-example" icon={Database} title="Real SAP Example">
-          <Card className="border-primary/25">
-            <CardHeader>
-              <CardTitle className="text-base">{lesson.sapExample.title}</CardTitle>
-              <CardDescription className="leading-relaxed">
-                {lesson.sapExample.scenario}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {lesson.sapExample.prompt && (
-                <CodeBlock
-                  snippet={{
-                    language: "prompt",
-                    filename: "prompt-to-claude.txt",
-                    code: lesson.sapExample.prompt,
-                  }}
-                />
-              )}
-              {lesson.sapExample.code && <CodeBlock snippet={lesson.sapExample.code} />}
-              <div className="space-y-2 text-sm leading-relaxed text-muted-foreground">
-                {lesson.sapExample.explanation.map((p, i) => (
-                  <p key={i}>{p}</p>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </Section>
-
-        {/* Best practices */}
-        <Section id="best-practices" icon={ShieldCheck} title="Best Practices">
-          <ul className="grid gap-3">
-            {lesson.bestPractices.map((bp, i) => (
-              <li
-                key={i}
-                className="flex items-start gap-3 rounded-lg border border-success/25 bg-success/5 p-3.5 text-sm leading-relaxed"
-              >
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden />
-                {bp}
-              </li>
-            ))}
-          </ul>
-        </Section>
-
-        {/* Common mistakes */}
-        <Section id="common-mistakes" icon={XCircle} title="Common Mistakes">
-          <Accordion type="single" collapsible className="rounded-lg border px-4">
-            {lesson.commonMistakes.map((cm, i) => (
-              <AccordionItem
-                key={i}
-                value={`mistake-${i}`}
-                className={i === lesson.commonMistakes.length - 1 ? "border-b-0" : ""}
-              >
-                <AccordionTrigger className="gap-3 text-left">
-                  <span className="flex items-start gap-2.5">
-                    <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" aria-hidden />
-                    {cm.mistake}
-                  </span>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="ml-6 flex items-start gap-2.5 rounded-md bg-success/5 p-3 text-sm leading-relaxed">
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden />
-                    <span>
-                      <span className="font-semibold">Fix: </span>
-                      {cm.fix}
-                    </span>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </Section>
-
-        {/* Tips */}
-        <Section id="tips" icon={Lightbulb} title="Pro Tips">
-          <div className="grid gap-3 sm:grid-cols-2">
-            {lesson.tips.map((tip, i) => (
-              <div
-                key={i}
-                className="flex items-start gap-3 rounded-lg border bg-card p-3.5 text-sm leading-relaxed shadow-sm"
-              >
-                <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden />
-                {tip}
-              </div>
-            ))}
+        <header className="mt-4">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+            <span className="font-medium text-foreground">{module.title}</span>
+            <span aria-hidden>·</span>
+            <Badge variant={levelVariant[lesson.level]}>{lesson.level}</Badge>
+            <span className="inline-flex items-center gap-1">
+              <Clock className="h-3.5 w-3.5" aria-hidden />
+              {formatDuration(lesson.duration)}
+            </span>
           </div>
-        </Section>
+          <h1 className="mt-3 text-3xl font-bold tracking-tight text-foreground">
+            {lesson.title}
+          </h1>
+          <p className="mt-3 text-lg leading-relaxed text-muted-foreground">
+            {lesson.description}
+          </p>
 
-        {/* Screenshots — only rendered when real images are supplied */}
-        {lesson.screenshots.some((s) => s.imageUrl) && (
-          <Section id="screenshots" icon={ImageIcon} title="Screenshots">
-            <div className="grid gap-6 md:grid-cols-2">
-              {lesson.screenshots
-                .filter((s) => s.imageUrl)
-                .map((s, i) => (
-                  <ScreenshotFrame key={i} media={s} />
-                ))}
+          <div className="no-print mt-5 flex flex-wrap items-center gap-2">
+            <Button
+              variant={isComplete ? "secondary" : "default"}
+              size="sm"
+              onClick={toggle}
+            >
+              {isComplete ? (
+                <>
+                  <CheckCircle2 className="text-success" /> Completed
+                </>
+              ) : (
+                <>
+                  <Circle /> Mark complete
+                </>
+              )}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => window.print()}>
+              <Printer /> Print
+            </Button>
+            {lesson.download && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() =>
+                  downloadTextFile(
+                    lesson.download!.filename,
+                    lesson.download!.content,
+                  )
+                }
+              >
+                <Download /> {lesson.download.name}
+              </Button>
+            )}
+          </div>
+        </header>
+
+        <div className="mt-10 space-y-10">
+          {/* Quick start */}
+          <section id="quickstart" className="scroll-mt-24">
+            <QuickStart steps={lesson.steps} />
+          </section>
+
+          {/* Overview + objectives */}
+          <Section id="overview" title="Overview">
+            <div className="space-y-3 text-[15px] leading-7 text-muted-foreground">
+              {lesson.overview.map((p, i) => (
+                <p key={i}>{p}</p>
+              ))}
             </div>
-          </Section>
-        )}
-
-        {/* Video */}
-        <Section id="video" icon={Video} title="Video Walkthrough">
-          <VideoFrame video={lesson.video} lessonSlug={lesson.slug} />
-        </Section>
-
-        {/* Practice exercise */}
-        <Section id="exercise" icon={FlaskConical} title="Practice Exercise">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">{lesson.exercise.title}</CardTitle>
-              <CardDescription className="leading-relaxed">
-                {lesson.exercise.scenario}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <ol className="list-decimal space-y-2 pl-5 text-sm leading-relaxed">
-                {lesson.exercise.tasks.map((t, i) => (
-                  <li key={i}>{t}</li>
-                ))}
-              </ol>
-              {lesson.exercise.hint && (
-                <Callout type="tip" title="Hint">
-                  {lesson.exercise.hint}
-                </Callout>
-              )}
-              {lesson.exercise.solution && (
-                <Collapsible>
-                  <CollapsibleTrigger asChild>
-                    <Button variant="outline" size="sm" className="group">
-                      <ChevronDown className="transition-transform group-data-[state=open]:rotate-180" />
-                      Show solution
-                    </Button>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
-                    <CodeBlock snippet={lesson.exercise.solution} className="mt-3" />
-                  </CollapsibleContent>
-                </Collapsible>
-              )}
-            </CardContent>
-          </Card>
-        </Section>
-
-        {/* Quiz */}
-        <Section id="quiz" icon={ClipboardList} title="Knowledge Check">
-          <Quiz lessonSlug={lesson.slug} questions={lesson.quiz} />
-        </Section>
-
-        {/* Summary */}
-        <Section id="summary" icon={FileText} title="Summary">
-          <Card className="bg-accent/50">
-            <CardContent className="pt-6">
-              <ul className="grid gap-2.5">
-                {lesson.summary.map((s, i) => (
-                  <li key={i} className="flex items-start gap-3 text-sm leading-relaxed">
-                    <span aria-hidden className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                    {s}
+            <div className="mt-5 rounded-lg border border-border bg-muted/40 p-4">
+              <p className="mb-2 text-sm font-semibold text-foreground">
+                What you'll be able to do
+              </p>
+              <ul className="grid gap-1.5">
+                {lesson.objectives.map((o, i) => (
+                  <li
+                    key={i}
+                    className="flex items-start gap-2 text-sm leading-6 text-muted-foreground"
+                  >
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden />
+                    {o}
                   </li>
                 ))}
               </ul>
-            </CardContent>
-          </Card>
-        </Section>
+            </div>
+          </Section>
 
-        {/* Official documentation & references */}
-        {references.length > 0 && (
-          <Section id="references" icon={BookMarked} title="Official Documentation & References">
-            <p className="text-sm text-muted-foreground">
-              Learn more straight from the source. These are the official docs
-              behind this lesson — bookmark them as your authoritative reference.
-            </p>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {references.map((r) => (
-                <a
-                  key={r.url}
-                  href={r.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex items-start gap-3 rounded-lg border bg-card p-4 shadow-sm transition-all hover:border-primary/40 hover:shadow-md"
-                >
-                  <ExternalLink
-                    className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary"
-                    aria-hidden
-                  />
-                  <span className="min-w-0 flex-1">
-                    <span className="flex flex-wrap items-center gap-2">
-                      <span className="font-medium leading-snug group-hover:text-primary">
-                        {r.label}
-                      </span>
-                      <Badge variant="secondary" className="shrink-0 font-normal">
-                        {r.source}
-                      </Badge>
-                    </span>
-                    {r.note && (
-                      <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
-                        {r.note}
-                      </span>
+          {/* Steps */}
+          <Section id="steps" title="Step-by-step">
+            <ol className="space-y-8">
+              {lesson.steps.map((step, i) => {
+                const fallback = references.length
+                  ? references[i % references.length]
+                  : undefined;
+                const sref =
+                  step.reference ??
+                  (fallback
+                    ? { label: fallback.label, url: fallback.url, kind: "doc" as const }
+                    : undefined);
+                return (
+                  <li key={i} className="scroll-mt-24">
+                    <h3 className="flex items-baseline gap-2.5 text-base font-semibold text-foreground">
+                      <span className="tabular-nums text-primary">{i + 1}.</span>
+                      {step.title}
+                    </h3>
+                    <div className="mt-2 space-y-2 text-[15px] leading-7 text-muted-foreground">
+                      {step.body.map((p, j) => (
+                        <p key={j}>{p}</p>
+                      ))}
+                    </div>
+                    {step.code && <CodeBlock snippet={step.code} className="mt-3" />}
+                    {step.callout && (
+                      <Callout
+                        type={step.callout.type}
+                        title={step.callout.title}
+                        className="mt-3"
+                      >
+                        {step.callout.body}
+                      </Callout>
                     )}
-                    <span className="mt-1 block truncate text-xs text-muted-foreground/70">
-                      {r.url.replace(/^https?:\/\//, "")}
-                    </span>
-                  </span>
-                </a>
+                    {sref && (
+                      <a
+                        href={sref.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+                      >
+                        {sref.kind === "video" ? (
+                          <VideoIcon className="h-3.5 w-3.5" aria-hidden />
+                        ) : (
+                          <BookMarked className="h-3.5 w-3.5" aria-hidden />
+                        )}
+                        {sref.kind === "video" ? "Watch" : "Reference"}: {sref.label}
+                        <ExternalLink className="h-3 w-3 opacity-60" aria-hidden />
+                      </a>
+                    )}
+                  </li>
+                );
+              })}
+            </ol>
+          </Section>
+
+          {/* Real SAP example */}
+          <Section id="sap-example" title="Real SAP example">
+            <p className="text-base font-medium text-foreground">
+              {lesson.sapExample.title}
+            </p>
+            <p className="mt-1.5 text-[15px] leading-7 text-muted-foreground">
+              {lesson.sapExample.scenario}
+            </p>
+            {lesson.sapExample.prompt && (
+              <CodeBlock
+                className="mt-4"
+                snippet={{
+                  language: "prompt",
+                  filename: "prompt to Claude",
+                  code: lesson.sapExample.prompt,
+                }}
+              />
+            )}
+            {lesson.sapExample.code && (
+              <CodeBlock className="mt-3" snippet={lesson.sapExample.code} />
+            )}
+            <div className="mt-4 space-y-2 text-[15px] leading-7 text-muted-foreground">
+              {lesson.sapExample.explanation.map((p, i) => (
+                <p key={i}>{p}</p>
               ))}
             </div>
           </Section>
-        )}
 
-        {/* Related topics */}
-        {lesson.relatedSlugs.length > 0 && (
-          <Section id="related" icon={Link2} title="Related Topics">
-            <div className="grid gap-3 sm:grid-cols-2">
-              {lesson.relatedSlugs.map((rs) => {
-                const rel = findLesson(rs);
-                if (!rel) return null;
-                return (
-                  <Link
-                    key={rs}
-                    to={`/lessons/${rs}`}
-                    className="group rounded-lg border bg-card p-4 shadow-sm transition-all hover:border-primary/40 hover:shadow-md"
-                  >
-                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                      {rel.module.shortTitle}
-                    </p>
-                    <p className="mt-1 font-medium leading-snug group-hover:text-primary">
-                      {rel.lesson.title}
-                    </p>
-                  </Link>
-                );
-              })}
-            </div>
+          {/* Best practices */}
+          <Section id="best-practices" title="Best practices">
+            <ul className="space-y-2.5">
+              {lesson.bestPractices.map((bp, i) => (
+                <li
+                  key={i}
+                  className="flex items-start gap-2.5 text-[15px] leading-7 text-muted-foreground"
+                >
+                  <Check className="mt-1 h-4 w-4 shrink-0 text-success" aria-hidden />
+                  {bp}
+                </li>
+              ))}
+            </ul>
           </Section>
-        )}
-      </div>
 
-      {/* Prev / Next lesson */}
-      <Separator className="my-10" />
-      <div className="no-print grid gap-4 sm:grid-cols-2">
-        {prev ? (
-          <Link
-            to={`/lessons/${prev.lesson.slug}`}
-            className="group flex items-center gap-3 rounded-lg border bg-card p-4 shadow-sm transition-all hover:border-primary/40 hover:shadow-md"
-          >
-            <ArrowLeft className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:-translate-x-0.5" aria-hidden />
-            <div className="min-w-0">
-              <p className="text-xs text-muted-foreground">Previous lesson</p>
-              <p className="truncate text-sm font-medium">{prev.lesson.title}</p>
-            </div>
-          </Link>
-        ) : (
-          <div aria-hidden />
-        )}
-        {next && (
-          <Link
-            to={`/lessons/${next.lesson.slug}`}
-            className="group flex items-center justify-end gap-3 rounded-lg border border-primary/30 bg-card p-4 text-right shadow-sm transition-all hover:border-primary hover:shadow-md"
-          >
-            <div className="min-w-0">
-              <p className="text-xs text-muted-foreground">Next lesson</p>
-              <p className="truncate text-sm font-medium">{next.lesson.title}</p>
-            </div>
-            <ArrowRight className="h-4 w-4 shrink-0 text-primary transition-transform group-hover:translate-x-0.5" aria-hidden />
-          </Link>
-        )}
-      </div>
+          {/* Common mistakes */}
+          <Section id="common-mistakes" title="Common mistakes">
+            <ul className="space-y-4">
+              {lesson.commonMistakes.map((cm, i) => (
+                <li key={i} className="text-[15px] leading-7">
+                  <p className="flex items-start gap-2.5 font-medium text-foreground">
+                    <X className="mt-1 h-4 w-4 shrink-0 text-destructive" aria-hidden />
+                    {cm.mistake}
+                  </p>
+                  <p className="ml-[26px] mt-1 text-muted-foreground">
+                    <span className="font-medium text-success">Fix — </span>
+                    {cm.fix}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </Section>
+
+          {/* Tips */}
+          <Section id="tips" title="Tips">
+            <ul className="space-y-2.5">
+              {lesson.tips.map((tip, i) => (
+                <li
+                  key={i}
+                  className="flex items-start gap-2.5 text-[15px] leading-7 text-muted-foreground"
+                >
+                  <span
+                    aria-hidden
+                    className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary"
+                  />
+                  {tip}
+                </li>
+              ))}
+            </ul>
+          </Section>
+
+          {/* Screenshots (real images only) */}
+          {hasScreens && (
+            <Section id="screenshots" title="Screenshots">
+              <div className="grid gap-5 sm:grid-cols-2">
+                {lesson.screenshots
+                  .filter((s) => s.imageUrl)
+                  .map((s, i) => (
+                    <ScreenshotFrame key={i} media={s} />
+                  ))}
+              </div>
+            </Section>
+          )}
+
+          {/* Video */}
+          <Section id="video" title="Video walkthrough">
+            <VideoFrame video={lesson.video} lessonSlug={lesson.slug} />
+          </Section>
+
+          {/* Practice exercise */}
+          <Section id="exercise" title="Practice exercise">
+            <p className="text-base font-medium text-foreground">
+              {lesson.exercise.title}
+            </p>
+            <p className="mt-1.5 text-[15px] leading-7 text-muted-foreground">
+              {lesson.exercise.scenario}
+            </p>
+            <ol className="mt-3 list-decimal space-y-1.5 pl-5 text-[15px] leading-7 text-muted-foreground">
+              {lesson.exercise.tasks.map((t, i) => (
+                <li key={i}>{t}</li>
+              ))}
+            </ol>
+            {lesson.exercise.hint && (
+              <Callout type="tip" title="Hint" className="mt-4">
+                {lesson.exercise.hint}
+              </Callout>
+            )}
+            {lesson.exercise.solution && (
+              <Collapsible className="mt-3">
+                <CollapsibleTrigger asChild>
+                  <Button variant="outline" size="sm" className="group">
+                    <ChevronDown className="transition-transform group-data-[state=open]:rotate-180" />
+                    Show solution
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
+                  <CodeBlock snippet={lesson.exercise.solution} className="mt-3" />
+                </CollapsibleContent>
+              </Collapsible>
+            )}
+          </Section>
+
+          {/* Quiz */}
+          <Section id="quiz" title="Knowledge check">
+            <Quiz lessonSlug={lesson.slug} questions={lesson.quiz} />
+          </Section>
+
+          {/* Summary */}
+          <Section id="summary" title="Summary">
+            <ul className="space-y-2">
+              {lesson.summary.map((s, i) => (
+                <li
+                  key={i}
+                  className="flex items-start gap-2.5 text-[15px] leading-7 text-muted-foreground"
+                >
+                  <span
+                    aria-hidden
+                    className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary"
+                  />
+                  {s}
+                </li>
+              ))}
+            </ul>
+          </Section>
+
+          {/* References */}
+          {references.length > 0 && (
+            <Section id="references" title="Official documentation">
+              <ul className="space-y-2.5">
+                {references.map((r) => (
+                  <li key={r.url}>
+                    <a
+                      href={r.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group flex items-baseline gap-2 text-[15px] leading-7"
+                    >
+                      <ExternalLink className="relative top-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground group-hover:text-primary" aria-hidden />
+                      <span>
+                        <span className="font-medium text-foreground group-hover:text-primary">
+                          {r.label}
+                        </span>
+                        <span className="ml-2 text-xs text-muted-foreground">
+                          {r.source}
+                        </span>
+                        {r.note && (
+                          <span className="block text-sm text-muted-foreground">
+                            {r.note}
+                          </span>
+                        )}
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </Section>
+          )}
+
+          {/* Related */}
+          {lesson.relatedSlugs.length > 0 && (
+            <Section id="related" title="Related topics">
+              <div className="grid gap-2 sm:grid-cols-2">
+                {lesson.relatedSlugs.map((rs) => {
+                  const rel = findLesson(rs);
+                  if (!rel) return null;
+                  return (
+                    <Link
+                      key={rs}
+                      to={`/lessons/${rs}`}
+                      className="group rounded-md border border-border px-4 py-3 transition-colors hover:border-primary/40 hover:bg-accent/40"
+                    >
+                      <p className="text-xs text-muted-foreground">
+                        {rel.module.shortTitle}
+                      </p>
+                      <p className="mt-0.5 text-sm font-medium text-foreground group-hover:text-primary">
+                        {rel.lesson.title}
+                      </p>
+                    </Link>
+                  );
+                })}
+              </div>
+            </Section>
+          )}
+        </div>
+
+        {/* Prev / next */}
+        <nav className="no-print mt-12 grid gap-3 border-t border-border pt-6 sm:grid-cols-2">
+          {prev ? (
+            <Link
+              to={`/lessons/${prev.lesson.slug}`}
+              className="group flex items-center gap-3 rounded-md border border-border px-4 py-3 transition-colors hover:border-primary/40 hover:bg-accent/40"
+            >
+              <ArrowLeft className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+              <span className="min-w-0">
+                <span className="block text-xs text-muted-foreground">Previous</span>
+                <span className="block truncate text-sm font-medium text-foreground">
+                  {prev.lesson.title}
+                </span>
+              </span>
+            </Link>
+          ) : (
+            <span aria-hidden />
+          )}
+          {next && (
+            <Link
+              to={`/lessons/${next.lesson.slug}`}
+              className="group flex items-center justify-end gap-3 rounded-md border border-border px-4 py-3 text-right transition-colors hover:border-primary/40 hover:bg-accent/40"
+            >
+              <span className="min-w-0">
+                <span className="block text-xs text-muted-foreground">Next</span>
+                <span className="block truncate text-sm font-medium text-foreground group-hover:text-primary">
+                  {next.lesson.title}
+                </span>
+              </span>
+              <ArrowRight className="h-4 w-4 shrink-0 text-primary" aria-hidden />
+            </Link>
+          )}
+        </nav>
+      </article>
+
+      {/* Right rail — on this page */}
+      <aside className="no-print hidden w-52 shrink-0 xl:block">
+        <div className="sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto py-1 scrollbar-thin">
+          <OnThisPage items={toc} />
+        </div>
+      </aside>
     </div>
   );
 }
