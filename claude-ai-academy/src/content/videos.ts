@@ -98,9 +98,9 @@ const videos: Record<string, LessonVideo> = {
     channel: "Anthropic",
   },
   "github-integration": {
-    id: "B98jOriYL4I",
-    title: "SAP — abapGit — Push/Clone Code to/from GitHub",
-    channel: "YouTube",
+    id: "7pKN_pjPW04",
+    title: "Claude Code Tutorial #9 — Claude Code with GitHub",
+    channel: "Net Ninja",
   },
   "vscode-integration": {
     id: "SUysp3sJHbA",

@@ -252,23 +252,39 @@ export function LessonPage() {
                     {step.callout.body}
                   </Callout>
                 )}
-                {step.reference && (
-                  <a
-                    href={step.reference.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-4 inline-flex items-center gap-2 rounded-md border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
-                  >
-                    {step.reference.kind === "video" ? (
-                      <Video className="h-3.5 w-3.5" aria-hidden />
-                    ) : (
-                      <BookMarked className="h-3.5 w-3.5" aria-hidden />
-                    )}
-                    {step.reference.kind === "video" ? "Watch: " : "Reference: "}
-                    {step.reference.label}
-                    <ExternalLink className="h-3 w-3 opacity-60" aria-hidden />
-                  </a>
-                )}
+                {(() => {
+                  // Explicit per-step reference wins; otherwise fall back to
+                  // this lesson's verified official references, cycling so
+                  // steps surface different official docs. Guarantees every
+                  // step links to an authoritative source.
+                  const fallback = references.length
+                    ? references[i % references.length]
+                    : undefined;
+                  const sref =
+                    step.reference ??
+                    (fallback
+                      ? { label: fallback.label, url: fallback.url, kind: "doc" as const }
+                      : undefined);
+                  if (!sref) return null;
+                  const isVideo = sref.kind === "video";
+                  return (
+                    <a
+                      href={sref.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-4 inline-flex items-center gap-2 rounded-md border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
+                    >
+                      {isVideo ? (
+                        <Video className="h-3.5 w-3.5" aria-hidden />
+                      ) : (
+                        <BookMarked className="h-3.5 w-3.5" aria-hidden />
+                      )}
+                      {isVideo ? "Watch: " : "Reference: "}
+                      {sref.label}
+                      <ExternalLink className="h-3 w-3 opacity-60" aria-hidden />
+                    </a>
+                  );
+                })()}
               </motion.li>
             ))}
           </ol>

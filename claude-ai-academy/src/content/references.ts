@@ -226,16 +226,19 @@ const references: Record<string, Reference[]> = {
     { label: "GitHub code review with Claude", url: `${CC}/code-review`, source: "Claude Docs" },
   ],
   "cds-views": [
+    { label: "Claude Code — common workflows", url: `${CC}/common-workflows`, source: "Claude Docs" },
     abapCheatSheets,
     rapHelp,
     cleanAbap,
   ],
   "rap-development": [
+    { label: "Claude Code — common workflows", url: `${CC}/common-workflows`, source: "Claude Docs" },
     rapHelp,
     abapCheatSheets,
     cleanAbap,
   ],
   odata: [
+    { label: "Claude Code — common workflows", url: `${CC}/common-workflows`, source: "Claude Docs" },
     rapHelp,
     abapCheatSheets,
   ],
