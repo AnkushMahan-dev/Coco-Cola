@@ -7,6 +7,7 @@ import { ModulePage } from "@/pages/ModulePage";
 import { LessonPage } from "@/pages/LessonPage";
 import { DownloadsPage } from "@/pages/DownloadsPage";
 import { ReelsPage } from "@/pages/ReelsPage";
+import { EcosystemPage } from "@/pages/EcosystemPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 
 /**
@@ -26,6 +27,7 @@ export default function App() {
             <Route path="/lessons/:slug" element={<LessonPage />} />
             <Route path="/downloads" element={<DownloadsPage />} />
             <Route path="/reels" element={<ReelsPage />} />
+            <Route path="/ecosystem" element={<EcosystemPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>

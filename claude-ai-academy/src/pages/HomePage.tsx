@@ -2,40 +2,28 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
-  AtSign,
-  Blocks,
   BookOpen,
   Bot,
   Boxes,
   Briefcase,
-  Cable,
-  Check,
-  Chrome,
   Clock,
-  Code2,
   Database,
   Download,
-  ExternalLink,
   Gauge,
   GraduationCap,
   MessageSquare,
   Monitor,
-  PenTool,
   Plug,
-  Puzzle,
   Rocket,
   Search,
-  Sheet,
   Shield,
   Sparkles,
-  Users,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { curriculum, totalLessonCount, findLesson } from "@/content/curriculum";
-import { ecosystem } from "@/content/ecosystem";
 import { Reels } from "@/components/Reels";
 import { useProgress } from "@/lib/progress";
 import { formatDuration } from "@/lib/utils";
@@ -50,23 +38,6 @@ const moduleIcons: Record<ModuleIcon, typeof Rocket> = {
   shield: Shield,
   briefcase: Briefcase,
   gauge: Gauge,
-};
-
-// Map the ecosystem items' icon field (emoji, kept in data) to real SVG
-// icons — no emoji as structural icons (professional UI guideline).
-const ecosystemIcons: Record<string, typeof Rocket> = {
-  "🧠": Sparkles,
-  "💻": Code2,
-  "🤝": Users,
-  "💬": AtSign,
-  "🌐": Chrome,
-  "📊": Sheet,
-  "🧩": Puzzle,
-  "🧰": Briefcase,
-  "🎨": PenTool,
-  "🔗": Cable,
-  "🔌": Blocks,
-  "📚": Boxes,
 };
 
 const highlights = [
@@ -275,17 +246,17 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* Section 2 — Explore the Claude ecosystem (official claude.com topics) */}
+      {/* Section 2 — Explore the Claude ecosystem (now its own page) */}
       <section className="scroll-mt-20 border-t bg-background">
         <div className="mx-auto max-w-5xl px-4 py-16 lg:px-10">
-          <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
-            <motion.div
-              initial={{ opacity: 0, y: 14 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-              className="space-y-2"
-            >
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className="flex flex-wrap items-center justify-between gap-6 rounded-xl border bg-card p-8"
+          >
+            <div className="max-w-xl space-y-2">
               <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
                 <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden />
                 Ecosystem
@@ -293,67 +264,20 @@ export function HomePage() {
               <h2 className="text-2xl font-bold tracking-tight lg:text-3xl">
                 Explore the Claude ecosystem
               </h2>
-              <p className="max-w-2xl text-muted-foreground">
+              <p className="text-muted-foreground">
                 Every product &amp; feature from the{" "}
                 <span className="font-medium text-foreground">claude.com</span>{" "}
-                navigation — official pages, plus where each is covered here.
+                navigation — official pages, plus where each is covered in this
+                Academy, all on one page.
               </p>
-            </motion.div>
-            <Badge variant="secondary" className="gap-1.5 py-1">
-              <ExternalLink className="h-3.5 w-3.5" aria-hidden />
-              Opens claude.com
-            </Badge>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {ecosystem.map((item, i) => {
-              const Icon = ecosystemIcons[item.icon] ?? Boxes;
-              return (
-                <motion.a
-                  key={item.url}
-                  href={item.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  initial={{ opacity: 0, y: 12 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  whileHover={{ y: -4 }}
-                  transition={{ duration: 0.3, ease: "easeOut", delay: (i % 3) * 0.04 }}
-                  className="group flex flex-col gap-2.5 rounded-lg border bg-card p-5 transition-colors hover:border-primary/40 hover:bg-accent/40"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md accent-chip">
-                      <Icon className="h-5 w-5" aria-hidden />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                        {item.group}
-                      </p>
-                      <p className="font-semibold leading-tight text-foreground group-hover:text-primary">
-                        {item.name}
-                      </p>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {item.domain}
-                      </p>
-                    </div>
-                    <ExternalLink
-                      className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary"
-                      aria-hidden
-                    />
-                  </div>
-                  <p className="text-sm leading-relaxed text-muted-foreground">
-                    {item.blurb}
-                  </p>
-                  {item.lessonSlug && (
-                    <span className="mt-auto flex items-center gap-1.5 pt-1 text-xs font-medium text-primary">
-                      <Check className="h-3.5 w-3.5" aria-hidden />
-                      Covered in this Academy
-                    </span>
-                  )}
-                </motion.a>
-              );
-            })}
-          </div>
+            </div>
+            <Button size="lg" asChild>
+              <Link to="/ecosystem">
+                <Boxes aria-hidden /> Browse the ecosystem
+                <ArrowRight aria-hidden />
+              </Link>
+            </Button>
+          </motion.div>
         </div>
       </section>
 

@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { Check, Download, Home, LayoutDashboard, PlayCircle, Rocket, MessageSquare, Sparkles, Plug, Database, Shield, Briefcase, Gauge } from "lucide-react";
+import { Boxes, Check, Download, Home, LayoutDashboard, PlayCircle, Rocket, MessageSquare, Sparkles, Plug, Database, Shield, Briefcase, Gauge } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -25,6 +25,7 @@ const moduleIcons: Record<ModuleIcon, typeof Rocket> = {
 const topLinks = [
   { to: "/", label: "Home", icon: Home, end: true },
   { to: "/dashboard", label: "Learning Dashboard", icon: LayoutDashboard },
+  { to: "/ecosystem", label: "Claude Ecosystem", icon: Boxes },
   { to: "/reels", label: "Quick Reels", icon: PlayCircle },
   { to: "/downloads", label: "Downloads", icon: Download },
 ];
