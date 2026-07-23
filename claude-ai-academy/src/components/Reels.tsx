@@ -21,7 +21,15 @@ export function Reels() {
       <div className="mx-auto max-w-5xl px-4 py-14 lg:px-10">
         <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div className="space-y-2">
-            <h2 className="text-2xl font-bold tracking-tight">Quick reels</h2>
+            <motion.h2
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4 }}
+              className="text-2xl font-bold tracking-tight"
+            >
+              Quick reels
+            </motion.h2>
             <p className="text-muted-foreground">
               60-second explainers — tap one, watch, get the gist. Then dive
               into the full lesson.
@@ -44,11 +52,13 @@ export function Reels() {
               type="button"
               role="listitem"
               onClick={() => setActive(reel)}
-              initial={{ opacity: 0, y: 16 }}
+              initial={{ opacity: 0, y: 18 }}
               whileInView={{ opacity: 1, y: 0 }}
+              whileHover={{ y: -6 }}
+              whileTap={{ scale: 0.97 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.3, delay: Math.min(i * 0.05, 0.3) }}
-              className="group relative aspect-[9/16] w-[168px] shrink-0 snap-start overflow-hidden rounded-xl border bg-zinc-900 text-left shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              transition={{ type: "spring", stiffness: 320, damping: 24, delay: Math.min(i * 0.06, 0.35) }}
+              className="group relative aspect-[9/16] w-[168px] shrink-0 snap-start overflow-hidden rounded-xl border bg-zinc-900 text-left shadow-sm transition-shadow hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               aria-label={`Play reel: ${reel.title}`}
             >
               <img

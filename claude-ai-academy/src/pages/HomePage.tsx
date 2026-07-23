@@ -185,20 +185,30 @@ export function HomePage() {
               return (
                 <motion.div
                   key={module.slug}
-                  initial={{ opacity: 0, y: 14 }}
+                  initial={{ opacity: 0, y: 18 }}
                   whileInView={{ opacity: 1, y: 0 }}
+                  whileHover={{ y: -6 }}
+                  whileTap={{ scale: 0.985 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.3, delay: (i % 2) * 0.06 }}
+                  transition={{ type: "spring", stiffness: 320, damping: 24, delay: (i % 2) * 0.06 }}
                 >
                   <Link
                     to={`/modules/${module.slug}`}
                     className="group block h-full"
                     style={accentStyle(module.slug)}
                   >
-                    <Card className="relative h-full overflow-hidden transition-all accent-border group-hover:-translate-y-0.5 group-hover:shadow-lg">
-                      <span aria-hidden className="absolute inset-x-0 top-0 h-1 accent-bar" />
+                    <Card className="relative h-full overflow-hidden transition-shadow accent-border group-hover:shadow-lg">
+                      <motion.span
+                        aria-hidden
+                        initial={{ scaleX: 0 }}
+                        whileInView={{ scaleX: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5, delay: (i % 2) * 0.06 + 0.15 }}
+                        style={{ transformOrigin: "left" }}
+                        className="absolute inset-x-0 top-0 h-1 accent-bar"
+                      />
                       <CardHeader className="flex-row items-start gap-4 space-y-0 pt-6">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg accent-chip">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg accent-chip transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110">
                           <Icon className="h-5 w-5" aria-hidden />
                         </span>
                         <div className="min-w-0 flex-1 space-y-1.5">
