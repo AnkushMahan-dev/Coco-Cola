@@ -36,6 +36,20 @@ export function OnThisPage({ items }: { items: TocItem[] }) {
 
   if (items.length === 0) return null;
 
+  // The app runs under HashRouter, so the URL hash holds the route. A plain
+  // `href="#section"` would be read as a route change (→ "Page not found"),
+  // so we scroll to the target in JS and leave the router hash untouched.
+  const goTo = (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    setActive(id);
+    // Move focus for keyboard/screen-reader users without a second scroll.
+    el.setAttribute("tabindex", "-1");
+    el.focus({ preventScroll: true });
+  };
+
   return (
     <nav aria-label="On this page">
       <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -46,6 +60,7 @@ export function OnThisPage({ items }: { items: TocItem[] }) {
           <li key={it.id}>
             <a
               href={`#${it.id}`}
+              onClick={(e) => goTo(e, it.id)}
               className={cn(
                 "-ml-px block border-l py-1 pl-4 text-sm leading-snug transition-colors",
                 active === it.id

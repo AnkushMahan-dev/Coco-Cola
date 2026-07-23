@@ -38,6 +38,7 @@ import { findLesson, nextLesson, previousLesson } from "@/content/curriculum";
 import { getLessonReferences } from "@/content/references";
 import { reelForLesson } from "@/content/reels";
 import { ReelCard } from "@/components/ReelCard";
+import type { Reference } from "@/content/references";
 import { useLessonProgress, useLessonTimer, progressStore } from "@/lib/progress";
 import { downloadTextFile, formatDuration } from "@/lib/utils";
 
@@ -47,14 +48,37 @@ const levelVariant = {
   Advanced: "warning",
 } as const;
 
+/** The lesson's most relevant official Claude doc (prefer Anthropic/Claude
+ * sources over third-party SAP/GitHub links). */
+function officialDoc(refs: Reference[]): Reference | undefined {
+  return (
+    refs.find((r) => r.source === "Anthropic") ??
+    refs.find((r) => r.source === "Claude Docs" || r.source === "Claude Platform") ??
+    refs.find((r) => r.source === "MCP") ??
+    refs[0]
+  );
+}
+
+/** A best-practices-flavoured official doc, when one exists. */
+function bestPracticeDoc(refs: Reference[]): Reference | undefined {
+  return (
+    refs.find((r) => /best practice/i.test(r.label)) ??
+    refs.find((r) => /workflow|troubleshoot/i.test(r.label)) ??
+    officialDoc(refs)
+  );
+}
+
 /** A docs-style section: heading + content, separated by a hairline rule. */
 function Section({
   id,
   title,
+  doc,
   children,
 }: {
   id: string;
   title: string;
+  /** Optional link to the official Claude doc for this section's topic. */
+  doc?: { label: string; url: string };
   children: ReactNode;
 }) {
   return (
@@ -63,12 +87,27 @@ function Section({
       aria-labelledby={`${id}-h`}
       className="scroll-mt-24 border-t border-border pt-10 first:border-0 first:pt-0"
     >
-      <h2
-        id={`${id}-h`}
-        className="mb-4 text-lg font-semibold tracking-tight text-foreground"
-      >
-        {title}
-      </h2>
+      <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <h2
+          id={`${id}-h`}
+          className="text-lg font-semibold tracking-tight text-foreground"
+        >
+          {title}
+        </h2>
+        {doc && (
+          <a
+            href={doc.url}
+            target="_blank"
+            rel="noreferrer"
+            title={`Official Claude docs: ${doc.label}`}
+            className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-primary hover:underline"
+          >
+            <BookMarked className="h-3.5 w-3.5" aria-hidden />
+            Official docs
+            <ExternalLink className="h-3 w-3" aria-hidden />
+          </a>
+        )}
+      </div>
       {children}
     </section>
   );
@@ -121,6 +160,11 @@ export function LessonPage() {
   const references = getLessonReferences(slug);
   const hasScreens = lesson.screenshots.some((s) => s.imageUrl);
   const lessonReel = reelForLesson(lesson);
+
+  // Per-section link to the official Claude documentation for this topic.
+  const primaryDoc = officialDoc(references);
+  const practiceDoc = bestPracticeDoc(references);
+  const asDoc = (r?: Reference) => (r ? { label: r.label, url: r.url } : undefined);
 
   const toc: TocItem[] = [
     { id: "quickstart", label: "Quick start" },
@@ -220,7 +264,7 @@ export function LessonPage() {
           </section>
 
           {/* Overview + objectives */}
-          <Section id="overview" title="Overview">
+          <Section id="overview" title="Overview" doc={asDoc(primaryDoc)}>
             <div className="space-y-3 text-[15px] leading-7 text-muted-foreground">
               {lesson.overview.map((p, i) => (
                 <p key={i}>{p}</p>
@@ -245,7 +289,7 @@ export function LessonPage() {
           </Section>
 
           {/* Steps */}
-          <Section id="steps" title="Step-by-step">
+          <Section id="steps" title="Step-by-step" doc={asDoc(primaryDoc)}>
             <ol className="space-y-8">
               {lesson.steps.map((step, i) => {
                 const fallback = references.length
@@ -300,7 +344,7 @@ export function LessonPage() {
           </Section>
 
           {/* Real SAP example */}
-          <Section id="sap-example" title="Real SAP example">
+          <Section id="sap-example" title="Real SAP example" doc={asDoc(primaryDoc)}>
             <p className="text-base font-medium text-foreground">
               {lesson.sapExample.title}
             </p>
@@ -328,7 +372,7 @@ export function LessonPage() {
           </Section>
 
           {/* Best practices */}
-          <Section id="best-practices" title="Best practices">
+          <Section id="best-practices" title="Best practices" doc={asDoc(practiceDoc)}>
             <ul className="space-y-2.5">
               {lesson.bestPractices.map((bp, i) => (
                 <li
@@ -343,7 +387,7 @@ export function LessonPage() {
           </Section>
 
           {/* Common mistakes */}
-          <Section id="common-mistakes" title="Common mistakes">
+          <Section id="common-mistakes" title="Common mistakes" doc={asDoc(practiceDoc)}>
             <ul className="space-y-4">
               {lesson.commonMistakes.map((cm, i) => (
                 <li key={i} className="text-[15px] leading-7">
@@ -361,7 +405,7 @@ export function LessonPage() {
           </Section>
 
           {/* Tips */}
-          <Section id="tips" title="Tips">
+          <Section id="tips" title="Tips" doc={asDoc(practiceDoc)}>
             <ul className="space-y-2.5">
               {lesson.tips.map((tip, i) => (
                 <li
@@ -416,7 +460,7 @@ export function LessonPage() {
           </Section>
 
           {/* Practice exercise */}
-          <Section id="exercise" title="Practice exercise">
+          <Section id="exercise" title="Practice exercise" doc={asDoc(primaryDoc)}>
             <p className="text-base font-medium text-foreground">
               {lesson.exercise.title}
             </p>
@@ -454,7 +498,7 @@ export function LessonPage() {
           </Section>
 
           {/* Summary */}
-          <Section id="summary" title="Summary">
+          <Section id="summary" title="Summary" doc={asDoc(primaryDoc)}>
             <ul className="space-y-2">
               {lesson.summary.map((s, i) => (
                 <li

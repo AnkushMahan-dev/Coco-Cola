@@ -114,6 +114,14 @@ export function QuickStart({ steps }: { steps: Step[] }) {
 
       <a
         href="#steps"
+        onClick={(e) => {
+          // HashRouter owns the URL hash, so scroll in JS instead of letting
+          // the browser treat "#steps" as a route change.
+          e.preventDefault();
+          document
+            .getElementById("steps")
+            ?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }}
         className={cn(
           "flex items-center justify-center gap-1.5 border-t accent-border py-2.5 text-xs font-medium accent-text transition-colors hover:bg-[hsl(var(--ah)/0.06)]",
         )}
