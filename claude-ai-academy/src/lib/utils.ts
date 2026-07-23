@@ -28,3 +28,13 @@ export function formatDuration(minutes: number): string {
   const m = minutes % 60;
   return m === 0 ? `${h} hr` : `${h} hr ${m} min`;
 }
+
+/** Human-readable byte size for a UTF-8 string (uses TextEncoder when available). */
+export function formatBytes(text: string): string {
+  const bytes =
+    typeof TextEncoder !== "undefined"
+      ? new TextEncoder().encode(text).length
+      : text.length;
+  if (bytes < 1024) return `${bytes} B`;
+  return `${(bytes / 1024).toFixed(bytes < 10240 ? 1 : 0)} KB`;
+}

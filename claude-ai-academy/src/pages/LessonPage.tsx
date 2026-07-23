@@ -1,9 +1,11 @@
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
   ArrowRight,
   BookMarked,
+  Bookmark,
+  BookmarkCheck,
   Check,
   CheckCircle2,
   ChevronDown,
@@ -12,6 +14,8 @@ import {
   Download,
   ExternalLink,
   Printer,
+  ThumbsDown,
+  ThumbsUp,
   Video as VideoIcon,
   X,
 } from "lucide-react";
@@ -31,7 +35,7 @@ import { ScreenshotFrame, VideoFrame } from "@/components/lesson/MediaPlaceholde
 import { OnThisPage, type TocItem } from "@/components/lesson/OnThisPage";
 import { findLesson, nextLesson, previousLesson } from "@/content/curriculum";
 import { getLessonReferences } from "@/content/references";
-import { useLessonProgress, progressStore } from "@/lib/progress";
+import { useLessonProgress, useLessonTimer, progressStore } from "@/lib/progress";
 import { downloadTextFile, formatDuration } from "@/lib/utils";
 
 const levelVariant = {
@@ -67,10 +71,40 @@ function Section({
   );
 }
 
+function NotesField({
+  value,
+  onSave,
+}: {
+  value: string;
+  onSave: (v: string) => void;
+}) {
+  const [draft, setDraft] = useState(value);
+  useEffect(() => setDraft(value), [value]);
+  return (
+    <textarea
+      value={draft}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={() => onSave(draft)}
+      placeholder="Jot notes for this lesson — saved to this browser."
+      className="min-h-[92px] w-full rounded-md border border-input bg-card p-3 text-sm leading-6 outline-none ring-offset-background placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+    />
+  );
+}
+
 export function LessonPage() {
   const { slug = "" } = useParams();
   const ref = findLesson(slug);
-  const { isComplete, toggle } = useLessonProgress(slug);
+  const {
+    isComplete,
+    toggle,
+    isBookmarked,
+    toggleBookmark,
+    helpful,
+    setHelpful,
+    note,
+    setNote,
+  } = useLessonProgress(slug);
+  useLessonTimer(slug);
 
   useEffect(() => {
     if (ref) progressStore.setLastVisited(ref.lesson.slug);
@@ -141,6 +175,17 @@ export function LessonPage() {
               ) : (
                 <>
                   <Circle /> Mark complete
+                </>
+              )}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={toggleBookmark}>
+              {isBookmarked ? (
+                <>
+                  <BookmarkCheck className="text-primary" /> Saved
+                </>
+              ) : (
+                <>
+                  <Bookmark /> Save
                 </>
               )}
             </Button>
@@ -463,8 +508,47 @@ export function LessonPage() {
           )}
         </div>
 
+        {/* Feedback + notes */}
+        <div className="no-print mt-12 border-t border-border pt-6">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-sm font-medium text-foreground">
+              Was this lesson helpful?
+            </span>
+            <Button
+              variant={helpful === "yes" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setHelpful("yes")}
+            >
+              <ThumbsUp /> Yes
+            </Button>
+            <Button
+              variant={helpful === "no" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setHelpful("no")}
+            >
+              <ThumbsDown /> No
+            </Button>
+            {helpful && (
+              <span className="text-sm text-muted-foreground">
+                Thanks for the feedback.
+              </span>
+            )}
+          </div>
+          <div className="mt-4">
+            <label
+              htmlFor="lesson-notes"
+              className="mb-1.5 block text-sm font-medium text-foreground"
+            >
+              Your notes
+            </label>
+            <div id="lesson-notes">
+              <NotesField value={note} onSave={setNote} />
+            </div>
+          </div>
+        </div>
+
         {/* Prev / next */}
-        <nav className="no-print mt-12 grid gap-3 border-t border-border pt-6 sm:grid-cols-2">
+        <nav className="no-print mt-10 grid gap-3 border-t border-border pt-6 sm:grid-cols-2">
           {prev ? (
             <Link
               to={`/lessons/${prev.lesson.slug}`}
