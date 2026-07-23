@@ -245,9 +245,15 @@ export function HomePage() {
         <div className="mx-auto max-w-5xl px-4 py-14 lg:px-10">
           <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
             <div className="space-y-2">
-              <h2 className="text-2xl font-bold tracking-tight">
+              <motion.h2
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4 }}
+                className="text-2xl font-bold tracking-tight"
+              >
                 Explore the Claude ecosystem
-              </h2>
+              </motion.h2>
               <p className="text-muted-foreground">
                 Every product &amp; feature from the{" "}
                 <span className="font-medium text-foreground">claude.com</span>{" "}
@@ -268,15 +274,25 @@ export function HomePage() {
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ ["--ah" as string]: item.hue }}
-                initial={{ opacity: 0, y: 14 }}
+                initial={{ opacity: 0, y: 18 }}
                 whileInView={{ opacity: 1, y: 0 }}
+                whileHover={{ y: -6 }}
+                whileTap={{ scale: 0.98 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.3, delay: (i % 3) * 0.05 }}
-                className="group relative flex flex-col gap-2 overflow-hidden rounded-xl border accent-border bg-card p-5 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"
+                transition={{ type: "spring", stiffness: 320, damping: 24, delay: (i % 3) * 0.06 }}
+                className="group relative flex flex-col gap-2 overflow-hidden rounded-xl border accent-border bg-card p-5 shadow-sm transition-shadow hover:shadow-lg"
               >
-                <span aria-hidden className="absolute inset-x-0 top-0 h-1 accent-bar" />
+                <motion.span
+                  aria-hidden
+                  initial={{ scaleX: 0 }}
+                  whileInView={{ scaleX: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: (i % 3) * 0.06 + 0.15 }}
+                  style={{ transformOrigin: "left" }}
+                  className="absolute inset-x-0 top-0 h-1 accent-bar"
+                />
                 <div className="flex items-center gap-3">
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl accent-chip text-xl transition-transform group-hover:scale-110">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl accent-chip text-xl transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110">
                     {item.icon}
                   </span>
                   <div className="min-w-0 flex-1">
