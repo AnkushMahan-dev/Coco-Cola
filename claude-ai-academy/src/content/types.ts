@@ -21,12 +21,21 @@ export interface CalloutData {
   body: string;
 }
 
+export interface StepReference {
+  label: string;
+  url: string;
+  /** "doc" renders a book icon, "video" a play icon */
+  kind?: "doc" | "video";
+}
+
 export interface Step {
   title: string;
   /** One or more paragraphs describing the step */
   body: string[];
   code?: CodeSnippet;
   callout?: CalloutData;
+  /** Official reference or video link for this specific step */
+  reference?: StepReference;
 }
 
 export interface MediaPlaceholder {
@@ -34,6 +43,12 @@ export interface MediaPlaceholder {
   caption: string;
   /** Alt-style description of the visual for accessibility */
   description: string;
+  /**
+   * Real image URL. The Screenshots section only renders entries that have
+   * one — no placeholder mockups are shown. Add a real screenshot here to
+   * surface it.
+   */
+  imageUrl?: string;
 }
 
 export interface VideoPlaceholder extends MediaPlaceholder {

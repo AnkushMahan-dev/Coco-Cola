@@ -17,9 +17,9 @@ const embed = (id: string) => `https://www.youtube-nocookie.com/embed/${id}`;
 const videos: Record<string, LessonVideo> = {
   // Module 1 — Getting Started
   "claude-desktop": {
-    id: "jw0pMr54Ztc",
-    title: "The Ultimate Beginner's Guide To Claude",
-    channel: "AI Edge",
+    id: "0vZ_UVLhSQQ",
+    title: "Getting started with Claude.ai",
+    channel: "Anthropic",
   },
   "claude-web": {
     id: "0vZ_UVLhSQQ",

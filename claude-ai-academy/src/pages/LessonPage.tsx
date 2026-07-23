@@ -252,6 +252,23 @@ export function LessonPage() {
                     {step.callout.body}
                   </Callout>
                 )}
+                {step.reference && (
+                  <a
+                    href={step.reference.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 inline-flex items-center gap-2 rounded-md border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
+                  >
+                    {step.reference.kind === "video" ? (
+                      <Video className="h-3.5 w-3.5" aria-hidden />
+                    ) : (
+                      <BookMarked className="h-3.5 w-3.5" aria-hidden />
+                    )}
+                    {step.reference.kind === "video" ? "Watch: " : "Reference: "}
+                    {step.reference.label}
+                    <ExternalLink className="h-3 w-3 opacity-60" aria-hidden />
+                  </a>
+                )}
               </motion.li>
             ))}
           </ol>
@@ -345,14 +362,18 @@ export function LessonPage() {
           </div>
         </Section>
 
-        {/* Screenshots */}
-        <Section id="screenshots" icon={ImageIcon} title="Screenshots">
-          <div className="grid gap-6 md:grid-cols-2">
-            {lesson.screenshots.map((s, i) => (
-              <ScreenshotFrame key={i} media={s} />
-            ))}
-          </div>
-        </Section>
+        {/* Screenshots — only rendered when real images are supplied */}
+        {lesson.screenshots.some((s) => s.imageUrl) && (
+          <Section id="screenshots" icon={ImageIcon} title="Screenshots">
+            <div className="grid gap-6 md:grid-cols-2">
+              {lesson.screenshots
+                .filter((s) => s.imageUrl)
+                .map((s, i) => (
+                  <ScreenshotFrame key={i} media={s} />
+                ))}
+            </div>
+          </Section>
+        )}
 
         {/* Video */}
         <Section id="video" icon={Video} title="Video Walkthrough">

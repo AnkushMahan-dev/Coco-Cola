@@ -38,6 +38,11 @@ export const module1: Module = {
       steps: [
         {
           title: "Download and install the app",
+          reference: {
+            label: "Download Claude (official)",
+            url: "https://claude.ai/download",
+            kind: "doc",
+          },
           body: [
             "Go to claude.ai/download and choose the Windows installer. Run the downloaded .exe — installation takes under a minute and does not require admin rights on most corporate builds. If your company distributes software through a portal (e.g. Company Portal / Software Center), check there first: many IT departments package Claude Desktop centrally.",
           ],
@@ -49,18 +54,33 @@ export const module1: Module = {
         },
         {
           title: "Sign in with your work account",
+          reference: {
+            label: "Claude Desktop quickstart",
+            url: "https://code.claude.com/docs/en/desktop-quickstart",
+            kind: "doc",
+          },
           body: [
             "Launch the app and sign in. If your company uses single sign-on you will be redirected to the familiar Microsoft/identity-provider login. A work account matters: enterprise plans carry commercial data-protection terms, whereas a private account may not be approved for company code and data.",
           ],
         },
         {
           title: "Tour the interface",
+          reference: {
+            label: "Claude Desktop overview",
+            url: "https://code.claude.com/docs/en/desktop",
+            kind: "doc",
+          },
           body: [
             "The left sidebar shows recent chats and Projects (shared spaces with custom instructions and knowledge files). The center is the conversation. The model picker sits near the input box — for complex ABAP work choose the most capable model available to you; for quick lookups a faster model is fine.",
           ],
         },
         {
           title: "Set the global shortcut and startup options",
+          reference: {
+            label: "Claude Code & Desktop settings",
+            url: "https://code.claude.com/docs/en/settings",
+            kind: "doc",
+          },
           body: [
             "Open Settings from your profile menu. Enable 'Launch on login' so Claude is always one keystroke away, and note the global shortcut (configurable, e.g. Ctrl+Alt+Space) that pops a Claude window over whatever you are doing — including SAP GUI or Eclipse ADT.",
           ],
@@ -72,6 +92,11 @@ export const module1: Module = {
         },
         {
           title: "Find the configuration folder",
+          reference: {
+            label: "MCP & the config file location",
+            url: "https://code.claude.com/docs/en/mcp",
+            kind: "doc",
+          },
           body: [
             "Press Win+R, type %APPDATA%\\Claude and press Enter. This folder holds claude_desktop_config.json — the file where MCP servers are registered later in the course. You do not need to change anything yet; just remember where it lives.",
           ],
@@ -83,6 +108,11 @@ export const module1: Module = {
         },
         {
           title: "Pin Claude for daily use",
+          reference: {
+            label: "Claude Desktop overview",
+            url: "https://code.claude.com/docs/en/desktop",
+            kind: "doc",
+          },
           body: [
             "Right-click the taskbar icon and choose 'Pin to taskbar'. With Windows Snap (Win+Left/Right) you can dock Claude beside SAP GUI — a layout you will use constantly in the SAP GUI lesson.",
           ],

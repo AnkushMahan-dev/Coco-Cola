@@ -1,27 +1,24 @@
 import { PlayCircle, Youtube } from "lucide-react";
 import type { MediaPlaceholder, VideoPlaceholder } from "@/content/types";
-import { Illustration, inferVariant } from "./Illustration";
 import { getLessonVideo } from "@/content/videos";
 
 /**
- * Screenshot frame — renders a generated SVG UI illustration chosen from
- * the screenshot's caption/description. Swap for a real <img> whenever
- * actual screenshots are captured; the caption/description stay valid.
+ * Screenshot frame — renders a REAL image (media.imageUrl). The lesson page
+ * only calls this for screenshots that actually have an image, so no
+ * placeholder/mockup art is ever shown.
  */
 export function ScreenshotFrame({ media }: { media: MediaPlaceholder }) {
-  const variant = inferVariant(`${media.caption} ${media.description}`);
+  if (!media.imageUrl) return null;
   return (
     <figure className="overflow-hidden rounded-lg border">
-      <div
-        role="img"
-        aria-label={media.description}
-        className="aspect-video bg-muted"
-      >
-        <Illustration variant={variant} />
-      </div>
+      <img
+        src={media.imageUrl}
+        alt={media.description}
+        loading="lazy"
+        className="aspect-video w-full bg-muted object-cover"
+      />
       <figcaption className="border-t bg-card px-4 py-2 text-xs text-muted-foreground">
-        📷 {media.caption}{" "}
-        <span className="opacity-70">(illustrative mockup)</span>
+        📷 {media.caption}
       </figcaption>
     </figure>
   );
