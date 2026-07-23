@@ -12,7 +12,7 @@
  * override, letting components inherit the light/dark-aware accent.
  */
 export function moduleAccent(_slug: string): string {
-  return "221 83% 53%";
+  return "18 65% 48%";
 }
 
 /** No per-module override — inherit the theme's accent (adapts to dark mode). */
