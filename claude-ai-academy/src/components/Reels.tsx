@@ -52,13 +52,11 @@ export function Reels() {
               type="button"
               role="listitem"
               onClick={() => setActive(reel)}
-              initial={{ opacity: 0, y: 18 }}
+              initial={{ opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
-              whileHover={{ y: -6 }}
-              whileTap={{ scale: 0.97 }}
               viewport={{ once: true }}
-              transition={{ type: "spring", stiffness: 320, damping: 24, delay: Math.min(i * 0.06, 0.35) }}
-              className="group relative aspect-[9/16] w-[168px] shrink-0 snap-start overflow-hidden rounded-xl border bg-zinc-900 text-left shadow-sm transition-shadow hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              transition={{ duration: 0.3, ease: "easeOut", delay: Math.min(i * 0.04, 0.25) }}
+              className="group relative aspect-[9/16] w-[164px] shrink-0 snap-start overflow-hidden rounded-lg border bg-zinc-900 text-left transition-colors hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               aria-label={`Play reel: ${reel.title}`}
             >
               <img

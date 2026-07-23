@@ -1,4 +1,8 @@
-@import "@fontsource-variable/inter";
+@import "@fontsource/ibm-plex-sans/400.css";
+@import "@fontsource/ibm-plex-sans/500.css";
+@import "@fontsource/ibm-plex-sans/600.css";
+@import "@fontsource/ibm-plex-sans/700.css";
+@import "@fontsource-variable/jetbrains-mono";
 
 @tailwind base;
 @tailwind components;
@@ -6,65 +10,66 @@
 
 @layer base {
   :root {
-    --background: 250 40% 99%;
-    --foreground: 250 25% 12%;
+    /* Swiss minimalism — neutral slate + a single blue accent */
+    --background: 210 40% 98%;
+    --foreground: 217 33% 17%;
     --card: 0 0% 100%;
-    --card-foreground: 250 25% 12%;
+    --card-foreground: 217 33% 17%;
     --popover: 0 0% 100%;
-    --popover-foreground: 250 25% 12%;
-    --primary: 262 83% 58%;
+    --popover-foreground: 217 33% 17%;
+    --primary: 221 83% 53%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 255 35% 96%;
-    --secondary-foreground: 262 40% 30%;
-    --muted: 255 30% 96%;
-    --muted-foreground: 250 12% 45%;
-    --accent: 262 70% 96%;
-    --accent-foreground: 262 72% 40%;
-    --destructive: 0 78% 55%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 215 25% 27%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 214 100% 97%;
+    --accent-foreground: 221 83% 45%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    --success: 158 72% 38%;
+    --success: 142 64% 34%;
     --success-foreground: 0 0% 100%;
-    --warning: 34 95% 48%;
+    --warning: 32 90% 42%;
     --warning-foreground: 0 0% 100%;
-    --info: 217 91% 56%;
+    --info: 221 83% 53%;
     --info-foreground: 0 0% 100%;
-    --border: 255 25% 90%;
-    --input: 255 25% 86%;
-    --ring: 262 83% 58%;
-    --radius: 0.75rem;
+    --border: 214 32% 91%;
+    --input: 214 32% 88%;
+    --ring: 221 83% 53%;
+    --radius: 0.5rem;
 
-    /* Default lesson/section accent (overridden per module at runtime) */
-    --ah: 262 83% 58%;
+    /* Accent hue used by the accent-* utilities — a single, calm blue */
+    --ah: 221 83% 53%;
   }
 
   .dark {
-    --background: 258 30% 7%;
-    --foreground: 255 25% 93%;
-    --card: 258 26% 11%;
-    --card-foreground: 255 25% 93%;
-    --popover: 258 28% 10%;
-    --popover-foreground: 255 25% 93%;
-    --primary: 263 90% 70%;
-    --primary-foreground: 258 30% 8%;
-    --secondary: 258 20% 18%;
-    --secondary-foreground: 255 25% 90%;
-    --muted: 258 18% 17%;
-    --muted-foreground: 255 12% 65%;
-    --accent: 262 40% 22%;
-    --accent-foreground: 263 90% 82%;
-    --destructive: 0 72% 60%;
+    --background: 222 47% 11%;
+    --foreground: 210 40% 96%;
+    --card: 222 33% 14%;
+    --card-foreground: 210 40% 96%;
+    --popover: 222 40% 12%;
+    --popover-foreground: 210 40% 96%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 217 33% 18%;
+    --secondary-foreground: 210 40% 92%;
+    --muted: 217 33% 18%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 217 33% 22%;
+    --accent-foreground: 213 94% 80%;
+    --destructive: 0 63% 51%;
     --destructive-foreground: 0 0% 100%;
-    --success: 158 64% 48%;
-    --success-foreground: 258 30% 8%;
-    --warning: 34 95% 58%;
-    --warning-foreground: 258 30% 8%;
+    --success: 142 55% 45%;
+    --success-foreground: 222 47% 11%;
+    --warning: 38 92% 55%;
+    --warning-foreground: 222 47% 11%;
     --info: 217 91% 66%;
-    --info-foreground: 258 30% 8%;
-    --border: 258 18% 22%;
-    --input: 258 18% 26%;
-    --ring: 263 90% 70%;
+    --info-foreground: 222 47% 11%;
+    --border: 217 30% 24%;
+    --input: 217 30% 26%;
+    --ring: 217 91% 60%;
 
-    --ah: 263 90% 70%;
+    --ah: 217 91% 66%;
   }
 
   * {
@@ -78,11 +83,19 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-feature-settings: "cv02", "ss01";
+    text-rendering: optimizeLegibility;
   }
 
   ::selection {
-    @apply bg-primary/25;
+    @apply bg-primary/15;
+  }
+
+  /* Readable long-form measure inside lesson prose */
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
   }
 }
 
@@ -92,123 +105,23 @@
     scrollbar-color: hsl(var(--border)) transparent;
   }
 
-  /* Colorful gradient text for hero + headings (slow animated sheen) */
-  .text-gradient {
-    background-image: linear-gradient(
-      100deg,
-      hsl(262 83% 58%),
-      hsl(291 70% 55%),
-      hsl(199 89% 48%),
-      hsl(262 83% 58%)
-    );
-    background-size: 220% auto;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    animation: gradient-pan 9s linear infinite;
-  }
-  .dark .text-gradient {
-    background-image: linear-gradient(
-      100deg,
-      hsl(263 90% 72%),
-      hsl(291 80% 70%),
-      hsl(199 90% 62%)
-    );
-  }
-
-  /* Vibrant multi-blob hero backdrop (slow drift) */
-  .hero-mesh {
-    background-image:
-      radial-gradient(42% 55% at 12% 8%, hsl(262 83% 58% / 0.22), transparent 60%),
-      radial-gradient(38% 50% at 88% 4%, hsl(291 75% 58% / 0.20), transparent 60%),
-      radial-gradient(50% 60% at 70% 90%, hsl(199 89% 48% / 0.16), transparent 60%);
-    animation: hero-drift 22s ease-in-out infinite;
-    will-change: transform;
-  }
-
-  /* Reusable hover-lift for cards/links */
-  .hover-lift {
-    transition:
-      transform 0.18s ease,
-      box-shadow 0.18s ease,
-      border-color 0.18s ease;
-  }
-  .hover-lift:hover {
-    transform: translateY(-2px);
-  }
-
-  /* Accent helpers driven by --ah (set per module) */
+  /* Accent helpers (now a single calm blue via --ah) */
   .accent-chip {
-    background-color: hsl(var(--ah) / 0.12);
+    background-color: hsl(var(--ah) / 0.1);
     color: hsl(var(--ah));
   }
   .accent-text {
     color: hsl(var(--ah));
   }
   .accent-border {
-    border-color: hsl(var(--ah) / 0.4);
+    border-color: hsl(var(--border));
   }
   .accent-bar {
-    background-image: linear-gradient(
-      90deg,
-      hsl(var(--ah)),
-      hsl(var(--ah) / 0.4)
-    );
+    background-color: hsl(var(--ah));
   }
 }
 
-/* ---- keyframes for small ambient animations ---- */
-@keyframes gradient-pan {
-  to {
-    background-position: 220% center;
-  }
-}
-
-@keyframes hero-drift {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  50% {
-    transform: translate3d(0, -1.4%, 0) scale(1.05);
-  }
-}
-
-@keyframes pop-in {
-  0% {
-    transform: scale(0.6);
-    opacity: 0;
-  }
-  60% {
-    transform: scale(1.08);
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.animate-pop-in {
-  animation: pop-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-}
-
-/* Respect users who prefer reduced motion: kill ambient/looping motion */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
-    scroll-behavior: auto !important;
-  }
-  .hero-mesh,
-  .text-gradient {
-    animation: none !important;
-  }
-}
-
-/* Print styles: turn any lesson into a clean PDF via Ctrl+P / "Save as PDF". */
+/* Print styles: clean, navigation-free PDF via Ctrl+P / "Save as PDF". */
 @media print {
   header,
   aside,
@@ -244,5 +157,16 @@
     content: " (" attr(href) ")";
     font-size: 0.8em;
     color: #555;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }

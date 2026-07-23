@@ -5,24 +5,17 @@
  * with `style={{ ['--ah']: moduleAccent(slug) }}`.
  */
 
-const accents: Record<string, string> = {
-  "getting-started": "262 83% 58%", // violet
-  "prompt-engineering": "217 91% 56%", // blue
-  "advanced-capabilities": "291 70% 55%", // fuchsia
-  integrations: "189 94% 40%", // cyan
-  "sap-toolchain": "158 72% 38%", // emerald
-  "best-practices": "34 95% 48%", // amber
-  "real-sap-projects": "346 84% 57%", // rose
-  "quality-productivity": "173 80% 38%", // teal
-};
-
-const DEFAULT = "262 83% 58%";
-
-export function moduleAccent(slug: string): string {
-  return accents[slug] ?? DEFAULT;
+/**
+ * The design system uses a single calm blue accent (Swiss minimalism), so
+ * every module shares the theme's --ah value. These helpers are kept so
+ * callers don't need to change; accentStyle intentionally returns no
+ * override, letting components inherit the light/dark-aware accent.
+ */
+export function moduleAccent(_slug: string): string {
+  return "221 83% 53%";
 }
 
-/** Convenience style object to drop the accent onto any container. */
-export function accentStyle(slug: string): React.CSSProperties {
-  return { ["--ah" as string]: moduleAccent(slug) } as React.CSSProperties;
+/** No per-module override — inherit the theme's accent (adapts to dark mode). */
+export function accentStyle(_slug: string): React.CSSProperties {
+  return {};
 }

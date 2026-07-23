@@ -13,17 +13,17 @@ export default {
     extend: {
       fontFamily: {
         sans: [
-          "Inter Variable",
-          "Segoe UI Variable",
+          "IBM Plex Sans",
           "Segoe UI",
           "system-ui",
+          "-apple-system",
           "sans-serif",
         ],
         mono: [
+          "JetBrains Mono Variable",
           "Cascadia Code",
           "Consolas",
           "ui-monospace",
-          "SFMono-Regular",
           "monospace",
         ],
       },

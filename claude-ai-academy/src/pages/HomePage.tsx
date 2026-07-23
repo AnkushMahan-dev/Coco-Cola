@@ -2,10 +2,17 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
+  AtSign,
+  Blocks,
   BookOpen,
   Bot,
+  Boxes,
   Briefcase,
+  Cable,
+  Check,
+  Chrome,
   Clock,
+  Code2,
   Database,
   Download,
   ExternalLink,
@@ -13,11 +20,15 @@ import {
   GraduationCap,
   MessageSquare,
   Monitor,
+  PenTool,
   Plug,
+  Puzzle,
   Rocket,
   Search,
+  Sheet,
   Shield,
   Sparkles,
+  Users,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,7 +38,6 @@ import { curriculum, totalLessonCount, findLesson } from "@/content/curriculum";
 import { ecosystem } from "@/content/ecosystem";
 import { Reels } from "@/components/Reels";
 import { useProgress } from "@/lib/progress";
-import { accentStyle } from "@/lib/moduleTheme";
 import { formatDuration } from "@/lib/utils";
 import type { ModuleIcon } from "@/content/types";
 
@@ -40,6 +50,23 @@ const moduleIcons: Record<ModuleIcon, typeof Rocket> = {
   shield: Shield,
   briefcase: Briefcase,
   gauge: Gauge,
+};
+
+// Map the ecosystem items' icon field (emoji, kept in data) to real SVG
+// icons — no emoji as structural icons (professional UI guideline).
+const ecosystemIcons: Record<string, typeof Rocket> = {
+  "🧠": Sparkles,
+  "💻": Code2,
+  "🤝": Users,
+  "💬": AtSign,
+  "🌐": Chrome,
+  "📊": Sheet,
+  "🧩": Puzzle,
+  "🧰": Briefcase,
+  "🎨": PenTool,
+  "🔗": Cable,
+  "🔌": Blocks,
+  "📚": Boxes,
 };
 
 const highlights = [
@@ -80,28 +107,27 @@ export function HomePage() {
   return (
     <div>
       {/* Hero */}
-      <section className="relative overflow-hidden border-b">
-        <div aria-hidden className="pointer-events-none absolute inset-0 hero-mesh" />
-        <div className="relative mx-auto max-w-5xl px-4 py-16 lg:px-10 lg:py-24">
+      <section className="border-b bg-card">
+        <div className="mx-auto max-w-5xl px-4 py-16 lg:px-10 lg:py-20">
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="max-w-3xl space-y-6"
+            transition={{ duration: 0.35, ease: "easeOut" }}
+            className="max-w-2xl space-y-6"
           >
-            <Badge variant="secondary" className="gap-1.5 py-1">
+            <Badge variant="secondary" className="gap-1.5 py-1 font-medium">
               <GraduationCap className="h-3.5 w-3.5" aria-hidden />
-              {curriculum.length} modules · {totalLessonCount} hands-on lessons
+              {curriculum.length} modules · {totalLessonCount} lessons
             </Badge>
-            <h1 className="text-4xl font-bold tracking-tight lg:text-5xl">
+            <h1 className="text-4xl font-bold leading-[1.1] tracking-tight lg:text-5xl">
               Master Claude AI for{" "}
-              <span className="text-gradient">SAP development</span>
+              <span className="text-primary">SAP development</span>
             </h1>
-            <p className="text-lg leading-relaxed text-muted-foreground">
-              A structured training platform and reference guide that takes SAP
-              ABAP developers, technical leads and architects from first prompt
-              to AI-assisted S/4HANA delivery — with real project examples,
-              best practices and security guardrails.
+            <p className="max-w-xl text-lg leading-relaxed text-muted-foreground">
+              A structured, hands-on path that takes SAP ABAP developers and
+              architects from their first prompt to AI-assisted S/4HANA
+              delivery — with real project examples, best practices and
+              security guardrails.
             </p>
             <div className="flex flex-wrap gap-3">
               <Button size="lg" asChild>
@@ -120,7 +146,7 @@ export function HomePage() {
               <div className="max-w-md space-y-1.5 pt-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Your progress</span>
-                  <span className="font-medium">
+                  <span className="font-medium tabular-nums">
                     {completedCount}/{totalLessonCount} lessons · {pct}%
                   </span>
                 </div>
@@ -185,30 +211,18 @@ export function HomePage() {
               return (
                 <motion.div
                   key={module.slug}
-                  initial={{ opacity: 0, y: 18 }}
+                  initial={{ opacity: 0, y: 12 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  whileHover={{ y: -6 }}
-                  whileTap={{ scale: 0.985 }}
                   viewport={{ once: true }}
-                  transition={{ type: "spring", stiffness: 320, damping: 24, delay: (i % 2) * 0.06 }}
+                  transition={{ duration: 0.3, ease: "easeOut", delay: (i % 2) * 0.05 }}
                 >
                   <Link
                     to={`/modules/${module.slug}`}
                     className="group block h-full"
-                    style={accentStyle(module.slug)}
                   >
-                    <Card className="relative h-full overflow-hidden transition-shadow accent-border group-hover:shadow-lg">
-                      <motion.span
-                        aria-hidden
-                        initial={{ scaleX: 0 }}
-                        whileInView={{ scaleX: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.5, delay: (i % 2) * 0.06 + 0.15 }}
-                        style={{ transformOrigin: "left" }}
-                        className="absolute inset-x-0 top-0 h-1 accent-bar"
-                      />
-                      <CardHeader className="flex-row items-start gap-4 space-y-0 pt-6">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg accent-chip transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110">
+                    <Card className="h-full transition-colors hover:border-primary/40 hover:bg-accent/40">
+                      <CardHeader className="flex-row items-start gap-4 space-y-0">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md accent-chip">
                           <Icon className="h-5 w-5" aria-hidden />
                         </span>
                         <div className="min-w-0 flex-1 space-y-1.5">
@@ -277,60 +291,52 @@ export function HomePage() {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {ecosystem.map((item, i) => (
-              <motion.a
-                key={item.url}
-                href={item.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ ["--ah" as string]: item.hue }}
-                initial={{ opacity: 0, y: 18 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                whileHover={{ y: -6 }}
-                whileTap={{ scale: 0.98 }}
-                viewport={{ once: true }}
-                transition={{ type: "spring", stiffness: 320, damping: 24, delay: (i % 3) * 0.06 }}
-                className="group relative flex flex-col gap-2 overflow-hidden rounded-xl border accent-border bg-card p-5 shadow-sm transition-shadow hover:shadow-lg"
-              >
-                <motion.span
-                  aria-hidden
-                  initial={{ scaleX: 0 }}
-                  whileInView={{ scaleX: 1 }}
+            {ecosystem.map((item, i) => {
+              const Icon = ecosystemIcons[item.icon] ?? Boxes;
+              return (
+                <motion.a
+                  key={item.url}
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  initial={{ opacity: 0, y: 12 }}
+                  whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: (i % 3) * 0.06 + 0.15 }}
-                  style={{ transformOrigin: "left" }}
-                  className="absolute inset-x-0 top-0 h-1 accent-bar"
-                />
-                <div className="flex items-center gap-3">
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl accent-chip text-xl transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110">
-                    {item.icon}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[10px] font-bold uppercase tracking-wider accent-text">
-                      {item.group}
-                    </p>
-                    <p className="font-semibold leading-tight group-hover:accent-text">
-                      {item.name}
-                    </p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {item.domain}
-                    </p>
+                  transition={{ duration: 0.3, ease: "easeOut", delay: (i % 3) * 0.04 }}
+                  className="group flex flex-col gap-2.5 rounded-lg border bg-card p-5 transition-colors hover:border-primary/40 hover:bg-accent/40"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md accent-chip">
+                      <Icon className="h-5 w-5" aria-hidden />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        {item.group}
+                      </p>
+                      <p className="font-semibold leading-tight text-foreground group-hover:text-primary">
+                        {item.name}
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {item.domain}
+                      </p>
+                    </div>
+                    <ExternalLink
+                      className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary"
+                      aria-hidden
+                    />
                   </div>
-                  <ExternalLink
-                    className="h-4 w-4 shrink-0 text-muted-foreground transition-all group-hover:accent-text group-hover:translate-x-0.5"
-                    aria-hidden
-                  />
-                </div>
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  {item.blurb}
-                </p>
-                {item.lessonSlug && (
-                  <span className="mt-auto pt-1 text-xs font-medium accent-text">
-                    ✓ Covered in this Academy →
-                  </span>
-                )}
-              </motion.a>
-            ))}
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    {item.blurb}
+                  </p>
+                  {item.lessonSlug && (
+                    <span className="mt-auto flex items-center gap-1.5 pt-1 text-xs font-medium text-primary">
+                      <Check className="h-3.5 w-3.5" aria-hidden />
+                      Covered in this Academy
+                    </span>
+                  )}
+                </motion.a>
+              );
+            })}
           </div>
         </div>
       </section>
