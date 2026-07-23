@@ -189,18 +189,28 @@ export function HomePage() {
       {/* Quick reels — short vertical YouTube clips */}
       <Reels />
 
-      {/* Curriculum overview */}
-      <section className="border-t bg-muted/40">
-        <div className="mx-auto max-w-5xl px-4 py-14 lg:px-10">
-          <div className="mb-8 space-y-2">
-            <h2 className="text-2xl font-bold tracking-tight">
+      {/* Section 1 — The learning path (the structured curriculum) */}
+      <section className="scroll-mt-20 border-t bg-muted/40">
+        <div className="mx-auto max-w-5xl px-4 py-16 lg:px-10">
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className="mb-8 space-y-2"
+          >
+            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden />
+              Curriculum
+            </span>
+            <h2 className="text-2xl font-bold tracking-tight lg:text-3xl">
               The learning path
             </h2>
-            <p className="text-muted-foreground">
+            <p className="max-w-2xl text-muted-foreground">
               Eight modules, from your first chat to full AI-assisted SAP
-              project delivery.
+              project delivery — follow them in order or jump to what you need.
             </p>
-          </div>
+          </motion.div>
           <div className="grid gap-5 md:grid-cols-2">
             {curriculum.map((module, i) => {
               const Icon = moduleIcons[module.icon];
@@ -214,6 +224,7 @@ export function HomePage() {
                   initial={{ opacity: 0, y: 12 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
+                  whileHover={{ y: -4 }}
                   transition={{ duration: 0.3, ease: "easeOut", delay: (i % 2) * 0.05 }}
                 >
                   <Link
@@ -264,26 +275,30 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* Explore the Claude ecosystem — official claude.com topics */}
-      <section className="border-t">
-        <div className="mx-auto max-w-5xl px-4 py-14 lg:px-10">
+      {/* Section 2 — Explore the Claude ecosystem (official claude.com topics) */}
+      <section className="scroll-mt-20 border-t bg-background">
+        <div className="mx-auto max-w-5xl px-4 py-16 lg:px-10">
           <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
-            <div className="space-y-2">
-              <motion.h2
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4 }}
-                className="text-2xl font-bold tracking-tight"
-              >
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="space-y-2"
+            >
+              <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden />
+                Ecosystem
+              </span>
+              <h2 className="text-2xl font-bold tracking-tight lg:text-3xl">
                 Explore the Claude ecosystem
-              </motion.h2>
-              <p className="text-muted-foreground">
+              </h2>
+              <p className="max-w-2xl text-muted-foreground">
                 Every product &amp; feature from the{" "}
                 <span className="font-medium text-foreground">claude.com</span>{" "}
                 navigation — official pages, plus where each is covered here.
               </p>
-            </div>
+            </motion.div>
             <Badge variant="secondary" className="gap-1.5 py-1">
               <ExternalLink className="h-3.5 w-3.5" aria-hidden />
               Opens claude.com
@@ -302,6 +317,7 @@ export function HomePage() {
                   initial={{ opacity: 0, y: 12 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
+                  whileHover={{ y: -4 }}
                   transition={{ duration: 0.3, ease: "easeOut", delay: (i % 3) * 0.04 }}
                   className="group flex flex-col gap-2.5 rounded-lg border bg-card p-5 transition-colors hover:border-primary/40 hover:bg-accent/40"
                 >

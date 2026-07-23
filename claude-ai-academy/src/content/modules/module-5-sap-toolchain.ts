@@ -1167,5 +1167,476 @@ SELECT FROM vbap
       },
       relatedSlugs: ["mcp-servers", "claude-code", "security-guidelines", "atc-remediation"],
     },
+
+    // ------------------------------------------------------------------
+    // Lesson 4: Hands-on — MCP ABAP ADT API setup on Windows
+    // ------------------------------------------------------------------
+    {
+      slug: "abap-adt-mcp-setup",
+      title: "Hands-on: MCP ABAP ADT Server Setup (Windows)",
+      description:
+        "A complete, click-by-click Windows walkthrough: clone the community MCP ABAP ADT API server, build it, wire your SAP connection into .env, register it in claude_desktop_config.json, and confirm Claude Desktop shows it connected — with strict dev-only, least-privilege guardrails.",
+      duration: 30,
+      level: "Advanced",
+      keywords: [
+        "MCP",
+        "ABAP ADT",
+        "mcp-abap-adt-api",
+        "claude_desktop_config.json",
+        "Node.js",
+        "npm run build",
+        ".env",
+        "setup",
+        "install",
+        "SAP_URL",
+        "service user",
+        "Windows",
+      ],
+      overview: [
+        "This is the practical companion to the previous lesson. Where that one explained what an ABAP MCP server is and the governance around it, this lesson walks you through actually installing one on a Windows laptop and connecting it to Claude Desktop — end to end, in about half an hour. It follows the exact sequence you would run in a real proof-of-concept: clone the repository, install dependencies, build the TypeScript into JavaScript, put your SAP connection details in a .env file, register the compiled server in Claude Desktop's configuration, and verify the connection.",
+        "The server used here is the community open-source project mcp-abap-abap-adt-api (github.com/mario-andreschak/mcp-abap-abap-adt-api). It wraps the same ADT REST services Eclipse uses, so once connected Claude can read source, search objects and run checks against the ABAP system you point it at. It is not an SAP or Anthropic product — treat it like any open-source dependency: read the code, pin a version, and control exactly what it can reach.",
+        "Every command and path here is written for Windows: Command Prompt / PowerShell, C:\\ paths, and %APPDATA%\\Claude for the Claude Desktop config. Point this at a development or sandbox system with a display-only service user only — never at production, and never with your personal dialog credentials. Verified on Node.js v24.x.",
+      ],
+      objectives: [
+        "Install the prerequisites (Claude Desktop, Node.js, Git) and confirm they are ready on Windows.",
+        "Clone, install, build and verify the MCP ABAP ADT API server locally.",
+        "Create a .env file with your SAP connection details and understand each variable.",
+        "Register the compiled server in claude_desktop_config.json with the correct Node.js and index.js paths.",
+        "Start the server, confirm 'running on stdio', and see it listed as connected in Claude Desktop.",
+        "Apply the dev-only, least-privilege and TLS guardrails that make this safe to run.",
+      ],
+      steps: [
+        {
+          title: "Check the prerequisites",
+          body: [
+            "Before you start, make sure four things are in place on your Windows machine: the Claude Desktop application (installed and signed in with your work account), Node.js (a recent stable version — v20 or newer; the guide was verified on v24), Git together with a GitHub account, and valid SAP logon credentials for the TARGET DEVELOPMENT system (user, password, client). Confirm Node and Git from a terminal before going further — if either command is not recognized, install it first.",
+            "A word on the SAP credentials: for a first proof-of-concept you may use your own dev-system dialog user, but the moment this moves beyond your laptop you must switch to a dedicated, display-only service user agreed with BASIS (see the guardrails step). Never use production credentials at any stage.",
+          ],
+          code: {
+            language: "powershell",
+            filename: "PowerShell: confirm prerequisites",
+            code: `node --version      # expect v20+ (verified on v24.x)
+npm --version
+git --version
+# Claude Desktop: installed from claude.ai/download and signed in`,
+          },
+          callout: {
+            type: "warning",
+            title: "Development systems only",
+            body: "Everything in this lesson targets a DEV or sandbox SAP system with non-production data. Do not point an MCP server at a production system, and never place production credentials in a .env or config file.",
+          },
+        },
+        {
+          title: "Clone the repository",
+          body: [
+            "Open Command Prompt (or PowerShell), change into the folder where you keep projects, and clone the community server. Then step into the new folder. Cloning under your user profile keeps the later Claude Desktop path simple.",
+            "Tip: keep the path short and space-free (e.g. C:\\Users\\<you>\\mcp-abap-abap-adt-api). You will paste this exact path into the Claude config later, and spaces or deep nesting are a common source of typos.",
+          ],
+          code: {
+            language: "powershell",
+            filename: "Command Prompt: clone",
+            code: `cd %USERPROFILE%
+git clone https://github.com/mario-andreschak/mcp-abap-abap-adt-api
+cd mcp-abap-abap-adt-api`,
+          },
+        },
+        {
+          title: "Install dependencies",
+          body: [
+            "Install the required Node packages with npm. This pulls everything the server needs into node_modules. You will likely see a few deprecation warnings or a vulnerability notice scroll past — that is normal for a Node project and does not mean anything is broken.",
+            "There is no 'pip install' step here — this is a Node.js project, so npm is the only package manager involved.",
+          ],
+          code: {
+            language: "powershell",
+            filename: "Install packages",
+            code: `npm install`,
+          },
+        },
+        {
+          title: "Resolve reported vulnerabilities",
+          body: [
+            "Run npm audit fix to let npm automatically apply compatible security updates to the dependency tree. After it finishes, the reported vulnerabilities should be resolved. If npm reports remaining issues that would require breaking changes, leave them for a version review rather than forcing them on a POC.",
+          ],
+          code: {
+            language: "powershell",
+            filename: "Fix vulnerabilities",
+            code: `npm audit fix`,
+          },
+        },
+        {
+          title: "Build the project",
+          body: [
+            "The server is written in TypeScript and must be compiled to JavaScript before it can run. Run the build script — it produces a /dist folder containing the compiled application. This build step is mandatory; the config you write later points Claude at the compiled dist/index.js, not at the TypeScript source.",
+          ],
+          code: {
+            language: "powershell",
+            filename: "Compile TypeScript",
+            code: `npm run build`,
+          },
+        },
+        {
+          title: "Verify the build output",
+          body: [
+            "Confirm the build actually produced the compiled entry point. Change into dist and list its contents — you should see the handler, lib and types folders and, crucially, index.js at the top level. If index.js is missing, the build did not complete; re-run npm run build and read the errors.",
+          ],
+          code: {
+            language: "powershell",
+            filename: "Check dist/",
+            code: `cd dist
+dir
+# Expected structure:
+# dist/
+#  ├── handlers/
+#  ├── lib/
+#  ├── types/
+#  └── index.js   <-- must be present
+cd ..`,
+          },
+        },
+        {
+          title: "Configure the .env file",
+          body: [
+            "The project ships an example.env template with the SAP connection settings. Copy it to your own .env file and replace every placeholder with your real dev-system details: the server URL, user, password, client and language. Keep .env in the project root — the server reads it at startup.",
+            "This file contains SAP login credentials, so treat it like a password: never commit it to Git (the project's .gitignore should already exclude it — verify), never share it, and delete it when the POC is over. Prefer HTTPS in SAP_URL and, where your landscape allows, a display-only service user over your personal account.",
+          ],
+          code: {
+            language: "bash",
+            filename: ".env (replace every value)",
+            code: `# SAP Connection Settings
+SAP_URL=https://<your-sap-server-ip-or-hostname>
+SAP_USER=<your-sap-username>
+SAP_PASSWORD=<your-sap-password>
+SAP_CLIENT=<your-sap-client-number>   # e.g. 200, 300
+SAP_LANGUAGE=EN`,
+          },
+          callout: {
+            type: "warning",
+            title: "Never commit your .env",
+            body: "The .env holds live SAP credentials. Keep it out of version control, out of chat windows, and out of screenshots. Rotate the password per company policy and remove the file when you are done testing.",
+          },
+        },
+        {
+          title: "Run the application to test the connection",
+          body: [
+            "Start the server directly to confirm it can read your .env and reach SAP before you involve Claude. If the environment variables are set correctly you will get a clean start; if not, the server tells you exactly which variables it could not find — a fast way to catch a typo in .env before touching the Claude config.",
+            "A 'Missing required environment variables' error naming SAP_URL / SAP_USER / SAP_PASSWORD means the .env was not picked up or a value is blank. Fix .env and try again.",
+          ],
+          code: {
+            language: "powershell",
+            filename: "Start and observe",
+            code: `npm start
+# Success (stdio transport):
+#   MCP ABAP ADT API server running on stdio
+#
+# Misconfiguration example:
+#   Missing required environment variables:
+#   SAP_URL, SAP_USER, SAP_PASSWORD`,
+          },
+        },
+        {
+          title: "Register the server in Claude Desktop",
+          body: [
+            "Now tell Claude Desktop how to launch the server. In Claude Desktop go to Settings → Developer → Edit Config; this opens the folder holding claude_desktop_config.json (under %APPDATA%\\Claude on Windows). Add the abap-adt server block below, making sure BOTH paths are correct for your machine: the command path to node.exe, and the args path to your compiled dist/index.js. Use forward slashes or escaped backslashes in JSON.",
+            "The env block here mirrors your .env so Claude can start the server with the right SAP connection. NODE_TLS_REJECT_UNAUTHORIZED set to '0' disables TLS certificate verification — acceptable only against an internal dev system with a self-signed certificate. The better practice is to import your corporate CA into Windows and leave verification on; treat '0' as a temporary POC shortcut, never a production setting.",
+          ],
+          code: {
+            language: "json",
+            filename: "%APPDATA%\\Claude\\claude_desktop_config.json",
+            code: `{
+  "mcpServers": {
+    "abap-adt": {
+      "command": "C:\\\\Program Files\\\\nodejs\\\\node.exe",
+      "args": [
+        "C:/Users/<your-username>/mcp-abap-abap-adt-api/dist/index.js"
+      ],
+      "env": {
+        "SAP_URL": "http://<your-sap-server-ip>",
+        "SAP_USER": "<your-sap-username>",
+        "SAP_PASSWORD": "<your-sap-password>",
+        "SAP_CLIENT": "<your-sap-client-number>",
+        "SAP_LANGUAGE": "EN",
+        "NODE_TLS_REJECT_UNAUTHORIZED": "0"
+      }
+    }
+  }
+}`,
+          },
+          callout: {
+            type: "info",
+            title: "Fully restart Claude Desktop after editing",
+            body: "Claude Desktop only re-reads claude_desktop_config.json on a full restart — quit it from the system tray (not just the window close button) and reopen. If the server does not appear, check the logs under %APPDATA%\\Claude\\logs.",
+          },
+        },
+        {
+          title: "Start the server and confirm it is connected",
+          body: [
+            "With the config saved and Claude Desktop restarted, the server can also be started manually to watch its output; a healthy start prints 'MCP ABAP ADT API server running on stdio'. Inside Claude Desktop, open Settings → Developer — the abap-adt server should now appear as connected, and its tools become available in the tools panel of a conversation.",
+            "Do a read-only smoke test: ask Claude to search for a known package or read one class you have display access to. If the tools are listed but calls fail, it is almost always the SAP connection (URL/port/credentials or TLS), not Claude — re-run npm start and read the error.",
+          ],
+          code: {
+            language: "powershell",
+            filename: "Start the MCP server",
+            code: `npm start
+# -> MCP ABAP ADT API server running on stdio
+# Then in Claude Desktop: Settings > Developer > (abap-adt: connected)`,
+          },
+        },
+        {
+          title: "Know the available scripts and the guardrails",
+          body: [
+            "Run 'npm run' with no arguments to list every script the project exposes: start (run the compiled app), build (recompile), dev (run with the MCP inspector for debugging), and the test / test:watch / test:coverage scripts. Use dev when a tool call misbehaves and you want to inspect the raw MCP traffic.",
+            "Finally, lock down the security posture before anyone else uses this: dev/sandbox systems only; a dedicated Service/System-type user with display-only authorizations (S_DEVELOP ACTVT 03, no change/transport rights); credentials in env vars and .env that never reach Git; a pinned server version you have code-reviewed; and TLS verification restored via the corporate CA as soon as you move past the first POC. Agree all of this with BASIS and security up front — see the previous lesson for the full governance checklist.",
+          ],
+          code: {
+            language: "powershell",
+            filename: "List available scripts",
+            code: `npm run
+# start          - Run the compiled application
+# build          - Compile TypeScript into JavaScript
+# dev            - Run with the MCP inspector
+# test           - Run tests
+# test:watch     - Run tests in watch mode
+# test:coverage  - Generate a coverage report`,
+          },
+        },
+      ],
+      screenshots: [
+        {
+          caption: "Contents of the dist folder after a successful npm run build",
+          description:
+            "A Windows terminal (or Explorer) showing the dist folder with handlers/, lib/, types/ subfolders and index.js present at the top level after the TypeScript build completed.",
+        },
+        {
+          caption: "Claude Desktop Developer settings showing the abap-adt MCP server connected",
+          description:
+            "The Claude Desktop Settings → Developer screen listing the abap-adt server with a connected status indicator, and its tools available in the conversation tools panel.",
+        },
+      ],
+      video: {
+        caption: "End-to-end: clone → build → .env → Claude config → connected",
+        description:
+          "Screen recording on Windows: cloning the MCP ABAP ADT repository, running npm install / audit fix / build, filling in the .env, editing claude_desktop_config.json, restarting Claude Desktop, and confirming the abap-adt server shows as connected before a read-only smoke test.",
+        duration: "10:20",
+      },
+      sapExample: {
+        title: "Diligent-style POC: give Claude read-only eyes on the ABAP dev box",
+        scenario:
+          "An SAP team wants a two-day proof-of-concept: can Claude Desktop read ABAP objects directly from the development system instead of endless copy/paste? A developer follows this setup on a Windows laptop, using a display-only service user (ZSVC_MCP_READ) that BASIS provisioned against the DEV client only, and points SAP_URL at the internal dev host over HTTPS.",
+        prompt: `Using the abap-adt MCP tools, search the ZSD_DELIVERY package,
+read class ZCL_DELIVERY_SERVICE, and summarize what it does plus
+any SELECTs inside loops. Do not attempt to modify anything —
+this connection is display-only.`,
+        explanation: [
+          "Because the service user carried only display authorizations, every tool call Claude made was a read: search_object to list the package, read_source to fetch the class. Claude summarized the class and flagged a SELECT inside a LOOP — all without the developer copy/pasting a single line. The .env and config kept the credentials on the laptop; nothing was hardcoded or committed.",
+          "The POC's real deliverable was the guardrail model, not the demo: dev-only target, least-privilege service user, pinned and code-reviewed server version, TLS via the corporate CA for the production-track rollout, and a written team policy. With those agreed, the team could safely widen access; without them, they would have stopped at the laptop.",
+        ],
+      },
+      bestPractices: [
+        "Target development or sandbox systems only — never production — and never put production credentials in .env or the Claude config.",
+        "Use a dedicated display-only service user (S_DEVELOP ACTVT 03) rather than your personal dialog account once the POC leaves your laptop.",
+        "Keep .env out of Git and out of screenshots; rotate the password per policy and delete the file when testing ends.",
+        "Pin and code-review the server version — it is community open source that holds real credentials and acts when Claude calls a tool.",
+        "Prefer HTTPS and restore TLS verification via the corporate CA; treat NODE_TLS_REJECT_UNAUTHORIZED=0 as a temporary dev-only shortcut.",
+        "Fully restart Claude Desktop (quit from the tray) after editing the config, and check %APPDATA%\\Claude\\logs if the server does not appear.",
+        "Test the server with npm start before wiring Claude — it isolates SAP connection problems from Claude configuration problems.",
+      ],
+      commonMistakes: [
+        {
+          mistake: "Pointing the args path at the TypeScript source instead of the compiled dist/index.js.",
+          fix: "Run npm run build first and reference dist/index.js. Verify index.js exists in dist/ before editing the Claude config.",
+        },
+        {
+          mistake: "Editing claude_desktop_config.json and only closing the Claude window, then wondering why nothing changed.",
+          fix: "Quit Claude Desktop fully from the system tray and reopen — the config is read only on a full restart.",
+        },
+        {
+          mistake: "Unescaped Windows backslashes in the JSON command path.",
+          fix: "Use double backslashes (C:\\\\Program Files\\\\nodejs\\\\node.exe) or forward slashes in JSON string values.",
+        },
+        {
+          mistake: "Leaving NODE_TLS_REJECT_UNAUTHORIZED=0 in place for a system that will carry real work.",
+          fix: "Import the corporate CA into Windows and remove the override so TLS certificates are actually verified.",
+        },
+        {
+          mistake: "Committing the .env with live SAP credentials to a GitHub repo.",
+          fix: "Confirm .env is gitignored, never paste it anywhere, and rotate the password immediately if it was ever exposed.",
+        },
+      ],
+      tips: [
+        "Clone into a short, space-free path (C:\\Users\\<you>\\mcp-abap-abap-adt-api) so the config path is easy to get right.",
+        "Run npm run dev to launch the MCP inspector when a tool call fails — it shows the raw request/response.",
+        "Use Test-NetConnection in PowerShell to confirm the laptop can reach the SAP HTTPS port before blaming the server.",
+        "Keep a sanitized template of your claude_desktop_config.json (paths only, no secrets) in your team wiki for the next person.",
+        "Store the SAP password in a user environment variable and reference it, rather than typing it into multiple files.",
+      ],
+      exercise: {
+        title: "Stand up the MCP ABAP server and make one read-only call",
+        scenario:
+          "You have a Windows laptop, Claude Desktop, Node.js and Git, and display access to an SAP DEV client. Get Claude reading ABAP directly, end to end, without exposing credentials.",
+        tasks: [
+          "Clone, npm install, npm audit fix, and npm run build; confirm dist/index.js exists.",
+          "Create .env from example.env with your DEV connection details (HTTPS, display-only user if you have one).",
+          "Run npm start and confirm 'MCP ABAP ADT API server running on stdio' with no missing-variable errors.",
+          "Add the abap-adt block to claude_desktop_config.json with correct node.exe and dist/index.js paths; fully restart Claude Desktop.",
+          "In Claude Desktop, confirm the server is connected and ask Claude to read one class you can display — verify the call is read-only.",
+        ],
+        hint: "If the tools appear but calls fail, the problem is almost always the SAP connection (URL/port, credentials, or TLS), not Claude. Re-run npm start and read the error; use Test-NetConnection to check the port. Escaped backslashes and a full tray-quit restart fix most config issues.",
+        solution: {
+          language: "json",
+          filename: "Minimal working config (secrets redacted)",
+          code: `{
+  "mcpServers": {
+    "abap-adt": {
+      "command": "C:\\\\Program Files\\\\nodejs\\\\node.exe",
+      "args": ["C:/Users/you/mcp-abap-abap-adt-api/dist/index.js"],
+      "env": {
+        "SAP_URL": "https://sapdev01.corp.example.com:44300",
+        "SAP_USER": "ZSVC_MCP_READ",
+        "SAP_PASSWORD": "********",
+        "SAP_CLIENT": "200",
+        "SAP_LANGUAGE": "EN"
+      }
+    }
+  }
+}`,
+        },
+      },
+      quiz: [
+        {
+          question: "Which build artifact must the Claude config's args path point to?",
+          options: [
+            "The TypeScript source in src/",
+            "The compiled dist/index.js produced by npm run build",
+            "The example.env file",
+            "node_modules/.bin",
+          ],
+          correctIndex: 1,
+          explanation:
+            "The server runs the compiled JavaScript. npm run build creates dist/, and Claude must launch dist/index.js — pointing at the TypeScript source will not work.",
+        },
+        {
+          question: "You edited claude_desktop_config.json but the server does not show up. What is the most likely fix?",
+          options: [
+            "Reinstall Node.js",
+            "Re-run npm install",
+            "Fully quit Claude Desktop from the system tray and reopen it",
+            "Delete the dist folder",
+          ],
+          correctIndex: 2,
+          explanation:
+            "Claude Desktop only reads the config on a full restart. Closing the window is not enough — quit from the tray and reopen, then check %APPDATA%\\Claude\\logs if it still fails.",
+        },
+        {
+          question: "What does setting NODE_TLS_REJECT_UNAUTHORIZED to '0' do, and when is it acceptable?",
+          options: [
+            "It speeds up the server; always leave it on",
+            "It disables TLS certificate verification; acceptable only as a temporary shortcut against an internal dev system with a self-signed cert",
+            "It enables production mode",
+            "It encrypts the .env file",
+          ],
+          correctIndex: 1,
+          explanation:
+            "It turns off certificate verification. That is a dev-only convenience for self-signed internal certs; for anything beyond a POC, import the corporate CA and restore verification.",
+        },
+        {
+          question: "Which user should the MCP server authenticate as once the POC moves beyond your laptop?",
+          options: [
+            "Your production dialog user",
+            "SAP* or DDIC",
+            "A dedicated display-only service user on the DEV system, agreed with BASIS",
+            "Any user with SAP_ALL for convenience",
+          ],
+          correctIndex: 2,
+          explanation:
+            "Least privilege: a Service/System-type user with display-only authorizations (S_DEVELOP ACTVT 03) scoped to the development system, never production and never a broad profile like SAP_ALL.",
+        },
+      ],
+      summary: [
+        "The flow is: clone → npm install → npm audit fix → npm run build → verify dist/index.js → .env → register in Claude Desktop → restart → confirm connected.",
+        "npm run build is mandatory; Claude launches the compiled dist/index.js, with the SAP connection supplied via .env and the config's env block.",
+        "Test with npm start before involving Claude to separate SAP-connection issues from Claude-config issues.",
+        "Guardrails make it safe: dev-only, display-only service user, secrets kept out of Git, a pinned/reviewed server version, and TLS via the corporate CA.",
+      ],
+      download: {
+        name: "MCP ABAP ADT setup — Windows quick reference",
+        description:
+          "The full command sequence, the .env and claude_desktop_config.json templates, and the dev-only security checklist for the community MCP ABAP ADT server.",
+        filename: "mcp-abap-adt-setup-windows.md",
+        content: `# MCP ABAP ADT API — Windows Setup Quick Reference
+
+Community server: github.com/mario-andreschak/mcp-abap-abap-adt-api
+(Open source — not an SAP or Anthropic product. Dev systems only.)
+
+## Prerequisites
+- [ ] Claude Desktop installed + signed in (work account)
+- [ ] Node.js v20+ (verified on v24.x)  ->  node --version
+- [ ] Git + GitHub account                ->  git --version
+- [ ] DEV-system SAP credentials (display-only service user preferred)
+
+## Build sequence (Command Prompt / PowerShell)
+\`\`\`
+cd %USERPROFILE%
+git clone https://github.com/mario-andreschak/mcp-abap-abap-adt-api
+cd mcp-abap-abap-adt-api
+npm install
+npm audit fix
+npm run build
+cd dist & dir        REM confirm index.js is present
+cd ..
+\`\`\`
+
+## .env (project root — NEVER commit)
+\`\`\`
+SAP_URL=https://<host-or-ip>
+SAP_USER=<user>
+SAP_PASSWORD=<password>
+SAP_CLIENT=<client>     # e.g. 200
+SAP_LANGUAGE=EN
+\`\`\`
+Test it:  \`npm start\`  ->  "MCP ABAP ADT API server running on stdio"
+
+## Claude Desktop config
+Settings > Developer > Edit Config
+File: %APPDATA%\\Claude\\claude_desktop_config.json
+\`\`\`json
+{
+  "mcpServers": {
+    "abap-adt": {
+      "command": "C:\\\\Program Files\\\\nodejs\\\\node.exe",
+      "args": ["C:/Users/<you>/mcp-abap-abap-adt-api/dist/index.js"],
+      "env": {
+        "SAP_URL": "https://<host>:44300",
+        "SAP_USER": "<user>",
+        "SAP_PASSWORD": "<password>",
+        "SAP_CLIENT": "<client>",
+        "SAP_LANGUAGE": "EN"
+      }
+    }
+  }
+}
+\`\`\`
+Then FULLY restart Claude Desktop (quit from tray).
+
+## Available scripts (npm run)
+start | build | dev (MCP inspector) | test | test:watch | test:coverage
+
+## Security checklist
+- [ ] DEV / sandbox system only — never production
+- [ ] Display-only service user (S_DEVELOP ACTVT 03), no change/transport
+- [ ] .env gitignored; no secrets in config committed anywhere
+- [ ] Server version pinned and code-reviewed
+- [ ] TLS verification via corporate CA (drop NODE_TLS_REJECT_UNAUTHORIZED=0)
+- [ ] Full tray-restart of Claude Desktop after config edits
+- [ ] Logs on failure: %APPDATA%\\Claude\\logs
+
+## Common fixes
+- Missing env vars error  -> .env not read / blank value
+- Server not listed       -> full restart; check logs
+- Tools listed, calls fail -> SAP connection (URL/port/creds/TLS)
+- JSON path error         -> escape backslashes or use forward slashes
+`,
+      },
+      relatedSlugs: ["sap-abap-mcp-server", "mcp-servers", "claude-code", "security-guidelines"],
+    },
   ],
 };

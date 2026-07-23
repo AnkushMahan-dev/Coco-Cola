@@ -5,11 +5,33 @@ import { Header } from "./Header";
 import { SidebarNav } from "./Sidebar";
 import { CommandPalette } from "@/components/search/CommandPalette";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
+
+const SIDEBAR_KEY = "academy-sidebar-collapsed";
 
 export function AppShell() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  // Desktop sidebar collapse (hide/unhide), remembered across visits.
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem(SIDEBAR_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
   const location = useLocation();
+
+  const toggleSidebar = () =>
+    setSidebarCollapsed((c) => {
+      const next = !c;
+      try {
+        localStorage.setItem(SIDEBAR_KEY, next ? "1" : "0");
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
 
   // Global Ctrl+K / Cmd+K shortcut for search.
   useEffect(() => {
@@ -33,12 +55,22 @@ export function AppShell() {
       <Header
         onOpenSearch={() => setSearchOpen(true)}
         onToggleSidebar={() => setMobileNavOpen(true)}
+        onToggleDesktopSidebar={toggleSidebar}
+        sidebarCollapsed={sidebarCollapsed}
       />
 
       <div className="flex">
-        {/* Desktop sidebar */}
-        <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-72 shrink-0 border-r lg:block">
-          <SidebarNav />
+        {/* Desktop sidebar — collapsible (hide/unhide) */}
+        <aside
+          className={cn(
+            "sticky top-14 hidden h-[calc(100vh-3.5rem)] shrink-0 overflow-hidden border-r transition-[width] duration-300 ease-in-out lg:block",
+            sidebarCollapsed ? "w-0 border-r-0" : "w-72",
+          )}
+          aria-hidden={sidebarCollapsed}
+        >
+          <div className="h-full w-72">
+            <SidebarNav />
+          </div>
         </aside>
 
         {/* Mobile sidebar drawer */}

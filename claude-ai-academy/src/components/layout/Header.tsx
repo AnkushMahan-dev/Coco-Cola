@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { GraduationCap, Menu, Moon, Search, Sun, Monitor, Download, LayoutDashboard } from "lucide-react";
+import { GraduationCap, Menu, Moon, PanelLeft, PanelLeftClose, Search, Sun, Monitor, Download, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,14 +12,22 @@ import { useTheme } from "@/lib/theme";
 interface HeaderProps {
   onOpenSearch: () => void;
   onToggleSidebar: () => void;
+  onToggleDesktopSidebar?: () => void;
+  sidebarCollapsed?: boolean;
 }
 
-export function Header({ onOpenSearch, onToggleSidebar }: HeaderProps) {
+export function Header({
+  onOpenSearch,
+  onToggleSidebar,
+  onToggleDesktopSidebar,
+  sidebarCollapsed = false,
+}: HeaderProps) {
   const { setTheme } = useTheme();
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75">
       <div className="flex h-14 items-center gap-2 px-4 lg:px-6">
+        {/* Mobile: open the nav drawer */}
         <Button
           variant="ghost"
           size="icon"
@@ -28,6 +36,23 @@ export function Header({ onOpenSearch, onToggleSidebar }: HeaderProps) {
           aria-label="Toggle navigation"
         >
           <Menu className="h-5 w-5" />
+        </Button>
+
+        {/* Desktop: hide / unhide the left panel */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="hidden lg:inline-flex"
+          onClick={onToggleDesktopSidebar}
+          aria-label={sidebarCollapsed ? "Show sidebar" : "Hide sidebar"}
+          aria-pressed={!sidebarCollapsed}
+          title={sidebarCollapsed ? "Show sidebar" : "Hide sidebar"}
+        >
+          {sidebarCollapsed ? (
+            <PanelLeft className="h-5 w-5 transition-transform duration-200" />
+          ) : (
+            <PanelLeftClose className="h-5 w-5 transition-transform duration-200" />
+          )}
         </Button>
 
         <Link

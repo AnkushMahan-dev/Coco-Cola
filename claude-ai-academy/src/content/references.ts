@@ -191,6 +191,13 @@ const references: Record<string, Reference[]> = {
     mcpIntro,
     abapGit,
   ],
+  "abap-adt-mcp-setup": [
+    { label: "mcp-abap-abap-adt-api (community server)", url: "https://github.com/mario-andreschak/mcp-abap-abap-adt-api", source: "GitHub", note: "The open-source MCP server this hands-on lesson installs. Read the code and pin a version." },
+    { label: "Connect Claude Desktop to local MCP servers", url: `${CC}/mcp`, source: "Claude Docs" },
+    { label: "MCP quickstart", url: `${CC}/mcp-quickstart`, source: "Claude Docs" },
+    { label: "Claude Desktop", url: `${CC}/desktop`, source: "Claude Docs" },
+    mcpIntro,
+  ],
 
   // Module 6 — Best Practices & Governance
   "ai-coding-best-practices": [

@@ -134,6 +134,11 @@ const videos: Record<string, LessonVideo> = {
     title: "MCP Tutorial: Build Your First MCP Server and Client",
     channel: "YouTube",
   },
+  "abap-adt-mcp-setup": {
+    id: "PLyCki2K0Lg",
+    title: "Why we built — and donated — the Model Context Protocol (MCP)",
+    channel: "Anthropic",
+  },
 
   // Module 6 — Best Practices & Governance
   "ai-coding-best-practices": {
