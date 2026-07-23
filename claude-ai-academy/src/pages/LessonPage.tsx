@@ -13,6 +13,7 @@ import {
   Clock,
   Download,
   ExternalLink,
+  PlayCircle,
   Printer,
   ThumbsDown,
   ThumbsUp,
@@ -35,6 +36,8 @@ import { ScreenshotFrame, VideoFrame } from "@/components/lesson/MediaPlaceholde
 import { OnThisPage, type TocItem } from "@/components/lesson/OnThisPage";
 import { findLesson, nextLesson, previousLesson } from "@/content/curriculum";
 import { getLessonReferences } from "@/content/references";
+import { reelForLesson } from "@/content/reels";
+import { ReelCard } from "@/components/ReelCard";
 import { useLessonProgress, useLessonTimer, progressStore } from "@/lib/progress";
 import { downloadTextFile, formatDuration } from "@/lib/utils";
 
@@ -117,6 +120,7 @@ export function LessonPage() {
   const prev = previousLesson(slug);
   const references = getLessonReferences(slug);
   const hasScreens = lesson.screenshots.some((s) => s.imageUrl);
+  const lessonReel = reelForLesson(lesson);
 
   const toc: TocItem[] = [
     { id: "quickstart", label: "Quick start" },
@@ -390,6 +394,25 @@ export function LessonPage() {
           {/* Video */}
           <Section id="video" title="Video walkthrough">
             <VideoFrame video={lesson.video} lessonSlug={lesson.slug} />
+            {lessonReel && (
+              <div className="mt-5 flex flex-col gap-3 rounded-lg border bg-muted/30 p-4 sm:flex-row sm:items-center">
+                <ReelCard
+                  reel={lessonReel}
+                  className="w-[120px] self-center sm:self-auto"
+                />
+                <div className="min-w-0">
+                  <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-primary">
+                    <PlayCircle className="h-3.5 w-3.5" aria-hidden />
+                    In 60 seconds
+                  </p>
+                  <p className="mt-1 text-sm font-medium">{lessonReel.title}</p>
+                  <p className="text-sm text-muted-foreground">
+                    A quick YouTube Short on {lessonReel.topic} — tap to watch,
+                    then read the full walkthrough above.
+                  </p>
+                </div>
+              </div>
+            )}
           </Section>
 
           {/* Practice exercise */}
