@@ -56,15 +56,30 @@ export function Reels() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.3, ease: "easeOut", delay: Math.min(i * 0.04, 0.25) }}
-              className="group relative aspect-[9/16] w-[164px] shrink-0 snap-start overflow-hidden rounded-lg border bg-zinc-900 text-left transition-colors hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+              className="group relative aspect-[9/16] w-[164px] shrink-0 snap-start overflow-hidden rounded-lg border bg-gradient-to-br from-zinc-800 via-zinc-900 to-black text-left transition-colors hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
               aria-label={`Play reel: ${reel.title}`}
             >
+              {/* Branded fallback shown until (or if) the YouTube thumbnail loads */}
+              <span
+                aria-hidden
+                className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/25 via-transparent to-black/40"
+              >
+                <Youtube className="h-8 w-8 text-white/25" />
+              </span>
               <img
                 src={`https://i.ytimg.com/vi/${reel.id}/oardefault.jpg`}
                 alt=""
                 loading="lazy"
                 onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).src = `https://i.ytimg.com/vi/${reel.id}/hqdefault.jpg`;
+                  const img = e.currentTarget as HTMLImageElement;
+                  if (!img.dataset.fallback) {
+                    img.dataset.fallback = "1";
+                    img.src = `https://i.ytimg.com/vi/${reel.id}/hqdefault.jpg`;
+                  } else {
+                    // Both thumbnails blocked (offline/CSP): let the branded
+                    // fallback show instead of a broken-image box.
+                    img.style.display = "none";
+                  }
                 }}
                 className="absolute inset-0 h-full w-full object-cover opacity-90 transition-transform duration-300 group-hover:scale-105"
               />
