@@ -63,6 +63,24 @@ firebase hosting:channel:deploy preview
 
 This gives you a temporary, shareable preview URL that expires automatically.
 
+## Second site: Diligent Claude Academy
+
+This repo also contains a separate web app — the **Diligent Claude Academy**
+(`academy/index.html`), an enablement site for SAP/ABAP developers. It deploys
+to its own Firebase project (`diligent-claude-academy`) using its own config
+file, so it never mixes with the CCLM dashboard.
+
+Deploy it with:
+
+```bash
+npx firebase-tools deploy --only hosting \
+  --config firebase.academy.json \
+  --project diligent-claude-academy
+```
+
+That publishes to `https://diligent-claude-academy.web.app`. To preview a live
+copy locally first: `npx firebase-tools serve --config firebase.academy.json`.
+
 ## Updating the dashboard later
 
 Whenever you regenerate `CCLM_Dashboard.html`, refresh the deployed copy and

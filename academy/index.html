@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Diligent Claude Academy — Claude for SAP / ABAP Developers</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --brand:#1f4e78; --brand2:#2563eb; --bg:#f3f5f8; --ink:#1f2937;
+    --muted:#6b7280; --line:#e5e7eb; --card:#fff; --good:#059669; --warn:#d97706;
+    --code-bg:#0f172a; --code-ink:#e2e8f0;
+  }
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+  header{background:linear-gradient(135deg,#1f4e78 0%,#2563eb 100%);color:#fff;padding:22px 28px;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+  header .row{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .logo{width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:22px}
+  header h1{font-size:22px;font-weight:700;letter-spacing:.2px}
+  header .sub{font-size:13px;opacity:.9;margin-top:2px}
+  nav{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:50;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+  nav .row{max-width:1200px;margin:0 auto;padding:0 28px;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+  nav button{background:none;border:0;padding:15px 16px;font-size:14px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;transition:all .15s}
+  nav button:hover{color:var(--brand);background:#f9fafb}
+  nav button.active{color:var(--brand);border-bottom-color:var(--brand2);font-weight:600}
+  main{padding:28px;max-width:1200px;margin:0 auto}
+  .view{display:none;animation:fade .25s ease}
+  .view.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h2{font-size:22px;font-weight:700;color:var(--ink);margin-bottom:6px}
+  .lead{color:var(--muted);font-size:15px;margin-bottom:22px;max-width:760px}
+  h3{font-size:16px;font-weight:700;color:var(--brand);margin:26px 0 10px}
+  h4{font-size:14px;font-weight:700;color:#374151;margin:18px 0 6px}
+  p{margin-bottom:12px}
+  ul,ol{margin:0 0 14px 22px}
+  li{margin-bottom:6px}
+  .hero{background:linear-gradient(135deg,#eef4ff,#f8fafc);border:1px solid var(--line);border-radius:14px;padding:30px;margin-bottom:26px}
+  .hero h2{font-size:28px}
+  .pill{display:inline-block;background:#eef2ff;color:var(--brand2);font-size:12px;font-weight:600;padding:4px 11px;border-radius:999px;margin-bottom:14px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin:18px 0}
+  .card{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--brand2);border-radius:10px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+  .card .ico{font-size:22px;margin-bottom:8px}
+  .card h4{margin:0 0 6px;color:var(--ink)}
+  .card p{font-size:13px;color:var(--muted);margin:0}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin:18px 0}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:10px;padding:20px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+  .kpi .num{font-size:30px;font-weight:800;color:var(--brand2);line-height:1}
+  .kpi .lbl{font-size:12px;color:var(--muted);margin-top:6px}
+  .kpi .sub{font-size:11px;color:var(--good);margin-top:4px;font-weight:600}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px;background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line)}
+  th{background:#f8fafc;font-weight:600;color:#374151;font-size:12px;text-transform:uppercase;letter-spacing:.4px}
+  tr:last-child td{border-bottom:0}
+  .steps{counter-reset:step;list-style:none;margin-left:0}
+  .steps>li{counter-increment:step;position:relative;padding:16px 18px 16px 58px;background:#fff;border:1px solid var(--line);border-radius:10px;margin-bottom:12px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  .steps>li::before{content:counter(step);position:absolute;left:16px;top:16px;width:28px;height:28px;background:var(--brand2);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
+  .steps>li h4{margin-top:0}
+  pre{background:var(--code-bg);color:var(--code-ink);padding:16px 18px;border-radius:10px;overflow-x:auto;font-family:"SF Mono",Consolas,"Courier New",monospace;font-size:12.5px;line-height:1.6;margin:10px 0}
+  pre .c{color:#64748b}      /* comment */
+  pre .k{color:#7dd3fc}      /* keyword */
+  pre .s{color:#86efac}      /* string */
+  code{background:#eef2f7;color:#be123c;padding:1px 6px;border-radius:5px;font-family:"SF Mono",Consolas,monospace;font-size:12.5px}
+  .callout{background:#eff6ff;border-left:4px solid var(--brand2);border-radius:8px;padding:14px 16px;margin:16px 0;font-size:14px}
+  .callout.tip{background:#ecfdf5;border-left-color:var(--good)}
+  .callout.warn{background:#fffbeb;border-left-color:var(--warn)}
+  .callout b{color:var(--brand)}
+  .prompt{background:#111827;color:#e5e7eb;border-radius:10px;padding:14px 16px;font-family:"SF Mono",Consolas,monospace;font-size:13px;margin:10px 0;border-left:4px solid #22c55e}
+  .prompt .who{color:#22c55e;font-weight:700;font-size:11px;letter-spacing:.5px;display:block;margin-bottom:4px}
+  footer{max-width:1200px;margin:30px auto 0;padding:24px 28px;color:var(--muted);font-size:12px;border-top:1px solid var(--line);text-align:center}
+  .tag{display:inline-block;background:#f1f5f9;color:#475569;font-size:11px;font-weight:600;padding:3px 9px;border-radius:6px;margin:2px 4px 2px 0}
+  @media(max-width:640px){main{padding:20px 16px}.hero{padding:22px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="row">
+    <div class="logo">◆</div>
+    <div>
+      <h1>Diligent Claude Academy</h1>
+      <div class="sub">Enablement for SAP&nbsp;/&nbsp;ABAP Developers — build faster, cleaner, with confidence</div>
+    </div>
+  </div>
+</header>
+
+<nav>
+  <div class="row">
+    <button class="active" data-view="overview">Overview</button>
+    <button data-view="capabilities">Capabilities</button>
+    <button data-view="performance">Performance Improvement</button>
+    <button data-view="fs2code">ABAP from an FS — Worked Case</button>
+    <button data-view="start">Getting Started</button>
+  </div>
+</nav>
+
+<main>
+
+<!-- ============ OVERVIEW ============ -->
+<section class="view active" id="overview">
+  <div class="hero">
+    <span class="pill">SAP / ABAP ENABLEMENT</span>
+    <h2>Claude, applied to real ABAP work</h2>
+    <p class="lead" style="margin-bottom:0">Claude is an AI coding assistant that reads your code, understands your requirements, writes ABAP, checks its own work, and iterates until it runs. This academy shows SAP developers how to use it on day-to-day tasks — from a Functional Specification straight through to an activated, tested program.</p>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><div class="num">FS&nbsp;→&nbsp;Code</div><div class="lbl">Spec to working program</div></div>
+    <div class="kpi"><div class="num">RAP&nbsp;·&nbsp;CDS</div><div class="lbl">Classic & modern ABAP</div></div>
+    <div class="kpi"><div class="num">Review</div><div class="lbl">Syntax, ATC, best practice</div></div>
+    <div class="kpi"><div class="num">Test</div><div class="lbl">Unit tests & edge cases</div></div>
+  </div>
+
+  <h3>What you'll learn</h3>
+  <div class="grid">
+    <div class="card"><div class="ico">📋</div><h4>Turn specs into code</h4><p>Hand Claude a Functional Specification and co-develop the technical design and the ABAP program.</p></div>
+    <div class="card"><div class="ico">⚡</div><h4>Improve your performance</h4><p>Where the real time savings come from, and how to measure them honestly on your own backlog.</p></div>
+    <div class="card"><div class="ico">✅</div><h4>Keep quality high</h4><p>Use Claude to self-review against clean-ABAP guidelines, run syntax checks, and generate unit tests.</p></div>
+  </div>
+
+  <div class="callout"><b>Who this is for.</b> ABAP developers, technical leads, and functional consultants at CCBJI who want a consistent, practical way to bring Claude into the development lifecycle — not a sales pitch, a working method.</div>
+</section>
+
+<!-- ============ CAPABILITIES ============ -->
+<section class="view" id="capabilities">
+  <h2>Capabilities for SAP / ABAP developers</h2>
+  <p class="lead">The things Claude is genuinely good at in an ABAP context — grouped by where they fit in your day.</p>
+
+  <h3>Write &amp; modernise ABAP</h3>
+  <div class="grid">
+    <div class="card"><div class="ico">🧱</div><h4>Classic ABAP</h4><p>Reports, ALV output, internal tables, SELECTs, BAPIs, BDC, function modules, enhancements.</p></div>
+    <div class="card"><div class="ico">🚀</div><h4>Modern ABAP</h4><p>RAP business objects, CDS views, ABAP Cloud, released APIs, and clean-core patterns.</p></div>
+    <div class="card"><div class="ico">🔧</div><h4>Refactor safely</h4><p>Break down monolithic includes, extract methods, replace obsolete statements, apply naming standards.</p></div>
+  </div>
+
+  <h3>Understand &amp; explain</h3>
+  <div class="grid">
+    <div class="card"><div class="ico">🔍</div><h4>Read unfamiliar code</h4><p>Paste a legacy program and get a plain-language walkthrough of what it does and where the risks are.</p></div>
+    <div class="card"><div class="ico">🐞</div><h4>Debug &amp; fix</h4><p>Share a short dump or ATC finding and get a root-cause explanation with a corrected snippet.</p></div>
+    <div class="card"><div class="ico">📚</div><h4>Document</h4><p>Generate technical specifications, inline comments, and change-log entries from the code itself.</p></div>
+  </div>
+
+  <h3>Verify</h3>
+  <div class="grid">
+    <div class="card"><div class="ico">🧪</div><h4>Unit tests</h4><p>Generate ABAP Unit test classes with realistic fixtures and edge cases.</p></div>
+    <div class="card"><div class="ico">📏</div><h4>Standards review</h4><p>Check code against clean-ABAP guidelines and your team's conventions before you commit.</p></div>
+    <div class="card"><div class="ico">🛡️</div><h4>ATC-aware</h4><p>Anticipate common ABAP Test Cockpit findings (SELECT *, missing SY-SUBRC handling, performance) up front.</p></div>
+  </div>
+
+  <div class="callout tip"><b>Rule of thumb.</b> Claude accelerates the <i>writing, explaining and checking</i>. You stay the engineer — you decide the design, validate against the business need, and own what goes into the transport.</div>
+</section>
+
+<!-- ============ PERFORMANCE IMPROVEMENT ============ -->
+<section class="view" id="performance">
+  <h2>Performance Improvement</h2>
+  <p class="lead">Used well, Claude compresses the slow parts of ABAP development — boilerplate, lookups, first drafts, and test scaffolding — so more of your day goes to design and business logic. Here's where the gains actually come from, and how to measure them honestly.</p>
+
+  <h3>Where the time goes today vs. with Claude</h3>
+  <table>
+    <thead><tr><th>Development activity</th><th>Typical effort</th><th>With Claude</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Boilerplate (selection screen, ALV setup, TYPE declarations)</td><td>High</td><td>Low</td><td>Generated from one prompt, adjusted by you</td></tr>
+      <tr><td>Reading unfamiliar legacy code</td><td>High</td><td>Low</td><td>Plain-language walkthrough in seconds</td></tr>
+      <tr><td>First-draft program logic from an FS</td><td>Medium–High</td><td>Medium</td><td>Draft + your review beats blank page</td></tr>
+      <tr><td>Writing ABAP Unit tests</td><td>Often skipped</td><td>Low</td><td>Test class + fixtures generated</td></tr>
+      <tr><td>Technical spec &amp; documentation</td><td>Medium</td><td>Low</td><td>Drafted from the code itself</td></tr>
+      <tr><td>Design decisions &amp; business validation</td><td>—</td><td>Unchanged</td><td>Stays with the developer — as it should</td></tr>
+    </tbody>
+  </table>
+
+  <div class="kpis">
+    <div class="kpi"><div class="num">Faster</div><div class="lbl">First working draft</div><div class="sub">boilerplate + scaffolding</div></div>
+    <div class="kpi"><div class="num">Fewer</div><div class="lbl">ATC findings on first pass</div><div class="sub">standards checked up front</div></div>
+    <div class="kpi"><div class="num">More</div><div class="lbl">Unit-test coverage</div><div class="sub">tests actually get written</div></div>
+    <div class="kpi"><div class="num">Less</div><div class="lbl">Context-switching</div><div class="sub">explanations in place</div></div>
+  </div>
+
+  <div class="callout warn"><b>Measure, don't assume.</b> Speed-up varies by task, developer, and system access. Pick a handful of representative objects, log the before/after on real tickets, and let your own numbers set expectations. Treat any headline "N× faster" claim as a hypothesis to test, not a fact.</div>
+
+  <h3>Habits that drive the gains</h3>
+  <ol>
+    <li><b>Give Claude the spec, not a one-liner.</b> Paste the relevant FS section, table/field names, and your naming conventions. Better input → less rework.</li>
+    <li><b>Ask for a plan first.</b> Have Claude outline the technical approach before generating code, so you catch design issues early and cheaply.</li>
+    <li><b>Iterate in small steps.</b> Generate one artefact (a method, a report block) at a time and review it, rather than one giant program you can't verify.</li>
+    <li><b>Always run the checks.</b> Syntax check, ATC, and unit tests in your own system are the source of truth — Claude's output is a strong draft, not an activated object.</li>
+    <li><b>Keep a project standards note.</b> A short conventions file (naming, package, clean-ABAP rules) makes every generation consistent without repeating yourself.</li>
+  </ol>
+</section>
+
+<!-- ============ FS -> CODE WORKED CASE ============ -->
+<section class="view" id="fs2code">
+  <h2>Worked Case: Developing an ABAP program from a Functional Specification</h2>
+  <p class="lead">A complete, realistic walkthrough — from an FS to an activated, unit-tested report — showing exactly what you hand to Claude at each step and what you do yourself.</p>
+
+  <h3>The scenario &amp; the Functional Specification</h3>
+  <div class="callout"><b>FS-2041 — Open Sales Orders Report.</b> The business wants an ALV report listing open sales order items for a given sales organisation and date range, so the customer-service team can chase overdue deliveries.</div>
+
+  <table>
+    <thead><tr><th>FS element</th><th>Detail</th></tr></thead>
+    <tbody>
+      <tr><td>Objective</td><td>List open sales order items (not fully delivered) with customer, material, quantity, value and requested delivery date.</td></tr>
+      <tr><td>Selection screen</td><td>Sales Org (VKORG, mandatory), Requested Delivery Date range (VDATU), Customer (KUNNR, optional).</td></tr>
+      <tr><td>Source data</td><td>Header <code>VBAK</code>, Items <code>VBAP</code>, Status <code>VBUP</code> (delivery status ≠ fully delivered).</td></tr>
+      <tr><td>Output</td><td>Editable ALV grid: Order, Item, Sold-to, Material, Order Qty, Net Value, Currency, Req. Delivery Date.</td></tr>
+      <tr><td>Rules</td><td>Exclude fully delivered items (LFSTA = 'C'); sort by delivery date ascending; totals on Net Value.</td></tr>
+      <tr><td>Non-functional</td><td>Follow clean-ABAP naming; no <code>SELECT *</code>; handle "no data found"; must pass ATC.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>The workflow, step by step</h3>
+  <ol class="steps">
+    <li>
+      <h4>1 · Share the FS and ask for a technical design (not code yet)</h4>
+      <p>Start by having Claude translate the FS into a technical approach you can review. This is the cheapest place to catch a wrong table or a missed rule.</p>
+      <div class="prompt"><span class="who">YOU → CLAUDE</span>Here is Functional Spec FS-2041 (pasted below). Before writing any ABAP, give me a short Technical Specification: the tables and joins, the selection screen, the processing logic as pseudocode, and any risks or open questions. Follow clean-ABAP naming. Do not use SELECT *.</div>
+    </li>
+    <li>
+      <h4>2 · Review the Technical Specification Claude proposes</h4>
+      <p>Claude returns a design like the one below. <b>You</b> validate it against the business need and your system before a single line of code exists.</p>
+      <pre><span class="c">* Technical Specification — FS-2041 Open Sales Orders (draft)</span>
+<span class="c">* Tables : VBAK (header), VBAP (items), VBUP (item status)</span>
+<span class="c">* Join   : VBAP-VBELN = VBAK-VBELN</span>
+<span class="c">*          VBUP-VBELN = VBAP-VBELN AND VBUP-POSNR = VBAP-POSNR</span>
+<span class="c">* Filter : VBAK-VKORG = p_vkorg</span>
+<span class="c">*          VBAK-VDATU IN so_vdatu</span>
+<span class="c">*          VBAK-KUNNR IN so_kunnr (optional)</span>
+<span class="c">*          VBUP-LFSTA &lt;&gt; 'C'  (not fully delivered)</span>
+<span class="c">* Output : ALV via CL_SALV_TABLE, sorted by VDATU asc, sum NETWR</span>
+<span class="c">* Risks  : large VBAP volumes -&gt; restrict by date; check authorisations (VKORG)</span></pre>
+      <div class="callout tip">Ask follow-ups here: <i>"Should we add a VKORG authority-check?"</i> — refining the design now is far cheaper than reworking code later.</div>
+    </li>
+    <li>
+      <h4>3 · Ask Claude to generate the ABAP program</h4>
+      <p>With the design agreed, request the code. Be explicit about output type and standards.</p>
+      <div class="prompt"><span class="who">YOU → CLAUDE</span>Good. Now write the ABAP report ZSD_OPEN_ORDERS from that design. Use a single SELECT with an INNER JOIN, CL_SALV_TABLE for output, a mandatory VKORG parameter, and proper SY-SUBRC / no-data handling. Add clean-ABAP style comments.</div>
+      <pre><span class="k">REPORT</span> zsd_open_orders.
+
+<span class="k">TYPES</span>: <span class="k">BEGIN OF</span> ty_order,
+         vbeln <span class="k">TYPE</span> vbak-vbeln,
+         posnr <span class="k">TYPE</span> vbap-posnr,
+         kunnr <span class="k">TYPE</span> vbak-kunnr,
+         matnr <span class="k">TYPE</span> vbap-matnr,
+         kwmeng <span class="k">TYPE</span> vbap-kwmeng,
+         netwr <span class="k">TYPE</span> vbap-netwr,
+         waerk <span class="k">TYPE</span> vbak-waerk,
+         vdatu <span class="k">TYPE</span> vbak-vdatu,
+       <span class="k">END OF</span> ty_order.
+
+<span class="k">DATA</span> gt_orders <span class="k">TYPE STANDARD TABLE OF</span> ty_order.
+
+<span class="k">PARAMETERS</span>     p_vkorg <span class="k">TYPE</span> vbak-vkorg <span class="k">OBLIGATORY</span>.
+<span class="k">SELECT-OPTIONS</span>: so_vdatu <span class="k">FOR</span> <span class="c">"</span>gv_vdatu, so_kunnr <span class="k">FOR</span> <span class="c">"</span>gv_kunnr.
+
+<span class="k">START-OF-SELECTION</span>.
+  <span class="k">SELECT</span> h~vbeln i~posnr h~kunnr i~matnr
+         i~kwmeng i~netwr h~waerk h~vdatu
+    <span class="k">FROM</span> vbak <span class="k">AS</span> h
+    <span class="k">INNER JOIN</span> vbap <span class="k">AS</span> i <span class="k">ON</span> i~vbeln = h~vbeln
+    <span class="k">INNER JOIN</span> vbup <span class="k">AS</span> s <span class="k">ON</span> s~vbeln = i~vbeln
+                          <span class="k">AND</span> s~posnr = i~posnr
+    <span class="k">INTO CORRESPONDING FIELDS OF TABLE</span> @gt_orders
+    <span class="k">WHERE</span> h~vkorg  = @p_vkorg
+      <span class="k">AND</span> h~vdatu <span class="k">IN</span> @so_vdatu
+      <span class="k">AND</span> h~kunnr <span class="k">IN</span> @so_kunnr
+      <span class="k">AND</span> s~lfsta &lt;&gt; <span class="s">'C'</span>.       <span class="c">" exclude fully delivered</span>
+
+  <span class="k">IF</span> sy-subrc &lt;&gt; 0.
+    <span class="k">MESSAGE</span> <span class="s">'No open orders for the given selection'</span> <span class="k">TYPE</span> <span class="s">'S'</span>.
+    <span class="k">RETURN</span>.
+  <span class="k">ENDIF</span>.
+
+  <span class="k">SORT</span> gt_orders <span class="k">BY</span> vdatu <span class="k">ASCENDING</span>.
+
+  <span class="k">TRY</span>.
+      <span class="k">DATA</span>(lo_alv) = cl_salv_table=&gt;factory(
+        <span class="k">IMPORTING</span> r_salv_table = <span class="k">DATA</span>(lr_alv)
+        <span class="k">CHANGING</span>  t_table      = gt_orders ).
+      lr_alv-&gt;display( ).
+    <span class="k">CATCH</span> cx_salv_msg <span class="k">INTO DATA</span>(lx_msg).
+      <span class="k">MESSAGE</span> lx_msg-&gt;get_text( ) <span class="k">TYPE</span> <span class="s">'E'</span>.
+  <span class="k">ENDTRY</span>.</pre>
+      <div class="callout warn"><b>Your job, not Claude's:</b> paste this into Eclipse ADT / SE80, run a <b>syntax check</b>, adjust field names to your release, and confirm the logic against the FS. The generated code is a strong first draft — you activate it.</div>
+    </li>
+    <li>
+      <h4>4 · Generate ABAP Unit tests</h4>
+      <p>Ask for tests so the object ships verified rather than "looked fine when I ran it once".</p>
+      <div class="prompt"><span class="who">YOU → CLAUDE</span>Write an ABAP Unit test class for the selection logic: one case with open items, one where every item is fully delivered (expect empty result), and one with an invalid VKORG. Use test doubles so it doesn't hit the live tables.</div>
+    </li>
+    <li>
+      <h4>5 · Self-review against standards, then run ATC</h4>
+      <p>Before the transport, have Claude sanity-check its own output against your rules, then let ABAP Test Cockpit be the final word in your system.</p>
+      <div class="prompt"><span class="who">YOU → CLAUDE</span>Review ZSD_OPEN_ORDERS against clean-ABAP: naming, no SELECT *, error handling, performance on large VBAP. List anything ATC would likely flag and show the fix.</div>
+    </li>
+    <li>
+      <h4>6 · Activate, test, document</h4>
+      <p>Run it in your system, unit-test it, and — if you like — ask Claude to draft the Technical Specification document and change-log from the final code, closing the loop back to the FS.</p>
+    </li>
+  </ol>
+
+  <div class="callout tip"><b>The pattern to remember:</b> <b>FS → design → code → tests → review → activate.</b> Claude drafts each artefact and explains its reasoning; you validate against the business need and own everything that enters a transport.</div>
+</section>
+
+<!-- ============ GETTING STARTED ============ -->
+<section class="view" id="start">
+  <h2>Getting Started</h2>
+  <p class="lead">A short path from zero to your first FS-to-code task.</p>
+
+  <ol class="steps">
+    <li><h4>1 · Pick a low-risk first task</h4><p>Choose a small report or a routine enhancement you understand well — something you can judge the output on.</p></li>
+    <li><h4>2 · Prepare your inputs</h4><p>Have the FS section, the table/field names, and a short note of your team's naming and clean-ABAP conventions ready to paste.</p></li>
+    <li><h4>3 · Ask for a design before code</h4><p>Get the technical approach first, review it, then request the ABAP. Iterate one artefact at a time.</p></li>
+    <li><h4>4 · Verify in your own system</h4><p>Syntax check, ATC, and ABAP Unit tests are the source of truth. Never activate un-reviewed generated code.</p></li>
+    <li><h4>5 · Capture what works</h4><p>Keep a running note of prompts and conventions that give good results, and share it with the team so quality stays consistent.</p></li>
+  </ol>
+
+  <h3>Good-practice reminders</h3>
+  <div class="grid">
+    <div class="card"><div class="ico">🔐</div><h4>Mind the data</h4><p>Follow CCBJI policy on what code, data, and system details may be shared with external tools. When in doubt, ask.</p></div>
+    <div class="card"><div class="ico">👤</div><h4>You own the code</h4><p>Every object that enters a transport is your professional responsibility — review it as if you wrote it, because you're shipping it.</p></div>
+    <div class="card"><div class="ico">📈</div><h4>Measure honestly</h4><p>Track your own before/after on real tickets. Let evidence, not hype, set expectations.</p></div>
+  </div>
+
+  <p style="margin-top:20px"><span class="tag">Classic ABAP</span><span class="tag">RAP</span><span class="tag">CDS</span><span class="tag">ALV</span><span class="tag">ABAP Unit</span><span class="tag">ATC</span><span class="tag">Clean ABAP</span><span class="tag">Eclipse ADT</span></p>
+</section>
+
+<footer>
+  Diligent Claude Academy · Internal enablement for CCBJI SAP&nbsp;/&nbsp;ABAP developers.<br>
+  Examples are illustrative — always verify generated ABAP in your own system before activation.
+</footer>
+
+</main>
+
+<script>
+  const buttons = document.querySelectorAll('nav button');
+  const views = document.querySelectorAll('.view');
+  buttons.forEach(btn => btn.addEventListener('click', () => {
+    const id = btn.dataset.view;
+    buttons.forEach(b => b.classList.toggle('active', b === btn));
+    views.forEach(v => v.classList.toggle('active', v.id === id));
+    window.scrollTo({top:0, behavior:'smooth'});
+  }));
+</script>
+</body>
+</html>
