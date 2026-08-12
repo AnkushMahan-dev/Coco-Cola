@@ -323,9 +323,18 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         route          = <ls_vttk>-route
         settlementdate = <ls_vttk>-erdat
         driver         = <ls_vttk>-/bev1/rpfar1
-        vehicle        = <ls_vttk>-/bev1/rpmowa
-        referencedoc   = <ls_vttk>-xblnr
-        headertext     = <ls_vttk>-bktxt ).
+        vehicle        = <ls_vttk>-/bev1/rpmowa ).
+
+      " ---------------------------------------------------------------
+      " NOTE: ReferenceDoc / HeaderText are NOT columns of table VTTK.
+      " In the classic report the ty_vttk WORK-AREA fields xblnr/bktxt
+      " are filled FROM the shipment number and used as join keys to:
+      "   * BKPF-XBLNR  -> FI document reference   (ReferenceDoc)
+      "   * MKPF-BKTXT  -> material-doc header text (HeaderText)
+      " They are therefore left blank here (removed from the VTTK read
+      " so the class activates) and populated at the enrichment step:
+*      ls_out-referencedoc = <fs_bkpf>-xblnr.  " BKPF by shipment
+*      ls_out-headertext   = <fs_mkpf>-bktxt.  " MKPF by shipment
 
       " ---------------------------------------------------------------
       " Enrichment extension points (wired to the /DSD/ + /CCEJ/ tables

@@ -59,10 +59,17 @@ module SD, area FSV, type G):
 - Metadata extension: removed the dangling `criticality` reference that would
   have broken activation.
 
-> One environment-specific item that only the target system can confirm: the
-> `VTTK` append fields `/BEV1/RPFAR1` and `/BEV1/RPMOWA` (used by the classic
-> report). They exist on the CCBJI beverage system; if your client copy differs,
-> adjust those two field names.
+> **`ReferenceDoc` / `HeaderText` are NOT VTTK columns.** In the classic report
+> the `ty_vttk` *work-area* fields `xblnr`/`bktxt` are filled from the shipment
+> number and used as join keys to `BKPF-XBLNR` (FI doc reference) and
+> `MKPF-BKTXT` (material-doc header text). Reading them off table `VTTK` fails
+> activation, so they are removed from the VTTK read and left blank (populate at
+> the enrichment step). The entity columns are kept so the output contract is
+> unchanged.
+>
+> One more environment-specific item: the `VTTK` append fields `/BEV1/RPFAR1`
+> and `/BEV1/RPMOWA` (driver / truck) used by the classic report — they exist on
+> the CCBJI beverage system; if your client copy differs, adjust those two names.
 
 ### Validation mapping — report `f_validation` → `validate_selection( )`
 
