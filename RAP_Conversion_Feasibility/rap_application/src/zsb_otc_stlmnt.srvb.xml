@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ================================================================= -->
+<!-- Service Binding : ZSB_OTC_STLMNT  (OData V4 - UI)                  -->
+<!-- Binds service definition ZSD_OTC_STLMNT_DTL and PUBLISHES the      -->
+<!-- OData endpoint consumed by the Fiori Elements List Report.        -->
+<!--                                                                   -->
+<!-- abapGit serializes a service binding as shown below. If your      -->
+<!-- abapGit version cannot import SRVB, create it manually in ADT:    -->
+<!--   right-click ZSD_OTC_STLMNT_DTL -> New -> Service Binding        -->
+<!--   Name        : ZSB_OTC_STLMNT                                    -->
+<!--   Binding Type: OData V4 - UI  (ODATA_V4_UI)                       -->
+<!--   Service Def : ZSD_OTC_STLMNT_DTL                                -->
+<!-- then Activate and press "Publish".                                -->
+<!-- ================================================================= -->
+<abapGit version="v1.0.0" serializer="LCL_OBJECT_SRVB" serializer_version="v1.0.0">
+ <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
+  <asx:values>
+   <SRVB>
+    <HEADER>
+     <BINDING_NAME>ZSB_OTC_STLMNT</BINDING_NAME>
+     <BINDING_TYPE>ODATA</BINDING_TYPE>
+     <BINDING_VERSION>V4</BINDING_VERSION>
+     <BINDING_CATEGORY>UI</BINDING_CATEGORY>
+     <SERVICE_DEFINITION>ZSD_OTC_STLMNT_DTL</SERVICE_DEFINITION>
+     <DESCRIPTION>OTC DSD Settlement Details OData V4</DESCRIPTION>
+    </HEADER>
+    <SERVICES>
+     <SERVICE>
+      <SERVICE_DEFINITION>ZSD_OTC_STLMNT_DTL</SERVICE_DEFINITION>
+     </SERVICE>
+    </SERVICES>
+   </SRVB>
+  </asx:values>
+ </asx:abap>
+</abapGit>

@@ -1,0 +1,4 @@
+@EndUserText.label: 'OTC DSD Settlement Details Service'
+define service ZSD_OTC_STLMNT_DTL {
+  expose ZI_OTC_STLMNT_DETAIL as SettlementDetail;
+}

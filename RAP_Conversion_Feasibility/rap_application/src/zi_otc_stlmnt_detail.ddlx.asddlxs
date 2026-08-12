@@ -1,0 +1,59 @@
+@Metadata.layer: #CORE
+@UI: { headerInfo: { typeName:       'Settlement Detail',
+                     typeNamePlural: 'Settlement Details',
+                     title:          { type: #STANDARD, value: 'ShipmentNo' } } }
+annotate entity ZI_OTC_STLMNT_DETAIL with
+{
+  @UI.facet: [ { id:        'Tour',
+                 purpose:   #STANDARD,
+                 type:      #IDENTIFICATION_REFERENCE,
+                 label:     'Tour Header',
+                 position:  10 } ]
+
+  @UI: { lineItem:       [ { position: 10, importance: #HIGH } ],
+         identification: [ { position: 10 } ] }
+  @UI.selectionField: [ { position: 10 } ]
+  ShipmentNo;
+
+  @UI: { lineItem:       [ { position: 20, importance: #HIGH } ],
+         identification: [ { position: 20 } ] }
+  ProcessingStatus;
+
+  @UI: { lineItem: [ { position: 30 } ], identification: [ { position: 30 } ] }
+  @UI.selectionField: [ { position: 20 } ]
+  Route;
+
+  @UI: { lineItem: [ { position: 40 } ], identification: [ { position: 40 } ] }
+  @UI.selectionField: [ { position: 30 } ]
+  SettlementDate;
+
+  @UI: { lineItem: [ { position: 50 } ], identification: [ { position: 50 } ] }
+  Tpp;
+
+  @UI: { lineItem: [ { position: 60 } ], identification: [ { position: 60 } ] }
+  StatusId;
+
+  @UI: { lineItem: [ { position: 70 } ], identification: [ { position: 70 } ] }
+  Plant;
+
+  @UI: { lineItem: [ { position: 80 } ], identification: [ { position: 80 } ] }
+  Driver;
+
+  @UI: { lineItem: [ { position: 90 } ], identification: [ { position: 90 } ] }
+  Vehicle;
+
+  @UI: { lineItem: [ { position: 100 } ], identification: [ { position: 100 } ] }
+  Scenario;
+
+  @UI: { lineItem: [ { position: 110 } ], identification: [ { position: 110 } ] }
+  Warnings;
+
+  @UI: { lineItem: [ { position: 120 } ], identification: [ { position: 120 } ] }
+  Errors;
+
+  @UI: { identification: [ { position: 130 } ] }
+  ReferenceDoc;
+
+  @UI: { identification: [ { position: 140 } ] }
+  HeaderText;
+}
