@@ -288,21 +288,23 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
     ENDIF.
 
     LOOP AT lt_vttk ASSIGNING FIELD-SYMBOL(<ls_vttk>).
+      " ReferenceDoc / HeaderText are NOT columns of VTTK. In the report
+      " the ty_vttk work-area fields xblnr/bktxt are set to the shipment
+      " number with leading zeros removed (lines 304-308) and shown as-is
+      " (they double as join keys to BKPF-XBLNR / MKPF-BKTXT). Reproduced:
+      DATA lv_shipref TYPE tknum.
+      lv_shipref = <ls_vttk>-tknum.
+      SHIFT lv_shipref LEFT DELETING LEADING '0'.
+
       DATA(ls_out) = VALUE ty_result(
         shipmentno     = <ls_vttk>-tknum
         tpp            = <ls_vttk>-tplst
         route          = <ls_vttk>-route
         settlementdate = <ls_vttk>-erdat
         driver         = <ls_vttk>-/bev1/rpfar1
-        vehicle        = <ls_vttk>-/bev1/rpmowa ).
-
-      " ReferenceDoc / HeaderText are NOT columns of VTTK. In the report
-      " the ty_vttk work-area fields xblnr/bktxt are filled from the
-      " shipment number and used as join keys to BKPF-XBLNR (FI doc ref)
-      " and MKPF-BKTXT (material-doc header text). Left blank here so the
-      " class activates; populate at the enrichment step:
-*      ls_out-referencedoc = <fs_bkpf>-xblnr.  " BKPF by shipment
-*      ls_out-headertext   = <fs_mkpf>-bktxt.  " MKPF by shipment
+        vehicle        = <ls_vttk>-/bev1/rpmowa
+        referencedoc   = lv_shipref
+        headertext     = lv_shipref ).
 
       " Enrichment extension points (same source tables as the report):
       "   StatusId <- /DSD/ST_STATUS ; Plant <- TTDS/route ;

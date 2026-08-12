@@ -317,24 +317,27 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
     ENDIF.
 
     LOOP AT lt_vttk ASSIGNING FIELD-SYMBOL(<ls_vttk>).
+      " ---------------------------------------------------------------
+      " ReferenceDoc / HeaderText are NOT columns of table VTTK. In the
+      " classic report the ty_vttk work-area fields xblnr/bktxt are set
+      " to the SHIPMENT NUMBER with leading zeros removed (report lines
+      " 304-308) and displayed as-is; they also double as the join keys
+      " to BKPF-XBLNR (FI doc) and MKPF-BKTXT (material doc). Reproduced
+      " faithfully here so the columns are populated exactly as before.
+      " ---------------------------------------------------------------
+      DATA lv_shipref TYPE tknum.
+      lv_shipref = <ls_vttk>-tknum.
+      SHIFT lv_shipref LEFT DELETING LEADING '0'.
+
       DATA(ls_out) = VALUE ty_result(
         shipmentno     = <ls_vttk>-tknum
         tpp            = <ls_vttk>-tplst
         route          = <ls_vttk>-route
         settlementdate = <ls_vttk>-erdat
         driver         = <ls_vttk>-/bev1/rpfar1
-        vehicle        = <ls_vttk>-/bev1/rpmowa ).
-
-      " ---------------------------------------------------------------
-      " NOTE: ReferenceDoc / HeaderText are NOT columns of table VTTK.
-      " In the classic report the ty_vttk WORK-AREA fields xblnr/bktxt
-      " are filled FROM the shipment number and used as join keys to:
-      "   * BKPF-XBLNR  -> FI document reference   (ReferenceDoc)
-      "   * MKPF-BKTXT  -> material-doc header text (HeaderText)
-      " They are therefore left blank here (removed from the VTTK read
-      " so the class activates) and populated at the enrichment step:
-*      ls_out-referencedoc = <fs_bkpf>-xblnr.  " BKPF by shipment
-*      ls_out-headertext   = <fs_mkpf>-bktxt.  " MKPF by shipment
+        vehicle        = <ls_vttk>-/bev1/rpmowa
+        referencedoc   = lv_shipref
+        headertext     = lv_shipref ).
 
       " ---------------------------------------------------------------
       " Enrichment extension points (wired to the /DSD/ + /CCEJ/ tables

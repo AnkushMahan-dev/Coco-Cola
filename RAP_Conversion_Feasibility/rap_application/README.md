@@ -60,12 +60,12 @@ module SD, area FSV, type G):
   have broken activation.
 
 > **`ReferenceDoc` / `HeaderText` are NOT VTTK columns.** In the classic report
-> the `ty_vttk` *work-area* fields `xblnr`/`bktxt` are filled from the shipment
-> number and used as join keys to `BKPF-XBLNR` (FI doc reference) and
-> `MKPF-BKTXT` (material-doc header text). Reading them off table `VTTK` fails
-> activation, so they are removed from the VTTK read and left blank (populate at
-> the enrichment step). The entity columns are kept so the output contract is
-> unchanged.
+> the `ty_vttk` *work-area* fields `xblnr`/`bktxt` are set to the **shipment
+> number with leading zeros removed** (report lines 304–308) and displayed as-is
+> (they also double as the join keys to `BKPF-XBLNR` / `MKPF-BKTXT`). The query
+> class reproduces this exactly — `SHIFT … LEFT DELETING LEADING '0'` — so both
+> columns are **populated with the same value the report shows**, and the class
+> still activates (no non-existent VTTK column is read).
 >
 > One more environment-specific item: the `VTTK` append fields `/BEV1/RPFAR1`
 > and `/BEV1/RPMOWA` (driver / truck) used by the classic report — they exist on
