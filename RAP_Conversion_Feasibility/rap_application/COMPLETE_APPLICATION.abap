@@ -8,13 +8,13 @@
 *&  Namespace : /CCBJI/          Package : /CCBJI/OTC
 *&  Work stream OTC (Order to Cash) - Module SD - Process area FSV
 *&
-*&  Same business requirement, same output data, same validations -
-*&  only the presentation layer changes (SALV -> OData V4 -> Fiori).
+*&  Same business requirement, same output data, SAME VALIDATIONS
+*&  (report FORM f_validation ported into the query class, same
+*&  /CCEJ/OTC message numbers). Only the presentation layer changes
+*&  (SALV -> OData V4 -> Fiori).
 *&
 *&  NO BEHAVIOR DEFINITION / BINDING IS REQUIRED - the report is
-*&  read-only (0 DB writes, 0 COMMIT WORK). A behavior definition is
-*&  only for CREATE/UPDATE/DELETE/actions; a read-only projection is
-*&  exposed directly by the service definition.
+*&  read-only (0 DB writes, 0 COMMIT WORK).
 *&
 *&  ACTIVATION ORDER
 *&    1. /CCBJI/CL_FSV_STLMNT_QRY   (class)
@@ -58,6 +58,17 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
            END OF ty_result,
            tt_result TYPE STANDARD TABLE OF ty_result WITH DEFAULT KEY.
 
+    METHODS validate_selection
+      IMPORTING it_shipment    TYPE RANGE OF tknum
+                it_route       TYPE RANGE OF route
+                it_settle_date TYPE RANGE OF erdat
+                it_plant       TYPE RANGE OF werks_d
+                it_status      TYPE RANGE OF /dsd/st_status_id
+                it_tpp         TYPE RANGE OF tplst
+                it_driver      TYPE RANGE OF /dsd/rp_driver1
+                it_vehicle     TYPE RANGE OF /dsd/rp_truck
+      RAISING   cx_rap_query_provider.
+
     METHODS read_settlement_data
       IMPORTING it_shipment      TYPE RANGE OF tknum
                 it_route         TYPE RANGE OF route
@@ -80,6 +91,11 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
     DATA lt_shipment    TYPE RANGE OF tknum.
     DATA lt_route       TYPE RANGE OF route.
     DATA lt_settle_date TYPE RANGE OF erdat.
+    DATA lt_plant       TYPE RANGE OF werks_d.
+    DATA lt_status      TYPE RANGE OF /dsd/st_status_id.
+    DATA lt_tpp         TYPE RANGE OF tplst.
+    DATA lt_driver      TYPE RANGE OF /dsd/rp_driver1.
+    DATA lt_vehicle     TYPE RANGE OF /dsd/rp_truck.
 
     FIELD-SYMBOLS <lt_range> TYPE STANDARD TABLE.
 
@@ -96,18 +112,33 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         CONTINUE.
       ENDIF.
       CASE ls_range-name.
-        WHEN 'SHIPMENTNO'.
-          lt_shipment    = CORRESPONDING #( <lt_range> ).
-        WHEN 'ROUTE'.
-          lt_route       = CORRESPONDING #( <lt_range> ).
-        WHEN 'SETTLEMENTDATE'.
-          lt_settle_date = CORRESPONDING #( <lt_range> ).
+        WHEN 'SHIPMENTNO'.     lt_shipment    = CORRESPONDING #( <lt_range> ).
+        WHEN 'ROUTE'.          lt_route       = CORRESPONDING #( <lt_range> ).
+        WHEN 'SETTLEMENTDATE'. lt_settle_date = CORRESPONDING #( <lt_range> ).
+        WHEN 'PLANT'.          lt_plant       = CORRESPONDING #( <lt_range> ).
+        WHEN 'STATUSID'.       lt_status      = CORRESPONDING #( <lt_range> ).
+        WHEN 'TPP'.            lt_tpp         = CORRESPONDING #( <lt_range> ).
+        WHEN 'DRIVER'.         lt_driver      = CORRESPONDING #( <lt_range> ).
+        WHEN 'VEHICLE'.        lt_vehicle     = CORRESPONDING #( <lt_range> ).
         WHEN OTHERS.
       ENDCASE.
       UNASSIGN <lt_range>.
     ENDLOOP.
 
-    " 2. Paging
+    " 2. VALIDATION - same checks / same /CCEJ/OTC messages as
+    "    report FORM f_validation. A failure aborts the query
+    "    (= LEAVE LIST-PROCESSING) and shows the message in Fiori.
+    validate_selection(
+      it_shipment    = lt_shipment
+      it_route       = lt_route
+      it_settle_date = lt_settle_date
+      it_plant       = lt_plant
+      it_status      = lt_status
+      it_tpp         = lt_tpp
+      it_driver      = lt_driver
+      it_vehicle     = lt_vehicle ).
+
+    " 3. Paging
     DATA(lo_paging)  = io_request->get_paging( ).
     DATA(lv_offset)  = lo_paging->get_offset( ).
     DATA(lv_page_sz) = lo_paging->get_page_size( ).
@@ -119,14 +150,14 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
       lv_max_rows = lv_offset + lv_page_sz.
     ENDIF.
 
-    " 3. Read + derive (reused report logic)
+    " 4. Read + derive (reused report logic)
     DATA(lt_result) = read_settlement_data(
                         it_shipment    = lt_shipment
                         it_route       = lt_route
                         it_settle_date = lt_settle_date
                         iv_max_rows    = lv_max_rows ).
 
-    " 4. Sorting
+    " 5. Sorting
     DATA lt_sort_order TYPE abap_sortorder_tab.
     LOOP AT io_request->get_sort_elements( ) INTO DATA(ls_sort).
       APPEND VALUE #( name       = ls_sort-element_name
@@ -138,12 +169,12 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
       SORT lt_result BY shipmentno.
     ENDIF.
 
-    " 5. Total count
+    " 6. Total count
     IF io_request->is_total_numb_of_rec_requested( ).
       io_response->set_total_number_of_records( lines( lt_result ) ).
     ENDIF.
 
-    " 6. Page window + return
+    " 7. Page window + return
     IF io_request->is_data_requested( ).
       IF lv_page_sz <> if_rap_query_paging=>page_size_unlimited.
         DATA(lv_from) = lv_offset + 1.
@@ -155,6 +186,80 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         io_response->set_data( lt_page ).
       ELSE.
         io_response->set_data( lt_result ).
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD validate_selection.
+
+    " 1:1 port of report FORM f_validation - ORIGINAL /CCEJ/OTC message
+    " numbers, raised as type E so the query aborts like the classic
+    " LEAVE LIST-PROCESSING. Each existence check runs only when its
+    " selection value is supplied - identical to the report.
+
+    " Mandatory selection (i525): ShipmentNo OR Plant+Route+Date.
+    IF it_shipment IS NOT INITIAL
+       OR ( it_plant IS NOT INITIAL AND it_route IS NOT INITIAL
+            AND it_settle_date IS NOT INITIAL ).
+    ELSE.
+      RAISE EXCEPTION TYPE cx_rap_query_provider MESSAGE e525(/ccej/otc).
+    ENDIF.
+
+    " Plant must exist (i012, when no shipment).
+    IF it_shipment IS INITIAL AND it_plant IS NOT INITIAL.
+      SELECT SINGLE werks FROM t001w INTO @DATA(lv_werks) WHERE werks IN @it_plant.
+      IF sy-subrc <> 0.
+        RAISE EXCEPTION TYPE cx_rap_query_provider MESSAGE e012(/ccej/otc).
+      ENDIF.
+    ENDIF.
+
+    " Transportation planning point must exist (i125).
+    IF it_tpp IS NOT INITIAL.
+      SELECT SINGLE tplst FROM ttds INTO @DATA(lv_tplst) WHERE tplst IN @it_tpp. "#EC CI_USAGE_OK[2270199]
+      IF sy-subrc <> 0.
+        RAISE EXCEPTION TYPE cx_rap_query_provider MESSAGE e125(/ccej/otc).
+      ENDIF.
+    ENDIF.
+
+    " Shipment number must exist (i123).
+    IF it_shipment IS NOT INITIAL.
+      SELECT SINGLE tknum FROM vttk INTO @DATA(lv_tknum) WHERE tknum IN @it_shipment. "#EC CI_USAGE_OK[2270199]
+      IF sy-subrc <> 0.
+        RAISE EXCEPTION TYPE cx_rap_query_provider MESSAGE e123(/ccej/otc).
+      ENDIF.
+    ENDIF.
+
+    " Status must exist (i124).
+    IF it_status IS NOT INITIAL.
+      SELECT SINGLE status_id FROM /dsd/st_cstatus INTO @DATA(lv_status) WHERE status_id IN @it_status.
+      IF sy-subrc <> 0.
+        RAISE EXCEPTION TYPE cx_rap_query_provider MESSAGE e124(/ccej/otc).
+      ENDIF.
+    ENDIF.
+
+    " Route must exist (i126).
+    IF it_route IS NOT INITIAL.
+      SELECT SINGLE route FROM tvro INTO @DATA(lv_route) WHERE route IN @it_route.
+      IF sy-subrc <> 0.
+        RAISE EXCEPTION TYPE cx_rap_query_provider MESSAGE e126(/ccej/otc).
+      ENDIF.
+    ENDIF.
+
+    " Vehicle must exist (i127).
+    IF it_vehicle IS NOT INITIAL.
+      SELECT SINGLE equnr FROM equi INTO @DATA(lv_equnr) WHERE equnr IN @it_vehicle.
+      IF sy-subrc <> 0.
+        RAISE EXCEPTION TYPE cx_rap_query_provider MESSAGE e127(/ccej/otc).
+      ENDIF.
+    ENDIF.
+
+    " Driver must exist (i128).
+    IF it_driver IS NOT INITIAL.
+      SELECT SINGLE kunnr FROM kna1 INTO @DATA(lv_kunnr) WHERE kunnr IN @it_driver.
+      IF sy-subrc <> 0.
+        RAISE EXCEPTION TYPE cx_rap_query_provider MESSAGE e128(/ccej/otc).
       ENDIF.
     ENDIF.
 
@@ -270,6 +375,8 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
 *&  OBJECT 3 of 5 : METADATA EXTENSION  (Metadata Extension)
 *&  Name : /CCBJI/I_FSV_STLMNT_DTL   (same name as the entity it annotates)
 *&  File : src/#ccbji#i_fsv_stlmnt_dtl.ddlx.asddlxs
+*&  Selection fields mirror the classic selection screen:
+*&  ShipmentNo, Route, SettlementDate, StatusId, Plant.
 *&---------------------------------------------------------------------*
 @Metadata.layer: #CORE
 @UI: { headerInfo: { typeName:       'Settlement Detail',
@@ -301,8 +408,10 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
   @UI: { lineItem: [ { position: 50 } ], identification: [ { position: 50 } ] }
   Tpp;
   @UI: { lineItem: [ { position: 60 } ], identification: [ { position: 60 } ] }
+  @UI.selectionField: [ { position: 40 } ]
   StatusId;
   @UI: { lineItem: [ { position: 70 } ], identification: [ { position: 70 } ] }
+  @UI.selectionField: [ { position: 50 } ]
   Plant;
   @UI: { lineItem: [ { position: 80 } ], identification: [ { position: 80 } ] }
   Driver;

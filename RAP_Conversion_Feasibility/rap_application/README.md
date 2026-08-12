@@ -40,7 +40,7 @@ module SD, area FSV, type G):
 |-------|--------|
 | **Business requirement** | ✅ Preserved. Same purpose (settlement tour header display), same selection criteria (Shipment/Visit List, Route, Settlement Date + extensible), same source table `VTTK`. |
 | **Output / business output** | ✅ Preserved. Output columns mirror the classic `ty_final` (ShipmentNo, Status, Plant, Route, Date, Driver, Vehicle, Scenario, Warnings, Errors, Ref Doc, Header Text) + the derived traffic-light **Processing Status**. |
-| **Validations** | ✅ Preserved. The traffic-light rule (`f_traffic_light`: Red=error, Yellow=warning, Green=clean) runs in `derive_processing_status( )`. Selection validation (`f_validation`/`f_validate_data`) maps to the query-class filter handling — empty filter = select all, exactly like the report. |
+| **Validations** | ✅ Preserved. Report `FORM f_validation` is ported 1:1 into `validate_selection( )` — same checks, same message class **`/CCEJ/OTC`**, same numbers (see table below). The traffic-light rule (`f_traffic_light`) runs in `derive_processing_status( )`. |
 | **Syntax** | ✅ Reviewed. Notes below. |
 | **Behavior definition / binding** | ❌ **Not required** — see §3. |
 
@@ -63,6 +63,38 @@ module SD, area FSV, type G):
 > `VTTK` append fields `/BEV1/RPFAR1` and `/BEV1/RPMOWA` (used by the classic
 > report). They exist on the CCBJI beverage system; if your client copy differs,
 > adjust those two field names.
+
+### Validation mapping — report `f_validation` → `validate_selection( )`
+
+Runs before the data fetch (RAP equivalent of `START-OF-SELECTION` +
+`LEAVE LIST-PROCESSING`). A failed check raises `cx_rap_query_provider` carrying
+the **same `/CCEJ/OTC` message**, which Fiori shows to the user.
+
+| Check | Table | Original msg | Condition |
+|-------|-------|--------------|-----------|
+| Mandatory selection | — | `i525` | ShipmentNo, **or** Plant+Route+SettlementDate together |
+| Plant exists | `T001W` | `i012` | when Plant given and no Shipment |
+| TPP exists | `TTDS` | `i125` | when TPP given |
+| Shipment exists | `VTTK` | `i123` | when ShipmentNo given |
+| Status exists | `/DSD/ST_CSTATUS` | `i124` | when Status given |
+| Route exists | `TVRO` | `i126` | when Route given |
+| Vehicle exists | `EQUI` | `i127` | when Vehicle given |
+| Driver exists | `KNA1` | `i128` | when Driver given |
+
+In the classic report the shipment/route/status/TPP checks sat under
+`IF rb_ship` / `IF rb_ship OR rb_visi`. Here the **mode is fixed by the service**
+(no radio button), so the radio gate collapses and each check simply runs when
+its filter is supplied — behaviour and messages stay identical.
+
+**Two release/UX notes (no negative business impact):**
+- `cx_rap_query_provider` carries the T100 message via the `RAISE EXCEPTION …
+  MESSAGE e###(/ccej/otc)` form. This is supported on S/4HANA 2020+. If your
+  release rejects it, swap to a bare `RAISE EXCEPTION TYPE cx_rap_query_provider.`
+  or a small custom `if_t100_message` exception — the check logic is unchanged.
+- The mandatory (`i525`) check fires on an empty filter, exactly like the classic
+  screen. Configure the Fiori List Report with **initial load = off** (standard
+  for mandatory-filter reports) so the message appears only after the user
+  presses **Go** with insufficient filters — never a blank-load error.
 
 ---
 

@@ -7,10 +7,11 @@
 *&  Replaces the read logic of the classic ALV report
 *&  /CCBJI/RDSDFSVG_STLMNT_DETAILS (Settlement Details - Tour Header).
 *&
-*&  Business requirement, output data and validations are preserved:
-*&  the same selection criteria, the same source table and the same
-*&  derivation (traffic-light processing status) run here at runtime
-*&  and are returned through OData V4 instead of SALV.
+*&  Business requirement, output data AND validations are preserved:
+*&  the same selection checks (report FORM f_validation), the same
+*&  message class /CCEJ/OTC with the same message numbers, the same
+*&  source table and the same traffic-light derivation run here at
+*&  runtime and are returned through OData V4 instead of SALV.
 *&---------------------------------------------------------------------*
 CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
   PUBLIC
@@ -41,6 +42,20 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
            END OF ty_result,
            tt_result TYPE STANDARD TABLE OF ty_result WITH DEFAULT KEY.
 
+    "! Reproduces report FORM f_validation.
+    "! Raises the SAME messages (/CCEJ/OTC) the classic report issued
+    "! before LEAVE LIST-PROCESSING. Propagated to the OData consumer.
+    METHODS validate_selection
+      IMPORTING it_shipment    TYPE RANGE OF tknum
+                it_route       TYPE RANGE OF route
+                it_settle_date TYPE RANGE OF erdat
+                it_plant       TYPE RANGE OF werks_d
+                it_status      TYPE RANGE OF /dsd/st_status_id
+                it_tpp         TYPE RANGE OF tplst
+                it_driver      TYPE RANGE OF /dsd/rp_driver1
+                it_vehicle     TYPE RANGE OF /dsd/rp_truck
+      RAISING   cx_rap_query_provider.
+
     METHODS read_settlement_data
       IMPORTING it_shipment      TYPE RANGE OF tknum
                 it_route         TYPE RANGE OF route
@@ -63,6 +78,11 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
     DATA lt_shipment    TYPE RANGE OF tknum.
     DATA lt_route       TYPE RANGE OF route.
     DATA lt_settle_date TYPE RANGE OF erdat.
+    DATA lt_plant       TYPE RANGE OF werks_d.
+    DATA lt_status      TYPE RANGE OF /dsd/st_status_id.
+    DATA lt_tpp         TYPE RANGE OF tplst.
+    DATA lt_driver      TYPE RANGE OF /dsd/rp_driver1.
+    DATA lt_vehicle     TYPE RANGE OF /dsd/rp_truck.
 
     FIELD-SYMBOLS <lt_range> TYPE STANDARD TABLE.
 
@@ -82,21 +102,36 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         CONTINUE.
       ENDIF.
       CASE ls_range-name.
-        WHEN 'SHIPMENTNO'.
-          lt_shipment    = CORRESPONDING #( <lt_range> ).
-        WHEN 'ROUTE'.
-          lt_route       = CORRESPONDING #( <lt_range> ).
-        WHEN 'SETTLEMENTDATE'.
-          lt_settle_date = CORRESPONDING #( <lt_range> ).
+        WHEN 'SHIPMENTNO'.     lt_shipment    = CORRESPONDING #( <lt_range> ).
+        WHEN 'ROUTE'.          lt_route       = CORRESPONDING #( <lt_range> ).
+        WHEN 'SETTLEMENTDATE'. lt_settle_date = CORRESPONDING #( <lt_range> ).
+        WHEN 'PLANT'.          lt_plant       = CORRESPONDING #( <lt_range> ).
+        WHEN 'STATUSID'.       lt_status      = CORRESPONDING #( <lt_range> ).
+        WHEN 'TPP'.            lt_tpp         = CORRESPONDING #( <lt_range> ).
+        WHEN 'DRIVER'.         lt_driver      = CORRESPONDING #( <lt_range> ).
+        WHEN 'VEHICLE'.        lt_vehicle     = CORRESPONDING #( <lt_range> ).
         WHEN OTHERS.
-          " further selection fields (plant, status, driver ...) are wired
-          " here following the same pattern as the classic sel-screen.
       ENDCASE.
       UNASSIGN <lt_range>.
     ENDLOOP.
 
     " -----------------------------------------------------------------
-    " 2. Paging - translate OData $top / $skip into a max-rows guard.
+    " 2. VALIDATION - same checks as the report FORM f_validation.
+    "    A failed check raises cx_rap_query_provider carrying the SAME
+    "    /CCEJ/OTC message, aborting the query (= LEAVE LIST-PROCESSING).
+    " -----------------------------------------------------------------
+    validate_selection(
+      it_shipment    = lt_shipment
+      it_route       = lt_route
+      it_settle_date = lt_settle_date
+      it_plant       = lt_plant
+      it_status      = lt_status
+      it_tpp         = lt_tpp
+      it_driver      = lt_driver
+      it_vehicle     = lt_vehicle ).
+
+    " -----------------------------------------------------------------
+    " 3. Paging - translate OData $top / $skip into a max-rows guard.
     " -----------------------------------------------------------------
     DATA(lo_paging)  = io_request->get_paging( ).
     DATA(lv_offset)  = lo_paging->get_offset( ).
@@ -110,7 +145,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
     ENDIF.
 
     " -----------------------------------------------------------------
-    " 3. Read + derive the data (the reused report logic).
+    " 4. Read + derive the data (the reused report logic).
     " -----------------------------------------------------------------
     DATA(lt_result) = read_settlement_data(
                         it_shipment    = lt_shipment
@@ -119,7 +154,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
                         iv_max_rows    = lv_max_rows ).
 
     " -----------------------------------------------------------------
-    " 4. Sorting requested by the consumer (ALV sort equivalent).
+    " 5. Sorting requested by the consumer (ALV sort equivalent).
     " -----------------------------------------------------------------
     DATA lt_sort_order TYPE abap_sortorder_tab.
     LOOP AT io_request->get_sort_elements( ) INTO DATA(ls_sort).
@@ -133,14 +168,14 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
     ENDIF.
 
     " -----------------------------------------------------------------
-    " 5. Total record count for the OData list report.
+    " 6. Total record count for the OData list report.
     " -----------------------------------------------------------------
     IF io_request->is_total_numb_of_rec_requested( ).
       io_response->set_total_number_of_records( lines( lt_result ) ).
     ENDIF.
 
     " -----------------------------------------------------------------
-    " 6. Apply the page window and return the data.
+    " 7. Apply the page window and return the data.
     " -----------------------------------------------------------------
     IF io_request->is_data_requested( ).
       IF lv_page_sz <> if_rap_query_paging=>page_size_unlimited.
@@ -153,6 +188,103 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         io_response->set_data( lt_page ).
       ELSE.
         io_response->set_data( lt_result ).
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD validate_selection.
+
+    " =================================================================
+    " 1:1 port of report FORM f_validation. Message numbers are the
+    " ORIGINAL /CCEJ/OTC numbers (i525/i012/i123/i124/i125/i126/i127/
+    " i128), raised as type E so the query aborts exactly like the
+    " classic LEAVE LIST-PROCESSING. Each existence check runs only
+    " when its selection value is supplied - identical to the report.
+    " In the report the shipment/route/status/TPP checks sat under
+    " IF rb_ship; here the "mode" is fixed by the service, so the radio
+    " gate collapses and the checks apply whenever the filter is set.
+    " =================================================================
+
+    " --- Mandatory selection (report i525): ShipmentNo, OR the trio
+    "     Plant + Route + Settlement Date. -----------------------------
+    IF it_shipment IS NOT INITIAL
+       OR ( it_plant IS NOT INITIAL AND it_route IS NOT INITIAL
+            AND it_settle_date IS NOT INITIAL ).
+      " selection is sufficient - continue
+    ELSE.
+      RAISE EXCEPTION TYPE cx_rap_query_provider
+        MESSAGE e525(/ccej/otc).
+    ENDIF.
+
+    " --- Plant must exist (report i012, checked when no shipment). ----
+    IF it_shipment IS INITIAL AND it_plant IS NOT INITIAL.
+      SELECT SINGLE werks FROM t001w INTO @DATA(lv_werks)
+        WHERE werks IN @it_plant.
+      IF sy-subrc <> 0.
+        RAISE EXCEPTION TYPE cx_rap_query_provider
+          MESSAGE e012(/ccej/otc).
+      ENDIF.
+    ENDIF.
+
+    " --- Transportation planning point must exist (report i125). -----
+    IF it_tpp IS NOT INITIAL.
+      SELECT SINGLE tplst FROM ttds INTO @DATA(lv_tplst)   "#EC CI_USAGE_OK[2270199]
+        WHERE tplst IN @it_tpp.
+      IF sy-subrc <> 0.
+        RAISE EXCEPTION TYPE cx_rap_query_provider
+          MESSAGE e125(/ccej/otc).
+      ENDIF.
+    ENDIF.
+
+    " --- Shipment number must exist (report i123). -------------------
+    IF it_shipment IS NOT INITIAL.
+      SELECT SINGLE tknum FROM vttk INTO @DATA(lv_tknum)    "#EC CI_USAGE_OK[2270199]
+        WHERE tknum IN @it_shipment.
+      IF sy-subrc <> 0.
+        RAISE EXCEPTION TYPE cx_rap_query_provider
+          MESSAGE e123(/ccej/otc).
+      ENDIF.
+    ENDIF.
+
+    " --- Status must exist (report i124). ----------------------------
+    IF it_status IS NOT INITIAL.
+      SELECT SINGLE status_id FROM /dsd/st_cstatus INTO @DATA(lv_status)
+        WHERE status_id IN @it_status.
+      IF sy-subrc <> 0.
+        RAISE EXCEPTION TYPE cx_rap_query_provider
+          MESSAGE e124(/ccej/otc).
+      ENDIF.
+    ENDIF.
+
+    " --- Route must exist (report i126). -----------------------------
+    IF it_route IS NOT INITIAL.
+      SELECT SINGLE route FROM tvro INTO @DATA(lv_route)
+        WHERE route IN @it_route.
+      IF sy-subrc <> 0.
+        RAISE EXCEPTION TYPE cx_rap_query_provider
+          MESSAGE e126(/ccej/otc).
+      ENDIF.
+    ENDIF.
+
+    " --- Vehicle must exist (report i127). ---------------------------
+    IF it_vehicle IS NOT INITIAL.
+      SELECT SINGLE equnr FROM equi INTO @DATA(lv_equnr)
+        WHERE equnr IN @it_vehicle.
+      IF sy-subrc <> 0.
+        RAISE EXCEPTION TYPE cx_rap_query_provider
+          MESSAGE e127(/ccej/otc).
+      ENDIF.
+    ENDIF.
+
+    " --- Driver must exist (report i128). ----------------------------
+    IF it_driver IS NOT INITIAL.
+      SELECT SINGLE kunnr FROM kna1 INTO @DATA(lv_kunnr)
+        WHERE kunnr IN @it_driver.
+      IF sy-subrc <> 0.
+        RAISE EXCEPTION TYPE cx_rap_query_provider
+          MESSAGE e128(/ccej/otc).
       ENDIF.
     ENDIF.
 
