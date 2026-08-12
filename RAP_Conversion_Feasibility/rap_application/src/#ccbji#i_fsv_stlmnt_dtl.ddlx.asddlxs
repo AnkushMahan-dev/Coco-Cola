@@ -2,13 +2,13 @@
 @UI: { headerInfo: { typeName:       'Settlement Detail',
                      typeNamePlural: 'Settlement Details',
                      title:          { type: #STANDARD, value: 'ShipmentNo' } } }
-annotate entity ZI_OTC_STLMNT_DETAIL with
+annotate entity /CCBJI/I_FSV_STLMNT_DTL with
 {
-  @UI.facet: [ { id:        'Tour',
-                 purpose:   #STANDARD,
-                 type:      #IDENTIFICATION_REFERENCE,
-                 label:     'Tour Header',
-                 position:  10 } ]
+  @UI.facet: [ { id:       'Tour',
+                 purpose:  #STANDARD,
+                 type:     #IDENTIFICATION_REFERENCE,
+                 label:    'Tour Header',
+                 position: 10 } ]
 
   @UI: { lineItem:       [ { position: 10, importance: #HIGH } ],
          identification: [ { position: 10 } ] }

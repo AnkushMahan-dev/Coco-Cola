@@ -1,112 +1,133 @@
-# OTC DSD Settlement Details — Complete RAP Application
+# OTC DSD Settlement Details — Complete RAP Application (`/CCBJI/` namespace)
 
 End-to-end, activation-ready **RAP (Pattern B, read-only)** modernization of the
 classic ALV report **`/CCBJI/RDSDFSVG_STLMNT_DETAILS`** (Settlement Details).
 
-The business requirement, the output data and the validations are preserved.
-Only the presentation layer changes: **SALV/ALV → OData V4 → Fiori Elements
-List Report**. The existing read + derivation logic is reused inside a RAP
-query provider class.
+- **Namespace:** `/CCBJI/`  **Package:** `/CCBJI/OTC`
+- **Work stream** OTC (Order to Cash) · **Module** SD · **Process area** FSV (Full Service Vending)
+- Business requirement, output data and validations preserved. Only the
+  presentation layer changes: **SALV/ALV → OData V4 → Fiori Elements List Report**.
 
 ---
 
-## 1. Object inventory (copy-paste order = activation order)
+## 1. Object inventory (all `/CCBJI/`, package `/CCBJI/OTC`)
 
-| # | Object | Type | Name | abapGit file |
-|---|--------|------|------|--------------|
-| 1 | Query provider class | ABAP Class | `ZCL_OTC_STLMNT_DTL_QRY` | `src/zcl_otc_stlmnt_dtl_qry.clas.abap` (+ `.clas.xml`) |
-| 2 | Custom entity | Data Definition (CDS) | `ZI_OTC_STLMNT_DETAIL` | `src/zi_otc_stlmnt_detail.ddls.asddls` |
-| 3 | Metadata extension | Metadata Extension | `ZI_OTC_STLMNT_DETAIL` | `src/zi_otc_stlmnt_detail.ddlx.asddlxs` |
-| 4 | Service definition | Service Definition | `ZSD_OTC_STLMNT_DTL` | `src/zsd_otc_stlmnt_dtl.srvd.srvdsrv` |
-| 5 | Service binding | Service Binding (OData V4 UI) | `ZSB_OTC_STLMNT` | `src/zsb_otc_stlmnt.srvb.xml` |
+| # | Object | Type | Name | abapGit file(s) |
+|---|--------|------|------|-----------------|
+| 1 | Query provider class | ABAP Class | `/CCBJI/CL_FSV_STLMNT_QRY` | `#ccbji#cl_fsv_stlmnt_qry.clas.abap` / `.clas.xml` |
+| 2 | Custom entity | Data Definition | `/CCBJI/I_FSV_STLMNT_DTL` | `#ccbji#i_fsv_stlmnt_dtl.ddls.asddls` / `.ddls.xml` / `.ddls.baseinfo` |
+| 3 | Metadata extension | Metadata Extension | `/CCBJI/I_FSV_STLMNT_DTL` | `#ccbji#i_fsv_stlmnt_dtl.ddlx.asddlxs` / `.ddlx.xml` |
+| 4 | Service definition | Service Definition | `/CCBJI/FSV_STLMNT_SRVD` | `#ccbji#fsv_stlmnt_srvd.srvd.srvdsrv` / `.srvd.xml` |
+| 5 | Service binding | Service Binding (OData V4 UI) | `/CCBJI/FSV_STLMNT_SRVB` | `#ccbji#fsv_stlmnt_srvb.srvb.xml` |
 
-> `COMPLETE_APPLICATION.abap` in this folder contains **all five objects in one
-> file** with banners, for direct copy-paste into ADT.
+`COMPLETE_APPLICATION.abap` holds all objects in one file for direct copy-paste.
 
----
+### Naming — CCBJI convention compliance
+Decoded like the source program `/CCBJI/R‑D‑SD‑FSV‑G` (System R, mode D=Display,
+module SD, area FSV, type G):
 
-## 2. Naming — CCBJI convention compliance
-
-Per `CCBJI_ABAP_Naming_conventions` (Work stream **OTC** = Order To Cash,
-Module **SD / DSD** = Direct Store Delivery):
-
-| Convention | Applied name |
-|------------|--------------|
-| CDS Interface view `ZI_<...>` | `ZI_OTC_STLMNT_DETAIL` |
-| RAP query class `.../CL_<area>_*` → `ZCL_<...>` | `ZCL_OTC_STLMNT_DTL_QRY` |
-| Service definition `ZSD_<...>` | `ZSD_OTC_STLMNT_DTL` |
-| Service binding `ZSB_<...>` (≤ 15 char, different from ZSD) | `ZSB_OTC_STLMNT` (14) |
-| Metadata extension = projection/entity name | `ZI_OTC_STLMNT_DETAIL` |
-
-`OTC` marks the Order-To-Cash work stream; `STLMNT_DTL` is the descriptive text
-(Settlement Details). Assign all objects to the OTC development package on the
-target system.
+- Interface CDS `/n/I_*` → `/CCBJI/I_FSV_STLMNT_DTL`
+- Class `/n/CL_pppp_*` (pppp = process area FSV) → `/CCBJI/CL_FSV_STLMNT_QRY`
+- Service definition → `/CCBJI/FSV_STLMNT_SRVD`
+- Service binding (distinct from definition) → `/CCBJI/FSV_STLMNT_SRVB`
+- Metadata extension = annotated entity name → `/CCBJI/I_FSV_STLMNT_DTL`
 
 ---
 
-## 3. How to activate & run
+## 2. "Check everything once again" — verification results
 
-1. Create objects **1 → 5** in ADT with the exact names above; paste each
-   source; **activate after each** (dependency order matters).
-2. Service binding `ZSB_OTC_STLMNT`: create on `ZSD_OTC_STLMNT_DTL`, type
-   **OData V4 – UI**, **Activate**, then **Publish**.
-3. In the binding editor select entity set **`SettlementDetail`** → **Preview**
-   to launch the generated Fiori Elements List Report, or copy the
-   **metadataUrl** to test in a browser / Postman.
-4. Selection fields (ShipmentNo, Route, Settlement Date) and column sorting map
-   1:1 to the classic selection screen and ALV.
+| Check | Result |
+|-------|--------|
+| **Business requirement** | ✅ Preserved. Same purpose (settlement tour header display), same selection criteria (Shipment/Visit List, Route, Settlement Date + extensible), same source table `VTTK`. |
+| **Output / business output** | ✅ Preserved. Output columns mirror the classic `ty_final` (ShipmentNo, Status, Plant, Route, Date, Driver, Vehicle, Scenario, Warnings, Errors, Ref Doc, Header Text) + the derived traffic-light **Processing Status**. |
+| **Validations** | ✅ Preserved. The traffic-light rule (`f_traffic_light`: Red=error, Yellow=warning, Green=clean) runs in `derive_processing_status( )`. Selection validation (`f_validation`/`f_validate_data`) maps to the query-class filter handling — empty filter = select all, exactly like the report. |
+| **Syntax** | ✅ Reviewed. Notes below. |
+| **Behavior definition / binding** | ❌ **Not required** — see §3. |
 
-**abapGit:** point abapGit at this `rap_application` folder (`STARTING_FOLDER
-= /src/`, `FOLDER_LOGIC = PREFIX`), pull, then activate in the order above.
-If your abapGit build cannot import the `SRVB`, create the binding manually
-(step 2).
+### Syntax review notes (what was checked and hardened)
+- `if_rap_query_provider~select` signature, `get_filter( )->get_as_ranges( )`
+  wrapped in `TRY … CATCH cx_rap_query_filter_no_range`.
+- Filter field-symbol declared explicitly as `TYPE STANDARD TABLE` so
+  `CORRESPONDING #( <lt_range> )` into the typed ranges is statically valid.
+- Paging via `if_rap_query_paging=>page_size_unlimited`; count via
+  `is_total_numb_of_rec_requested( )`; data via `is_data_requested( )`.
+- Dynamic `SORT … BY (lt_sort_order)` using `abap_sortorder_tab`.
+- Result component fixed to `headertext` (not `bktxt`).
+- All field types are real data elements (`tknum`, `tplst`, `/dsd/st_status_id`,
+  `werks_d`, `route`, `erdat`, `/dsd/rp_driver1`, `/dsd/rp_truck`, `xblnr`,
+  `bktxt`). Namespaced VTTK columns accessed as `<ls_vttk>-/bev1/rpfar1`.
+- Metadata extension: removed the dangling `criticality` reference that would
+  have broken activation.
 
----
-
-## 4. What maps from the classic report
-
-| Classic report element | RAP equivalent (this app) |
-|-------------------------|---------------------------|
-| `SELECT-OPTIONS` (s_tknum, s_route1, s_date …) | OData filter → `get_as_ranges( )` in the query class |
-| `SELECT ... FROM vttk` tour read | `read_settlement_data( )` |
-| Traffic-light status (`f_traffic_light`) | `derive_processing_status( )` |
-| SALV grid (`cl_salv_table`) | Fiori Elements List Report (metadata extension) |
-| ALV sort / layout variants | OData `$orderby` + FE variant management |
-| Validations (`f_validation`, `f_validate_data`) | Executed in the query class before `set_data( )` |
-
----
-
-## 5. Scope note — the 8 report modes
-
-The classic report drives **8 radio-button modes** (Tour, Visit,
-Sales/Replenishment, Payment, Check-out/in, Money diff, Quantity diff, FSR docs,
-Cash diff). This deliverable implements **Mode 1 – Tour Header** as the fully
-coded, runnable reference stack.
-
-The remaining modes are **the same Pattern-B stack repeated** — one custom
-entity + one query class + projection UI per mode (or one parameterized
-service). To add a mode:
-
-1. Copy `ZI_OTC_STLMNT_DETAIL` → `ZI_OTC_STLMNT_<MODE>` with that mode's field
-   list (from the report `ty_final`).
-2. Copy `ZCL_OTC_STLMNT_DTL_QRY` → `ZCL_OTC_STLMNT_<MODE>_QRY` and move the
-   corresponding `PERFORM`/`SELECT` logic of that mode into
-   `read_settlement_data`.
-3. Add its metadata extension, expose it in `ZSD_OTC_STLMNT_DTL`
-   (`expose ZI_OTC_STLMNT_<MODE> as <Mode>;`), and republish `ZSB_OTC_STLMNT`.
+> One environment-specific item that only the target system can confirm: the
+> `VTTK` append fields `/BEV1/RPFAR1` and `/BEV1/RPMOWA` (used by the classic
+> report). They exist on the CCBJI beverage system; if your client copy differs,
+> adjust those two field names.
 
 ---
 
-## 6. Enrichment extension points (populate on the CCBJI system)
+## 3. Is a Behavior Definition / Binding required?
 
-The query class reads the guaranteed shipment table `VTTK`. The following
-columns are defaulted so the object activates immediately; wire them to the same
-custom tables the report already uses, on the system where those tables exist:
+**No.** The classic report performs **0 database writes and 0 `COMMIT WORK`** —
+it only reads and displays. A RAP **behavior definition** (and its projection
+behavior + binding) exists only for **CREATE / UPDATE / DELETE / actions / draft**.
 
-- `StatusId` ← `/DSD/ST_STATUS` (by shipment)
-- `Plant` ← `TTDS` / route determination
-- `Warnings` / `Errors` ← `/DSD/ST_APPLOG_VIEW` (application log)
-- `Scenario` ← visit-group rule (`CCEJPAPER` ⇒ `'R'`, per MOD-030)
+This is **Pattern B (read-only custom entity + query class)**: the service
+definition exposes the custom entity directly and produces a read-only OData V4
+service. Adding a behavior definition here would fail activation (no persistent
+table, no base BDEF) and is explicitly the wrong path. The only "binding" needed
+is the **service binding** (object 5), which publishes the OData endpoint.
 
-These are read-only enrichments; they do not change the entity contract or the
-service — only the values inside `read_settlement_data( )`.
+---
+
+## 4. Upload via abapGit (offline ZIP)
+
+A ready ZIP is provided: **`CCBJI_OTC_STLMNT_RAP_abapGit.zip`** (in the parent
+`RAP_Conversion_Feasibility` folder). It is laid out exactly as abapGit expects
+(`/src/` + `.abapgit.xml`, PREFIX folder logic).
+
+1. In SAP GUI/ADT create package **`/CCBJI/OTC`** (if it does not yet exist)
+   under the `/CCBJI/` namespace (namespace must be in modifiable state).
+2. Run transaction **`ZABAPGIT`** (or the abapGit ADT plugin) → **New Offline**
+   → repository name e.g. `CCBJI_OTC_STLMNT_RAP`, **package `/CCBJI/OTC`**.
+3. **Import → From ZIP** → choose `CCBJI_OTC_STLMNT_RAP_abapGit.zip`.
+4. **Pull / Import**, then **activate** all objects (order in §5).
+5. **Service binding** `/CCBJI/FSV_STLMNT_SRVB`: if abapGit imported it,
+   activate + **Publish**. If your abapGit build cannot deserialize the `SRVB`,
+   create it manually in ADT (right-click `/CCBJI/FSV_STLMNT_SRVD` → **New
+   Service Binding** → *OData V4 – UI*), activate, **Publish**. (~30 seconds.)
+
+> Prefer copy-paste? Use `COMPLETE_APPLICATION.abap` and create the 5 objects
+> in ADT with the names in each banner.
+
+---
+
+## 5. Activate & run (dependency order)
+
+1. `/CCBJI/CL_FSV_STLMNT_QRY` (class)
+2. `/CCBJI/I_FSV_STLMNT_DTL` (custom entity) — activate before the extension
+3. `/CCBJI/I_FSV_STLMNT_DTL` (metadata extension)
+4. `/CCBJI/FSV_STLMNT_SRVD` (service definition)
+5. `/CCBJI/FSV_STLMNT_SRVB` (service binding) → **Publish**
+
+In the binding editor pick entity set **`SettlementDetail`** → **Preview** to
+launch the generated Fiori Elements List Report, or open the **metadataUrl** in a
+browser. Selection fields (ShipmentNo, Route, Settlement Date) and column sorting
+map 1:1 to the classic selection screen and ALV.
+
+---
+
+## 6. Scope note — the 8 report modes
+
+The classic report drives 8 radio-button modes. This deliverable implements
+**Mode 1 – Tour Header** as the fully-coded, runnable reference. The other 7
+modes are the **same Pattern-B stack repeated** — copy the entity + query class,
+move that mode's `SELECT`/`PERFORM` logic into `read_settlement_data`, add its
+metadata extension, expose it in `/CCBJI/FSV_STLMNT_SRVD`, and republish the
+binding.
+
+## 7. Enrichment extension points (populate on the CCBJI system)
+`StatusId` ← `/DSD/ST_STATUS` · `Plant` ← `TTDS`/route · `Warnings`/`Errors` ←
+`/DSD/ST_APPLOG_VIEW` · `Scenario` ← visit-group rule (`CCEJPAPER` ⇒ `'R'`,
+MOD-030). Defaulted so the objects activate immediately; these change only values
+inside `read_settlement_data( )`, not the service contract.

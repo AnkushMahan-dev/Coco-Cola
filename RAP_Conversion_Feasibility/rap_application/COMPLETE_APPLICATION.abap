@@ -5,29 +5,32 @@
 *&      /CCBJI/RDSDFSVG_STLMNT_DETAILS  (Settlement Details)
 *&  into a read-only RAP (Pattern B) OData V4 / Fiori Elements service.
 *&
-*&  Same business requirement, same output data, same validations –
+*&  Namespace : /CCBJI/          Package : /CCBJI/OTC
+*&  Work stream OTC (Order to Cash) - Module SD - Process area FSV
+*&
+*&  Same business requirement, same output data, same validations -
 *&  only the presentation layer changes (SALV -> OData V4 -> Fiori).
 *&
-*&  Create each object in ADT with the name shown in its banner, paste
-*&  the source, ACTIVATE in the given order, then Publish the binding.
+*&  NO BEHAVIOR DEFINITION / BINDING IS REQUIRED - the report is
+*&  read-only (0 DB writes, 0 COMMIT WORK). A behavior definition is
+*&  only for CREATE/UPDATE/DELETE/actions; a read-only projection is
+*&  exposed directly by the service definition.
 *&
 *&  ACTIVATION ORDER
-*&    1. ZCL_OTC_STLMNT_DTL_QRY     (class)
-*&    2. ZI_OTC_STLMNT_DETAIL       (custom entity)
-*&    3. ZI_OTC_STLMNT_DETAIL       (metadata extension)
-*&    4. ZSD_OTC_STLMNT_DTL         (service definition)
-*&    5. ZSB_OTC_STLMNT             (service binding -> Publish)
+*&    1. /CCBJI/CL_FSV_STLMNT_QRY   (class)
+*&    2. /CCBJI/I_FSV_STLMNT_DTL    (custom entity)
+*&    3. /CCBJI/I_FSV_STLMNT_DTL    (metadata extension)
+*&    4. /CCBJI/FSV_STLMNT_SRVD     (service definition)
+*&    5. /CCBJI/FSV_STLMNT_SRVB     (service binding -> Publish)
 *&=====================================================================*
 
 
 *&---------------------------------------------------------------------*
-*&  OBJECT 1 of 5 : ABAP CLASS  (Repository Object: Class)
-*&  Name         : ZCL_OTC_STLMNT_DTL_QRY
-*&  File         : src/zcl_otc_stlmnt_dtl_qry.clas.abap
-*&  Purpose      : RAP query provider – runs the reused report read
-*&                 logic and returns rows to OData.
+*&  OBJECT 1 of 5 : ABAP CLASS
+*&  Name : /CCBJI/CL_FSV_STLMNT_QRY
+*&  File : src/#ccbji#cl_fsv_stlmnt_qry.clas.abap
 *&---------------------------------------------------------------------*
-CLASS zcl_otc_stlmnt_dtl_qry DEFINITION
+CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
   PUBLIC
   FINAL
   CREATE PUBLIC.
@@ -70,13 +73,15 @@ CLASS zcl_otc_stlmnt_dtl_qry DEFINITION
 ENDCLASS.
 
 
-CLASS zcl_otc_stlmnt_dtl_qry IMPLEMENTATION.
+CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
 
   METHOD if_rap_query_provider~select.
 
     DATA lt_shipment    TYPE RANGE OF tknum.
     DATA lt_route       TYPE RANGE OF route.
     DATA lt_settle_date TYPE RANGE OF erdat.
+
+    FIELD-SYMBOLS <lt_range> TYPE STANDARD TABLE.
 
     " 1. RAP filter -> ABAP ranges (classic SELECT-OPTIONS equivalent)
     TRY.
@@ -86,7 +91,7 @@ CLASS zcl_otc_stlmnt_dtl_qry IMPLEMENTATION.
     ENDTRY.
 
     LOOP AT lt_ranges INTO DATA(ls_range).
-      ASSIGN ls_range-range->* TO FIELD-SYMBOL(<lt_range>).
+      ASSIGN ls_range-range->* TO <lt_range>.
       IF <lt_range> IS NOT ASSIGNED.
         CONTINUE.
       ENDIF.
@@ -218,19 +223,18 @@ ENDCLASS.
 
 
 *&---------------------------------------------------------------------*
-*&  OBJECT 2 of 5 : CDS CUSTOM ENTITY  (Repository Object: Data Definition)
-*&  Name         : ZI_OTC_STLMNT_DETAIL
-*&  File         : src/zi_otc_stlmnt_detail.ddls.asddls
-*&  Purpose      : Pattern-B custom entity bound to the query class.
+*&  OBJECT 2 of 5 : CDS CUSTOM ENTITY  (Data Definition)
+*&  Name : /CCBJI/I_FSV_STLMNT_DTL
+*&  File : src/#ccbji#i_fsv_stlmnt_dtl.ddls.asddls
 *&---------------------------------------------------------------------*
 @EndUserText.label: 'OTC DSD Settlement Details - Tour Header'
-@ObjectModel.query.implementedBy: 'ABAP:ZCL_OTC_STLMNT_DTL_QRY'
+@ObjectModel.query.implementedBy: 'ABAP:/CCBJI/CL_FSV_STLMNT_QRY'
 @Metadata.allowExtensions: true
 @AccessControl.authorizationCheck: #NOT_REQUIRED
 @ObjectModel.usageType: { serviceQuality: #A,
                           sizeCategory:   #M,
                           dataClass:      #MIXED }
-define custom entity ZI_OTC_STLMNT_DETAIL
+define custom entity /CCBJI/I_FSV_STLMNT_DTL
 {
   key ShipmentNo       : tknum;
       @EndUserText.label: 'Processing Status'
@@ -263,16 +267,15 @@ define custom entity ZI_OTC_STLMNT_DETAIL
 
 
 *&---------------------------------------------------------------------*
-*&  OBJECT 3 of 5 : METADATA EXTENSION  (Repository Object: Metadata Extension)
-*&  Name         : ZI_OTC_STLMNT_DETAIL
-*&  File         : src/zi_otc_stlmnt_detail.ddlx.asddlxs
-*&  Purpose      : Fiori Elements List Report UI annotations.
+*&  OBJECT 3 of 5 : METADATA EXTENSION  (Metadata Extension)
+*&  Name : /CCBJI/I_FSV_STLMNT_DTL   (same name as the entity it annotates)
+*&  File : src/#ccbji#i_fsv_stlmnt_dtl.ddlx.asddlxs
 *&---------------------------------------------------------------------*
 @Metadata.layer: #CORE
 @UI: { headerInfo: { typeName:       'Settlement Detail',
                      typeNamePlural: 'Settlement Details',
                      title:          { type: #STANDARD, value: 'ShipmentNo' } } }
-annotate entity ZI_OTC_STLMNT_DETAIL with
+annotate entity /CCBJI/I_FSV_STLMNT_DTL with
 {
   @UI.facet: [ { id: 'Tour', purpose: #STANDARD,
                  type: #IDENTIFICATION_REFERENCE,
@@ -319,22 +322,23 @@ annotate entity ZI_OTC_STLMNT_DETAIL with
 
 
 *&---------------------------------------------------------------------*
-*&  OBJECT 4 of 5 : SERVICE DEFINITION  (Repository Object: Service Definition)
-*&  Name         : ZSD_OTC_STLMNT_DTL
-*&  File         : src/zsd_otc_stlmnt_dtl.srvd.srvdsrv
+*&  OBJECT 4 of 5 : SERVICE DEFINITION
+*&  Name : /CCBJI/FSV_STLMNT_SRVD
+*&  File : src/#ccbji#fsv_stlmnt_srvd.srvd.srvdsrv
 *&---------------------------------------------------------------------*
 @EndUserText.label: 'OTC DSD Settlement Details Service'
-define service ZSD_OTC_STLMNT_DTL {
-  expose ZI_OTC_STLMNT_DETAIL as SettlementDetail;
+define service /CCBJI/FSV_STLMNT_SRVD {
+  expose /CCBJI/I_FSV_STLMNT_DTL as SettlementDetail;
 }
 
 
 *&---------------------------------------------------------------------*
-*&  OBJECT 5 of 5 : SERVICE BINDING  (Repository Object: Service Binding)
-*&  Name         : ZSB_OTC_STLMNT
+*&  OBJECT 5 of 5 : SERVICE BINDING
+*&  Name         : /CCBJI/FSV_STLMNT_SRVB
 *&  Binding Type : OData V4 - UI  (ODATA_V4_UI)
-*&  Service Def  : ZSD_OTC_STLMNT_DTL
-*&  Note         : Created in ADT (no plain-text source). After creating,
-*&                 ACTIVATE and press PUBLISH. Then use "Preview" on the
-*&                 SettlementDetail entity set to launch the Fiori app.
+*&  Service Def  : /CCBJI/FSV_STLMNT_SRVD
+*&  Note         : Created in ADT (no plain-text source). Right-click the
+*&                 service definition -> New Service Binding, choose
+*&                 "OData V4 - UI", ACTIVATE, then PUBLISH. Use "Preview"
+*&                 on entity set SettlementDetail to launch the Fiori app.
 *&---------------------------------------------------------------------*

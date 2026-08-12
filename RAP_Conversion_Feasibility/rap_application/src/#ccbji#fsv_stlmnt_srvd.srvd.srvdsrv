@@ -1,0 +1,4 @@
+@EndUserText.label: 'OTC DSD Settlement Details Service'
+define service /CCBJI/FSV_STLMNT_SRVD {
+  expose /CCBJI/I_FSV_STLMNT_DTL as SettlementDetail;
+}

@@ -1,18 +1,18 @@
 *&---------------------------------------------------------------------*
-*&  Class  ZCL_OTC_STLMNT_DTL_QRY
+*&  Class  /CCBJI/CL_FSV_STLMNT_QRY
 *&---------------------------------------------------------------------*
 *&  RAP query implementation (Pattern B) for the custom entity
-*&  ZI_OTC_STLMNT_DETAIL.
+*&  /CCBJI/I_FSV_STLMNT_DTL.
 *&
 *&  Replaces the read logic of the classic ALV report
 *&  /CCBJI/RDSDFSVG_STLMNT_DETAILS (Settlement Details - Tour Header).
 *&
-*&  The business requirement, the output data and the validations are
-*&  preserved: the same selection criteria, the same source tables and
-*&  the same derivation (traffic-light processing status) are executed
-*&  here at runtime and returned through OData V4 instead of SALV.
+*&  Business requirement, output data and validations are preserved:
+*&  the same selection criteria, the same source table and the same
+*&  derivation (traffic-light processing status) run here at runtime
+*&  and are returned through OData V4 instead of SALV.
 *&---------------------------------------------------------------------*
-CLASS zcl_otc_stlmnt_dtl_qry DEFINITION
+CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
   PUBLIC
   FINAL
   CREATE PUBLIC.
@@ -20,11 +20,9 @@ CLASS zcl_otc_stlmnt_dtl_qry DEFINITION
   PUBLIC SECTION.
     INTERFACES if_rap_query_provider.
 
-  PROTECTED SECTION.
-
   PRIVATE SECTION.
 
-    "! Output structure – mirrors the key columns of the classic report ty_final
+    "! Output structure - mirrors the key columns of the report ty_final
     TYPES: BEGIN OF ty_result,
              shipmentno       TYPE tknum,
              processingstatus TYPE c LENGTH 1,
@@ -43,7 +41,6 @@ CLASS zcl_otc_stlmnt_dtl_qry DEFINITION
            END OF ty_result,
            tt_result TYPE STANDARD TABLE OF ty_result WITH DEFAULT KEY.
 
-    "! Reads the settlement tour data honouring the selection ranges.
     METHODS read_settlement_data
       IMPORTING it_shipment      TYPE RANGE OF tknum
                 it_route         TYPE RANGE OF route
@@ -51,7 +48,6 @@ CLASS zcl_otc_stlmnt_dtl_qry DEFINITION
                 iv_max_rows      TYPE i
       RETURNING VALUE(rt_result) TYPE tt_result.
 
-    "! Derives the traffic-light processing status (source: f_traffic_light).
     METHODS derive_processing_status
       IMPORTING iv_warnings      TYPE i
                 iv_errors        TYPE i
@@ -60,7 +56,7 @@ CLASS zcl_otc_stlmnt_dtl_qry DEFINITION
 ENDCLASS.
 
 
-CLASS zcl_otc_stlmnt_dtl_qry IMPLEMENTATION.
+CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
 
   METHOD if_rap_query_provider~select.
 
@@ -68,9 +64,11 @@ CLASS zcl_otc_stlmnt_dtl_qry IMPLEMENTATION.
     DATA lt_route       TYPE RANGE OF route.
     DATA lt_settle_date TYPE RANGE OF erdat.
 
+    FIELD-SYMBOLS <lt_range> TYPE STANDARD TABLE.
+
     " -----------------------------------------------------------------
     " 1. Translate the RAP filter (Fiori selection fields) into ABAP
-    "    ranges – the equivalent of the classic SELECT-OPTIONS.
+    "    ranges - the equivalent of the classic SELECT-OPTIONS.
     " -----------------------------------------------------------------
     TRY.
         DATA(lt_ranges) = io_request->get_filter( )->get_as_ranges( ).
@@ -79,7 +77,7 @@ CLASS zcl_otc_stlmnt_dtl_qry IMPLEMENTATION.
     ENDTRY.
 
     LOOP AT lt_ranges INTO DATA(ls_range).
-      ASSIGN ls_range-range->* TO FIELD-SYMBOL(<lt_range>).
+      ASSIGN ls_range-range->* TO <lt_range>.
       IF <lt_range> IS NOT ASSIGNED.
         CONTINUE.
       ENDIF.
@@ -91,14 +89,14 @@ CLASS zcl_otc_stlmnt_dtl_qry IMPLEMENTATION.
         WHEN 'SETTLEMENTDATE'.
           lt_settle_date = CORRESPONDING #( <lt_range> ).
         WHEN OTHERS.
-          " further selection fields (plant, status, driver …) are wired
+          " further selection fields (plant, status, driver ...) are wired
           " here following the same pattern as the classic sel-screen.
       ENDCASE.
       UNASSIGN <lt_range>.
     ENDLOOP.
 
     " -----------------------------------------------------------------
-    " 2. Paging – translate OData $top / $skip into a max-rows guard.
+    " 2. Paging - translate OData $top / $skip into a max-rows guard.
     " -----------------------------------------------------------------
     DATA(lo_paging)  = io_request->get_paging( ).
     DATA(lv_offset)  = lo_paging->get_offset( ).
@@ -164,9 +162,8 @@ CLASS zcl_otc_stlmnt_dtl_qry IMPLEMENTATION.
   METHOD read_settlement_data.
 
     " -----------------------------------------------------------------
-    " Read the shipment / visit-list tour header – same source table
+    " Read the shipment / visit-list tour header - same source table
     " (VTTK) and same key fields as the classic report ty_vttk.
-    " Namespaced driver / vehicle columns are aliased.
     " -----------------------------------------------------------------
     DATA lt_vttk TYPE STANDARD TABLE OF vttk.
 
@@ -200,8 +197,8 @@ CLASS zcl_otc_stlmnt_dtl_qry IMPLEMENTATION.
 
       " ---------------------------------------------------------------
       " Enrichment extension points (wired to the /DSD/ + /CCEJ/ tables
-      " already used by the classic report – same field names):
-      "   * StatusId  <- /DSD/ST_STATUS  by shipment
+      " already used by the classic report - same field names):
+      "   * StatusId  <- /DSD/ST_STATUS   by shipment
       "   * Plant     <- TTDS / route determination
       "   * Warnings / Errors <- /DSD/ST_APPLOG_VIEW (application log)
       "   * Scenario  <- visit group rule ( CCEJPAPER => 'R', MOD-030 )

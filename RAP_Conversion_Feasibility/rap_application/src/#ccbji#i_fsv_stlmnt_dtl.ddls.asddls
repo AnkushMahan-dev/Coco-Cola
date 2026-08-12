@@ -1,11 +1,11 @@
 @EndUserText.label: 'OTC DSD Settlement Details - Tour Header'
-@ObjectModel.query.implementedBy: 'ABAP:ZCL_OTC_STLMNT_DTL_QRY'
+@ObjectModel.query.implementedBy: 'ABAP:/CCBJI/CL_FSV_STLMNT_QRY'
 @Metadata.allowExtensions: true
 @AccessControl.authorizationCheck: #NOT_REQUIRED
 @ObjectModel.usageType: { serviceQuality: #A,
                           sizeCategory:   #M,
                           dataClass:      #MIXED }
-define custom entity ZI_OTC_STLMNT_DETAIL
+define custom entity /CCBJI/I_FSV_STLMNT_DTL
 {
       // Key of the settlement tour header row (one row per shipment / visit list)
   key ShipmentNo       : tknum;
