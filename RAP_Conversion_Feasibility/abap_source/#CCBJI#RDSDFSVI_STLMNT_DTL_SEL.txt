@@ -1,0 +1,246 @@
+*----------------------------------------------------------------------*
+* Program Name     : /CCEJ/RDSDFSVI_STLMNT_DTLS_SEL                    *
+* Program Title    : Settlement Details                                *
+* Program Type     : Include program                                   *
+* Description      : There are eight different mode in this report that*
+*                    display settlement data based on Visit List.      *
+* Mode 1           : DSD Route Settlement: Tour Header Data            *
+* Mode 2           : This mode will display list of all Vending        *
+*                    machines/Van Sales Customers/Pre-saes customers   *
+*                   (Hybrid route) visited during the route execution. *
+* Mode 3           : This mode of report will display all the          *
+*                    information related to sales and replenishment    *
+*                    done for the tour.                                *
+* Mode 4           : Display Payment Details                           *
+* Mode 5           : Display Check Out/In Details                      *
+* Mode 6           : Display Money Differences                         *
+* Mode 7           : Display Quantity Differences                      *
+* Mode 8          :  Display FSR Documents                             *
+* Date             : 16 May 2016                                       *
+* Author           : <Abhishek Buckal>  <S404352>                      *
+* Run Frequency    :  N/A                                              *
+* Transaction      :  /CCEJ/RDOVM_STLMNTDT                             *
+* Transport Number :  DCRK9A0JSC                                       *
+* RICEF ID         :  <OTC-3161-R-01>                                  *
+* Release          :  <CCEJ 5.1>                                       *
+* Additional Info  : (EX: Form Name/Output type/Copied from/ etc)      *
+*----------------------------------------------------------------------*
+*         =========== MODIFICATION LOG ===========                     *
+*----------------------------------------------------------------------*
+* Mod No.            : <01/02/03 etc>                                  *
+* Date               : DD-MMM-YYYY                                     *
+* Author             : <User Name>  <User Id>                          *
+* Change Reference   : <Old RICEFW ID>                                 *
+* Transport Number   :                                                 *
+* Change Request     : CRXXXXXX                                        *
+* Change Description :                                                 *
+*----------------------------------------------------------------------*
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-004                                         *
+* Date               : 16-12-2016                                      *
+* Author             : <Abhishek Buckal>  <S404352>                    *
+* Change Reference   : Defect 1761- Rel 5.1                            *
+* Transport Number   : DCRK9A0JSC                                      *
+* Change Request     : 800001836                                       *
+* Change Description: Adding the layout functionality                  *
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-010                                         *
+* Date               : 09-03-2017                                      *
+* Author             : <Anurag Khanna>  <S175283>                      *
+* Change Reference   : Defect 2610- Rel 5.1                            *
+* Transport Number   : DCRK9A0WL4                                      *
+* Change Request     : 8000022629                                      *
+* Change Description : 1.Remove parameter Layout from selection screen *
+* 2.FSR node- Cancelled invoice should not be shown 3.ALV choose layout*
+* functionality correction                                             *
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-013                                         *
+* Date               : 08-05-2017                                      *
+* Author             : <Anurag Khanna>  <S175283>                      *
+* Change Reference   : June Monthly-3885                               *
+* Transport Number   : MCRK9A0H4P                                      *
+* Change Request     : 8000023335                                      *
+* Change Description : Addition of new radiobutton- Cash Difference and*
+* its associated logic- tcode /CCEJ/RDOSD_CASH_DIF. This would be used *
+* for chking detail of cash posting that happen during settlmnt process*
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-027                                         *
+* Date               : 10-11-2017                                      *
+* Author             : <Anurag Khanna>  <S175283>                      *
+* Change Reference   : Defect 4341                                     *
+* Transport Number   : DCRK9A157C                                      *
+* Change Request     : 2000018428                                      *
+* Change Description : 1.Payment Node-a.addition of DZ docs b.adding   *
+* posting key & document type in sel screen  2.Tour Details-addition of*
+* a.Visit grp b.Refresh button functionality  3.Count Display at header*
+*----------------------------------------------------------------------*
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-030                                         *
+* Date               : 20-Aug-2018                                     *
+* Author             : Abhishek Buckal  <S404352>                      *
+* Change Reference   : GAP 1000000842                                  *
+* Transport Number   : DJRK991155                                      *
+* Change Request     : 8000001920                                      *
+* Change Description : If Visit group is "CCEJPAPER"  ,Scenario should *
+* be populated as "R" and Driver swap should be populated as "N" .     *
+* Add original exection date EXDAT1                                    *
+*----------------------------------------------------------------------*
+*----------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&  Include           /CCEJ/RDSDFSVI_STLMNT_DTLS_SEL
+*&---------------------------------------------------------------------*
+
+SELECTION-SCREEN:BEGIN OF BLOCK b1 WITH FRAME TITLE text-001.
+" *****Code Remediation changes S4 2025_1_A Conversion **begin of change by EJX9007361 10.06.2026 for ATC
+* SELECT-OPTIONS:s_tknum  FOR vttk-tknum, "Shipment/Visit List
+SELECT-OPTIONS:s_tknum FOR vttk-tknum, "#EC CI_USAGE_OK[2270199]
+" *****Code Remediation changes S4 2025_1_A Conversion **end of change by EJX9007361 10.06.2026 for ATC
+               s_werks  FOR v_plant NO INTERVALS NO-EXTENSION,"Plant
+               s_route1 FOR v_route NO INTERVALS NO-EXTENSION, "Route
+               "Stlmnt. date
+               s_date   FOR v_sdate,
+" *****Code Remediation changes S4 2025_1_A Conversion **begin of change by EJX9007361 10.06.2026 for ATC
+* s_tplst  FOR vttk-tplst MODIF ID m1,
+               s_tplst  FOR vttk-tplst MODIF ID m1, "#EC CI_USAGE_OK[2270199]
+" *****Code Remediation changes S4 2025_1_A Conversion **end of change by EJX9007361 10.06.2026 for ATC
+               "Transportation planning point
+" *****Code Remediation changes S4 2025_1_A Conversion **begin of change by EJX9007361 10.06.2026 for ATC
+* s_route  FOR vttk-route MODIF ID m1, "Route
+s_route FOR vttk-route MODIF ID m1, "#EC CI_USAGE_OK[2270199]
+" *****Code Remediation changes S4 2025_1_A Conversion **end of change by EJX9007361 10.06.2026 for ATC
+               "Vehicle
+" *****Code Remediation changes S4 2025_1_A Conversion **begin of change by EJX9007361 10.06.2026 for ATC
+* s_vehic  FOR vttk-/bev1/rpmowa MODIF ID  m2 NO-DISPLAY,
+               s_vehic  FOR vttk-/bev1/rpmowa MODIF ID  m2 NO-DISPLAY, "#EC CI_USAGE_OK[2270199]
+" *****Code Remediation changes S4 2025_1_A Conversion **end of change by EJX9007361 10.06.2026 for ATC
+               "Driver
+" *****Code Remediation changes S4 2025_1_A Conversion **begin of change by EJX9007361 10.06.2026 for ATC
+* s_driv   FOR vttk-/bev1/rpfar1 MODIF ID m2 NO-DISPLAY,
+               s_driv   FOR vttk-/bev1/rpfar1 MODIF ID m2 NO-DISPLAY, "#EC CI_USAGE_OK[2270199]
+" *****Code Remediation changes S4 2025_1_A Conversion **end of change by EJX9007361 10.06.2026 for ATC
+               s_hht    FOR v_po  MODIF ID m3
+                            NO INTERVALS NO-EXTENSION, "PO no.
+               s_status FOR v_status MODIF ID m4 NO INTERVALS
+                              NO-EXTENSION, "Status
+" *****Code Remediation changes S4 2025_1_A Conversion **begin of change by EJX9007361 10.06.2026 for ATC
+* s_erdat  FOR vttk-erdat MODIF ID m1, "Created date
+s_erdat FOR vttk-erdat MODIF ID m1, "#EC CI_USAGE_OK[2270199]
+" *****Code Remediation changes S4 2025_1_A Conversion **end of change by EJX9007361 10.06.2026 for ATC
+***start of addition for MOD-013
+*                Customer
+             s_kunnr FOR v_kunnr MODIF ID m5 NO INTERVALS NO-EXTENSION,
+**                Equipment Owner
+             s_equp FOR v_equp MODIF ID m5 NO INTERVALS NO-EXTENSION,
+*                Business type extension
+             s_katr4 FOR v_katr4 MODIF ID m5 NO INTERVALS NO-EXTENSION,
+*                Business type
+             s_katr3 FOR v_katr3 MODIF ID m5 NO INTERVALS NO-EXTENSION,
+*                Visit Type
+             s_vistyp FOR v_visittype MODIF ID m5 NO INTERVALS NO-EXTENSION,
+*                Summary Status
+             s_sum_st FOR v_sum_st MODIF ID m5 NO INTERVALS NO-EXTENSION,
+***end of addition for MOD-013
+
+* BOC For MOD-014
+*           s_eqpown FOR v_equp MODIF ID m5,
+"Sales Document Type
+s_auart FOR v_auart MODIF ID m3,
+"Sales Document Number
+s_so FOR v_so MODIF ID m3,
+"Delivery Document Type
+s_lfart FOR v_lfart MODIF ID m3,
+"Delivery Doc No
+s_do FOR v_do MODIF ID m3,
+"Invoice Type
+s_fkart FOR v_fkart MODIF ID m3,
+"Invoice No
+s_inv FOR v_inv MODIF ID m3,
+"FI Document Type
+s_blart FOR v_blart MODIF ID m3,
+"FI Document No
+s_belnr FOR v_belnr MODIF ID m3,
+"Intercompany invoice Type
+s_coityp FOR v_fkart MODIF ID m3,
+"Intercompany invoice
+s_coinv FOR v_inv MODIF ID m3,
+"Intercompany FI Document Type
+s_cfityp FOR v_blart MODIF ID m3,
+"Intercompany FI document
+s_comfi FOR v_belnr MODIF ID m3,
+"Scenario
+s_scene FOR v_scene MODIF ID m6 NO INTERVALS NO-EXTENSION,
+"Log status
+s_log   FOR v_log MODIF ID m6 NO INTERVALS NO-EXTENSION,
+"Final quantity differnce
+s_qty  FOR v_qty MODIF ID m7 NO INTERVALS NO-EXTENSION,
+* EOC For MOD-014
+
+* BOC For MOD-015
+ "Traffic light
+s_light FOR v_light MODIF ID m3 NO INTERVALS NO-EXTENSION,
+s_fsrlog FOR v_fsrlog MODIF ID m3 NO INTERVALS NO-EXTENSION,
+* EOC For MOD-015
+* BOC For MOD-016
+ "Dummy Account Flag
+s_dummy FOR v_dummy
+MODIF ID m8 NO INTERVALS NO-EXTENSION,
+* EOC For MOD-016
+* BOC For MOD-017
+"Planned Route
+s_plan   FOR v_plan MODIF ID m6 NO INTERVALS NO-EXTENSION,
+s_dswap  FOR v_dswap MODIF ID m6 NO INTERVALS
+NO-EXTENSION,
+* EOC For MOD-017
+* BOC For MOD-018
+"Matnr
+s_matnr FOR v_matnr MODIF ID m8,
+*Check id
+s_chkid FOR v_chkid MODIF ID m8 NO INTERVALS
+NO-EXTENSION,
+"money differnce
+s_mdiff  FOR v_mdiff MODIF ID m8 NO INTERVALS NO-EXTENSION,
+"Payment Method
+s_pay  FOR v_pay MODIF ID m8 NO INTERVALS NO-EXTENSION,
+"Object Typ
+s_objtyp  FOR v_objtyp MODIF ID m8 NO INTERVALS
+NO-EXTENSION,
+"Document No
+s_docno  FOR v_docno MODIF ID m8,
+* EOC For MOD-018
+"Payment Log status
+s_plog   FOR v_plog MODIF ID m8 NO INTERVALS NO-EXTENSION,
+"Visit Log status
+s_vlog   FOR v_vlog MODIF ID m8 NO INTERVALS NO-EXTENSION,
+***start of addition for MOD-027
+"Posting Key
+s_bschl FOR v_bschl MODIF ID m8 NO INTERVALS,
+"Document Type
+s_blart1 FOR v_blart1 MODIF ID m8 NO INTERVALS.
+***end of addition for MOD-027
+SELECTION-SCREEN:END OF BLOCK b1.
+
+**SELECTION-SCREEN:BEGIN OF BLOCK b2 WITH FRAME.
+PARAMETERS:rb_visi RADIOBUTTON GROUP g1 DEFAULT 'X' USER-COMMAND u1,
+"" Visit List
+           rb_ship RADIOBUTTON GROUP g1 . ""Shipment No.
+**SELECTION-SCREEN:END OF BLOCK b2.
+
+SELECTION-SCREEN:BEGIN OF BLOCK b3 WITH FRAME TITLE text-002.
+PARAMETERS:rb_driv  RADIOBUTTON GROUP g2 DEFAULT 'X'  USER-COMMAND u2,
+"Tour details
+           rb_visit RADIOBUTTON GROUP g2 , "Visit Details
+           rb_slrep RADIOBUTTON GROUP g2, "Sales replenishment info.
+           rb_patdt RADIOBUTTON GROUP g2, "Payment details
+           rb_check RADIOBUTTON GROUP g2, "Check Out/In
+           rb_money RADIOBUTTON GROUP g2, "Money differences
+           rb_quan  RADIOBUTTON GROUP g2, "Quantity differences
+           rb_fsdoc RADIOBUTTON GROUP g2, "FSR Documents
+***start of addition for MOD-013
+           rb_cash RADIOBUTTON GROUP g2. "Cash Difference
+***end of addition for MOD-013
+SELECTION-SCREEN:END OF BLOCK b3.
+***start of addition for MOD-004
+***start of commenting for MOD-010
+*PARAMETERS : p_layout TYPE disvariant-variant.  " for layout
+***end of commenting for MOD-010
+***end of addition for MOD-004

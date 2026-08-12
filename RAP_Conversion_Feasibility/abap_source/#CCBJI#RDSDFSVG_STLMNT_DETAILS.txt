@@ -1,0 +1,420 @@
+*&---------------------------------------------------------------------*
+*& Report  /CCEJ/RDSDFSVG_STLMNT_DETAILS
+*&
+*&---------------------------------------------------------------------*
+*----------------------------------------------------------------------*
+* Program Name     : /CCEJ/RDSDFSVG_STLMNT_DETAILS                     *
+* Program Title    : Settlement Details                                *
+* Program Type     : Executable program                                *
+* Description      : There are eight different mode in this report that*
+*                    display settlement data based on Visit List.      *
+* Mode 1           : DSD Route Settlement: Tour Header Data            *
+* Mode 2           : This mode will display list of all Vending        *
+*                    machines/Van Sales Customers/Pre-saes customers   *
+*                   (Hybrid route) visited during the route execution. *
+* Mode 3           : This mode of report will display all the          *
+*                    information related to sales and replenishment    *
+*                    done for the tour.                                *
+* Mode 4           : Display Payment Details                           *
+* Mode 5           : Display Check Out/In Details                      *
+* Mode 6           : Display Money Differences                         *
+* Mode 7           : Display Quantity Differences                      *
+* Mode 8          :  Display FSR Documents                             *
+* Date             : 16 May 2016                                       *
+* Author           : <Abhishek Buckal>  <S404352>                      *
+* Run Frequency    :  N/A                                              *
+* Transaction      :  /CCEJ/RDOVM_STLMNTDT                             *
+* Transport Number :  DCRK9A0JSC                                       *
+* RICEF ID         :  <OTC-3161-R-01>                                  *
+* Release          :  <CCEJ 5.1>                                       *
+* Additional Info  : (EX: Form Name/Output type/Copied from/ etc)      *
+*----------------------------------------------------------------------*
+*         =========== MODIFICATION LOG ===========                     *
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-001                                         *
+* Date               : 29-09-2016                                      *
+* Author             : <Anurag Khanna>  <S175283>                      *
+* Change Reference   : Defect 565- Rel 5.1                             *
+* Transport Number   : DCRK9A0JSC                                      *
+* Change Request     : 800001836                                       *
+* Change Description : 1. Sales/Replenishment info. radiobutton- show  *
+* amount for YJPR(Promotion amount) and YJP0(Free Vend amount)         *
+*2.FSR documents-Added Refresh button & its corresponding functionality*
+*3.FSR documents-Logic change for FI documents based on Invoice Number *
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-002                                         *
+* Date               : 11-11-2016                                      *
+* Author             : <Anurag Khanna>  <S175283>                      *
+* Change Reference   : Defect 1157- Rel 5.1                            *
+* Transport Number   : DCRK9A0JSC                                      *
+* Change Request     : 800001836                                       *
+* Change Description : a. in ALV output add- 1.for Vist Details- add   *
+* equipment owner 2.for Sales/Replenishment info. & Payment details-add*
+* business type extension 3.for Quantity differences & Check out/Check *
+* in- add Material descprition 4.for FSR documents- add business type  *
+* extension b.changes for filteration FSR status(on Selection screen)  *
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-003                                         *
+* Date               : 12-12-2016                                      *
+* Author             : <Abhishek Buckal>  <S404352>                    *
+* Change Reference   : Defect 1570- Rel 5.1                            *
+* Transport Number   : DCRK9A0JSC                                      *
+* Change Request     : 800001836                                       *
+* Change Description: Added the Presales document logic in th existing *
+*                     FSR Node                                         *
+*----------------------------------------------------------------------*
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-004                                         *
+* Date               : 16-12-2016                                      *
+* Author             : <Abhishek Buckal>  <S404352>                    *
+* Change Reference   : Defect 1761- Rel 5.1                            *
+* Transport Number   : DCRK9A0JSC                                      *
+* Change Request     : 800001836                                       *
+* Change Description: Adding the layout functionality                  *
+*----------------------------------------------------------------------*
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-005                                         *
+* Date               : 16-12-2016                                      *
+* Author             : <Abhishek Buckal>  <S404352>                    *
+* Change Reference   : Defect 1758- Rel 5.1                            *
+* Transport Number   : DCRK9A0JSC                                      *
+* Change Request     : 800001836                                       *
+* Change Description: Changing the code as per the comments given      *
+*                     during the performance testing                   *
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-006                                         *
+* Date               : 16-01-2017                                      *
+* Author             : <Anurag Khanna>  <S175283>                      *
+* Change Reference   : Defect 1980- Rel 5.1                            *
+* Transport Number   : DCRK9A0JSC                                      *
+* Change Request     : 800001836                                       *
+* Change Description: Payment details-if status is GE 804000- in ALV   *
+* change "Customer" label with "Receipent" & add new column Customer   *
+*----------------------------------------------------------------------*
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-007                                         *
+* Date               : 21-01-2017                                      *
+* Author             : <Imran Sarvadi>  <S124919>                      *
+* Change Reference   : Defect # 2009- Rel 5.1                          *
+* Transport Number   : DCRK9A0JSC                                      *
+* Change Request     : 800001836                                       *
+* Change Description: Adding Subtotal                                  *
+*----------------------------------------------------------------------*
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-008                                         *
+* Date               : 08-02-2017                                      *
+* Author             : <Anurag Khanna>  <S175283>                      *
+* Change Reference   : Defect 2219- Rel 5.1                            *
+* Transport Number   : DCRK9A0JSC                                      *
+* Change Request     : 800001836                                       *
+* Change Description : Tour Details- addition of new column Scenario   *
+*----------------------------------------------------------------------*
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-009                                         *
+* Date               : 09-03-2017                                      *
+* Author             : <Abhishek Buckal>  <S404352>                    *
+* Change Reference   : Defect 2584- Rel 5.1                            *
+* Transport Number   : DCRK9A0WL4                                      *
+* Change Request     : 8000022629                                      *
+* Change Description : Add the visit data for which the document has   *
+* not been created.                                                    *
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-010                                         *
+* Date               : 09-03-2017                                      *
+* Author             : <Anurag Khanna>  <S175283>                      *
+* Change Reference   : Defect 2610- Rel 5.1                            *
+* Transport Number   : DCRK9A0WL4                                      *
+* Change Request     : 8000022629                                      *
+* Change Description : 1.Remove parameter Layout from selection screen *
+* 2.FSR node- Cancelled invoice should not be shown 3.ALV choose layout*
+* functionality correction                                             *
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-011                                         *
+* Date               : 10-03-2017                                      *
+* Author             : <Anurag Khanna>  <S175283>                      *
+* Change Reference   : Defect 2579- Rel 5.1                            *
+* Transport Number   : DCRK9A0WL4                                      *
+* Change Request     : 8000022629                                      *
+* Change Description : Sales/Replenishment info.- addition of columns- *
+* Scenario and Business type                                           *
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-012                                         *
+* Date               : 15-03-2017                                      *
+* Author             : <Anurag Khanna>  <S175283>                      *
+* Change Reference   : Defect 2671                                     *
+* Transport Number   : DCRK9A0WQ2                                      *
+* Change Request     : 2000016027                                      *
+* Change Description : Tour Details- addition of new columns- Warnigs, *
+* Error, Scenario and changes to logic to display trafiic light        *
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-013                                         *
+* Date               : 08-05-2017                                      *
+* Author             : <Anurag Khanna>  <S175283>                      *
+* Change Reference   : June Monthly-3885                               *
+* Transport Number   : MCRK9A0H4P                                      *
+* Change Request     : 8000023335                                      *
+* Change Description : Addition of new radiobutton- Cash Difference and*
+* its associated logic- tcode /CCEJ/RDOSD_CASH_DIF. This would be used *
+* for chking detail of cash posting that happen during settlmnt process*
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-014                                         *
+* Date               : 11-05-2017                                      *
+* Author             : <Abhishek Buckal>  <S404352>                    *
+* Change Reference   : June Monthly-3742                               *
+* Transport Number   : MCRK9A0H4P                                      *
+* Change Request     : 8000023335                                      *
+* Change Description : Mutual Operation related fields additions       *
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-015                                         *
+* Date               : 15-05-2017                                      *
+* Author             : <Abhishek Buckal>  <S404352>                    *
+* Change Reference   : June Monthly-4376                               *
+* Transport Number   : MCRK9A0H4P                                      *
+* Change Request     : 8000023335                                      *
+* Change Description :                                                 *
+* FSR node:
+* 1.Proceessing status ( Traffic light) should be in selection screen  *
+* for this node.                                                       *
+*2.Show all the date, time and last update date, time in japan timezone*
+* (need to consider WF-BATCH and WF-BATCH2)                            *
+*3.Introduce traffic light for each line item in FSR report            *
+*4.Traffic light would be red ,if  any field which is  blank and not   *
+*5.Traffic light would be yellow if dates do not match with each other *
+*6.Sales order creation date,delivery date,billing date ,FI date )     *
+*For rest f the scenarios ,it would be green.                          *
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-016                                         *
+* Date               : 16-05-2017                                      *
+* Author             : <Imran Sarvadi>  <S124919>                      *
+* Change Reference   : June Monthly-4377-E-02                          *
+* Transport Number   : MCRK9A0H4P                                      *
+* Change Request     : 8000023335                                      *
+* Change Description :                                                 *
+* If Settlement status is “804000” or “804090”,                        *
+* then check if recipient is same as dummy account mentioned in        *
+* dummy account table /SCL/T_VD_DUMMYACC.                              *
+* If yes,please set the dummy flag as “X”.                             *
+* If recipient is not equal to any dummy account,set the flag as blank *
+*----------------------------------------------------------------------*
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-017                                         *
+* Date               : 17-05-2017                                      *
+* Author             : <Imran Sarvadi>  <S124919>                      *
+* Change Reference   : June Monthly-4376                               *
+* Transport Number   : MCRK9A0H4P                                      *
+* Change Request     : 8000023335                                      *
+* Change Description : 1.	Tour details node 2.Visit details node       *
+*Additional fields/selection added to above nodes                      *
+*----------------------------------------------------------------------*
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-018                                         *
+* Date               : 24-05-2017                                      *
+* Author             : <Imran Sarvadi>  <S124919>                      *
+* Change Reference   : June Monthly-4376( Defect # 6630 )              *
+* Transport Number   : MCRK9A0H4P                                      *
+* Change Request     : 8000023335                                      *
+* Change Description : additional fields on selection                  *
+*----------------------------------------------------------------------*
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-019                                         *
+* Date               : 25-05-2017                                      *
+* Author             : <Imran Sarvadi>  <S124919>                      *
+* Change Reference   : June Monthly-4376( Defect # 6641 )              *
+* Transport Number   : MCRK9A0H4P                                      *
+* Change Request     : 8000023335                                      *
+* Change Description : additional fields on selection                  *
+*----------------------------------------------------------------------*
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-020                                         *
+* Date               : 06-06-2017                                      *
+* Author             : <Imran Sarvadi>  <S124919>                      *
+* Change Reference   : June Monthly-4376( Defect # 6641 )              *
+* Transport Number   : MCRK9A0H4P                                      *
+* Change Request     : 8000023335                                      *
+* Change Description : layout/selection changes                        *
+*----------------------------------------------------------------------*
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-021                                         *
+* Date               : 23-06-2017                                      *
+* Author             : <Abhishek Buckal>  <S404352>                    *
+* Change Reference   : June Monthly-4376( Defect # 3525 )              *
+* Transport Number   : MCRK9A0KP3                                      *
+* Change Request     : 8000023831                                      *
+* Change Description :                                                 *
+* 1. Add logic for Invoice created with zero values check status       *
+*    VBRK-RFBSK = 'C'.                                                 *
+* 2. For ZROC Order type if delivery PGI not done and invoice created  *
+*    with status 'C' shows status as green otherwise Red.              *
+* 3. Check the logic for object type 20 it shows in green if no sales  *
+*    order created.                                                    *
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-022                                         *
+* Date               : 26-06-2017                                      *
+* Author             : <Anurag Khanna>  <S175283>                      *
+* Change Reference   : July Monthly-4378_E03                           *
+* Transport Number   : MCRK9A0KP3                                      *
+* Change Request     : 8000023831                                      *
+* Change Description : Changes for Tour Details radiobutton            *
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-023                                         *
+* Date               : 04-07-2017                                      *
+* Author             : <Abhishek Buckal>  <S404352>                    *
+* Change Reference   : Defect- 3549                                    *
+* Transport Number   : MCRK9A0PVC                                      *
+* Change Request     : 8000024637                                      *
+* Change Description : Add the Logic for multiple Deliveries for a     *
+* sales order                                                          *
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-024                                         *
+* Date               : 06-09-2017                                      *
+* Author             : <Anurag Khanna>  <S175283>                      *
+* Change Reference   : Defect 3836                                     *
+* Transport Number   : MCRK9A0Y0J                                      *
+* Change Request     : 8000025659                                      *
+* Change Description : Tour Details- show VLs which are not executed in*
+* output                                                               *
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-025                                         *
+* Date               : 06-11-2017                                      *
+* Author             : <Anurag Khanna>  <S175283>                      *
+* Change Reference   : Defect 4265                                     *
+* Transport Number   : DCRK9A157C                                      *
+* Change Request     : 2000018428                                      *
+* Change Description : 1.Tour Details-correction in 1(a)Application log*
+* output 1(b)Processing status on sel screen 2.FSR node- removal of    *
+* Date conversion to Japan Time Zone logic for Settlement Date 3.Sel.  *
+* screen clear fields based on radiobutton selected                    *
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-026                                         *
+* Date               : 08-11-2017                                      *
+* Author             : <Anurag Khanna>  <S175283>                      *
+* Change Reference   : Defect 4318                                     *
+* Transport Number   : DCRK9A157C                                      *
+* Change Request     : 2000018428                                      *
+* Change Description : Performance Optimization changes                *
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-027                                         *
+* Date               : 10-11-2017                                      *
+* Author             : <Anurag Khanna>  <S175283>                      *
+* Change Reference   : Defect 4341                                     *
+* Transport Number   : DCRK9A157C                                      *
+* Change Request     : 2000018428                                      *
+* Change Description : 1.Payment Node-a.addition of DZ docs b.adding   *
+* posting key & document type in sel screen  2.Tour Details-addition of*
+* a.Visit grp b.Refresh button functionality  3.Count Display at header*
+*----------------------------------------------------------------------*
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-028                                         *
+* Date               : 13-04-2018                                      *
+* Author             : <Anurag Khanna>  <S175283>                      *
+* Change Reference   : Defect 9000000436                               *
+* Transport Number   : DJRK987507                                      *
+* Change Request     : 8000001234                                      *
+* Change Description : Quantity field total is not coming as per the   *
+* quantity unit ( add unit in quantity field catalog )                 *
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-029                                         *
+* Date               : 10-05-2018                                      *
+* Author             : <Anurag Khanna>  <S175283>                      *
+* Change Reference   : Defect 9000000597                               *
+* Transport Number   : MJRK902026                                      *
+* Change Request     : 8000001348                                      *
+* Change Description : FSR node- changes for Inter-company invoice     *
+*----------------------------------------------------------------------*
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-030                                         *
+* Date               : 20-Aug-2018                                     *
+* Author             : Abhishek Buckal  <S404352>                      *
+* Change Reference   : GAP 1000000842                                  *
+* Transport Number   : DJRK991155                                      *
+* Change Request     : 8000001920                                      *
+* Change Description : If Visit group is "CCEJPAPER"  ,Scenario should *
+* be populated as "R" and Driver swap should be populated as "N" .     *
+* Add original exection date EXDAT1                                    *
+*----------------------------------------------------------------------*
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-031                                         *
+* Date               : 22-May-2018                                     *
+* Author             : Abhishek Buckal  <S404352>                      *
+* Change Reference   : Defect: 9000003456                              *
+* Transport Number   : DJRK9A0057                                      *
+* Change Request     : 8000003294                                      *
+* Change Description : For Paper based skip the logic of DZ document   *
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-032                                         *
+* Date               : 03-Mar-2020                                     *
+* Author             : Abhishek Buckal  <S404352>                      *
+* Change Reference   : Defect: 9000006789                              *
+* Transport Number   : DJRK9A07ZO                                      *
+* Change Request     : 8000004531                                      *
+* Change Description : Display Future day in FSR Doc screen            *
+*----------------------------------------------------------------------*
+REPORT /ccbji/rdsdfsvg_stlmnt_details MESSAGE-ID /ccej/otc.
+
+**" include for global data declaration
+INCLUDE /CCBJI/RDSDFSVI_STLMNT_DTL_TOP.
+*INCLUDE /ccej/rdsdfsvi_stlmnt_dtls_top.
+
+**" include for selection screen
+INCLUDE /CCBJI/RDSDFSVI_STLMNT_DTL_SEL.
+*INCLUDE /ccej/rdsdfsvi_stlmnt_dtls_sel.
+
+**" include for form definition
+INCLUDE /CCBJI/RDSDFSVI_STLMNT_DTL_SUB.
+*INCLUDE /ccej/rdsdfsvi_stlmnt_dtls_sub.
+
+*----------------------------------------------------------------------*
+* INITIALIZATION                                                       *
+*----------------------------------------------------------------------*
+INITIALIZATION.
+**"Clear global table
+  PERFORM f_clear.
+***start of addition for MOD-004
+  "Get Default Layout
+***start of commenting for MOD-010
+*  PERFORM f_default_layout
+*          USING if_salv_c_layout=>restrict_user_dependant
+*          CHANGING p_layout.
+***end of commenting for MOD-010
+***end of addition for MOD-004
+*----------------------------------------------------------------------*
+* AT-SELECTION-SCREEN OUTPUT
+*----------------------------------------------------------------------*
+AT SELECTION-SCREEN OUTPUT.
+**" Screen modification
+  PERFORM f_output.
+
+***start of addition for MOD-004
+*----------------------------------------------------------------------*
+* AT SELECTION-SCREEN ON VALUE-REQUEST                                 *
+*----------------------------------------------------------------------*
+***start of commenting for MOD-010
+*AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_layout.
+*  "Layout on F4 help
+*  PERFORM f_f4_layout
+*          USING if_salv_c_layout=>restrict_user_dependant
+*          CHANGING p_layout.
+***end of commenting for MOD-010
+***end of addition for MOD-004
+***start of addition for MOD-024
+AT SELECTION-SCREEN ON VALUE-REQUEST FOR s_light-low.
+  PERFORM f_value CHANGING s_light-low.
+***end of addition for MOD-024
+
+*----------------------------------------------------------------------*
+* START-OF-SELECTION                                                   *
+*----------------------------------------------------------------------*
+START-OF-SELECTION.
+****" Validation
+  PERFORM f_validation.
+***start of addition for MOD-013
+  PERFORM f_validate_data.
+***end of addition for MOD-013
+**"Choose the mode based on radio buttons.
+  PERFORM f_mode_choose.
+*----------------------------------------------------------------------*
+* END-OF-SELECTION                                                     *
+*----------------------------------------------------------------------*
+END-OF-SELECTION.
+**"Display ALV Report
+  PERFORM f_display_report.

@@ -1,0 +1,1325 @@
+*----------------------------------------------------------------------*
+* Program Name     : /CCEJ/RDSDFSVI_STLMNT_DTLS_TOP                    *
+* Program Title    : Settlement Details                                *
+* Program Type     : Include program                                   *
+* Description      : There are eight different mode in this report that*
+*                    display settlement data based on Visit List.      *
+* Mode 1           : DSD Route Settlement: Tour Header Data            *
+* Mode 2           : This mode will display list of all Vending        *
+*                    machines/Van Sales Customers/Pre-saes customers   *
+*                   (Hybrid route) visited during the route execution. *
+* Mode 3           : This mode of report will display all the          *
+*                    information related to sales and replenishment    *
+*                    done for the tour.                                *
+* Mode 4           : Display Payment Details                           *
+* Mode 5           : Display Check Out/In Details                      *
+* Mode 6           : Display Money Differences                         *
+* Mode 7           : Display Quantity Differences                      *
+* Mode 8          :  Display FSR Documents                             *
+* Date             : 16 May 2016                                       *
+* Author           : <Abhishek Buckal>  <S404352>                      *
+* Run Frequency    :  N/A                                              *
+* Transaction      :  /CCEJ/RDOVM_STLMNTDT                             *
+* Transport Number :  DCRK9A0JSC                                       *
+* RICEF ID         :  <OTC-3161-R-01>                                  *
+* Release          :  <CCEJ 5.1>                                       *
+* Additional Info  : (EX: Form Name/Output type/Copied from/ etc)      *
+*----------------------------------------------------------------------*
+*         =========== MODIFICATION LOG ===========                     *
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-001                                         *
+* Date               : 29-09-2016                                      *
+* Author             : <Anurag Khanna>  <S175283>                      *
+* Change Reference   : Defect 565- Rel 5.1                             *
+* Transport Number   : DCRK9A0JSC                                      *
+* Change Request     : 800001836                                       *
+* Change Description : 1. Sales/Replenishment info. radiobutton- show  *
+* amount for YJPR(Promotion amount) and YJP0(Free Vend amount)         *
+*2.FSR documents-Added Refresh button & its corresponding functionality*
+*3.FSR documents-Logic change for FI documents based on Invoice Number *
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-002                                         *
+* Date               : 11-11-2016                                      *
+* Author             : <Anurag Khanna>  <S175283>                      *
+* Change Reference   : Defect 1157- Rel 5.1                            *
+* Transport Number   : DCRK9A0JSC                                      *
+* Change Request     : 800001836                                       *
+* Change Description : a. in ALV output add- 1.for Vist Details- add   *
+* equipment owner 2.for Sales/Replenishment info. & Payment details-add*
+* business type extension 3.for Quantity differences & Check out/Check *
+* in- add Material descprition 4.for FSR documents- add business type  *
+* extension b.changes for filteration FSR status(on Selection screen)  *
+*----------------------------------------------------------------------*
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-003                                         *
+* Date               : 12-12-2016                                      *
+* Author             : <Abhishek Buckal>  <S404352>                    *
+* Change Reference   : Defect 1570- Rel 5.1                            *
+* Transport Number   : DCRK9A0JSC                                      *
+* Change Request     : 800001836                                       *
+* Change Description: Added the Presales document logic in th existing *
+*                     FSR Node                                         *
+*----------------------------------------------------------------------*
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-005                                         *
+* Date               : 16-12-2016                                      *
+* Author             : <Abhishek Buckal>  <S404352>                    *
+* Change Reference   : Defect 1758- Rel 5.1                            *
+* Transport Number   : DCRK9A0JSC                                      *
+* Change Request     : 800001836                                       *
+* Change Description: Changing the code as per the comments given      *
+*                     during the performance testing                   *
+*----------------------------------------------------------------------*
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-006                                         *
+* Date               : 16-01-2017                                      *
+* Author             : <Anurag Khanna>  <S175283>                      *
+* Change Reference   : Defect 1980- Rel 5.1                            *
+* Transport Number   : DCRK9A0JSC                                      *
+* Change Request     : 800001836                                       *
+* Change Description: Payment details-if status is GE 804000- in ALV   *
+* change "Customer" label with "Receipent" & add new column Customer   *
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-008                                         *
+* Date               : 08-02-2017                                      *
+* Author             : <Anurag Khanna>  <S175283>                      *
+* Change Reference   : Defect 2219- Rel 5.1                            *
+* Transport Number   : DCRK9A0JSC                                      *
+* Change Request     : 800001836                                       *
+* Change Description: Tour Details- addition of new column Scenario    *
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-010                                         *
+* Date               : 09-03-2017                                      *
+* Author             : <Anurag Khanna>  <S175283>                      *
+* Change Reference   : Defect 2610- Rel 5.1                            *
+* Transport Number   : DCRK9A0WL4                                      *
+* Change Request     : 8000022629                                      *
+* Change Description : 1.Remove parameter Layout from selection screen *
+* 2.FSR node- Cancelled invoice should not be shown 3.ALV choose layout*
+* functionality correction                                             *
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-011                                         *
+* Date               : 10-03-2017                                      *
+* Author             : <Anurag Khanna>  <S175283>                      *
+* Change Reference   : Defect 2579- Rel 5.1                            *
+* Transport Number   : DCRK9A0WL4                                      *
+* Change Request     : 8000022629                                      *
+* Change Description : Sales/Replenishment info.- addition of columns- *
+* Scenario and Business type                                           *
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-012                                         *
+* Date               : 15-03-2017                                      *
+* Author             : <Anurag Khanna>  <S175283>                      *
+* Change Reference   : Defect 2671                                     *
+* Transport Number   : DCRK9A0WQ2                                      *
+* Change Request     : 2000016027                                      *
+* Change Description : Tour Details- addition of new columns- Warnigs, *
+* Error, Scenario and changes to logic to display trafiic light        *
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-013                                         *
+* Date               : 08-05-2017                                      *
+* Author             : <Anurag Khanna>  <S175283>                      *
+* Change Reference   : June Monthly-3885                               *
+* Transport Number   : MCRK9A0H4P                                      *
+* Change Request     : 8000023335                                      *
+* Change Description : Addition of new radiobutton- Cash Difference and*
+* its associated logic- tcode /CCEJ/RDOSD_CASH_DIF. This would be used *
+* for chking detail of cash posting that happen during settlmnt process*
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-022                                         *
+* Date               : 26-06-2017                                      *
+* Author             : <Anurag Khanna>  <S175283>                      *
+* Change Reference   : July Monthly-4378_E03                           *
+* Transport Number   : MCRK9A0KP3                                      *
+* Change Request     : 8000023831                                      *
+* Change Description : Changes for Tour Details radiobutton            *
+*----------------------------------------------------------------------*
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-023                                         *
+* Date               : 04-07-2017                                      *
+* Author             : <Abhishek Buckal>  <S404352>                    *
+* Change Reference   : Defect- 3549                                    *
+* Transport Number   : MCRK9A0PVC                                      *
+* Change Request     : 8000024637                                      *
+* Change Description : Add the Logic for multiple Deliveries for a     *
+* sales order                                                          *
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-025                                         *
+* Date               : 06-11-2017                                      *
+* Author             : <Anurag Khanna>  <S175283>                      *
+* Change Reference   : Defect 4265                                     *
+* Transport Number   : DCRK9A157C                                      *
+* Change Request     : 2000018428                                      *
+* Change Description : 1.Tour Details-correction in 1(a)Application log*
+* output 1(b)Processing status on sel screen 2.FSR node- removal of    *
+* Date conversion to Japan Time Zone logic for Settlement Date 3.Sel.  *
+* screen clear fields based on radiobutton selected                    *
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-026                                         *
+* Date               : 08-11-2017                                      *
+* Author             : <Anurag Khanna>  <S175283>                      *
+* Change Reference   : Defect 4318                                     *
+* Transport Number   : DCRK9A157C                                      *
+* Change Request     : 2000018428                                      *
+* Change Description : Performance Optimization changes                *
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-027                                         *
+* Date               : 10-11-2017                                      *
+* Author             : <Anurag Khanna>  <S175283>                      *
+* Change Reference   : Defect 4341                                     *
+* Transport Number   : DCRK9A157C                                      *
+* Change Request     : 2000018428                                      *
+* Change Description : 1.Payment Node-a.addition of DZ docs b.adding   *
+* posting key & document type in sel screen  2.Tour Details-addition of*
+* a.Visit grp b.Refresh button functionality  3.Count Display at header*
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-029                                         *
+* Date               : 10-05-2018                                      *
+* Author             : <Anurag Khanna>  <S175283>                      *
+* Change Reference   : Defect 9000000597                               *
+* Transport Number   : MJRK902026                                      *
+* Change Request     : 8000001348                                      *
+* Change Description : FSR node- changes for Inter-company invoice     *
+*----------------------------------------------------------------------*
+*----------------------------------------------------------------------*
+* Mod No.            : MOD-030                                         *
+* Date               : 20-Aug-2018                                     *
+* Author             : Abhishek Buckal  <S404352>                      *
+* Change Reference   : GAP 1000000842                                  *
+* Transport Number   : DJRK991155                                      *
+* Change Request     : 8000001920                                      *
+* Change Description : If Visit group is "CCEJPAPER"  ,Scenario should *
+* be populated as "R" and Driver swap should be populated as "N" .     *
+* Add original exection date EXDAT1                                    *
+*----------------------------------------------------------------------*
+*----------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&  Include           /CCEJ/RDSDFSVI_STLMNT_DTLS_TOP
+*&---------------------------------------------------------------------*
+
+*********************Table Declaration******************************
+" *****Code Remediation changes S4 2025_1_A Conversion **begin of change by EJX9007361 10.06.2026 for ATC
+* TABLES:vttk. "Shipment Header
+TABLES:vttk. "#EC CI_USAGE_OK[2270199]
+" *****Code Remediation changes S4 2025_1_A Conversion **end of change by EJX9007361 10.06.2026 for ATC
+*********************Data Declaration*******************************
+DATA:v_status TYPE /dsd/st_status-status_id, "Status ID
+     v_po     TYPE vbkd-bstkd, "Po no.
+     v_plant  TYPE t001w-werks, "Plant
+     v_route  TYPE /ccej/slss_driver-route, "route
+     v_sdate  TYPE /dsd/vc_exdat, "Settlement date
+* BOC MOD-014
+     v_auart TYPE vbak-auart,
+     v_so TYPE vbak-vbeln,
+     v_lfart TYPE likp-lfart,
+     v_do TYPE likp-vbeln,
+     v_fkart TYPE vbrk-fkart,
+     v_inv TYPE vbrk-vbeln,
+     v_blart TYPE bkpf-blart,
+     v_belnr TYPE bkpf-belnr,
+     v_scene TYPE c,
+     v_log   TYPE /ccej/sls_log_status,
+     v_qty   TYPE /dsd/sl_fin_diff,
+* EOC MOD-014
+
+* BOC For MOD-015
+     v_light TYPE /ccej/otc_proc_status,
+     v_fsrlog TYPE /ccej/otc_fsrlog_status,
+     v_fsr_status TYPE char4,
+* EOC For MOD-015
+* BOC MOD-016
+    v_dummy TYPE /ccej/sls_dummy_acct,
+* EOC MOD-016
+* BOC MOD-017
+    v_plan TYPE /ccej/sls_plan_route,
+    v_dswap TYPE /ccej/sls_drv_swap,
+* EOC MOD-017
+* BOC MOD-018
+    v_matnr TYPE matnr,
+    v_chkid TYPE /dsd/hh_check_id,
+    v_mdiff TYPE /dsd/amount_diff,
+    v_pay TYPE /dsd/hh_rapaymnt-paymt,
+    v_objtyp TYPE /dsd/hh_del_doctyp,
+    v_docno TYPE belnr_d,
+* EOC MOD-018
+* BOC for MOD-020
+   v_plog   TYPE /ccej/sls_plog_status,
+   v_vlog   TYPE /ccej/sls_vlog_status.
+* EOC for MOD-020
+
+*********************Types Declaration******************************
+TYPES:BEGIN OF ty_vttk,
+    tknum	       TYPE tknum, " Shipment no.
+    tplst	       TYPE tplst, " Transportation planning point
+    erdat        TYPE erdat, " Created date
+    route        TYPE routr, " Route
+    /bev1/rpfar1 TYPE /dsd/rp_driver1, " Driver name
+    /bev1/rpmowa TYPE	/dsd/rp_truck, " Vehicle
+    xblnr        TYPE xblnr, " Refeerence doc.
+    bktxt        TYPE bktxt,  "Doc.header text
+    END OF ty_vttk,
+
+
+    BEGIN OF ty_status,
+    status_id TYPE /dsd/st_status_id, " Status
+    shipment  TYPE tknum, " Shipment no.
+    END OF ty_status,
+
+    BEGIN OF ty_vbak,
+    vbeln	TYPE vbeln, " Sales order no.
+    erdat TYPE erdat, " Created date
+    "BOC For MOD-015
+    erzet	TYPE erzet, " Time
+    ernam TYPE ernam, " User
+    "EOC For MOD-015
+    auart TYPE auart, " Sales doc. type
+***start of addition for MOD-029
+    vkorg TYPE vkorg, "Sales Organization
+***end of addition for MOD-029
+    xblnr TYPE xblnr, " Refrence doc.
+    sld_doc_id   TYPE /dsd/sl_pre_doc_id, "Preceding Document
+    END OF ty_vbak,
+
+    BEGIN OF ty_vbak1,
+    vbeln	TYPE vbeln, " Sales order no.
+    auart TYPE auart, " Sales doc. type
+    kunnr TYPE kunnr, " Customer
+    END OF ty_vbak1,
+
+    BEGIN OF ty_tvak,
+    auart TYPE 	auart, " Sales Doc. type
+    lfarv	TYPE lfarv,  "Delivery type
+    fkarv	TYPE fkarv, "Billing type
+    END OF ty_tvak,
+
+    BEGIN OF ty_likp,
+    vbeln	TYPE vbeln_vl, " Delivery no.
+    "BOC For MOD-015
+    ernam	TYPE ernam,    "User
+    erzet TYPE erzet,    "Time
+    "EOC For MOD-015
+    erdat TYPE erdat,    " Created date
+    lfart TYPE lfart,    " Delivery type
+    END OF ty_likp,
+
+
+    BEGIN OF ty_invoice,
+    vbeln TYPE vbeln_vf, " Invoice no.
+    fkart TYPE fkart,    " Invoive type
+    fkdat TYPE fkdat,    " Invoice date
+    "BOC For MOD-015
+    ernam TYPE ernam,    "User
+    erzet TYPE erzet,    " Time
+    "EOC For MOD-015
+    "BOC For MOD-021
+    rfbsk	TYPE rfbsk,    "Status for transfer to accounting
+    "EOC Foe MOD-021
+    END OF ty_invoice,
+
+    BEGIN OF ty_bkpf,
+    bukrs TYPE bukrs, " Company Code
+    belnr TYPE belnr_d,  " Accounting doc.
+    gjahr	TYPE gjahr , "Fiscal Year
+    blart TYPE blart,  " Doc. type
+    budat TYPE budat,  " Date
+    "BOC For MOD-015
+    cputm TYPE cputm,  "Time
+    usnam	TYPE usnam,  "User
+    "EOC For MOD-015
+    xblnr TYPE xblnr,  " Refrence doc.
+***start of addition for MOD-001
+    awkey TYPE awkey,  " Reference Key
+***end of addition for MOD-001
+    END OF ty_bkpf,
+
+    BEGIN OF ty_bkpf_d,
+    bukrs TYPE bukrs, " Company Code
+    belnr TYPE belnr_d,  " Accounting doc.
+    gjahr	TYPE gjahr , "Fiscal Year
+    blart TYPE blart,  " Doc. type
+    budat TYPE budat,  " Date
+    tcode TYPE tcode,  "Tcode
+    xblnr TYPE xblnr,  " Refrence doc.
+    END OF ty_bkpf_d,
+
+    BEGIN OF ty_mkpf,
+    mblnr TYPE mblnr,  " Material document
+    bktxt TYPE bktxt,  " Doc.header text
+    END OF ty_mkpf.
+
+TYPES:BEGIN OF ty_final,
+      "BOC For MOD-014
+      fsr_status  TYPE char4, "Processing status
+      "EOC For MOD-014
+      tknum        TYPE tknum, " Shipment no.
+      tplst        TYPE tplst, " TPP
+      status_id    TYPE /dsd/st_status_id,    " Status
+      werks    TYPE werks_d,        "Plant
+      route	  TYPE route,          "Route
+      date    TYPE erdat,          "Date
+      /bev1/rpfar1 TYPE /dsd/rp_driver1, " Driver name
+      visit_id     TYPE /dsd/hh_visit_id, "Visit ID
+      erdat_s      TYPE erdat,  " Shipp. created date
+      custnr       TYPE kunnr,  " Customer
+***start of addition for MOD-002
+      katr4        TYPE katr4, "Business Type Extension
+***end of addition for MOD-002
+      seqno        TYPE i,       " Seq. No.
+      bstkd        TYPE char40, " PO No.
+      pre_doc_id   TYPE /dsd/sl_pre_doc_id,"Preceding Document Number
+      auart        TYPE char10,    " Sales doc. type
+      vbeln        TYPE vbeln,    " Sales order no.
+      erdat_o      TYPE char40,   " Order created date
+      lfart        TYPE char10,    " Delivery type
+      vbeln_d      TYPE vbeln_vl, " Delivery no.
+      erdat_d      TYPE char10,   " Delivery created date
+      mblnr        TYPE mblnr,    " Material document
+      fkart        TYPE char10,   " Invoive type
+      vbeln_i      TYPE vbeln_vf, " Invoice no.
+      fkdat        TYPE char10,   " Invoice date
+      blart        TYPE char10,   " Doc. type
+      belnr        TYPE belnr_d,   " Accounting doc.
+      budat        TYPE char10,   " Date
+      "BOC For MOD-014
+      cominvtyp    TYPE char10, "Inter comp. Invoice Invoive type
+      cominv       TYPE char10, "Inter comp. Invoice
+      cominvdate   TYPE char10, "Inter comp. Invoice date
+      comfityp     TYPE char10, "Inter comp. Invoice Doc. type
+      comfi        TYPE char10, "Inter comp. FI
+      comfidate    TYPE char10,"Inter comp. FI Date
+      comfi_bukrs  TYPE  char10, " Company Code
+      comfi_gjahr  TYPE  char10 , "Fiscal Year
+      "EOC For MOD-014
+      bukrs        TYPE  char10, " Company Code
+      gjahr	       TYPE  char10 , "Fiscal Year
+      paymt        TYPE char10,"Payment Method
+      cardnr       TYPE /dsd/hh_cardnr, "Payment Card Number
+      xblnr        TYPE xblnr,
+      " Accounting document field based on shipment no.
+      bktxt TYPE bktxt,   " Material document field on shipment no
+*      xblnr1 TYPE xblnr, "commented for MOD-001
+***start of addition for MOD-001
+      awkey TYPE awkey,  " Reference Key
+***end of addition for MOD-001
+      " Accounting document field based on Invoice no.
+      xblnr2 TYPE xblnr,
+      " Accounting document field based on Delivery no.
+      /scl/equp_ownr TYPE /scl/mdmd_equp_own,"MOD-014
+      END OF ty_final.
+TYPES:tb_vbfa TYPE STANDARD TABLE OF vbfa.
+************************************************************************
+
+TYPES:BEGIN OF ty_rahd,
+     tour_id     TYPE  /dsd/hh_tour_id, "Tour ID
+     obj_typ     TYPE  /dsd/hh_doc_typ, "Tour Doc. Type
+     obj_id      TYPE  /dsd/sl_pre_doc_id, "Shipment/Visit ID
+     vehicle     TYPE  /dsd/hh_fzgnr, "Vehicle
+     driver      TYPE  /dsd/hh_farnr, "Driver
+     sld_doc_id	 TYPE /dsd/sl_pre_doc_id,"Prec. Doc. No.
+     visitid     TYPE /dsd/vc_vlid,  "Visit List
+     END OF  ty_rahd,
+
+     BEGIN OF ty_/dsd/sl_sld_item,
+     sld_doc_id	 TYPE /dsd/sl_pre_doc_id, "Prec. Document No.
+     tour_id     TYPE /dsd/hh_tour_id, "Tour ID
+     obj_typ     TYPE /dsd/hh_doc_typ, "Tour Document Type
+     obj_id      TYPE /dsd/sl_pre_doc_id,"Shipment/Visit ID
+***start of addition for MOD-002
+     tourid      TYPE /dsd/st_tourid, "Tour ID- CHAR 12
+***end of addition for MOD-002
+     END OF ty_/dsd/sl_sld_item,
+
+     BEGIN OF ty_sd,
+     vbeln      TYPE vbeln, " Sales order no.
+     obj_id     TYPE  /dsd/sl_pre_doc_id, "Shipment/Visit ID
+     tour_id    TYPE /dsd/hh_tour_id , "Tour ID
+     visit_id	  TYPE /dsd/hh_visit_id, "Visit ID
+     pre_doc_id TYPE  /dsd/sl_pre_doc_id, "Prec. Document No.
+     vehicle    TYPE  /dsd/hh_fzgnr, "Vehicle
+     driver     TYPE  /dsd/hh_farnr, "Driver
+***start of addition for MOD-003
+     vbeln_d    TYPE vbeln_vl, "Delivery
+     flag       TYPE abap_bool, "Flag Indicator
+***end of addition for MOD-003
+     END OF ty_sd,
+
+     BEGIN OF ty_mat,
+     mblnr      TYPE mblnr, " Material Document
+     obj_id     TYPE  /dsd/sl_pre_doc_id,"Shipment/Visit ID
+     tour_id    TYPE /dsd/hh_tour_id , "Tour ID
+     visit_id	  TYPE /dsd/hh_visit_id, "Visit ID
+     pre_doc_id TYPE  /dsd/sl_pre_doc_id, "Prec. Document No.
+     vehicle    TYPE  /dsd/hh_fzgnr,"Vehicle
+     driver     TYPE  /dsd/hh_farnr,"Driver
+     END OF ty_mat,
+
+     BEGIN OF ty_acc,
+     belnr      TYPE belnr_d, " Accounting Document
+     obj_id     TYPE  /dsd/sl_pre_doc_id, "Shipment/Visit ID
+     visit_id	  TYPE /dsd/hh_visit_id, "Visit ID
+     pre_doc_id TYPE  /dsd/sl_pre_doc_id, "Prec. Document No.
+     tour_id    TYPE /dsd/hh_tour_id, "Tour ID
+     vehicle    TYPE  /dsd/hh_fzgnr, "Vehicle
+     driver     TYPE  /dsd/hh_farnr, "Driver
+     xblnr      TYPE xblnr1, "Reference Field
+     END OF ty_acc,
+
+     BEGIN OF ty_vbkd,
+     vbeln TYPE vbeln, "Sales order
+     bstkd TYPE bstkd, "Po No.
+     END OF ty_vbkd,
+
+     BEGIN OF ty_raec,
+     tour_id     TYPE  /dsd/hh_tour_id, "Tour ID
+     paymt        TYPE /dsd/hh_paymt, "Payment Method
+     paymt_descr  TYPE dzweck, "Payment Descr.
+     cardnr      TYPE  /dsd/hh_cardnr, "Card Number
+     oi_csh_post TYPE  belnr_d, "Document Number
+     END OF ty_raec,
+
+     BEGIN OF ty_vlh,
+     vlid	 TYPE /dsd/vc_vlid, "Visit List ID
+     erdat TYPE erdat, "Created on
+     "BOC For MOD-015
+     erzet TYPE erzet, "Time
+     ernam TYPE ernam, "User
+     "EOC For MOD-015
+     END OF ty_vlh.
+
+TYPES:tb_t_sld_flow TYPE STANDARD TABLE OF /dsd/sl_sld_flow_s,
+      tb_t_rahd     TYPE STANDARD TABLE OF ty_rahd,
+      tb_t_vlh      TYPE STANDARD  TABLE OF ty_vlh,
+      tb_t_option   TYPE STANDARD TABLE OF selopt,
+      tb_t_acc      TYPE STANDARD  TABLE OF ty_acc,
+      tb_t_bkpf     TYPE STANDARD  TABLE OF ty_bkpf,
+      tb_t_raec     TYPE STANDARD  TABLE OF ty_raec,
+      tb_t_mat      TYPE STANDARD  TABLE OF ty_mat.
+**********************************************************************
+TYPES:BEGIN OF ty_/dsd/st_status,
+      tourid    TYPE /dsd/hh_tour_id, "Tour ID
+      status_id	TYPE /dsd/st_status_id, "Status ID
+      shipment  TYPE  tknum, "Shipment
+      vlid      TYPE  /dsd/vc_vlid ,"Visit List ID
+      END OF ty_/dsd/st_status,
+
+      BEGIN OF ty_/dsd/hh_rahd,
+      tour_id TYPE /dsd/hh_tour_id, "Tour ID
+      driver  TYPE /dsd/hh_farnr, "Driver
+      credate	TYPE /dsd/hh_credate, "Created on
+*     BOC MOD-017
+      cretime TYPE /dsd/hh_cretime,"Creation time
+      creuser TYPE /dsd/hh_creator,"Creation User
+*     EOC MOD-017
+      END OF ty_/dsd/hh_rahd,
+
+      BEGIN OF ty_hh_rahd,
+      tour_id	 TYPE /dsd/hh_tour_id ,"Tour ID
+      obj_id   TYPE /dsd/hh_doc_id, "Tour Document Number
+      driver   TYPE /dsd/hh_farnr, "Driver Number
+      codriver TYPE /dsd/hh_cofnr, "Co-Driver Number
+      plant	   TYPE werks_d, "Plant
+      checkout TYPE /dsd/hh_checkout, "Check-Out
+      checkin	 TYPE /dsd/hh_checkin, "Check-In
+      procstat TYPE  /dsd/hh_procstat, "Processing Status of the Tour
+      manrel   TYPE /dsd/hh_manrel, "Manually Released
+      origin   TYPE /dsd/hh_origin, "Data Origin
+      credate	 TYPE /dsd/hh_credate, "Creation Date
+      cretime	 TYPE /dsd/hh_cretime, "Creation Time
+      creuser	 TYPE /dsd/hh_creator, "Created by
+      cngdate	 TYPE /dsd/hh_cngdate, "Change Date
+      cngtime	 TYPE /dsd/hh_cngtime, "Change Time
+      cnguser	 TYPE /dsd/hh_changer, "Changed by
+      pres_procstat	TYPE /dsd/hh_pres_procstat,"Processing Status
+***start of addition for MOD-012
+      extnumber TYPE balnrext, "Application Log: External ID
+***end of addition for MOD-012
+      END OF ty_hh_rahd,
+
+      BEGIN OF ty_hh_rahd1,
+      fsr_status TYPE char4,
+      status_id  TYPE /dsd/st_status_id, "Status ID
+      obj_id   TYPE /dsd/hh_doc_id, "Tour Document Number
+      werks    TYPE werks_d,        "Plant
+      route	   TYPE route,          "Route
+      date     TYPE erdat,          "Date
+      driver   TYPE /dsd/hh_farnr, "Driver Number
+      codriver TYPE /dsd/hh_cofnr, "Co-Driver Number
+      plant	   TYPE werks_d, "Plant
+      checkout TYPE /dsd/hh_checkout, "Check-Out
+      checkin	 TYPE /dsd/hh_checkin, "Check-In
+      procstat TYPE  /dsd/hh_procstat, "Processing Status of the Tour
+      manrel   TYPE /dsd/hh_manrel, "Manually Released
+      origin   TYPE /dsd/hh_origin, "Data Origin
+      credate	 TYPE /dsd/hh_credate, "Creation Date
+      cretime	 TYPE /dsd/hh_cretime, "Creation Time
+      creuser	 TYPE /dsd/hh_creator, "Created by
+      cngdate	 TYPE /dsd/hh_cngdate, "Change Date
+      cngtime	 TYPE /dsd/hh_cngtime, "Change Time
+      cnguser	 TYPE /dsd/hh_changer, "Changed by
+      pres_procstat	TYPE /dsd/hh_pres_procstat,"Presales Status
+***start of addition for MOD-008
+      scenario TYPE char1, "Scenario
+***end of addition for MOD-008
+***start of addition for MOD-012
+      log_status TYPE /ccej/sls_log_status,
+      msg_cnt_e TYPE baldbcnte,
+      msg_cnt_w TYPE baldbcntw,
+***end of addition for MOD-012
+*     BOC MOD-017
+      planned TYPE char1,"Planned route
+      drv_swap TYPE char1,"Driver Swap
+*     EOC MOD-017
+*     BOC MOD-018
+      proc_status TYPE char1,"Processing Status
+***start of addition for MOD-027
+      auth TYPE /dsd/vc_authority, "Visit Group
+***end of addition for MOD-027
+*     EOC MOD-018
+***start of addition for MOD-022
+      idoc_number TYPE edi_docnum, "IDOC number
+***end of addition for MOD-022
+***start of addition for MOD-025
+      tour_id TYPE /dsd/hh_tour_id ,"Tour ID
+***end of addition for MOD-025
+      exdat1  TYPE /dsd/vc_exdat1,"Original Executation Date "++MOD-030
+      END OF ty_hh_rahd1,
+
+      BEGIN OF ty_/dsd/hh_racvhd,
+      tour_id   TYPE /dsd/hh_tour_id, "Tour ID
+      visit_id  TYPE /dsd/hh_visit_id, "Visit List ID
+      custnr    TYPE kunnr, "Customer
+      man_proc  TYPE /dsd/de_man_proc,"Processing Indicator "MOD-009
+      obj_typ	  TYPE /dsd/hh_del_doctyp,"Object type "MOD-009
+      END OF ty_/dsd/hh_racvhd,
+
+      BEGIN OF ty_/dsd/hh_radelhd,
+      tour_id   TYPE /dsd/hh_tour_id, "Tour ID
+      visit_id  TYPE /dsd/hh_visit_id,"Visit List ID
+      hh_delvry TYPE /dsd/hh_hh_delvry, "Delivery
+      obj_typ	  TYPE /dsd/hh_del_doctyp,"Object type
+      plant     TYPE  werks_d, "Plant
+      ponumber  TYPE   bstkd, "PO No.
+      podate    TYPE bstdk, "PO Date
+      END OF ty_/dsd/hh_radelhd,
+
+      BEGIN OF ty_makt,
+      matnr TYPE matnr, "Mat. No.
+      maktx TYPE maktx, "Mat. Descr.
+      END OF ty_makt,
+
+      BEGIN OF ty_mara,
+      matnr TYPE matnr, "Material No.
+      /scl/pkggroup TYPE /scl/md_pkggroup, "Package Group
+      END OF ty_mara,
+
+
+      BEGIN OF ty_/dsd/hh_radelcnd,
+      tour_id	     TYPE /dsd/hh_tour_id, "Tour ID
+      visit_id     TYPE /dsd/hh_visit_id, "Visit ID
+      hh_delvry    TYPE /dsd/hh_hh_delvry, "Delivery
+      hh_delvry_it TYPE /dsd/hh_hh_delvry_it, "Delivery Item
+      cond         TYPE kschl, ""Condition type
+      amount       TYPE /dsd/hh_amnt, "Amount
+      END OF ty_/dsd/hh_radelcnd,
+
+      BEGIN OF ty_/dsd/hh_radelit,
+      tour_id        TYPE /dsd/hh_tour_id, "Tour ID
+      visit_id       TYPE /dsd/hh_visit_id, "Visit ID
+      hh_delvry      TYPE	/dsd/hh_hh_delvry, "Delivery
+      hh_delvry_it   TYPE /dsd/hh_hh_delvry_it,"Delivery Item
+      be_delvry_it   TYPE posnr, "Item NO.
+      matnr          TYPE	matnr , "Mat No.
+      plant          TYPE   werks_d, "Plant
+      quan           TYPE /dsd/hh_quan, "Quantity
+      uom            TYPE  /dsd/hh_uom , "UOM
+      ta_code        TYPE /dsd/hh_proc_cod, "Item flag
+      reason         TYPE  /dsd/hh_reason, "Reason
+      charg          TYPE   charg_d, ""Batch no.
+      /scl/orig_qty  TYPE /scl/dsd_orig_quan,
+      END OF ty_/dsd/hh_radelit,
+
+      BEGIN OF ty_final1,
+      obj_typ	       TYPE /dsd/hh_del_doctyp,"Object type
+      shipment       TYPE  tknum, "Shipment
+      vlid           TYPE  /dsd/vc_vlid, "Visit List
+      credate        TYPE /dsd/hh_credate, "Creation Date
+      werks          TYPE werks_d,        "Plant
+      route	         TYPE route,          "Route
+      date           TYPE erdat,          "Date
+      driver         TYPE /dsd/hh_farnr, "Driver Number
+      tourid         TYPE /dsd/hh_tour_id, "Tour ID
+      status_id      TYPE /dsd/st_status_id, "Status ID
+      visit_id       TYPE /dsd/hh_visit_id, "Visit ID
+      hh_delvry      TYPE /dsd/hh_hh_delvry, "Delivery No.
+      custnr         TYPE kunnr, "Customer
+***start of addition for MOD-011
+      katr3          TYPE katr3, "Business Type
+***end of addition for MOD-011
+***start of addition for MOD-002
+      katr4          TYPE katr4, "Business Type Extension
+      /scl/equp_ownr TYPE /scl/mdmd_equp_own, "Equipment Owner
+***end of addition for MOD-002
+      ponumber       TYPE   bstkd, "Po No
+      podate         TYPE bstdk, "PO Date
+      hh_delvry_it   TYPE /dsd/hh_hh_delvry_it, "Delivery Item
+      matnr          TYPE  matnr, "Mat No.
+      maktx          TYPE maktx, "Mat descr.
+      /scl/pkggroup  TYPE /scl/md_pkggroup, "Package Group
+      plant1         TYPE  werks_d, "Plant
+      quan(13)       TYPE  p DECIMALS 0, "Quantity
+      uom            TYPE  /dsd/hh_uom , "Unit of Measure
+      ta_code        TYPE /dsd/hh_proc_cod, "Return Flag
+      reason         TYPE  /dsd/hh_reason, "Reason
+      charg          TYPE   charg_d, ""Batch no.
+      cond           TYPE kschl, ""Condition type
+      amount         TYPE /dsd/hh_amnt, "Amount
+      /scl/orig_qty  TYPE /scl/dsd_orig_quan, "Original qty
+      set_id(3)      TYPE c, "Set ID
+      money_type(2)  TYPE c, "Money Type
+***start of addition for MOD-001
+      sales_amt      TYPE /dsd/hh_amnt, "Sales Amount
+***end of addition for MOD-001
+      money_code(4)  TYPE c, "Money Code
+***start of addition for MOD-001
+      yjpr           TYPE /dsd/hh_amnt, "YJPR Amount
+      yjp0           TYPE /dsd/hh_amnt, "YJP0 Amount
+***end of addition for MOD-001
+***start of addition for MOD-011
+      scenario TYPE char1, "Scenario
+***end of addition for MOD-011
+        END OF ty_final1.
+
+" *****Code Remediation changes S4 2025_1_A Conversion **begin of change by EJX9007361 10.06.2026 for ATC
+* TYPES:ty_tknum       TYPE RANGE OF vttk-tknum,
+TYPES:ty_tknum       TYPE RANGE OF vttk-tknum, "#EC CI_USAGE_OK[2270199]
+" *****Code Remediation changes S4 2025_1_A Conversion **end of change by EJX9007361 10.06.2026 for ATC
+      tb_t_hh_rahd   TYPE STANDARD TABLE OF ty_/dsd/hh_rahd,
+      tb_t_hh_racvhd TYPE STANDARD TABLE OF ty_/dsd/hh_racvhd.
+**********************************************************************
+TYPES:BEGIN OF ty_bseg,
+      bukrs	TYPE bukrs, "Company Code
+      belnr	TYPE belnr_d, "Accounting document
+      gjahr	TYPE gjahr, "Fiscal year
+      buzei	TYPE buzei, "Line item
+      buzid	TYPE buzid, "Identification
+      bschl TYPE bschl,"Posting Key
+      pswbt	TYPE pswbt,"Amount General Ledger
+      pswsl	TYPE pswsl,"General ledger currency
+      zuonr	TYPE dzuonr,"Assignment Number,
+      saknr	TYPE saknr, "G/L Account Number
+      kunnr TYPE kunnr, "Customer
+      hzuon	TYPE hzuon, "Special G/L Accounts
+     END OF ty_bseg.
+
+TYPES:BEGIN OF ty_final2,
+      fsr_status TYPE char4,"Status MOD-020
+      shipment    TYPE  tknum, "Shipment no.
+      werks    TYPE werks_d,        "Plant
+      route	  TYPE route,          "Route
+      date    TYPE erdat,          "Date
+      status_id   TYPE /dsd/st_status_id, "Status ID
+      visit_id    TYPE  /dsd/hh_visit_id, "Visit ID
+      cust1 TYPE kunnr,   "added for MOD-006
+      cust        TYPE kunnr, "Customer no.
+***start of addition for MOD-002
+      katr4       TYPE katr4, "Business Type Extension
+***end of addition for MOD-002
+      cash_id	    TYPE /dsd/hh_cash_id, "Cash ID
+      cash_typ    TYPE  /dsd/hh_csh_typ, "Cash Type
+      amount      TYPE /dsd/hh_amount, "Amount
+      curr        TYPE waers, "Currency
+      paymt       TYPE /dsd/hh_paymt, "Payment
+      paymt_descr	TYPE dzweck, "Pay Description
+      cardnr      TYPE /dsd/hh_cardnr,"Card No.
+      checknr     TYPE chect, "Check Number
+*      valid_date  TYPE  datbi_cc, "Valid To "***commented for MOD-027
+      oi_csh_post	TYPE belnr_d, "Accounting document
+      fisc_year   TYPE  gjahr,  "Fiscal year
+      compcod	    TYPE bukrs,   "Company Code
+      buzei	      TYPE buzei, "Line item
+      buzid	      TYPE buzid, "Identification
+      bschl       TYPE bschl,"Posting Key
+      pswbt	      TYPE pswbt,"Amount General Ledger
+      pswsl	      TYPE pswsl,"General ledger currency
+***start of commenting for MOD-001
+*      zuonr        TYPE dzuonr,"Assignment Number,
+*      saknr        TYPE saknr, "G/L Account Number
+***end of commenting for MOD-001
+      kunnr       TYPE kunnr, "Customer
+      /scl/equp_ownr TYPE /scl/mdmd_equp_own,"MOD-014
+      dummy_flag TYPE /ccej/sls_dummy_acct,"MOD-016
+      plog TYPE /ccej/sls_plog_status,"MOD-020
+***start of addition for MOD-027
+      blart TYPE blart,    "Document Type
+      bldat TYPE bldat,    "Document Date in Document
+      budat TYPE budat,    "Posting Date in the Document
+      stblg TYPE stblg,    "Reverse Document Number
+***end of addition for MOD-027
+     END OF ty_final2.
+
+**********************************************************************
+TYPES:BEGIN OF ty_final3,
+      shipment    TYPE  tknum, "Shipment
+      werks       TYPE werks_d,        "Plant
+      route	      TYPE route,          "Route
+      date        TYPE erdat,          "Date
+      status_id	  TYPE /dsd/st_status_id, "Status ID
+      tour_id	    TYPE /dsd/hh_tour_id, "Tour ID
+      check_id    TYPE  /dsd/hh_check_id, "Check ID
+      itemnr      TYPE  /dsd/hh_coci_itemnr, "Item No.
+      matnr       TYPE  matnr, "Mat No.
+***start of addition for MOD-002
+      maktx       TYPE maktx, "material descp
+***end of addition for MOD-002
+      plant       TYPE  werks_d, "Plant
+      quan_plan	  TYPE /dsd/hh_quan_plan, "Target Quantity
+      quan_count  TYPE  /dsd/hh_quan_count,
+      "Quantity in Check-In / Check-Out
+      quan_diff	  TYPE /dsd/hh_quan_diff, "Difference Quantity
+      uom	        TYPE /dsd/hh_uom, "Unit of Measure
+      reason      TYPE  /dsd/hh_check_reason,
+      "Reasons for Differences in Check
+      charg	      TYPE charg_d,"Batch Number
+      amount      TYPE /dsd/hh_amnt,"Amount
+      curr        TYPE  waers, "Currency
+      paymt	      TYPE /dsd/hh_paymt,"Payment Method
+     END OF ty_final3.
+
+TYPES:tb_t_status TYPE STANDARD TABLE OF ty_/dsd/st_status.
+**********************************************************************
+TYPES:BEGIN OF ty_final4,
+      shipment         TYPE /dsd/sl_pre_doc_id, "Shipment
+      werks            TYPE werks_d,        "Plant
+      route	           TYPE route,          "Route
+      date             TYPE erdat,          "Date
+      tour_id          TYPE /dsd/hh_tour_id, "Tour ID
+      sld_doc_id       TYPE /dsd/sl_sld_id, "Settlement Doc. No.
+      payment_type     TYPE	/dsd/hh_paymt, "Payment Type
+      amount_co	       TYPE /dsd/amount_co, "Check-Out Control
+      amount_expenses	 TYPE /dsd/amount_expenses, "Expenditures Amount
+      amount_earnings	 TYPE /dsd/amount_earnings, "Receipts
+      amount_ci	       TYPE /dsd/amount_ci,"Check-in Amount
+      amount_diff	     TYPE /dsd/amount_diff,"Difference Amount
+      reason           TYPE /dsd/hh_check_reason, "Reason Code
+      currency_amount	 TYPE waers,"Currency
+      amount_plan	     TYPE /dsd/sl_amount_plan, "Planned Amount
+      amount_diff_eval TYPE /dsd/sl_amount_diff_eval, "Mon. Diff. In/Out
+      END OF ty_final4,
+
+     BEGIN OF ty_sld_item,
+     sld_doc_id	 TYPE /dsd/sl_sld_id, "Settlement Doc. No.
+     tour_id     TYPE /dsd/hh_tour_id,"Tour ID
+     obj_typ     TYPE /dsd/hh_doc_typ, "Tour Doc. Type
+     shipment    TYPE /dsd/sl_pre_doc_id, "Prec. Document No.
+     END OF ty_sld_item.
+
+TYPES:tb_sld_item TYPE STANDARD TABLE OF ty_sld_item.
+**********************************************************************
+TYPES:BEGIN OF ty_final5,
+      shipment         TYPE /dsd/sl_pre_doc_id, "Shipment
+      werks            TYPE werks_d,        "Plant
+      route	           TYPE route,          "Route
+      date             TYPE erdat,          "Date
+      sld_doc_id       TYPE /dsd/sl_sld_id, "Settlement Doc. No.
+      matnr            TYPE  matnr, "Mat No.
+***start of addition for MOD-002
+      maktx            TYPE maktx, "material descp
+***end of addition for MOD-002
+      quan_planned     TYPE	/dsd/hh_quan_plan, "Target Quantity
+      quan_checkout	   TYPE /dsd/sl_quan_co, "Check-Out Qty
+      quan_diff	       TYPE /dsd/sl_quan_diff_co, "Check-Out Difference
+      quan_delivered   TYPE /dsd/sl_quan_deliverd, "Delivered Quantity
+      quan_return	     TYPE /dsd/sl_quan_return, "Returned Quantity
+      quan_checkin     TYPE   /dsd/sl_quan_ci, "Check-In Quantity
+      quan_final_diff	 TYPE /dsd/sl_fin_diff, "Final Difference
+      uom_for_quan     TYPE unit, "Unit
+      value_fin_diff   TYPE /dsd/value, "Amount of Qty Diff.
+      currency_fin_dif TYPE	waers, "Currency
+      plant	           TYPE werks_d, "Plant
+      charg	           TYPE charg_d,"Batch
+      END OF ty_final5.
+**********************************************************************
+TYPES:BEGIN OF ty_kna1,
+     kunnr  TYPE kunnr, "Customer
+     ktokd  TYPE 	ktokd, "Customer Account Group
+***start of addition for MOD-011
+     katr3 TYPE katr3, "Business Type
+***end of addition for MOD-011
+     katr4  TYPE katr4, "Business Type Extension
+***start of addition for MOD-002
+     /scl/equp_ownr TYPE /scl/mdmd_equp_own, "Equipment Owner
+***end of addition for MOD-002
+      END OF ty_kna1,
+
+      BEGIN OF ty_hh_racvhd,
+       tour_id  TYPE /dsd/hh_tour_id, "Tour ID
+       visit_id	TYPE /dsd/hh_visit_id, "Visit ID
+       custnr	  TYPE kunnr, "Customer
+       vkorg    TYPE vkorg, "Sales Organization
+       vtweg    TYPE vtweg, "Distribution Channel
+       spart    TYPE spart, "Division
+       viscod	  TYPE /dsd/hh_viscod,"Reason for Visit
+       cngdate  TYPE /dsd/hh_cngdate, "Change Date
+       cngtime  TYPE /dsd/hh_cngtime, "Time of Change
+       cnguser  TYPE /dsd/hh_changer, "Changed by user
+       status	  TYPE /dsd/hh_recstat, "Processing Status
+       man_proc	TYPE /dsd/de_man_proc, "Processing Indicator
+      END OF ty_hh_racvhd.
+
+TYPES:BEGIN OF ty_final6,
+       shipment  TYPE  tknum, "Shipment
+       credate   TYPE /dsd/hh_credate, "Create date
+       werks     TYPE werks_d,        "Plant
+       route     TYPE route,          "Route
+       date      TYPE erdat,          "Date
+       driver    TYPE /dsd/hh_farnr, "Driver
+       status_id TYPE /dsd/st_status_id, "Status
+       visit_id  TYPE /dsd/hh_visit_id, "Visit ID
+       custnr	   TYPE kunnr, "Customer
+***start of addition for MOD-002
+       /scl/equp_ownr TYPE /scl/mdmd_equp_own, "Equipment Owner
+***end of addition for MOD-002
+       ktokd     TYPE   ktokd, "Customer Account Group
+       katr4     TYPE katr4, "Business Type Extension
+       vkorg     TYPE vkorg, "Sales Organization
+       vtweg     TYPE vtweg, "Distribution Channel
+       spart     TYPE spart, "Division
+       viscod	   TYPE /dsd/hh_viscod,"Reason for Visit
+       cngdate   TYPE /dsd/hh_cngdate, "Change Date
+       cngtime   TYPE /dsd/hh_cngtime, "Time of Change
+       cnguser   TYPE /dsd/hh_changer, "Changed by user
+       status	   TYPE /dsd/hh_recstat, "Processing Status
+       man_proc	 TYPE /dsd/de_man_proc, "Processing Indicator
+      "BOC For MOD-017
+      fsr_status  TYPE char4, "Processing status
+      "EOC For MOD-017
+      vlog TYPE /ccej/sls_vlog_status,"MOD-020
+      END OF ty_final6.
+
+TYPES:tb_t_kna1 TYPE STANDARD TABLE OF ty_kna1,
+      tb_t_racvhd TYPE STANDARD TABLE OF ty_hh_racvhd.
+
+TYPES:   BEGIN OF ty_tplst,
+         tplst TYPE tplst, "Transportation planning point
+         END OF ty_tplst,
+
+         BEGIN OF ty_vkorg,
+         vkorg TYPE vkorg, "Sales Org.
+         END OF ty_vkorg.
+
+TYPES: BEGIN OF ty_vc_vlh,
+        vlid    TYPE /dsd/vc_vlid,    "Visit List
+        exdat   TYPE /dsd/vc_exdat,  "Execution Date
+        driver1 TYPE /dsd/rp_driver1, "Driver
+       END OF ty_vc_vlh.
+
+TYPES: BEGIN OF ty_/ccej/t_inb_stat,
+        werks	  TYPE werks_d,        "Plant
+        route	  TYPE route,          "Route
+        date    TYPE erdat,          "Date
+        vlid    TYPE /dsd/vc_vlid,   "Visit List
+***start of addition for MOD-022
+        idoc_number TYPE edi_docnum, "IDoc number
+***end of addition for MOD-022
+        "BOC For MOD-015
+         zzernam TYPE ernam,       "Name
+         zzerzzt TYPE erzzt,       "Time
+        "EOC For MOD-015
+       END OF ty_/ccej/t_inb_stat.
+TYPES:tb_t_stat TYPE STANDARD TABLE OF ty_/ccej/t_inb_stat.
+
+***start of addition for MOD-002
+TYPES: BEGIN OF ty_status_vlid,
+        tourid TYPE /dsd/st_tourid,
+        status_id TYPE /dsd/st_status_id,
+       END OF ty_status_vlid,
+
+       BEGIN OF ty_kna,
+         kunnr TYPE kunnr,
+         katr3 TYPE katr3,"MOD-009
+         katr4 TYPE katr4,
+         /scl/equp_ownr TYPE /scl/mdmd_equp_own,"MOD-014
+       END OF ty_kna.
+***end of addition for MOD-002
+
+***start of addition for MOD-003
+TYPES:BEGIN OF ty_/dsd/hh_radelhd_s,
+      tour_id   TYPE /dsd/hh_tour_id, "Tour ID
+      visit_id  TYPE /dsd/hh_visit_id,"Visit List ID
+      be_delvry	TYPE vbeln_vl, "Delivery
+      obj_typ	  TYPE /dsd/hh_del_doctyp,"Object type
+      plant     TYPE  werks_d, "Plant
+      ponumber  TYPE   bstkd, "PO No.
+      podate    TYPE bstdk, "PO Date
+      END OF ty_/dsd/hh_radelhd_s.
+
+TYPES:BEGIN OF ty_invoice_s,
+     objid  TYPE tknum, "Visit list
+     vbeln_o TYPE vbeln,
+     vbeln_d TYPE vbeln_vl, "Delivery
+     vbeln_i TYPE vbeln_vf, "Invoice
+     END OF ty_invoice_s.
+
+TYPES:tb_t_sd TYPE STANDARD TABLE OF ty_sd.
+***end of addition for MOD-003
+
+***start of addition for MOD-005
+TYPES:BEGIN OF ty_hh_racocihd,
+     tour_id TYPE	/dsd/hh_tour_id, "Tour ID
+     check_id	TYPE /dsd/hh_check_id, "Check ID
+     END OF ty_hh_racocihd.
+***end of addition for MOD-005
+
+***start of addition for MOD-008
+TYPES: BEGIN OF ty_racocihd,
+         tour_id TYPE /dsd/hh_tour_id,
+         checker TYPE /dsd/hh_coci_checker,
+       END OF ty_racocihd.
+***end of addition for MOD-008
+
+***start of addition for MOD-010
+TYPES: BEGIN OF ty_vbeln,
+         vbeln TYPE vbeln_vf,
+       END OF ty_vbeln.
+***end of addition for MOD-010
+
+***start of addition for MOD-012
+TYPES: BEGIN OF ty_balhdr,
+         lognumber TYPE balognr,
+         object TYPE balobj_d,
+         subobject TYPE balsubobj,
+         extnumber TYPE balnrext,
+         msg_cnt_e TYPE baldbcnte,
+         msg_cnt_w TYPE baldbcntw,
+         tim_stmp TYPE balcontsmp,
+       END OF ty_balhdr,
+***end of addition for MOD-012
+
+       BEGIN OF ty_radelit,
+         tour_id TYPE /dsd/hh_tour_id,
+         visit_id TYPE /dsd/hh_visit_id,
+         hh_delvry TYPE /dsd/hh_hh_delvry,
+         hh_delvry_it TYPE /dsd/hh_hh_delvry_it,
+       END OF ty_radelit.
+* BOC MOD-016
+TYPES:BEGIN OF ty_dummyacc,
+        kunnr TYPE kunnr,
+      END OF ty_dummyacc.
+* EOC MOD-016
+
+* BOC MOD-017
+* DSD: Visit List - Header Data
+TYPES:BEGIN OF ty_dsd_vc_vlh,
+        vlid TYPE /dsd/vc_vlid,"Visit ID
+        auth TYPE /dsd/vc_authority,"Visit Grp
+        "Start of addition for MOD-030
+        exdat1 TYPE /dsd/vc_exdat1,"Original Executation Date
+        "End of addition for MOD-030
+      END OF ty_dsd_vc_vlh,
+
+* DSD Route Settlement: Customer Visit - Header
+      BEGIN OF ty_dsd_hh_racvhd,
+        tour_id	TYPE /dsd/hh_tour_id,
+        visit_id TYPE /dsd/hh_visit_id,
+      END OF ty_dsd_hh_racvhd,
+
+* DSD: Visit List - Item Data
+      BEGIN OF ty_dsd_vc_vlp,
+        vlid  TYPE /dsd/vc_vlid,
+        kunnr TYPE /dsd/vc_kunnr,
+      END OF ty_dsd_vc_vlp.
+* EOC MOD-017
+
+***start of addition for MOD-022
+TYPES: BEGIN OF ty_vlh1,
+        vlid TYPE /dsd/vc_vlid, "Visit List
+        exdat TYPE /dsd/vc_exdat, "Execution Date
+        driver1 TYPE /dsd/rp_driver1, "Driver 1
+        auth TYPE /dsd/vc_authority, "Visit Group
+       END OF ty_vlh1.
+***end of addition for MOD-022
+
+***start of addition for MOD-029
+TYPES: BEGIN OF ty_knb1,
+        kunnr TYPE kunnr,
+        bukrs TYPE bukrs,
+       END OF ty_knb1.
+***end of addition for MOD-029
+*************Internal Table Declaration********************************
+DATA:i_final   TYPE STANDARD TABLE OF ty_final,             "#EC NEEDED
+     i_final1  TYPE STANDARD TABLE OF ty_final1,            "#EC NEEDED
+     i_final2  TYPE STANDARD TABLE OF ty_final2,            "#EC NEEDED
+     i_final3  TYPE STANDARD TABLE OF ty_final3,            "#EC NEEDED
+     i_final4  TYPE STANDARD TABLE OF ty_final4,            "#EC NEEDED
+     i_final5  TYPE STANDARD TABLE OF ty_final5,            "#EC NEEDED
+     i_final6  TYPE STANDARD TABLE OF ty_final6,            "#EC NEEDED
+     i_final7  TYPE STANDARD TABLE OF ty_hh_rahd,           "#EC NEEDED
+     i_final7_status  TYPE STANDARD TABLE OF ty_hh_rahd1,   "#EC NEEDED
+     i_racvhd  TYPE STANDARD TABLE OF ty_/dsd/hh_racvhd,    "#EC NEEDED
+     i_tvak    TYPE STANDARD TABLE OF ty_tvak,              "#EC NEEDED
+     i_inb_stat  TYPE STANDARD TABLE OF ty_/ccej/t_inb_stat, "#EC NEEDED
+     i_knb1 TYPE STANDARD TABLE OF ty_knb1, "***added for MOD-029
+     i_vbak TYPE STANDARD TABLE OF ty_vbak, "***added for MOD-029
+     i_vbfa TYPE STANDARD TABLE OF vbfa
+          WITH NON-UNIQUE SORTED KEY s1 COMPONENTS
+          vbelv,"#EC NEEDED
+***start of addition for MOD-002
+     i_kna1 TYPE STANDARD TABLE OF ty_kna.                  "#EC NEEDED
+
+FIELD-SYMBOLS <fs_kna1> TYPE ty_kna.
+***end of addition for MOD-002
+*************Work Area Declaration*************************************
+DATA:wa_final  TYPE ty_final,                               "#EC NEEDED
+***start of addition for MOD-001
+     v_flag1 TYPE abap_bool,
+     v_flag2 TYPE abap_bool.
+
+CONSTANTS c_back TYPE syucomm VALUE 'BACK'.
+***end of addition for MOD-001
+DATA v_flag3 TYPE abap_bool. "added for MOD-006
+
+***start of addition for MOD-012
+CONSTANTS: c_rtacc TYPE balobj_d VALUE '/DSD/RTACC',
+           c_fsr TYPE balsubobj VALUE 'FSR',
+           c_success TYPE /ccej/sls_log_status VALUE 'S',
+           c_error TYPE /ccej/sls_log_status VALUE 'E',
+           c_not_processed TYPE /ccej/sls_log_status VALUE 'N'.
+***end of addition for MOD-012
+
+***start of addition for MOD-013
+DATA: v_kunnr TYPE kunnr,                    "Customer number
+      v_equp TYPE kna1-/scl/equp_ownr,       "Equipment owner
+      v_katr4 TYPE kna1-katr4,               "Business Type Extension
+      v_katr3 TYPE kna1-katr3,               "Business Type
+      v_visittype TYPE /ccej/sls_visit_type, "Visit Type
+      v_sum_st TYPE /ccej/sls_summary_status, "Summary Status
+      r_visit_type TYPE RANGE OF /ccej/sls_visit_type, "Visit type
+      r_status TYPE RANGE OF /ccej/sls_summary_status. "Status
+CONSTANTS: c_grp5 TYPE screen-group1 VALUE 'M5',
+           c_grp1 TYPE screen-group1 VALUE 'M1',
+           c_grp2 TYPE screen-group1 VALUE 'M2',
+           c_grp3 TYPE screen-group1 VALUE 'M3',
+           c_grp4 TYPE screen-group1 VALUE 'M4',
+           "BOC For MOD-014
+           c_grp6 TYPE screen-group1 VALUE 'M6',
+           c_grp7 TYPE screen-group1 VALUE 'M7',
+           "EOC For MOD-014
+           c_grp8 TYPE screen-group1 VALUE 'M8',"MOD-016
+           c_s_vlid TYPE rsscr_name VALUE 'S_VLID',
+           c_s_werks TYPE rsscr_name VALUE 'S_WERKS',
+           c_s_route TYPE rsscr_name VALUE 'S_ROUTE',
+           c_s_date TYPE rsscr_name VALUE 'S_DATE',
+           c_s_kunnr TYPE rsscr_name VALUE 'S_KUNNR',
+           c_s_equp TYPE rsscr_name VALUE 'S_EQUP',
+           c_s_katr4 TYPE rsscr_name VALUE 'S_KATR4',
+           c_s_katr3 TYPE rsscr_name VALUE 'S_KATR3',
+           c_s_vistyp TYPE rsscr_name VALUE 'S_VISTYP',
+           c_s_sum_st TYPE rsscr_name VALUE 'S_STATUS',
+           c_type_select TYPE rsscr_kind VALUE 'S',
+           c_i TYPE char1 VALUE 'I',
+           c_eq TYPE char2 VALUE 'EQ',
+           c_visit_type TYPE domname VALUE '/CCEJ/SLS_VISIT_TYPE',
+           c_status TYPE domname VALUE '/CCEJ/SLS_SUMMARY_STATUS',
+           c_s_sum_st_name TYPE screen-name VALUE 'S_SUM_ST'.
+***end of addition for MOD-013
+
+"BOC For MOD-014
+TYPES:BEGIN OF ty_inv,
+      awkey TYPE awkey,
+      END OF ty_inv.
+
+DATA i_inv TYPE STANDARD TABLE OF awkey.
+
+* Quick Fix Replace data element VBTYP_N with data element VBTYPL_N
+* 05.06.2026 05:58:31 EJX9007361
+* Transport Q4RK902230 ATC Correction S4 HANA
+* Replaced Code:
+*DATA: i_inv TYPE STANDARD TABLE OF awkey,
+*      r_vbtyp TYPE RANGE OF vbtyp_n.
+DATA r_vbtyp TYPE RANGE OF VBTYPL_N.
+
+* End of Quick Fix
+"EOC For MOD-014
+
+"BOC For MOD-015
+CONSTANTS:"Green light
+          c_green TYPE c VALUE '3',
+         "Red light
+          c_red   TYPE c VALUE '1',
+         "Yellow light
+          c_yellow TYPE c VALUE '2',
+          "Processed
+          c_process TYPE c   VALUE 'P',
+          "Mismatch
+          c_mismatch TYPE c  VALUE 'M',
+          "Not Processed
+          c_nprocess TYPE c  VALUE 'N',
+          "Un Planned
+          c_unplanned TYPE c  VALUE 'U',
+          "Visited
+          c_visited TYPE c  VALUE 'V',
+          "Planned but not Visited
+          c_plan_not_visit TYPE c  VALUE 'N',
+          "User1
+          c_uname TYPE sy-uname VALUE 'WF-BATCH',
+          "User2
+          c_uname_1 TYPE sy-uname VALUE 'WF-BATCH2',
+*--BOC For MOD-021
+          c_rfbsk   TYPE rfbsk VALUE 'C'.
+*--EOC For MOD-021
+
+DATA:r_user TYPE RANGE OF sy-uname.
+"EOC For MOD-015
+
+"BOC For MOD-014
+CONSTANTS:c_blank TYPE char10 VALUE '-----------',
+"EOC For MOD-014
+***start of addition for MOD-022
+          c_idoc_number TYPE lvc_fname VALUE 'IDOC_NUMBER'."IDOC number
+***end of addition for MOD-022
+
+***start of addition for MOD-022
+DATA r_auth TYPE RANGE OF /dsd/vc_authority.
+CONSTANTS: c_ccejvend TYPE /dsd/vc_authority VALUE 'CCEJVEND',
+           c_ccejplan TYPE /dsd/vc_authority VALUE 'CCEPLAN',
+           c_ccejmanl TYPE /dsd/vc_authority VALUE 'CCEJMANL',
+           c_r5 TYPE char2 VALUE 'R5'.
+***end of addition for MOD-022
+*--Start of addition for MOD-023
+"Flag used for multiple delveries scenerio
+DATA v_flag TYPE c.
+
+* Quick Fix Replace data element VBTYP_N with data element VBTYPL_N
+* 05.06.2026 05:58:31 EJX9007361
+* Transport Q4RK902230 ATC Correction S4 HANA
+* Replaced Code:
+*DATA:v_flag TYPE c,
+*     r_deltyp TYPE RANGE OF vbtyp_n.
+DATA r_deltyp TYPE RANGE OF VBTYPL_N.
+
+* End of Quick Fix
+*--End of addition for MOD-023
+***start of addition for MOD-024
+TYPES: BEGIN OF ty_proc,
+        value TYPE /ccej/otc_proc_status,
+        descp TYPE val_text,
+       END OF ty_proc.
+
+CONSTANTS: c_star TYPE char1 VALUE '*',
+           c_cp TYPE char2 VALUE 'CP',
+           c_notexecuted TYPE char1 VALUE 'N',
+           c_gray TYPE char1 VALUE '0',
+           c_retfld TYPE dfies-fieldname VALUE 'VALUE',
+           "Start of addition for MOD-030
+           c_exdat1 TYPE lvc_fname VALUE 'EXDAT1',"Orig. execution date
+           "End of addition for MOD-030
+           c_value_org TYPE ddbool_d VALUE 'S',
+           c_dom_proc_status TYPE domname VALUE '/CCEJ/OTC_PROC_STATUS'.
+***end of addition for MOD-024
+***start of addition for MOD-025
+TYPES: BEGIN OF ty_rahd1,
+        tour_id TYPE /dsd/hh_tour_id, "Tour ID
+        obj_typ TYPE /dsd/hh_doc_typ, "Tour Document Type
+        obj_id TYPE /dsd/hh_doc_id, "Tour Document Number
+       END OF ty_rahd1.
+
+CONSTANTS: c_visitlist TYPE /dsd/hh_doc_typ VALUE '20',
+           c_s_light TYPE rsscr_name VALUE 'S_LIGHT'.
+DATA: r_fsr_status TYPE RANGE OF char4,
+      wa_fsr_status LIKE LINE OF r_fsr_status,
+      i_rahd1 TYPE STANDARD TABLE OF ty_rahd1,
+      v_radio TYPE char1,
+      v_radio1 TYPE char1.
+***end of addition for MOD-025
+***start of addition for MOD-026
+TYPES: BEGIN OF ty_lips,
+        vbeln TYPE vbeln_vl, "Delivery
+        posnr TYPE posnr_vl, "Delivery Item
+        vgbel TYPE vgbel, "Document number of reference document
+        vgpos TYPE vgpos, "Item number of reference item
+       END OF ty_lips.
+***end of addition for MOD-026
+***start of addition for MOD-027
+TYPES: BEGIN OF ty_inb_stat_xblnr,
+        werks	TYPE werks_d,        "Plant
+        route	TYPE route,          "Route
+        date  TYPE erdat,          "Date
+        vlid  TYPE /dsd/vc_vlid,   "Visit List
+        idoc_number TYPE edi_docnum, "IDoc number
+        zzernam TYPE ernam,       "Name
+        zzerzzt TYPE erzzt,       "Time
+        xblnr TYPE xblnr1,        "Reference Document Number
+       END OF ty_inb_stat_xblnr,
+
+       BEGIN OF ty_bkpf_p,
+        bukrs TYPE bukrs,    "Company Code
+        belnr TYPE belnr_d,  "Accounting Document Number
+        gjahr TYPE gjahr,    "Fiscal Year
+        blart TYPE blart,    "Document Type
+        bldat TYPE bldat,    "Document Date in Document
+        budat TYPE budat,    "Posting Date in the Document
+        xblnr TYPE xblnr1,   "Reference Document Number
+        stblg TYPE stblg,    "Reverse Document Number
+       END OF ty_bkpf_p,
+
+       BEGIN OF ty_bseg_p,
+        bukrs TYPE bukrs,    "Company Code
+        belnr TYPE belnr_d,  "Accounting Document Number
+        gjahr TYPE gjahr,    "Fiscal Year
+        buzei TYPE buzei,    "Line Item Within Accounting Document
+        buzid TYPE buzid,    "Identification of the Line Item
+        bschl TYPE bschl,    "Posting Key
+        pswbt TYPE pswbt,    "Amount for Updating in General Ledger
+        pswsl TYPE pswsl,    "Update Currency for General Ledger
+        hkont TYPE hkont,    "General Ledger Account
+        kunnr TYPE kunnr,    "Customer
+       END OF ty_bseg_p.
+
+DATA: v_bschl TYPE tbsl-bschl,
+      v_blart1 TYPE t003-blart,
+      v_rows TYPE i,
+      v_string TYPE lvc_title,
+      o_table TYPE REF TO cl_salv_table.
+FIELD-SYMBOLS <fs_i_table> TYPE ANY TABLE.
+CONSTANTS: c_filt TYPE salv_de_function VALUE '&ILT',
+           c_del_filt TYPE salv_de_function VALUE '&ILD',
+           c_jp_bukrs1 TYPE bukrs VALUE '7827',
+           c_jp_bukrs2 TYPE bukrs VALUE '7828',
+           c_dz TYPE blart VALUE 'DZ',
+           c_ca TYPE /dsd/hh_paymt VALUE 'CA',
+           c_credit_memo TYPE bschl VALUE '11',
+           c_driver TYPE katr4 VALUE 'H',
+***end of addition for MOD-027
+           c_vkorg1 TYPE vkorg VALUE '0801', "***added for MOD-029
+*--Start of addition for MOD-030
+           c_auth TYPE /dsd/vc_authority VALUE 'BJIPAPER',"Visit Group
+*--End of addition for MOD-030
+           c_buffer TYPE char1 VALUE 'B'.
+*---------------------------------------------------------------------*
+*---------------------------------------------------------------------*
+*       CLASS lcl_handle_events DEFINITION
+*---------------------------------------------------------------------*
+* Define a local class for handling events of cl_salv_table
+*---------------------------------------------------------------------*
+CLASS lcl_handle_events DEFINITION.
+  PUBLIC SECTION.
+    METHODS:
+      on_link_click FOR EVENT link_click OF cl_salv_events_table
+        IMPORTING row column.
+
+***start of addition for MOD-001
+    METHODS:
+      on_click FOR EVENT added_function OF cl_salv_events_table.
+
+    METHODS:
+      on_user_command FOR EVENT added_function OF cl_salv_events_table
+        IMPORTING e_salv_function.
+***end of addition for MOD-001
+
+***start of addition for MOD-027
+    METHODS: set_after_events            " After Event
+        FOR EVENT after_salv_function OF cl_salv_events_table
+          IMPORTING
+            e_salv_function.
+***end of addition for MOD-027
+ENDCLASS.                    "lcl_handle_events DEFINITION
