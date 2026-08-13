@@ -1,36 +1,5 @@
-*&==== ALL-9-MODES RAP APP. Activation: domain/dtel /CCBJI/FSV_MODE -> /CCBJI/CX_FSV_STLMNT -> VH views (incl /CCBJI/I_FSV_MODE_VH) -> query class -> entity -> MDE -> service def -> binding. ====
-*&---- EXCEPTION CLASS ----
-CLASS /ccbji/cx_fsv_stlmnt DEFINITION
-  PUBLIC
-  INHERITING FROM cx_rap_query_provider
-  CREATE PUBLIC.
-
-  PUBLIC SECTION.
-    INTERFACES if_t100_message.
-    METHODS constructor
-      IMPORTING textid   LIKE if_t100_message=>t100key OPTIONAL
-                previous LIKE previous OPTIONAL.
-  PROTECTED SECTION.
-  PRIVATE SECTION.
-ENDCLASS.
-
-
-CLASS /ccbji/cx_fsv_stlmnt IMPLEMENTATION.
-
-  METHOD constructor.
-    CALL METHOD super->constructor
-      EXPORTING previous = previous.
-    CLEAR me->textid.
-    IF textid IS INITIAL.
-      if_t100_message~t100key = if_t100_message=>default_textid.
-    ELSE.
-      if_t100_message~t100key = textid.
-    ENDIF.
-  ENDMETHOD.
-
-ENDCLASS.
-
-*&---- QUERY CLASS ----
+*&==== ALL-9-MODES RAP APP (no custom exception; UI enforces mandatory). Activation: domain/dtel /CCBJI/FSV_MODE -> VH views (incl /CCBJI/I_FSV_MODE_VH) -> query class -> entity -> MDE -> service def -> binding. ====
+*&---- QUERY CLASS /CCBJI/CL_FSV_STLMNT_QRY ----
 *&---------------------------------------------------------------------*
 *&  Class  /CCBJI/CL_FSV_STLMNT_QRY
 *&---------------------------------------------------------------------*
@@ -122,17 +91,6 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
            END OF ty_result,
            tt_result TYPE STANDARD TABLE OF ty_result WITH DEFAULT KEY.
 
-    METHODS validate_selection
-      IMPORTING it_shipment    TYPE tt_r_tknum
-                it_route       TYPE tt_r_route
-                it_settle_date TYPE tt_r_erdat
-                it_plant       TYPE tt_r_werks
-                it_status      TYPE tt_r_status
-                it_tpp         TYPE tt_r_tplst
-                it_driver      TYPE tt_r_driver
-                it_vehicle     TYPE tt_r_truck
-      RAISING   cx_rap_query_provider.
-
     "! selection -> inb_stat -> st_status -> resolved tours
     METHODS get_tours
       IMPORTING it_shipment    TYPE tt_r_tknum
@@ -207,12 +165,9 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
       lv_mode = 'TOUR'.
     ENDIF.
 
-    " 2. Validation (same /CCEJ/OTC messages as report FORM f_validation)
-    validate_selection(
-      it_shipment = lt_shipment  it_route   = lt_route
-      it_settle_date = lt_settle_date  it_plant = lt_plant
-      it_status = lt_status  it_tpp = lt_tpp
-      it_driver = lt_driver  it_vehicle = lt_vehicle ).
+    " 2. Mandatory selection is enforced in the UI via
+    "    @Consumption.filter.mandatory (ReportMode / Plant / Route / Date),
+    "    so no backend validation exception is needed here.
 
     " 3. Resolve tours (needed by every /DSD/-based reportmode)
     DATA(lt_tour) = get_tours(
@@ -603,69 +558,6 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD validate_selection.
-
-    " 1:1 port of report FORM f_validation - ORIGINAL /CCEJ/OTC numbers,
-    " raised via the concrete exception /CCBJI/CX_FSV_STLMNT.
-    IF it_shipment IS NOT INITIAL
-       OR ( it_plant IS NOT INITIAL AND it_route IS NOT INITIAL
-            AND it_settle_date IS NOT INITIAL ).
-    ELSE.
-      RAISE EXCEPTION TYPE /ccbji/cx_fsv_stlmnt MESSAGE e525(/ccej/otc).
-    ENDIF.
-
-    IF it_shipment IS INITIAL AND it_plant IS NOT INITIAL.
-      SELECT SINGLE werks FROM t001w INTO @DATA(lv_werks) WHERE werks IN @it_plant.
-      IF sy-subrc <> 0.
-        RAISE EXCEPTION TYPE /ccbji/cx_fsv_stlmnt MESSAGE e012(/ccej/otc).
-      ENDIF.
-    ENDIF.
-
-    IF it_tpp IS NOT INITIAL.
-      SELECT SINGLE tplst FROM ttds INTO @DATA(lv_tplst) WHERE tplst IN @it_tpp.
-      IF sy-subrc <> 0.
-        RAISE EXCEPTION TYPE /ccbji/cx_fsv_stlmnt MESSAGE e125(/ccej/otc).
-      ENDIF.
-    ENDIF.
-
-    IF it_shipment IS NOT INITIAL.
-      SELECT SINGLE tknum FROM vttk INTO @DATA(lv_tknum) WHERE tknum IN @it_shipment.
-      IF sy-subrc <> 0.
-        RAISE EXCEPTION TYPE /ccbji/cx_fsv_stlmnt MESSAGE e123(/ccej/otc).
-      ENDIF.
-    ENDIF.
-
-    IF it_status IS NOT INITIAL.
-      SELECT SINGLE status_id FROM /dsd/st_cstatus INTO @DATA(lv_st) WHERE status_id IN @it_status.
-      IF sy-subrc <> 0.
-        RAISE EXCEPTION TYPE /ccbji/cx_fsv_stlmnt MESSAGE e124(/ccej/otc).
-      ENDIF.
-    ENDIF.
-
-    IF it_route IS NOT INITIAL.
-      SELECT SINGLE route FROM tvro INTO @DATA(lv_ro) WHERE route IN @it_route.
-      IF sy-subrc <> 0.
-        RAISE EXCEPTION TYPE /ccbji/cx_fsv_stlmnt MESSAGE e126(/ccej/otc).
-      ENDIF.
-    ENDIF.
-
-    IF it_vehicle IS NOT INITIAL.
-      SELECT SINGLE equnr FROM equi INTO @DATA(lv_eq) WHERE equnr IN @it_vehicle.
-      IF sy-subrc <> 0.
-        RAISE EXCEPTION TYPE /ccbji/cx_fsv_stlmnt MESSAGE e127(/ccej/otc).
-      ENDIF.
-    ENDIF.
-
-    IF it_driver IS NOT INITIAL.
-      SELECT SINGLE kunnr FROM kna1 INTO @DATA(lv_kn) WHERE kunnr IN @it_driver.
-      IF sy-subrc <> 0.
-        RAISE EXCEPTION TYPE /ccbji/cx_fsv_stlmnt MESSAGE e128(/ccej/otc).
-      ENDIF.
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD derive_processing_status.
     rv_status = 'G'.
     IF iv_errors > 0.
@@ -681,7 +573,6 @@ ENDCLASS.
 @EndUserText.label: 'OTC DSD Settlement Details (all modes)'
 @ObjectModel.query.implementedBy: 'ABAP:/CCBJI/CL_FSV_STLMNT_QRY'
 @Metadata.allowExtensions: true
-@AccessControl.authorizationCheck: #NOT_REQUIRED
 @ObjectModel.usageType: { serviceQuality: #A,
                           sizeCategory:   #L,
                           dataClass:      #MIXED }
