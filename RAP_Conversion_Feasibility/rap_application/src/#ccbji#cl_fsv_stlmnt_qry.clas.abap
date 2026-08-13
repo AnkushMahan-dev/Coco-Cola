@@ -22,8 +22,8 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
 
   PRIVATE SECTION.
 
-    " Local range types (RANGE OF cannot be used inline in a METHODS
-    " signature on this release, so it is wrapped in named table types).
+    " RANGE OF cannot be used inline in a METHODS signature on this
+    " release, so it is wrapped in named table types.
     TYPES: tt_r_tknum  TYPE RANGE OF tknum,
            tt_r_route  TYPE RANGE OF route,
            tt_r_erdat  TYPE RANGE OF erdat,
@@ -93,11 +93,11 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
     DATA lt_driver      TYPE tt_r_driver.
     DATA lt_vehicle     TYPE tt_r_truck.
 
-    FIELD-SYMBOLS <lt_range> TYPE STANDARD TABLE.
-
     " -----------------------------------------------------------------
     " 1. Translate the RAP filter (Fiori selection fields) into ABAP
     "    ranges - the equivalent of the classic SELECT-OPTIONS.
+    "    get_as_ranges( ) returns the range table directly in ls_range-range
+    "    (it is NOT a data reference), so use it straight in CORRESPONDING.
     " -----------------------------------------------------------------
     TRY.
         DATA(lt_ranges) = io_request->get_filter( )->get_as_ranges( ).
@@ -106,22 +106,17 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
     ENDTRY.
 
     LOOP AT lt_ranges INTO DATA(ls_range).
-      ASSIGN ls_range-range->* TO <lt_range>.
-      IF <lt_range> IS NOT ASSIGNED.
-        CONTINUE.
-      ENDIF.
       CASE ls_range-name.
-        WHEN 'SHIPMENTNO'.     lt_shipment    = CORRESPONDING #( <lt_range> ).
-        WHEN 'ROUTE'.          lt_route       = CORRESPONDING #( <lt_range> ).
-        WHEN 'SETTLEMENTDATE'. lt_settle_date = CORRESPONDING #( <lt_range> ).
-        WHEN 'PLANT'.          lt_plant       = CORRESPONDING #( <lt_range> ).
-        WHEN 'STATUSID'.       lt_status      = CORRESPONDING #( <lt_range> ).
-        WHEN 'TPP'.            lt_tpp         = CORRESPONDING #( <lt_range> ).
-        WHEN 'DRIVER'.         lt_driver      = CORRESPONDING #( <lt_range> ).
-        WHEN 'VEHICLE'.        lt_vehicle     = CORRESPONDING #( <lt_range> ).
+        WHEN 'SHIPMENTNO'.     lt_shipment    = CORRESPONDING #( ls_range-range ).
+        WHEN 'ROUTE'.          lt_route       = CORRESPONDING #( ls_range-range ).
+        WHEN 'SETTLEMENTDATE'. lt_settle_date = CORRESPONDING #( ls_range-range ).
+        WHEN 'PLANT'.          lt_plant       = CORRESPONDING #( ls_range-range ).
+        WHEN 'STATUSID'.       lt_status      = CORRESPONDING #( ls_range-range ).
+        WHEN 'TPP'.            lt_tpp         = CORRESPONDING #( ls_range-range ).
+        WHEN 'DRIVER'.         lt_driver      = CORRESPONDING #( ls_range-range ).
+        WHEN 'VEHICLE'.        lt_vehicle     = CORRESPONDING #( ls_range-range ).
         WHEN OTHERS.
       ENDCASE.
-      UNASSIGN <lt_range>.
     ENDLOOP.
 
     " -----------------------------------------------------------------
@@ -206,12 +201,10 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
   METHOD validate_selection.
 
     " 1:1 port of report FORM f_validation - ORIGINAL /CCEJ/OTC message
-    " numbers, raised as type E so the query aborts like the classic
-    " LEAVE LIST-PROCESSING. Each existence check runs only when its
-    " selection value is supplied - identical to the report.
-    " NOTE: if this release rejects "MESSAGE e###(/ccej/otc)" on
-    " cx_rap_query_provider, replace those lines with a bare
-    " "RAISE EXCEPTION TYPE cx_rap_query_provider." - logic is unchanged.
+    " numbers, raised via the concrete exception /CCBJI/CX_FSV_STLMNT
+    " (CX_RAP_QUERY_PROVIDER is abstract and cannot be raised directly).
+    " The query aborts like the classic LEAVE LIST-PROCESSING. Each
+    " existence check runs only when its selection value is supplied.
 
     " Mandatory selection (i525): ShipmentNo OR Plant+Route+Date.
     IF it_shipment IS NOT INITIAL
@@ -219,7 +212,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             AND it_settle_date IS NOT INITIAL ).
       " selection is sufficient - continue
     ELSE.
-      RAISE EXCEPTION TYPE cx_rap_query_provider MESSAGE e525(/ccej/otc).
+      RAISE EXCEPTION TYPE /ccbji/cx_fsv_stlmnt MESSAGE e525(/ccej/otc).
     ENDIF.
 
     " Plant must exist (i012, checked when no shipment).
@@ -227,7 +220,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
       SELECT SINGLE werks FROM t001w INTO @DATA(lv_werks)
         WHERE werks IN @it_plant.
       IF sy-subrc <> 0.
-        RAISE EXCEPTION TYPE cx_rap_query_provider MESSAGE e012(/ccej/otc).
+        RAISE EXCEPTION TYPE /ccbji/cx_fsv_stlmnt MESSAGE e012(/ccej/otc).
       ENDIF.
     ENDIF.
 
@@ -236,7 +229,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
       SELECT SINGLE tplst FROM ttds INTO @DATA(lv_tplst)
         WHERE tplst IN @it_tpp.
       IF sy-subrc <> 0.
-        RAISE EXCEPTION TYPE cx_rap_query_provider MESSAGE e125(/ccej/otc).
+        RAISE EXCEPTION TYPE /ccbji/cx_fsv_stlmnt MESSAGE e125(/ccej/otc).
       ENDIF.
     ENDIF.
 
@@ -245,7 +238,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
       SELECT SINGLE tknum FROM vttk INTO @DATA(lv_tknum)
         WHERE tknum IN @it_shipment.
       IF sy-subrc <> 0.
-        RAISE EXCEPTION TYPE cx_rap_query_provider MESSAGE e123(/ccej/otc).
+        RAISE EXCEPTION TYPE /ccbji/cx_fsv_stlmnt MESSAGE e123(/ccej/otc).
       ENDIF.
     ENDIF.
 
@@ -254,7 +247,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
       SELECT SINGLE status_id FROM /dsd/st_cstatus INTO @DATA(lv_status)
         WHERE status_id IN @it_status.
       IF sy-subrc <> 0.
-        RAISE EXCEPTION TYPE cx_rap_query_provider MESSAGE e124(/ccej/otc).
+        RAISE EXCEPTION TYPE /ccbji/cx_fsv_stlmnt MESSAGE e124(/ccej/otc).
       ENDIF.
     ENDIF.
 
@@ -263,7 +256,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
       SELECT SINGLE route FROM tvro INTO @DATA(lv_route)
         WHERE route IN @it_route.
       IF sy-subrc <> 0.
-        RAISE EXCEPTION TYPE cx_rap_query_provider MESSAGE e126(/ccej/otc).
+        RAISE EXCEPTION TYPE /ccbji/cx_fsv_stlmnt MESSAGE e126(/ccej/otc).
       ENDIF.
     ENDIF.
 
@@ -272,7 +265,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
       SELECT SINGLE equnr FROM equi INTO @DATA(lv_equnr)
         WHERE equnr IN @it_vehicle.
       IF sy-subrc <> 0.
-        RAISE EXCEPTION TYPE cx_rap_query_provider MESSAGE e127(/ccej/otc).
+        RAISE EXCEPTION TYPE /ccbji/cx_fsv_stlmnt MESSAGE e127(/ccej/otc).
       ENDIF.
     ENDIF.
 
@@ -281,7 +274,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
       SELECT SINGLE kunnr FROM kna1 INTO @DATA(lv_kunnr)
         WHERE kunnr IN @it_driver.
       IF sy-subrc <> 0.
-        RAISE EXCEPTION TYPE cx_rap_query_provider MESSAGE e128(/ccej/otc).
+        RAISE EXCEPTION TYPE /ccbji/cx_fsv_stlmnt MESSAGE e128(/ccej/otc).
       ENDIF.
     ENDIF.
 
