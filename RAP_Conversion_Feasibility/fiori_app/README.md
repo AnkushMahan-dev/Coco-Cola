@@ -49,13 +49,27 @@ element names. To add a brand-new filter, first add it as
 
 ## Deploy options
 
-**A. Generate/host via SAP BAS or VS Code (Fiori tools)** — recommended
-- Create a new *List Report* project pointing at service
-  `/CCBJI/FSV_STLMNT_SRVB` (entity `SettlementDetail`), then overwrite the
-  generated `webapp/manifest.json`, `Component.js`, and drop in
-  `ext/controller/ListReportExt.controller.js`. Run `npm start` to test, then
-  deploy to the ABAP repository (`fiori deploy`) as a BSP application under
-  package `/CCBJI/OTC`.
+**A. "Create a SAP Fiori App..." from the ADT service binding** — no BAS needed
+- In the ADT Service Binding editor for `/CCBJI/FSV_STLMNT_SRVB_V4`, click
+  **Create a SAP Fiori App...**. This launches the SAP Fiori tools
+  Application Generator (needs **VS Code + the free "SAP Fiori tools -
+  Extension Pack"** installed locally; it does NOT run purely inside Eclipse).
+- Template **List Report Object Page** → main entity **`SettlementDetail`**.
+  The generator writes a correct, deployable app pre-wired to the service.
+- Then add just two things to the generated app (do NOT overwrite the whole
+  manifest): copy `ext/controller/ListReportExt.controller.js` into
+  `webapp/ext/controller/`, and merge the `sap.ui5.extends` block (see
+  manifest.json here) using the generated app's own `sap.app.id`. Update the
+  first line of the controller's `.extend("...")` to that same id.
+- `npm start` to test, then `npm run deploy` to the ABAP repository as a BSP
+  app under package `/CCBJI/OTC`.
+
+  Service URL for reference (binding `/CCBJI/FSV_STLMNT_SRVB_V4`):
+  `/sap/opu/odata4/ccbji/fsv_stlmnt_srvb_v4/srvd/ccbji/fsv_stlmnt_srvd/0001/`
+
+**A2. Same generator, from BAS or VS Code directly** (if you prefer)
+- Create a new *List Report* project pointing at the service above (entity
+  `SettlementDetail`), then add the controller + `extends` block as in A.
 
 **B. Adapt the auto-generated app from the service** (Fiori Elements preview)
 - If you launched the app straight from the service binding preview, the app

@@ -12,7 +12,7 @@
     "resources": "resources.json",
     "dataSources": {
       "mainService": {
-        "uri": "/sap/opu/odata4/ccbji/fsv_stlmnt_srvb/srvd/ccbji/fsv_stlmnt_srvd/0001/",
+        "uri": "/sap/opu/odata4/ccbji/fsv_stlmnt_srvb_v4/srvd/ccbji/fsv_stlmnt_srvd/0001/",
         "type": "OData",
         "settings": {
           "odataVersion": "4.0"
