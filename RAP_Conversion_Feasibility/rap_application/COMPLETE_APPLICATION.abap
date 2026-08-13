@@ -40,6 +40,18 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
 
   PRIVATE SECTION.
 
+    " RANGE OF cannot be used inline in a METHODS signature on this
+    " release, so it is wrapped in named table types.
+    TYPES: tt_r_tknum  TYPE RANGE OF tknum,
+           tt_r_route  TYPE RANGE OF route,
+           tt_r_erdat  TYPE RANGE OF erdat,
+           tt_r_werks  TYPE RANGE OF werks_d,
+           tt_r_status TYPE RANGE OF /dsd/st_status_id,
+           tt_r_tplst  TYPE RANGE OF tplst,
+           tt_r_driver TYPE RANGE OF /dsd/rp_driver1,
+           tt_r_truck  TYPE RANGE OF /dsd/rp_truck,
+           ty_status   TYPE c LENGTH 1.
+
     TYPES: BEGIN OF ty_result,
              shipmentno       TYPE tknum,
              processingstatus TYPE c LENGTH 1,
@@ -59,27 +71,27 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
            tt_result TYPE STANDARD TABLE OF ty_result WITH DEFAULT KEY.
 
     METHODS validate_selection
-      IMPORTING it_shipment    TYPE RANGE OF tknum
-                it_route       TYPE RANGE OF route
-                it_settle_date TYPE RANGE OF erdat
-                it_plant       TYPE RANGE OF werks_d
-                it_status      TYPE RANGE OF /dsd/st_status_id
-                it_tpp         TYPE RANGE OF tplst
-                it_driver      TYPE RANGE OF /dsd/rp_driver1
-                it_vehicle     TYPE RANGE OF /dsd/rp_truck
+      IMPORTING it_shipment    TYPE tt_r_tknum
+                it_route       TYPE tt_r_route
+                it_settle_date TYPE tt_r_erdat
+                it_plant       TYPE tt_r_werks
+                it_status      TYPE tt_r_status
+                it_tpp         TYPE tt_r_tplst
+                it_driver      TYPE tt_r_driver
+                it_vehicle     TYPE tt_r_truck
       RAISING   cx_rap_query_provider.
 
     METHODS read_settlement_data
-      IMPORTING it_shipment      TYPE RANGE OF tknum
-                it_route         TYPE RANGE OF route
-                it_settle_date   TYPE RANGE OF erdat
+      IMPORTING it_shipment      TYPE tt_r_tknum
+                it_route         TYPE tt_r_route
+                it_settle_date   TYPE tt_r_erdat
                 iv_max_rows      TYPE i
       RETURNING VALUE(rt_result) TYPE tt_result.
 
     METHODS derive_processing_status
       IMPORTING iv_warnings      TYPE i
                 iv_errors        TYPE i
-      RETURNING VALUE(rv_status) TYPE c.
+      RETURNING VALUE(rv_status) TYPE ty_status.
 
 ENDCLASS.
 
