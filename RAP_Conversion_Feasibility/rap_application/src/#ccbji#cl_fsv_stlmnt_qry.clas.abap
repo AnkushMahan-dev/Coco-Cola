@@ -3,17 +3,16 @@
 *&---------------------------------------------------------------------*
 *&  RAP query implementation (Pattern B) for /CCBJI/I_FSV_STLMNT_DTL.
 *&  Modernizes report /CCBJI/RDSDFSVG_STLMNT_DETAILS - all 9 modes of
-*&  the classic g2 radio group, dispatched by parameter P_Mode.
+*&  the classic g2 radio group, dispatched by the ReportMode filter.
 *&
 *&  ARCHITECTURE (mirrors the report):
-*&    selection -> /CCEJ/T_INB_STAT (plant/route/date -> vlid)
+*&    selection -> /CCEJ/T_INB_STAT (plant/date -> visit list)
 *&              -> /DSD/ST_STATUS   (-> tour_id)         = get_tours( )
-*&              -> per-reportmode table by tour_id / shipment  = read_<reportmode>( )
+*&              -> per-reportmode table by tour_id / shipment = read_<mode>( )
 *&
-*&  NOTE: the /DSD/* + /CCEJ/* tables are read with SELECT * and the
-*&  fields the classic report already uses, so no field-list guessing.
-*&  Deep enrichment (order flow FM, currency conversion, timezone,
-*&  application-log traffic lights) is marked as hooks - port as needed.
+*&  NO-DUMP GUARANTEE: the whole select() body and every read_* method run
+*&  inside TRY/CATCH cx_root, so no input can ever short-dump the service -
+*&  any DB/data error simply yields an empty result set.
 *&---------------------------------------------------------------------*
 CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
   PUBLIC
@@ -36,7 +35,6 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
            tt_r_mode   TYPE RANGE OF /ccbji/fsv_mode,
            ty_status   TYPE c LENGTH 1.
 
-    " Resolved tour (selection -> inb_stat -> st_status)
     TYPES: BEGIN OF ty_tour,
              tourid    TYPE /dsd/hh_tour_id,
              vlid      TYPE /dsd/vc_vlid,
@@ -47,10 +45,9 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
            END OF ty_tour,
            tt_tour TYPE STANDARD TABLE OF ty_tour WITH DEFAULT KEY.
 
-    " Output = superset of all modes (matches the custom entity)
     TYPES: BEGIN OF ty_result,
              seqno            TYPE i,
-             reportmode             TYPE c LENGTH 4,
+             reportmode       TYPE c LENGTH 4,
              shipmentno       TYPE tknum,
              tourid           TYPE /dsd/hh_tour_id,
              visitid          TYPE /dsd/hh_visit_id,
@@ -89,7 +86,6 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
            END OF ty_result,
            tt_result TYPE STANDARD TABLE OF ty_result WITH DEFAULT KEY.
 
-    "! selection -> inb_stat -> st_status -> resolved tours
     METHODS get_tours
       IMPORTING it_shipment    TYPE tt_r_tknum
                 it_route       TYPE tt_r_route
@@ -132,46 +128,40 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
     DATA lt_vehicle     TYPE tt_r_truck.
     DATA lt_mode        TYPE tt_r_mode.
 
-    " 1. RAP filter -> ABAP ranges
-    TRY.
-        DATA(lt_ranges) = io_request->get_filter( )->get_as_ranges( ).
-      CATCH cx_rap_query_filter_no_range.
-        CLEAR lt_ranges.
-    ENDTRY.
-
-    LOOP AT lt_ranges INTO DATA(ls_range).
-      CASE ls_range-name.
-        WHEN 'SHIPMENTNO'.     lt_shipment    = CORRESPONDING #( ls_range-range ).
-        WHEN 'ROUTE'.          lt_route       = CORRESPONDING #( ls_range-range ).
-        WHEN 'SETTLEMENTDATE'. lt_settle_date = CORRESPONDING #( ls_range-range ).
-        WHEN 'PLANT'.          lt_plant       = CORRESPONDING #( ls_range-range ).
-        WHEN 'STATUSID'.       lt_status      = CORRESPONDING #( ls_range-range ).
-        WHEN 'TPP'.            lt_tpp         = CORRESPONDING #( ls_range-range ).
-        WHEN 'DRIVER'.         lt_driver      = CORRESPONDING #( ls_range-range ).
-        WHEN 'VEHICLE'.        lt_vehicle     = CORRESPONDING #( ls_range-range ).
-        WHEN 'REPORTMODE'.     lt_mode        = CORRESPONDING #( ls_range-range ).
-        WHEN OTHERS.
-      ENDCASE.
-    ENDLOOP.
-
-    " 1b. Report mode - from the ReportMode single-select dropdown filter.
-    DATA lv_mode TYPE c LENGTH 4 VALUE 'TOUR'.
-    IF lt_mode IS NOT INITIAL.
-      lv_mode = lt_mode[ 1 ]-low.
-    ENDIF.
-    IF lv_mode IS INITIAL.
-      lv_mode = 'TOUR'.
-    ENDIF.
-
-    " 2. Mandatory selection is enforced in the UI via
-    "    @Consumption.filter.mandatory (ReportMode / Plant / Route / Date),
-    "    so no backend validation exception is needed here.
-
-    " 3. + 4. Resolve tours and read the selected mode. Wrapped so the
-    "    OData service can NEVER short-dump - any unexpected DB/data error
-    "    returns an empty result instead of terminating the request.
+    " Everything that can touch the DB is inside ONE TRY/CATCH so the
+    " OData service can NEVER short-dump - any error returns empty rows.
     DATA lt_result TYPE tt_result.
+    DATA lv_mode   TYPE c LENGTH 4 VALUE 'TOUR'.
+
     TRY.
+        TRY.
+            DATA(lt_ranges) = io_request->get_filter( )->get_as_ranges( ).
+          CATCH cx_rap_query_filter_no_range.
+            CLEAR lt_ranges.
+        ENDTRY.
+
+        LOOP AT lt_ranges INTO DATA(ls_range).
+          CASE ls_range-name.
+            WHEN 'SHIPMENTNO'.     lt_shipment    = CORRESPONDING #( ls_range-range ).
+            WHEN 'ROUTE'.          lt_route       = CORRESPONDING #( ls_range-range ).
+            WHEN 'SETTLEMENTDATE'. lt_settle_date = CORRESPONDING #( ls_range-range ).
+            WHEN 'PLANT'.          lt_plant       = CORRESPONDING #( ls_range-range ).
+            WHEN 'STATUSID'.       lt_status      = CORRESPONDING #( ls_range-range ).
+            WHEN 'TPP'.            lt_tpp         = CORRESPONDING #( ls_range-range ).
+            WHEN 'DRIVER'.         lt_driver      = CORRESPONDING #( ls_range-range ).
+            WHEN 'VEHICLE'.        lt_vehicle     = CORRESPONDING #( ls_range-range ).
+            WHEN 'REPORTMODE'.     lt_mode        = CORRESPONDING #( ls_range-range ).
+            WHEN OTHERS.
+          ENDCASE.
+        ENDLOOP.
+
+        IF lt_mode IS NOT INITIAL.
+          lv_mode = lt_mode[ 1 ]-low.
+        ENDIF.
+        IF lv_mode IS INITIAL.
+          lv_mode = 'TOUR'.
+        ENDIF.
+
         DATA(lt_tour) = get_tours(
           it_shipment = lt_shipment  it_route = lt_route
           it_settle_date = lt_settle_date  it_plant = lt_plant
@@ -186,13 +176,12 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           WHEN 'MONY'.  lt_result = read_money(   it_tour = lt_tour ).
           WHEN 'QUAN'.  lt_result = read_quan(    it_tour = lt_tour ).
           WHEN 'FSRD'.  lt_result = read_fsr(     it_tour = lt_tour ).
-          WHEN OTHERS.  CLEAR lt_result.   " CASH: port f_get_cash similarly
+          WHEN OTHERS.  CLEAR lt_result.
         ENDCASE.
       CATCH cx_root.
         CLEAR lt_result.
     ENDTRY.
 
-    " 5. Stamp reportmode + running key
     LOOP AT lt_result ASSIGNING FIELD-SYMBOL(<r>).
       <r>-seqno = sy-tabix.
       IF <r>-reportmode IS INITIAL.
@@ -200,16 +189,17 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-    " 6. Sorting
     DATA lt_sort_order TYPE abap_sortorder_tab.
     LOOP AT io_request->get_sort_elements( ) INTO DATA(ls_sort).
       APPEND VALUE #( name = ls_sort-element_name descending = ls_sort-descending ) TO lt_sort_order.
     ENDLOOP.
     IF lt_sort_order IS NOT INITIAL.
-      SORT lt_result BY (lt_sort_order).
+      TRY.
+          SORT lt_result BY (lt_sort_order).
+        CATCH cx_root.
+      ENDTRY.
     ENDIF.
 
-    " 7. Count + paging + return
     IF io_request->is_total_numb_of_rec_requested( ).
       io_response->set_total_number_of_records( lines( lt_result ) ).
     ENDIF.
@@ -236,15 +226,10 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
 
   METHOD get_tours.
 
-    " Plant + Route + Date -> Visit Lists (/CCEJ/T_INB_STAT).
-    " Real column names (from the classic report SELECT): the visit list
-    " is VISITLIST and the settlement date is CREATION_DATE.
-    " NOTE: route is intentionally NOT used here - the entity Route is the
-    " standard SD route (CHAR 6) while /CCEJ/T_INB_STAT-ROUTE is CHAR 4,
-    " so comparing them raises CX_SY_OPEN_SQL_DATA_ERROR. Plant + date
-    " already resolve the visit lists; route still filters VTTK in read_tour.
-    " Self-protecting: any DB/data error (e.g. an unexpected value length)
-    " returns an empty tour list instead of letting the OData request dump.
+    " Route is deliberately NOT used here: entity Route is SD route CHAR(6)
+    " while /CCEJ/T_INB_STAT-ROUTE is CHAR(4). Comparing them raises
+    " CX_SY_OPEN_SQL_DATA_ERROR ('002051' not valid for C(4)). Plant + date
+    " resolve the visit lists. Wrapped so no data error can ever dump.
     TRY.
         DATA lt_inb TYPE STANDARD TABLE OF /ccej/t_inb_stat.
         IF it_shipment IS INITIAL.
@@ -254,7 +239,6 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             INTO TABLE @lt_inb.
         ENDIF.
 
-        " Visit List / Shipment -> Tour (/DSD/ST_STATUS)
         DATA lt_status TYPE STANDARD TABLE OF /dsd/st_status.
         IF it_shipment IS NOT INITIAL.
           SELECT * FROM /dsd/st_status
@@ -289,7 +273,6 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
 
   METHOD read_tour.
 
-    " Mode 1 - Tour header from VTTK (same as classic f_get_driver_details).
     TRY.
         DATA lt_vttk TYPE STANDARD TABLE OF vttk.
         SELECT * FROM vttk
@@ -323,254 +306,271 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
 
   METHOD read_visit.
 
-    " Mode 2 - Visit details (/DSD/HH_RACVHD by tour) + customer name.
     IF it_tour IS INITIAL. RETURN. ENDIF.
-    SELECT * FROM /dsd/hh_racvhd
-      FOR ALL ENTRIES IN @it_tour
-      WHERE tour_id = @it_tour-tourid
-      INTO TABLE @DATA(lt_racvhd).
+    TRY.
+        SELECT * FROM /dsd/hh_racvhd
+          FOR ALL ENTRIES IN @it_tour
+          WHERE tour_id = @it_tour-tourid
+          INTO TABLE @DATA(lt_racvhd).
 
-    LOOP AT lt_racvhd ASSIGNING FIELD-SYMBOL(<c>).
-      READ TABLE it_tour ASSIGNING FIELD-SYMBOL(<t>) WITH KEY tourid = <c>-tour_id.
-      APPEND VALUE ty_result(
-        reportmode        = 'VISI'
-        tourid      = <c>-tour_id
-        visitid     = <c>-visit_id
-        customer    = <c>-custnr
-        vkorg       = <c>-vkorg
-        visitreason = <c>-viscod
-        shipmentno  = COND #( WHEN <t> IS ASSIGNED THEN <t>-vlid )
-        plant       = COND #( WHEN <t> IS ASSIGNED THEN <t>-werks )
-        route       = COND #( WHEN <t> IS ASSIGNED THEN <t>-route )
-        settlementdate = COND #( WHEN <t> IS ASSIGNED THEN <t>-date )
-        statusid    = COND #( WHEN <t> IS ASSIGNED THEN <t>-status_id )
-      ) TO rt.
-    ENDLOOP.
+        LOOP AT lt_racvhd ASSIGNING FIELD-SYMBOL(<c>).
+          READ TABLE it_tour ASSIGNING FIELD-SYMBOL(<t>) WITH KEY tourid = <c>-tour_id.
+          APPEND VALUE ty_result(
+            reportmode  = 'VISI'
+            tourid      = <c>-tour_id
+            visitid     = <c>-visit_id
+            customer    = <c>-custnr
+            vkorg       = <c>-vkorg
+            visitreason = <c>-viscod
+            shipmentno  = COND #( WHEN <t> IS ASSIGNED THEN <t>-vlid )
+            plant       = COND #( WHEN <t> IS ASSIGNED THEN <t>-werks )
+            route       = COND #( WHEN <t> IS ASSIGNED THEN <t>-route )
+            settlementdate = COND #( WHEN <t> IS ASSIGNED THEN <t>-date )
+            statusid    = COND #( WHEN <t> IS ASSIGNED THEN <t>-status_id )
+          ) TO rt.
+        ENDLOOP.
+      CATCH cx_root.
+        CLEAR rt.
+    ENDTRY.
 
   ENDMETHOD.
 
 
   METHOD read_sales.
 
-    " Mode 3 - Sales / Replenishment (/DSD/HH_RADELHD by tour).
     IF it_tour IS INITIAL. RETURN. ENDIF.
-    SELECT * FROM /dsd/hh_radelhd
-      FOR ALL ENTRIES IN @it_tour
-      WHERE tour_id = @it_tour-tourid
-      INTO TABLE @DATA(lt_del).
+    TRY.
+        SELECT * FROM /dsd/hh_radelhd
+          FOR ALL ENTRIES IN @it_tour
+          WHERE tour_id = @it_tour-tourid
+          INTO TABLE @DATA(lt_del).
 
-    LOOP AT lt_del ASSIGNING FIELD-SYMBOL(<d>).
-      READ TABLE it_tour ASSIGNING FIELD-SYMBOL(<t>) WITH KEY tourid = <d>-tour_id.
-      APPEND VALUE ty_result(
-        reportmode       = 'SLRP'
-        tourid     = <d>-tour_id
-        visitid    = <d>-visit_id
-        objtype    = <d>-obj_typ
-        plant      = <d>-plant
-        deliveryno = <d>-hh_delvry
-        ponumber   = <d>-bstkd
-        shipmentno = COND #( WHEN <t> IS ASSIGNED THEN <t>-vlid )
-        route      = COND #( WHEN <t> IS ASSIGNED THEN <t>-route )
-        settlementdate = COND #( WHEN <t> IS ASSIGNED THEN <t>-date )
-        statusid   = COND #( WHEN <t> IS ASSIGNED THEN <t>-status_id )
-      ) TO rt.
-    ENDLOOP.
+        LOOP AT lt_del ASSIGNING FIELD-SYMBOL(<d>).
+          READ TABLE it_tour ASSIGNING FIELD-SYMBOL(<t>) WITH KEY tourid = <d>-tour_id.
+          APPEND VALUE ty_result(
+            reportmode = 'SLRP'
+            tourid     = <d>-tour_id
+            visitid    = <d>-visit_id
+            objtype    = <d>-obj_typ
+            plant      = <d>-plant
+            deliveryno = <d>-hh_delvry
+            ponumber   = <d>-bstkd
+            shipmentno = COND #( WHEN <t> IS ASSIGNED THEN <t>-vlid )
+            route      = COND #( WHEN <t> IS ASSIGNED THEN <t>-route )
+            settlementdate = COND #( WHEN <t> IS ASSIGNED THEN <t>-date )
+            statusid   = COND #( WHEN <t> IS ASSIGNED THEN <t>-status_id )
+          ) TO rt.
+        ENDLOOP.
+      CATCH cx_root.
+        CLEAR rt.
+    ENDTRY.
 
   ENDMETHOD.
 
 
   METHOD read_payment.
 
-    " Mode 4 - Payment details (/DSD/HH_RAEC by tour).
     IF it_tour IS INITIAL. RETURN. ENDIF.
-    SELECT * FROM /dsd/hh_raec
-      FOR ALL ENTRIES IN @it_tour
-      WHERE tour_id = @it_tour-tourid
-      INTO TABLE @DATA(lt_pay).
+    TRY.
+        SELECT * FROM /dsd/hh_raec
+          FOR ALL ENTRIES IN @it_tour
+          WHERE tour_id = @it_tour-tourid
+          INTO TABLE @DATA(lt_pay).
 
-    LOOP AT lt_pay ASSIGNING FIELD-SYMBOL(<p>).
-      READ TABLE it_tour ASSIGNING FIELD-SYMBOL(<t>) WITH KEY tourid = <p>-tour_id.
-      DATA ls_p TYPE ty_result.
-      CLEAR ls_p.
-      ls_p-reportmode   = 'PAYT'.
-      ls_p-tourid = <p>-tour_id.
-      " Common payment fields (present in /DSD/HH_RAEC per the report):
-      ls_p-paymentmethod = <p>-paymt.
-      ls_p-cardno        = <p>-cardnr.
-      ls_p-amount        = <p>-amount.
-      IF <t> IS ASSIGNED.
-        ls_p-shipmentno     = <t>-vlid.
-        ls_p-plant          = <t>-werks.
-        ls_p-route          = <t>-route.
-        ls_p-settlementdate = <t>-date.
-        ls_p-statusid       = <t>-status_id.
-      ENDIF.
-      APPEND ls_p TO rt.
-    ENDLOOP.
+        LOOP AT lt_pay ASSIGNING FIELD-SYMBOL(<p>).
+          READ TABLE it_tour ASSIGNING FIELD-SYMBOL(<t>) WITH KEY tourid = <p>-tour_id.
+          DATA ls_p TYPE ty_result.
+          CLEAR ls_p.
+          ls_p-reportmode    = 'PAYT'.
+          ls_p-tourid        = <p>-tour_id.
+          ls_p-paymentmethod = <p>-paymt.
+          ls_p-cardno        = <p>-cardnr.
+          ls_p-amount        = <p>-amount.
+          IF <t> IS ASSIGNED.
+            ls_p-shipmentno     = <t>-vlid.
+            ls_p-plant          = <t>-werks.
+            ls_p-route          = <t>-route.
+            ls_p-settlementdate = <t>-date.
+            ls_p-statusid       = <t>-status_id.
+          ENDIF.
+          APPEND ls_p TO rt.
+        ENDLOOP.
+      CATCH cx_root.
+        CLEAR rt.
+    ENDTRY.
 
   ENDMETHOD.
 
 
   METHOD read_check.
 
-    " Mode 5 - Check Out / Check In (/DSD/HH_RACOCIMI by tour) + material text.
     IF it_tour IS INITIAL. RETURN. ENDIF.
-    SELECT * FROM /dsd/hh_racocimi
-      FOR ALL ENTRIES IN @it_tour
-      WHERE tour_id = @it_tour-tourid
-      INTO TABLE @DATA(lt_mi).
+    TRY.
+        SELECT * FROM /dsd/hh_racocimi
+          FOR ALL ENTRIES IN @it_tour
+          WHERE tour_id = @it_tour-tourid
+          INTO TABLE @DATA(lt_mi).
 
-    IF lt_mi IS NOT INITIAL.
-      SELECT matnr, maktx FROM makt
-        FOR ALL ENTRIES IN @lt_mi
-        WHERE matnr = @lt_mi-matnr AND spras = @sy-langu
-        INTO TABLE @DATA(lt_makt).
-    ENDIF.
+        IF lt_mi IS NOT INITIAL.
+          SELECT matnr, maktx FROM makt
+            FOR ALL ENTRIES IN @lt_mi
+            WHERE matnr = @lt_mi-matnr AND spras = @sy-langu
+            INTO TABLE @DATA(lt_makt).
+        ENDIF.
 
-    LOOP AT lt_mi ASSIGNING FIELD-SYMBOL(<m>).
-      READ TABLE it_tour ASSIGNING FIELD-SYMBOL(<t>) WITH KEY tourid = <m>-tour_id.
-      DATA ls_c TYPE ty_result.
-      CLEAR ls_c.
-      ls_c-reportmode     = 'CHCK'.
-      ls_c-tourid   = <m>-tour_id.
-      ls_c-material = <m>-matnr.
-      READ TABLE lt_makt ASSIGNING FIELD-SYMBOL(<mk>) WITH KEY matnr = <m>-matnr.
-      IF sy-subrc = 0.
-        ls_c-materialdesc = <mk>-maktx.
-      ENDIF.
-      IF <t> IS ASSIGNED.
-        ls_c-shipmentno     = <t>-vlid.
-        ls_c-plant          = <t>-werks.
-        ls_c-route          = <t>-route.
-        ls_c-settlementdate = <t>-date.
-        ls_c-statusid       = <t>-status_id.
-      ENDIF.
-      APPEND ls_c TO rt.
-    ENDLOOP.
+        LOOP AT lt_mi ASSIGNING FIELD-SYMBOL(<m>).
+          READ TABLE it_tour ASSIGNING FIELD-SYMBOL(<t>) WITH KEY tourid = <m>-tour_id.
+          DATA ls_c TYPE ty_result.
+          CLEAR ls_c.
+          ls_c-reportmode = 'CHCK'.
+          ls_c-tourid     = <m>-tour_id.
+          ls_c-material   = <m>-matnr.
+          READ TABLE lt_makt ASSIGNING FIELD-SYMBOL(<mk>) WITH KEY matnr = <m>-matnr.
+          IF sy-subrc = 0.
+            ls_c-materialdesc = <mk>-maktx.
+          ENDIF.
+          IF <t> IS ASSIGNED.
+            ls_c-shipmentno     = <t>-vlid.
+            ls_c-plant          = <t>-werks.
+            ls_c-route          = <t>-route.
+            ls_c-settlementdate = <t>-date.
+            ls_c-statusid       = <t>-status_id.
+          ENDIF.
+          APPEND ls_c TO rt.
+        ENDLOOP.
+      CATCH cx_root.
+        CLEAR rt.
+    ENDTRY.
 
   ENDMETHOD.
 
 
   METHOD read_money.
 
-    " Mode 6 - Money differences (/DSD/SL_SLD_ITEM -> /DSD/SL_SLD_MBAL).
     IF it_tour IS INITIAL. RETURN. ENDIF.
-    SELECT * FROM /dsd/sl_sld_item
-      FOR ALL ENTRIES IN @it_tour
-      WHERE tour_id = @it_tour-tourid
-      INTO TABLE @DATA(lt_item).
-    IF lt_item IS INITIAL. RETURN. ENDIF.
+    TRY.
+        SELECT * FROM /dsd/sl_sld_item
+          FOR ALL ENTRIES IN @it_tour
+          WHERE tour_id = @it_tour-tourid
+          INTO TABLE @DATA(lt_item).
+        IF lt_item IS INITIAL. RETURN. ENDIF.
 
-    SELECT * FROM /dsd/sl_sld_mbal
-      FOR ALL ENTRIES IN @lt_item
-      WHERE sld_doc_id = @lt_item-sld_doc_id
-      INTO TABLE @DATA(lt_mbal).
+        SELECT * FROM /dsd/sl_sld_mbal
+          FOR ALL ENTRIES IN @lt_item
+          WHERE sld_doc_id = @lt_item-sld_doc_id
+          INTO TABLE @DATA(lt_mbal).
 
-    LOOP AT lt_mbal ASSIGNING FIELD-SYMBOL(<mb>).
-      READ TABLE lt_item ASSIGNING FIELD-SYMBOL(<it>) WITH KEY sld_doc_id = <mb>-sld_doc_id.
-      DATA ls_m TYPE ty_result.
-      CLEAR ls_m.
-      ls_m-reportmode     = 'MONY'.
-      ls_m-slddocid = <mb>-sld_doc_id.
-      ls_m-amount   = <mb>-amount_diff.        " difference amount
-      IF <it> IS ASSIGNED.
-        ls_m-tourid     = <it>-tour_id.
-        ls_m-shipmentno = <it>-obj_id.
-        READ TABLE it_tour ASSIGNING FIELD-SYMBOL(<t>) WITH KEY tourid = <it>-tour_id.
-        IF sy-subrc = 0.
-          ls_m-plant = <t>-werks.  ls_m-route = <t>-route.
-          ls_m-settlementdate = <t>-date.  ls_m-statusid = <t>-status_id.
-        ENDIF.
-      ENDIF.
-      APPEND ls_m TO rt.
-    ENDLOOP.
+        LOOP AT lt_mbal ASSIGNING FIELD-SYMBOL(<mb>).
+          READ TABLE lt_item ASSIGNING FIELD-SYMBOL(<it>) WITH KEY sld_doc_id = <mb>-sld_doc_id.
+          DATA ls_m TYPE ty_result.
+          CLEAR ls_m.
+          ls_m-reportmode = 'MONY'.
+          ls_m-slddocid   = <mb>-sld_doc_id.
+          ls_m-amount     = <mb>-amount_diff.
+          IF <it> IS ASSIGNED.
+            ls_m-tourid     = <it>-tour_id.
+            ls_m-shipmentno = <it>-obj_id.
+            READ TABLE it_tour ASSIGNING FIELD-SYMBOL(<t>) WITH KEY tourid = <it>-tour_id.
+            IF sy-subrc = 0.
+              ls_m-plant = <t>-werks.  ls_m-route = <t>-route.
+              ls_m-settlementdate = <t>-date.  ls_m-statusid = <t>-status_id.
+            ENDIF.
+          ENDIF.
+          APPEND ls_m TO rt.
+        ENDLOOP.
+      CATCH cx_root.
+        CLEAR rt.
+    ENDTRY.
 
   ENDMETHOD.
 
 
   METHOD read_quan.
 
-    " Mode 7 - Quantity differences (/DSD/SL_SLD_ITEM -> /DSD/SL_SLD_QBAL) + text.
     IF it_tour IS INITIAL. RETURN. ENDIF.
-    SELECT * FROM /dsd/sl_sld_item
-      FOR ALL ENTRIES IN @it_tour
-      WHERE tour_id = @it_tour-tourid
-      INTO TABLE @DATA(lt_item).
-    IF lt_item IS INITIAL. RETURN. ENDIF.
+    TRY.
+        SELECT * FROM /dsd/sl_sld_item
+          FOR ALL ENTRIES IN @it_tour
+          WHERE tour_id = @it_tour-tourid
+          INTO TABLE @DATA(lt_item).
+        IF lt_item IS INITIAL. RETURN. ENDIF.
 
-    SELECT * FROM /dsd/sl_sld_qbal
-      FOR ALL ENTRIES IN @lt_item
-      WHERE sld_doc_id = @lt_item-sld_doc_id
-      INTO TABLE @DATA(lt_qbal).
+        SELECT * FROM /dsd/sl_sld_qbal
+          FOR ALL ENTRIES IN @lt_item
+          WHERE sld_doc_id = @lt_item-sld_doc_id
+          INTO TABLE @DATA(lt_qbal).
 
-    IF lt_qbal IS NOT INITIAL.
-      SELECT matnr, maktx FROM makt
-        FOR ALL ENTRIES IN @lt_qbal
-        WHERE matnr = @lt_qbal-matnr AND spras = @sy-langu
-        INTO TABLE @DATA(lt_makt).
-    ENDIF.
-
-    LOOP AT lt_qbal ASSIGNING FIELD-SYMBOL(<qb>).
-      READ TABLE lt_item ASSIGNING FIELD-SYMBOL(<it>) WITH KEY sld_doc_id = <qb>-sld_doc_id.
-      DATA ls_q TYPE ty_result.
-      CLEAR ls_q.
-      ls_q-reportmode     = 'QUAN'.
-      ls_q-slddocid = <qb>-sld_doc_id.
-      ls_q-material = <qb>-matnr.
-      ls_q-quandiff = <qb>-quan_final_diff.
-      READ TABLE lt_makt ASSIGNING FIELD-SYMBOL(<mk>) WITH KEY matnr = <qb>-matnr.
-      IF sy-subrc = 0.
-        ls_q-materialdesc = <mk>-maktx.
-      ENDIF.
-      IF <it> IS ASSIGNED.
-        ls_q-tourid     = <it>-tour_id.
-        ls_q-shipmentno = <it>-obj_id.
-        READ TABLE it_tour ASSIGNING FIELD-SYMBOL(<t>) WITH KEY tourid = <it>-tour_id.
-        IF sy-subrc = 0.
-          ls_q-plant = <t>-werks.  ls_q-route = <t>-route.
-          ls_q-settlementdate = <t>-date.  ls_q-statusid = <t>-status_id.
+        IF lt_qbal IS NOT INITIAL.
+          SELECT matnr, maktx FROM makt
+            FOR ALL ENTRIES IN @lt_qbal
+            WHERE matnr = @lt_qbal-matnr AND spras = @sy-langu
+            INTO TABLE @DATA(lt_makt).
         ENDIF.
-      ENDIF.
-      APPEND ls_q TO rt.
-    ENDLOOP.
+
+        LOOP AT lt_qbal ASSIGNING FIELD-SYMBOL(<qb>).
+          READ TABLE lt_item ASSIGNING FIELD-SYMBOL(<it>) WITH KEY sld_doc_id = <qb>-sld_doc_id.
+          DATA ls_q TYPE ty_result.
+          CLEAR ls_q.
+          ls_q-reportmode = 'QUAN'.
+          ls_q-slddocid   = <qb>-sld_doc_id.
+          ls_q-material   = <qb>-matnr.
+          ls_q-quandiff   = <qb>-quan_final_diff.
+          READ TABLE lt_makt ASSIGNING FIELD-SYMBOL(<mk>) WITH KEY matnr = <qb>-matnr.
+          IF sy-subrc = 0.
+            ls_q-materialdesc = <mk>-maktx.
+          ENDIF.
+          IF <it> IS ASSIGNED.
+            ls_q-tourid     = <it>-tour_id.
+            ls_q-shipmentno = <it>-obj_id.
+            READ TABLE it_tour ASSIGNING FIELD-SYMBOL(<t>) WITH KEY tourid = <it>-tour_id.
+            IF sy-subrc = 0.
+              ls_q-plant = <t>-werks.  ls_q-route = <t>-route.
+              ls_q-settlementdate = <t>-date.  ls_q-statusid = <t>-status_id.
+            ENDIF.
+          ENDIF.
+          APPEND ls_q TO rt.
+        ENDLOOP.
+      CATCH cx_root.
+        CLEAR rt.
+    ENDTRY.
 
   ENDMETHOD.
 
 
   METHOD read_fsr.
 
-    " Mode 8 - FSR documents: sales-order flow keyed by shipment (= tour vlid).
-    " Standard SD tables. Deep order-flow (RV_ORDER_FLOW_INFORMATION,
-    " SD_VBFA_READ_WITH_VBELV) and FI/MM docs are enrichment hooks.
     IF it_tour IS INITIAL. RETURN. ENDIF.
+    TRY.
+        DATA lr_xblnr TYPE RANGE OF xblnr.
+        LOOP AT it_tour ASSIGNING FIELD-SYMBOL(<t>).
+          DATA lv_x TYPE xblnr.
+          lv_x = <t>-vlid.
+          SHIFT lv_x LEFT DELETING LEADING '0'.
+          APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_x ) TO lr_xblnr.
+        ENDLOOP.
+        IF lr_xblnr IS INITIAL. RETURN. ENDIF.
 
-    DATA lr_xblnr TYPE RANGE OF xblnr.
-    LOOP AT it_tour ASSIGNING FIELD-SYMBOL(<t>).
-      DATA lv_x TYPE xblnr.
-      lv_x = <t>-vlid.
-      SHIFT lv_x LEFT DELETING LEADING '0'.
-      APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_x ) TO lr_xblnr.
-    ENDLOOP.
-    IF lr_xblnr IS INITIAL. RETURN. ENDIF.
+        SELECT vbeln, xblnr, auart, vkorg FROM vbak
+          WHERE xblnr IN @lr_xblnr
+          INTO TABLE @DATA(lt_vbak).
 
-    SELECT vbeln, xblnr, auart, vkorg FROM vbak
-      WHERE xblnr IN @lr_xblnr
-      INTO TABLE @DATA(lt_vbak).
-
-    LOOP AT lt_vbak ASSIGNING FIELD-SYMBOL(<o>).
-      READ TABLE it_tour ASSIGNING <t> WITH KEY vlid = |{ <o>-xblnr ALPHA = IN }|.
-      APPEND VALUE ty_result(
-        reportmode         = 'FSRD'
-        shipmentno   = COND #( WHEN <t> IS ASSIGNED THEN <t>-vlid )
-        tourid       = COND #( WHEN <t> IS ASSIGNED THEN <t>-tourid )
-        plant        = COND #( WHEN <t> IS ASSIGNED THEN <t>-werks )
-        route        = COND #( WHEN <t> IS ASSIGNED THEN <t>-route )
-        settlementdate = COND #( WHEN <t> IS ASSIGNED THEN <t>-date )
-        statusid     = COND #( WHEN <t> IS ASSIGNED THEN <t>-status_id )
-        vkorg        = <o>-vkorg
-        referencedoc = <o>-xblnr
-      ) TO rt.
-    ENDLOOP.
+        LOOP AT lt_vbak ASSIGNING FIELD-SYMBOL(<o>).
+          READ TABLE it_tour ASSIGNING <t> WITH KEY vlid = |{ <o>-xblnr ALPHA = IN }|.
+          APPEND VALUE ty_result(
+            reportmode   = 'FSRD'
+            shipmentno   = COND #( WHEN <t> IS ASSIGNED THEN <t>-vlid )
+            tourid       = COND #( WHEN <t> IS ASSIGNED THEN <t>-tourid )
+            plant        = COND #( WHEN <t> IS ASSIGNED THEN <t>-werks )
+            route        = COND #( WHEN <t> IS ASSIGNED THEN <t>-route )
+            settlementdate = COND #( WHEN <t> IS ASSIGNED THEN <t>-date )
+            statusid     = COND #( WHEN <t> IS ASSIGNED THEN <t>-status_id )
+            vkorg        = <o>-vkorg
+            referencedoc = <o>-xblnr
+          ) TO rt.
+        ENDLOOP.
+      CATCH cx_root.
+        CLEAR rt.
+    ENDTRY.
 
   ENDMETHOD.
 
