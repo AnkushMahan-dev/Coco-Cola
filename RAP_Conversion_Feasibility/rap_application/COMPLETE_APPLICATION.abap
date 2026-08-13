@@ -43,6 +43,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
              werks     TYPE werks_d,
              route     TYPE route,
              date      TYPE erdat,
+             idoc      TYPE edi_docnum,
              status_id TYPE /dsd/st_status_id,
            END OF ty_tour,
            tt_tour TYPE STANDARD TABLE OF ty_tour WITH DEFAULT KEY.
@@ -60,8 +61,19 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
              route            TYPE route,
              settlementdate   TYPE erdat,
              driver           TYPE /dsd/rp_driver1,
+             codriver         TYPE /dsd/rp_driver1,
              vehicle          TYPE /dsd/rp_truck,
              scenario         TYPE c LENGTH 1,
+             drvswap          TYPE c LENGTH 1,
+             visitgroup       TYPE /dsd/vc_authority,
+             idocno           TYPE edi_docnum,
+             createdon        TYPE dats,
+             createdtime      TYPE tims,
+             createdby        TYPE c LENGTH 12,
+             changedon        TYPE dats,
+             changedtime      TYPE tims,
+             changedby        TYPE c LENGTH 12,
+             light            TYPE int1,
              customer         TYPE kunnr,
              vkorg            TYPE vkorg,
              visitreason      TYPE /dsd/hh_viscod,
@@ -282,6 +294,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             ls_tour-werks = <i>-werks.
             ls_tour-route = <i>-route.
             ls_tour-date  = <i>-creation_date.
+            ls_tour-idoc  = <i>-idoc_number.
           ENDIF.
           APPEND ls_tour TO rt_tour.
         ENDLOOP.
@@ -294,16 +307,43 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
 
   METHOD read_tour.
 
-    " Mode 1 - Tour header from /DSD/HH_RAHD by tour_id (classic
-    " f_get_driver_details): driver, plant, processing status. Plant / route /
-    " settlement date come from the resolved tour (/CCEJ). The bounding key is
-    " the tour list itself, so a blank search yields nothing (no scan).
+    " Mode 1 - Tour Details, ported column-for-column from the classic
+    " f_get_driver_details:
+    "   /DSD/HH_RAHD    (by tour_id)  -> driver, co-driver, plant, procstat,
+    "                                    created/changed on/time/by, obj_id
+    "   /DSD/HH_RACOCIHD(by tour_id)  -> scenario + driver swap (CHECKER)
+    "   /DSD/VC_VLH     (by obj_id)   -> visit group (AUTH)
+    "   resolved tour   (/CCEJ)       -> plant, route, settlement date, idoc
+    "   status_id                      -> Exception traffic light
+    " Bounding key is the tour list, so a blank search yields nothing.
     IF it_tour IS INITIAL. RETURN. ENDIF.
+
+    " Fiori criticality: 3 = green (positive), 2 = yellow (critical),
+    " 1 = red (negative), 0 = gray (neutral) - matches the classic light.
+    CONSTANTS: lc_green  TYPE int1 VALUE 3,
+               lc_red    TYPE int1 VALUE 1,
+               lc_yellow TYPE int1 VALUE 2,
+               lc_gray   TYPE int1 VALUE 0,
+               lc_paper  TYPE /dsd/vc_authority VALUE 'CCEJPAPER'.
+
     TRY.
         SELECT * FROM /dsd/hh_rahd
           FOR ALL ENTRIES IN @it_tour
           WHERE tour_id = @it_tour-tourid
           INTO TABLE @DATA(lt_rahd).
+
+        IF lt_rahd IS NOT INITIAL.
+          " Scenario + Driver swap source (CHECKER string).
+          SELECT tour_id, checker FROM /dsd/hh_racocihd
+            FOR ALL ENTRIES IN @lt_rahd
+            WHERE tour_id = @lt_rahd-tour_id
+            INTO TABLE @DATA(lt_coci).
+          " Visit group (AUTH) by visit list (OBJ_ID).
+          SELECT vlid, auth FROM /dsd/vc_vlh
+            FOR ALL ENTRIES IN @lt_rahd
+            WHERE vlid = @lt_rahd-obj_id
+            INTO TABLE @DATA(lt_vlh).
+        ENDIF.
 
         LOOP AT it_tour ASSIGNING FIELD-SYMBOL(<t>).
           DATA ls_r TYPE ty_result.
@@ -315,15 +355,60 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           ls_r-route          = <t>-route.
           ls_r-settlementdate = <t>-date.
           ls_r-statusid       = <t>-status_id.
+          ls_r-idocno         = <t>-idoc.
 
           READ TABLE lt_rahd ASSIGNING FIELD-SYMBOL(<h>) WITH KEY tour_id = <t>-tourid.
           IF sy-subrc = 0.
-            ls_r-driver          = <h>-driver.
+            ls_r-driver           = <h>-driver.
+            ls_r-codriver         = <h>-codriver.
             ls_r-processingstatus = <h>-procstat.
+            ls_r-createdon        = <h>-credate.
+            ls_r-createdtime      = <h>-cretime.
+            ls_r-createdby        = <h>-creuser.
+            ls_r-changedon        = <h>-cngdate.
+            ls_r-changedtime      = <h>-cngtime.
+            ls_r-changedby        = <h>-cnguser.
             IF <h>-plant IS NOT INITIAL.
               ls_r-plant = <h>-plant.
             ENDIF.
+
+            " Visit group (AUTH).
+            READ TABLE lt_vlh ASSIGNING FIELD-SYMBOL(<vl>) WITH KEY vlid = <h>-obj_id.
+            IF sy-subrc = 0.
+              ls_r-visitgroup = <vl>-auth.
+            ENDIF.
+
+            " Scenario + Driver swap from CHECKER (classic MOD-008/017 rules).
+            READ TABLE lt_coci ASSIGNING FIELD-SYMBOL(<co>) WITH KEY tour_id = <t>-tourid.
+            IF sy-subrc = 0 AND <co>-checker IS NOT INITIAL.
+              DATA(lv_len) = strlen( <co>-checker ) - 1.
+              ls_r-scenario = <co>-checker+lv_len(1).
+              ls_r-drvswap  = <co>-checker+0(1).
+            ELSE.
+              ls_r-drvswap = 'N'.
+            ENDIF.
+            " Scenario valid only for R/V/H, else blank.
+            IF ls_r-scenario <> 'R' AND ls_r-scenario <> 'V' AND ls_r-scenario <> 'H'.
+              CLEAR ls_r-scenario.
+            ENDIF.
+            " Driver swap valid only for B/G/A, else N.
+            IF ls_r-drvswap <> 'B' AND ls_r-drvswap <> 'G' AND ls_r-drvswap <> 'A'.
+              ls_r-drvswap = 'N'.
+            ENDIF.
+            " MOD-030: visit group CCEJPAPER -> scenario R, driver swap N.
+            IF ls_r-visitgroup = lc_paper.
+              ls_r-scenario = 'R'.
+              ls_r-drvswap  = 'N'.
+            ENDIF.
           ENDIF.
+
+          " Exception traffic light from status id (classic mapping).
+          CASE ls_r-statusid.
+            WHEN '804090'. ls_r-light = lc_green.
+            WHEN '804000'. ls_r-light = lc_red.
+            WHEN '803000'. ls_r-light = lc_yellow.
+            WHEN OTHERS.   ls_r-light = lc_gray.
+          ENDCASE.
 
           DATA lv_ref TYPE xblnr.
           lv_ref = <t>-vlid.
@@ -643,7 +728,10 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_MODE_VH', element: 'ReportMode' } } ]
       ReportMode       : /ccbji/fsv_mode;
 
+      // Value help SUGGESTS shipments/visit lists (F4 + type-ahead) but does
+      // not restrict - any typed value is still accepted.
       @EndUserText.label: 'Shipment / Visit List'
+      @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_SHIP_VH', element: 'ShipmentNo' } } ]
       ShipmentNo       : tknum;
 
       @EndUserText.label: 'Tour ID'
@@ -659,14 +747,18 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       Tpp              : tplst;
 
       @EndUserText.label: 'Status'
+      @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_STATUS_VH', element: 'StatusId' } } ]
       StatusId         : /dsd/st_status_id;
 
       // Not mandatory - the classic report has NO obligatory selection
-      // fields; Tour Details runs on the Visit List alone.
+      // fields; Tour Details runs on the Visit List alone. Value help
+      // suggests values without restricting free input.
       @EndUserText.label: 'Plant'
+      @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_PLANT_VH', element: 'Plant' } } ]
       Plant            : werks_d;
 
       @EndUserText.label: 'Route'
+      @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_ROUTE_VH', element: 'Route' } } ]
       Route            : route;
 
       // #INTERVAL renders a Fiori calendar date-range picker (from - to),
@@ -679,11 +771,46 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       @EndUserText.label: 'Driver'
       Driver           : /dsd/rp_driver1;
 
+      @EndUserText.label: 'Co-Driver'
+      CoDriver         : /dsd/rp_driver1;
+
       @EndUserText.label: 'Vehicle'
       Vehicle          : /dsd/rp_truck;
 
       @EndUserText.label: 'Scenario'
       Scenario         : abap.char(1);
+
+      @EndUserText.label: 'Driver Swap'
+      DriverSwap       : abap.char(1);
+
+      @EndUserText.label: 'Visit Group'
+      VisitGroup       : /dsd/vc_authority;
+
+      @EndUserText.label: 'IDoc No.'
+      IDocNo           : edi_docnum;
+
+      @EndUserText.label: 'Created On'
+      CreatedOn        : abap.dats;
+
+      @EndUserText.label: 'Created Time'
+      CreatedTime      : abap.tims;
+
+      @EndUserText.label: 'Created By'
+      CreatedBy        : abap.char(12);
+
+      @EndUserText.label: 'Changed On'
+      ChangedOn        : abap.dats;
+
+      @EndUserText.label: 'Changed At'
+      ChangedTime      : abap.tims;
+
+      @EndUserText.label: 'Changed By'
+      ChangedBy        : abap.char(12);
+
+      // Exception traffic light as a Fiori criticality (0 gray / 1 red /
+      // 2 yellow / 3 green). Referenced by ProcessingStatus criticality.
+      @EndUserText.label: 'Exception'
+      Light            : abap.int1;
 
       @EndUserText.label: 'Customer'
       Customer         : kunnr;
@@ -865,6 +992,48 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
 
   @UI: { identification: [ { position: 270 } ] }
   ReferenceDoc;
+
+  // ---- Tour Details columns (classic f_get_driver_details) ---------------
+  // Processing status coloured by the Exception traffic light (Light).
+  @UI: { lineItem:       [ { position: 35, criticality: 'Light' } ],
+         identification: [ { position: 35, criticality: 'Light' } ] }
+  ProcessingStatus;
+
+  @UI: { lineItem: [ { position: 195 } ], identification: [ { position: 195 } ] }
+  CoDriver;
+
+  @UI: { lineItem: [ { position: 205 } ], identification: [ { position: 205 } ] }
+  CreatedOn;
+
+  @UI: { lineItem: [ { position: 206 } ], identification: [ { position: 206 } ] }
+  CreatedTime;
+
+  @UI: { lineItem: [ { position: 207 } ], identification: [ { position: 207 } ] }
+  CreatedBy;
+
+  @UI: { lineItem: [ { position: 208 } ], identification: [ { position: 208 } ] }
+  ChangedOn;
+
+  @UI: { lineItem: [ { position: 209 } ], identification: [ { position: 209 } ] }
+  ChangedTime;
+
+  @UI: { lineItem: [ { position: 210 } ], identification: [ { position: 210 } ] }
+  ChangedBy;
+
+  @UI: { lineItem: [ { position: 211 } ], identification: [ { position: 211 } ] }
+  Scenario;
+
+  @UI: { lineItem: [ { position: 212 } ], identification: [ { position: 212 } ] }
+  DriverSwap;
+
+  @UI: { lineItem: [ { position: 213 } ], identification: [ { position: 213 } ] }
+  VisitGroup;
+
+  @UI: { lineItem: [ { position: 214 } ], identification: [ { position: 214 } ] }
+  IDocNo;
+
+  @UI.hidden: true
+  Light;
 }
 
 *&---- VALUE HELP VIEWS ----
@@ -950,3 +1119,4 @@ define view entity /CCBJI/I_FSV_SHIP_VH
 define service /CCBJI/FSV_STLMNT_SRVD {
   expose /CCBJI/I_FSV_STLMNT_DTL as SettlementDetail;
 }
+

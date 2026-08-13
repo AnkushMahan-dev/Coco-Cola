@@ -107,4 +107,46 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
 
   @UI: { identification: [ { position: 270 } ] }
   ReferenceDoc;
+
+  // ---- Tour Details columns (classic f_get_driver_details) ---------------
+  // Processing status coloured by the Exception traffic light (Light).
+  @UI: { lineItem:       [ { position: 35, criticality: 'Light' } ],
+         identification: [ { position: 35, criticality: 'Light' } ] }
+  ProcessingStatus;
+
+  @UI: { lineItem: [ { position: 195 } ], identification: [ { position: 195 } ] }
+  CoDriver;
+
+  @UI: { lineItem: [ { position: 205 } ], identification: [ { position: 205 } ] }
+  CreatedOn;
+
+  @UI: { lineItem: [ { position: 206 } ], identification: [ { position: 206 } ] }
+  CreatedTime;
+
+  @UI: { lineItem: [ { position: 207 } ], identification: [ { position: 207 } ] }
+  CreatedBy;
+
+  @UI: { lineItem: [ { position: 208 } ], identification: [ { position: 208 } ] }
+  ChangedOn;
+
+  @UI: { lineItem: [ { position: 209 } ], identification: [ { position: 209 } ] }
+  ChangedTime;
+
+  @UI: { lineItem: [ { position: 210 } ], identification: [ { position: 210 } ] }
+  ChangedBy;
+
+  @UI: { lineItem: [ { position: 211 } ], identification: [ { position: 211 } ] }
+  Scenario;
+
+  @UI: { lineItem: [ { position: 212 } ], identification: [ { position: 212 } ] }
+  DriverSwap;
+
+  @UI: { lineItem: [ { position: 213 } ], identification: [ { position: 213 } ] }
+  VisitGroup;
+
+  @UI: { lineItem: [ { position: 214 } ], identification: [ { position: 214 } ] }
+  IDocNo;
+
+  @UI.hidden: true
+  Light;
 }

@@ -18,9 +18,10 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_MODE_VH', element: 'ReportMode' } } ]
       ReportMode       : /ccbji/fsv_mode;
 
-      // Free-text filter (no value help) - any value is accepted, so the
-      // filter bar never rejects input. Only ReportMode is a dropdown.
+      // Value help SUGGESTS shipments/visit lists (F4 + type-ahead) but does
+      // not restrict - any typed value is still accepted.
       @EndUserText.label: 'Shipment / Visit List'
+      @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_SHIP_VH', element: 'ShipmentNo' } } ]
       ShipmentNo       : tknum;
 
       @EndUserText.label: 'Tour ID'
@@ -36,14 +37,18 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       Tpp              : tplst;
 
       @EndUserText.label: 'Status'
+      @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_STATUS_VH', element: 'StatusId' } } ]
       StatusId         : /dsd/st_status_id;
 
       // Not mandatory - the classic report has NO obligatory selection
-      // fields; Tour Details runs on the Visit List alone.
+      // fields; Tour Details runs on the Visit List alone. Value help
+      // suggests values without restricting free input.
       @EndUserText.label: 'Plant'
+      @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_PLANT_VH', element: 'Plant' } } ]
       Plant            : werks_d;
 
       @EndUserText.label: 'Route'
+      @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_ROUTE_VH', element: 'Route' } } ]
       Route            : route;
 
       // #INTERVAL renders a Fiori calendar date-range picker (from - to),
@@ -56,11 +61,46 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       @EndUserText.label: 'Driver'
       Driver           : /dsd/rp_driver1;
 
+      @EndUserText.label: 'Co-Driver'
+      CoDriver         : /dsd/rp_driver1;
+
       @EndUserText.label: 'Vehicle'
       Vehicle          : /dsd/rp_truck;
 
       @EndUserText.label: 'Scenario'
       Scenario         : abap.char(1);
+
+      @EndUserText.label: 'Driver Swap'
+      DriverSwap       : abap.char(1);
+
+      @EndUserText.label: 'Visit Group'
+      VisitGroup       : /dsd/vc_authority;
+
+      @EndUserText.label: 'IDoc No.'
+      IDocNo           : edi_docnum;
+
+      @EndUserText.label: 'Created On'
+      CreatedOn        : abap.dats;
+
+      @EndUserText.label: 'Created Time'
+      CreatedTime      : abap.tims;
+
+      @EndUserText.label: 'Created By'
+      CreatedBy        : abap.char(12);
+
+      @EndUserText.label: 'Changed On'
+      ChangedOn        : abap.dats;
+
+      @EndUserText.label: 'Changed At'
+      ChangedTime      : abap.tims;
+
+      @EndUserText.label: 'Changed By'
+      ChangedBy        : abap.char(12);
+
+      // Exception traffic light as a Fiori criticality (0 gray / 1 red /
+      // 2 yellow / 3 green). Referenced by ProcessingStatus criticality.
+      @EndUserText.label: 'Exception'
+      Light            : abap.int1;
 
       @EndUserText.label: 'Customer'
       Customer         : kunnr;
