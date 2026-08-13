@@ -1,4 +1,4 @@
-*&==== ALL-9-MODES RAP APP. Activation: domain/dtel /CCBJI/FSV_MODE -> /CCBJI/CX_FSV_STLMNT -> VH views -> query class -> entity -> MDE -> service def -> binding (Publish). ====
+*&==== ALL-9-MODES RAP APP. Activation order: domain/dtel /CCBJI/FSV_MODE -> /CCBJI/CX_FSV_STLMNT -> VH views (incl /CCBJI/I_FSV_MODE_VH) -> query class -> entity -> MDE -> service def -> binding (Publish). ====
 *&---- EXCEPTION CLASS /CCBJI/CX_FSV_STLMNT ----
 CLASS /ccbji/cx_fsv_stlmnt DEFINITION
   PUBLIC
@@ -66,7 +66,8 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
            tt_r_tplst  TYPE RANGE OF tplst,
            tt_r_driver TYPE RANGE OF /dsd/rp_driver1,
            tt_r_truck  TYPE RANGE OF /dsd/rp_truck,
-           tt_r_mode   TYPE RANGE OF /ccbji/fsv_mode.
+           tt_r_mode   TYPE RANGE OF /ccbji/fsv_mode,
+           ty_status   TYPE c LENGTH 1.
 
     " Resolved tour (selection -> inb_stat -> st_status)
     TYPES: BEGIN OF ty_tour,
@@ -156,7 +157,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
     METHODS derive_processing_status
       IMPORTING iv_warnings      TYPE i
                 iv_errors        TYPE i
-      RETURNING VALUE(rv_status) TYPE c.
+      RETURNING VALUE(rv_status) TYPE ty_status.
 
 ENDCLASS.
 
@@ -692,6 +693,7 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       // single-select DROPDOWN, is mandatory, and defaults to Tour Details.
       @EndUserText.label: 'Report Mode'
       @Consumption.filter: { mandatory: true, selectionType: #SINGLE, defaultValue: 'TOUR' }
+      @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_MODE_VH', element: 'ReportMode' } } ]
       ReportMode       : /ccbji/fsv_mode;
 
       @EndUserText.label: 'Shipment / Visit List'
@@ -897,6 +899,30 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
 }
 
 *&---- VALUE HELP VIEWS ----
+* --- #ccbji#i_fsv_mode_vh.ddls.asddls ---
+@EndUserText.label: 'Report Mode Value Help'
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@ObjectModel.resultSet.sizeCategory: #XS
+@Search.searchable: true
+define view entity /CCBJI/I_FSV_MODE_VH
+  as select from dd07l as val
+    left outer join dd07t as txt
+      on  txt.domname    = val.domname
+      and txt.as4local   = val.as4local
+      and txt.as4vers    = val.as4vers
+      and txt.valpos     = val.valpos
+      and txt.ddlanguage = $session.system_language
+{
+      @Search.defaultSearchElement: true
+      @ObjectModel.text.element: ['ModeText']
+  key cast( val.domvalue_l as /ccbji/fsv_mode ) as ReportMode,
+
+      @Semantics.text: true
+      txt.ddtext                                as ModeText
+}
+where val.domname  = '/CCBJI/FSV_MODE'
+  and val.as4local = 'A'
+
 * --- #ccbji#i_fsv_plant_vh.ddls.asddls ---
 @EndUserText.label: 'Plant Value Help (Settlement Details)'
 @AccessControl.authorizationCheck: #NOT_REQUIRED

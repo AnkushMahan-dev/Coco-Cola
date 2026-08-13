@@ -33,7 +33,8 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
            tt_r_tplst  TYPE RANGE OF tplst,
            tt_r_driver TYPE RANGE OF /dsd/rp_driver1,
            tt_r_truck  TYPE RANGE OF /dsd/rp_truck,
-           tt_r_mode   TYPE RANGE OF /ccbji/fsv_mode.
+           tt_r_mode   TYPE RANGE OF /ccbji/fsv_mode,
+           ty_status   TYPE c LENGTH 1.
 
     " Resolved tour (selection -> inb_stat -> st_status)
     TYPES: BEGIN OF ty_tour,
@@ -123,7 +124,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
     METHODS derive_processing_status
       IMPORTING iv_warnings      TYPE i
                 iv_errors        TYPE i
-      RETURNING VALUE(rv_status) TYPE c.
+      RETURNING VALUE(rv_status) TYPE ty_status.
 
 ENDCLASS.
 
