@@ -635,8 +635,10 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       @Consumption.filter.mandatory: true
       Route            : route;
 
+      // #INTERVAL renders a Fiori calendar date-range picker (from - to),
+      // instead of the frustrating multi-value "conditions" input.
       @EndUserText.label: 'Settlement Date'
-      @Consumption.filter.mandatory: true
+      @Consumption.filter: { mandatory: true, selectionType: #INTERVAL }
       SettlementDate   : erdat;
 
       @EndUserText.label: 'Driver'
