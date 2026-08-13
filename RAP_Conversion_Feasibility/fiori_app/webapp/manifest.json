@@ -102,7 +102,7 @@
             "settings": {
               "entitySet": "SettlementDetail",
               "variantManagement": "Page",
-              "initialLoad": false,
+              "initialLoad": "Disabled",
               "navigation": {
                 "SettlementDetail": {
                   "detail": {
