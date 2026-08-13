@@ -96,10 +96,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
                 it_status      TYPE tt_r_status
       RETURNING VALUE(rt_tour) TYPE tt_tour.
 
-    METHODS read_tour     IMPORTING it_shipment TYPE tt_r_tknum
-                                    it_route    TYPE tt_r_route
-                                    it_date     TYPE tt_r_erdat
-                          RETURNING VALUE(rt)   TYPE tt_result.
+    METHODS read_tour     IMPORTING it_tour TYPE tt_tour RETURNING VALUE(rt) TYPE tt_result.
     METHODS read_visit    IMPORTING it_tour TYPE tt_tour RETURNING VALUE(rt) TYPE tt_result.
     METHODS read_sales    IMPORTING it_tour TYPE tt_tour RETURNING VALUE(rt) TYPE tt_result.
     METHODS read_payment  IMPORTING it_tour TYPE tt_tour RETURNING VALUE(rt) TYPE tt_result.
@@ -164,31 +161,24 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           lv_mode = 'TOUR'.
         ENDIF.
 
-        CASE lv_mode.
-          WHEN 'TOUR'.
-            " Tour Details reads VTTK directly by Visit List / created date /
-            " route - no visit-list-to-tour resolution needed. Same as the
-            " classic f_get_shipment_data.
-            lt_result = read_tour( it_shipment = lt_shipment
-                                   it_route    = lt_route
-                                   it_date     = lt_settle_date ).
-          WHEN OTHERS.
-            " All other modes resolve the visit list -> tour first.
-            DATA(lt_tour) = get_tours(
-              it_shipment = lt_shipment  it_route = lt_route
-              it_settle_date = lt_settle_date  it_plant = lt_plant
-              it_status = lt_status ).
+        " Resolve the selection -> tours (visit list -> /dsd/st_status ->
+        " tour_id, enriched with plant/route/date). get_tours has the
+        " performance guard, so a blank search yields no tours = no scan.
+        DATA(lt_tour) = get_tours(
+          it_shipment = lt_shipment  it_route = lt_route
+          it_settle_date = lt_settle_date  it_plant = lt_plant
+          it_status = lt_status ).
 
-            CASE lv_mode.
-              WHEN 'VISI'.  lt_result = read_visit(   it_tour = lt_tour ).
-              WHEN 'SLRP'.  lt_result = read_sales(   it_tour = lt_tour ).
-              WHEN 'PAYT'.  lt_result = read_payment( it_tour = lt_tour ).
-              WHEN 'CHCK'.  lt_result = read_check(   it_tour = lt_tour ).
-              WHEN 'MONY'.  lt_result = read_money(   it_tour = lt_tour ).
-              WHEN 'QUAN'.  lt_result = read_quan(    it_tour = lt_tour ).
-              WHEN 'FSRD'.  lt_result = read_fsr(     it_tour = lt_tour ).
-              WHEN OTHERS.  CLEAR lt_result.
-            ENDCASE.
+        CASE lv_mode.
+          WHEN 'TOUR'.  lt_result = read_tour(    it_tour = lt_tour ).
+          WHEN 'VISI'.  lt_result = read_visit(   it_tour = lt_tour ).
+          WHEN 'SLRP'.  lt_result = read_sales(   it_tour = lt_tour ).
+          WHEN 'PAYT'.  lt_result = read_payment( it_tour = lt_tour ).
+          WHEN 'CHCK'.  lt_result = read_check(   it_tour = lt_tour ).
+          WHEN 'MONY'.  lt_result = read_money(   it_tour = lt_tour ).
+          WHEN 'QUAN'.  lt_result = read_quan(    it_tour = lt_tour ).
+          WHEN 'FSRD'.  lt_result = read_fsr(     it_tour = lt_tour ).
+          WHEN OTHERS.  CLEAR lt_result.
         ENDCASE.
       CATCH cx_root.
         CLEAR lt_result.
@@ -251,25 +241,36 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
     ENDIF.
 
     TRY.
-        DATA lt_inb TYPE STANDARD TABLE OF /ccej/t_inb_stat.
-        IF it_shipment IS INITIAL.
-          SELECT * FROM /ccej/t_inb_stat
-            WHERE werks IN @it_plant
-              AND creation_date IN @it_settle_date
-            INTO TABLE @lt_inb.
-        ENDIF.
-
         DATA lt_status TYPE STANDARD TABLE OF /dsd/st_status.
+
         IF it_shipment IS NOT INITIAL.
+          " Visit List -> status / tour   (classic f_status, rb_visi branch:
+          " the Visit List matches /DSD/ST_STATUS-VLID, giving TOUR_ID).
           SELECT * FROM /dsd/st_status
             WHERE vlid IN @it_shipment AND status_id IN @it_status
             INTO TABLE @lt_status.
-        ELSEIF lt_inb IS NOT INITIAL.
-          SELECT * FROM /dsd/st_status
-            FOR ALL ENTRIES IN @lt_inb
-            WHERE vlid = @lt_inb-visitlist AND status_id IN @it_status
-            INTO TABLE @lt_status.
+        ELSE.
+          " Plant/date -> visit lists -> status / tour
+          SELECT * FROM /ccej/t_inb_stat
+            WHERE werks IN @it_plant AND creation_date IN @it_settle_date
+            INTO TABLE @DATA(lt_inb0).
+          IF lt_inb0 IS NOT INITIAL.
+            SELECT * FROM /dsd/st_status
+              FOR ALL ENTRIES IN @lt_inb0
+              WHERE vlid = @lt_inb0-visitlist AND status_id IN @it_status
+              INTO TABLE @lt_status.
+          ENDIF.
         ENDIF.
+
+        IF lt_status IS INITIAL.
+          RETURN.
+        ENDIF.
+
+        " Enrich Plant / Route / Settlement date from /CCEJ by visit list.
+        SELECT * FROM /ccej/t_inb_stat
+          FOR ALL ENTRIES IN @lt_status
+          WHERE visitlist = @lt_status-vlid
+          INTO TABLE @DATA(lt_inb).
 
         LOOP AT lt_status ASSIGNING FIELD-SYMBOL(<s>).
           DATA(ls_tour) = VALUE ty_tour(
@@ -293,35 +294,44 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
 
   METHOD read_tour.
 
-    " PERFORMANCE GUARD: require at least one selective key before touching
-    " VTTK, so a blank search can never trigger a full-table read / dump.
-    IF it_shipment IS INITIAL AND it_route IS INITIAL AND it_date IS INITIAL.
-      RETURN.
-    ENDIF.
-
+    " Mode 1 - Tour header from /DSD/HH_RAHD by tour_id (classic
+    " f_get_driver_details): driver, plant, processing status. Plant / route /
+    " settlement date come from the resolved tour (/CCEJ). The bounding key is
+    " the tour list itself, so a blank search yields nothing (no scan).
+    IF it_tour IS INITIAL. RETURN. ENDIF.
     TRY.
-        DATA lt_vttk TYPE STANDARD TABLE OF vttk.
-        SELECT * FROM vttk
-          WHERE tknum IN @it_shipment AND route IN @it_route AND erdat IN @it_date
-          ORDER BY tknum
-          INTO TABLE @lt_vttk.
+        SELECT * FROM /dsd/hh_rahd
+          FOR ALL ENTRIES IN @it_tour
+          WHERE tour_id = @it_tour-tourid
+          INTO TABLE @DATA(lt_rahd).
 
-        LOOP AT lt_vttk ASSIGNING FIELD-SYMBOL(<v>).
-          DATA lv_ref TYPE tknum.
-          lv_ref = <v>-tknum.
+        LOOP AT it_tour ASSIGNING FIELD-SYMBOL(<t>).
+          DATA ls_r TYPE ty_result.
+          CLEAR ls_r.
+          ls_r-reportmode     = 'TOUR'.
+          ls_r-shipmentno     = <t>-vlid.
+          ls_r-tourid         = <t>-tourid.
+          ls_r-plant          = <t>-werks.
+          ls_r-route          = <t>-route.
+          ls_r-settlementdate = <t>-date.
+          ls_r-statusid       = <t>-status_id.
+
+          READ TABLE lt_rahd ASSIGNING FIELD-SYMBOL(<h>) WITH KEY tour_id = <t>-tourid.
+          IF sy-subrc = 0.
+            ls_r-driver          = <h>-driver.
+            ls_r-processingstatus = <h>-procstat.
+            IF <h>-plant IS NOT INITIAL.
+              ls_r-plant = <h>-plant.
+            ENDIF.
+          ENDIF.
+
+          DATA lv_ref TYPE xblnr.
+          lv_ref = <t>-vlid.
           SHIFT lv_ref LEFT DELETING LEADING '0'.
-          APPEND VALUE ty_result(
-            reportmode     = 'TOUR'
-            shipmentno     = <v>-tknum
-            tpp            = <v>-tplst
-            route          = <v>-route
-            settlementdate = <v>-erdat
-            driver         = <v>-/bev1/rpfar1
-            vehicle        = <v>-/bev1/rpmowa
-            referencedoc   = lv_ref
-            headertext     = lv_ref
-            processingstatus = derive_processing_status( iv_warnings = 0 iv_errors = 0 )
-          ) TO rt.
+          ls_r-referencedoc = lv_ref.
+          ls_r-headertext   = lv_ref.
+
+          APPEND ls_r TO rt.
         ENDLOOP.
       CATCH cx_root.
         CLEAR rt.
