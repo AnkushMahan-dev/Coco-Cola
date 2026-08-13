@@ -725,20 +725,12 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
   @UI.hidden: true
   Seqno;
 
+  // ---- Report Mode : the driving dropdown (classic radio group) ----------
   @UI: { lineItem: [ { position: 10, importance: #HIGH } ], identification: [ { position: 10 } ] }
   @UI.selectionField: [ { position: 5 } ]
   ReportMode;
 
-  @UI: { lineItem: [ { position: 20, importance: #HIGH } ], identification: [ { position: 20 } ] }
-  @UI.selectionField: [ { position: 10 } ]
-  ShipmentNo;
-
-  @UI: { lineItem: [ { position: 30 } ], identification: [ { position: 30 } ] }
-  TourId;
-
-  @UI: { lineItem: [ { position: 40 } ], identification: [ { position: 40 } ] }
-  ProcessingStatus;
-
+  // ---- Header block : always visible (mandatory in the original screen) ---
   @UI: { lineItem: [ { position: 50 } ], identification: [ { position: 50 } ] }
   @UI.selectionField: [ { position: 50 } ]
   Plant;
@@ -751,14 +743,21 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
   @UI.selectionField: [ { position: 30 } ]
   SettlementDate;
 
+  // ---- Per-mode filters : shown/hidden by the ListReport controller ext ---
+  @UI: { lineItem: [ { position: 20, importance: #HIGH } ], identification: [ { position: 20 } ] }
+  @UI.selectionField: [ { position: 10 } ]
+  ShipmentNo;
+
   @UI: { lineItem: [ { position: 80 } ], identification: [ { position: 80 } ] }
   @UI.selectionField: [ { position: 40 } ]
   StatusId;
 
   @UI: { lineItem: [ { position: 90 } ], identification: [ { position: 90 } ] }
+  @UI.selectionField: [ { position: 60 } ]
   Customer;
 
   @UI: { lineItem: [ { position: 100 } ], identification: [ { position: 100 } ] }
+  @UI.selectionField: [ { position: 70 } ]
   Material;
 
   @UI: { lineItem: [ { position: 110 } ], identification: [ { position: 110 } ] }
@@ -774,30 +773,54 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
   Amount;
 
   @UI: { lineItem: [ { position: 150 } ], identification: [ { position: 150 } ] }
+  @UI.selectionField: [ { position: 170 } ]
   Currency;
 
   @UI: { lineItem: [ { position: 160 } ], identification: [ { position: 160 } ] }
+  @UI.selectionField: [ { position: 80 } ]
   PaymentMethod;
 
   @UI: { lineItem: [ { position: 170 } ], identification: [ { position: 170 } ] }
+  @UI.selectionField: [ { position: 160 } ]
   SldDocId;
 
   @UI: { lineItem: [ { position: 180 } ], identification: [ { position: 180 } ] }
+  @UI.selectionField: [ { position: 150 } ]
   DeliveryNo;
 
   @UI: { lineItem: [ { position: 190 } ], identification: [ { position: 190 } ] }
+  @UI.selectionField: [ { position: 90 } ]
   Driver;
 
   @UI: { identification: [ { position: 200 } ] }
+  @UI.selectionField: [ { position: 100 } ]
   Vehicle;
 
   @UI: { identification: [ { position: 210 } ] }
+  @UI.selectionField: [ { position: 120 } ]
   VisitId;
 
-  @UI: { identification: [ { position: 220 } ] }
-  Vkorg;
+  @UI: { lineItem: [ { position: 200 } ], identification: [ { position: 220 } ] }
+  @UI.selectionField: [ { position: 130 } ]
+  TourId;
 
   @UI: { identification: [ { position: 230 } ] }
+  @UI.selectionField: [ { position: 110 } ]
+  Vkorg;
+
+  @UI: { identification: [ { position: 240 } ] }
+  @UI.selectionField: [ { position: 140 } ]
+  CashType;
+
+  @UI: { identification: [ { position: 250 } ] }
+  @UI.selectionField: [ { position: 180 } ]
+  VisitReason;
+
+  @UI: { identification: [ { position: 260 } ] }
+  @UI.selectionField: [ { position: 190 } ]
+  ObjType;
+
+  @UI: { identification: [ { position: 270 } ] }
   ReferenceDoc;
 }
 
