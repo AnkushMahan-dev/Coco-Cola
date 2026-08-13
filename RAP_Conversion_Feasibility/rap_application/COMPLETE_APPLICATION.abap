@@ -245,40 +245,46 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
     " standard SD route (CHAR 6) while /CCEJ/T_INB_STAT-ROUTE is CHAR 4,
     " so comparing them raises CX_SY_OPEN_SQL_DATA_ERROR. Plant + date
     " already resolve the visit lists; route still filters VTTK in read_tour.
-    DATA lt_inb TYPE STANDARD TABLE OF /ccej/t_inb_stat.
-    IF it_shipment IS INITIAL.
-      SELECT * FROM /ccej/t_inb_stat
-        WHERE werks IN @it_plant
-          AND creation_date IN @it_settle_date
-        INTO TABLE @lt_inb.
-    ENDIF.
+    " Self-protecting: any DB/data error (e.g. an unexpected value length)
+    " returns an empty tour list instead of letting the OData request dump.
+    TRY.
+        DATA lt_inb TYPE STANDARD TABLE OF /ccej/t_inb_stat.
+        IF it_shipment IS INITIAL.
+          SELECT * FROM /ccej/t_inb_stat
+            WHERE werks IN @it_plant
+              AND creation_date IN @it_settle_date
+            INTO TABLE @lt_inb.
+        ENDIF.
 
-    " Visit List / Shipment -> Tour (/DSD/ST_STATUS)
-    DATA lt_status TYPE STANDARD TABLE OF /dsd/st_status.
-    IF it_shipment IS NOT INITIAL.
-      SELECT * FROM /dsd/st_status
-        WHERE vlid IN @it_shipment AND status_id IN @it_status
-        INTO TABLE @lt_status.
-    ELSEIF lt_inb IS NOT INITIAL.
-      SELECT * FROM /dsd/st_status
-        FOR ALL ENTRIES IN @lt_inb
-        WHERE vlid = @lt_inb-visitlist AND status_id IN @it_status
-        INTO TABLE @lt_status.
-    ENDIF.
+        " Visit List / Shipment -> Tour (/DSD/ST_STATUS)
+        DATA lt_status TYPE STANDARD TABLE OF /dsd/st_status.
+        IF it_shipment IS NOT INITIAL.
+          SELECT * FROM /dsd/st_status
+            WHERE vlid IN @it_shipment AND status_id IN @it_status
+            INTO TABLE @lt_status.
+        ELSEIF lt_inb IS NOT INITIAL.
+          SELECT * FROM /dsd/st_status
+            FOR ALL ENTRIES IN @lt_inb
+            WHERE vlid = @lt_inb-visitlist AND status_id IN @it_status
+            INTO TABLE @lt_status.
+        ENDIF.
 
-    LOOP AT lt_status ASSIGNING FIELD-SYMBOL(<s>).
-      DATA(ls_tour) = VALUE ty_tour(
-        tourid    = <s>-tourid
-        vlid      = <s>-vlid
-        status_id = <s>-status_id ).
-      READ TABLE lt_inb ASSIGNING FIELD-SYMBOL(<i>) WITH KEY visitlist = <s>-vlid.
-      IF sy-subrc = 0.
-        ls_tour-werks = <i>-werks.
-        ls_tour-route = <i>-route.
-        ls_tour-date  = <i>-creation_date.
-      ENDIF.
-      APPEND ls_tour TO rt_tour.
-    ENDLOOP.
+        LOOP AT lt_status ASSIGNING FIELD-SYMBOL(<s>).
+          DATA(ls_tour) = VALUE ty_tour(
+            tourid    = <s>-tourid
+            vlid      = <s>-vlid
+            status_id = <s>-status_id ).
+          READ TABLE lt_inb ASSIGNING FIELD-SYMBOL(<i>) WITH KEY visitlist = <s>-vlid.
+          IF sy-subrc = 0.
+            ls_tour-werks = <i>-werks.
+            ls_tour-route = <i>-route.
+            ls_tour-date  = <i>-creation_date.
+          ENDIF.
+          APPEND ls_tour TO rt_tour.
+        ENDLOOP.
+      CATCH cx_root.
+        CLEAR rt_tour.
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -286,29 +292,33 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
   METHOD read_tour.
 
     " Mode 1 - Tour header from VTTK (same as classic f_get_driver_details).
-    DATA lt_vttk TYPE STANDARD TABLE OF vttk.
-    SELECT * FROM vttk
-      WHERE tknum IN @it_shipment AND route IN @it_route AND erdat IN @it_date
-      ORDER BY tknum
-      INTO TABLE @lt_vttk.
+    TRY.
+        DATA lt_vttk TYPE STANDARD TABLE OF vttk.
+        SELECT * FROM vttk
+          WHERE tknum IN @it_shipment AND route IN @it_route AND erdat IN @it_date
+          ORDER BY tknum
+          INTO TABLE @lt_vttk.
 
-    LOOP AT lt_vttk ASSIGNING FIELD-SYMBOL(<v>).
-      DATA lv_ref TYPE tknum.
-      lv_ref = <v>-tknum.
-      SHIFT lv_ref LEFT DELETING LEADING '0'.
-      APPEND VALUE ty_result(
-        reportmode           = 'TOUR'
-        shipmentno     = <v>-tknum
-        tpp            = <v>-tplst
-        route          = <v>-route
-        settlementdate = <v>-erdat
-        driver         = <v>-/bev1/rpfar1
-        vehicle        = <v>-/bev1/rpmowa
-        referencedoc   = lv_ref
-        headertext     = lv_ref
-        processingstatus = derive_processing_status( iv_warnings = 0 iv_errors = 0 )
-      ) TO rt.
-    ENDLOOP.
+        LOOP AT lt_vttk ASSIGNING FIELD-SYMBOL(<v>).
+          DATA lv_ref TYPE tknum.
+          lv_ref = <v>-tknum.
+          SHIFT lv_ref LEFT DELETING LEADING '0'.
+          APPEND VALUE ty_result(
+            reportmode     = 'TOUR'
+            shipmentno     = <v>-tknum
+            tpp            = <v>-tplst
+            route          = <v>-route
+            settlementdate = <v>-erdat
+            driver         = <v>-/bev1/rpfar1
+            vehicle        = <v>-/bev1/rpmowa
+            referencedoc   = lv_ref
+            headertext     = lv_ref
+            processingstatus = derive_processing_status( iv_warnings = 0 iv_errors = 0 )
+          ) TO rt.
+        ENDLOOP.
+      CATCH cx_root.
+        CLEAR rt.
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -600,7 +610,6 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       ReportMode       : /ccbji/fsv_mode;
 
       @EndUserText.label: 'Shipment / Visit List'
-      @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_SHIP_VH', element: 'ShipmentNo' } } ]
       ShipmentNo       : tknum;
 
       @EndUserText.label: 'Tour ID'
@@ -616,16 +625,13 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       Tpp              : tplst;
 
       @EndUserText.label: 'Status'
-      @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_STATUS_VH', element: 'StatusId' } } ]
       StatusId         : /dsd/st_status_id;
 
       @EndUserText.label: 'Plant'
-      @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_PLANT_VH', element: 'Plant' } } ]
       @Consumption.filter.mandatory: true
       Plant            : werks_d;
 
       @EndUserText.label: 'Route'
-      @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_ROUTE_VH', element: 'Route' } } ]
       @Consumption.filter.mandatory: true
       Route            : route;
 

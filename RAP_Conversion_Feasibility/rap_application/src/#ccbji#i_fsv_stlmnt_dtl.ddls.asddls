@@ -18,8 +18,9 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_MODE_VH', element: 'ReportMode' } } ]
       ReportMode       : /ccbji/fsv_mode;
 
+      // Free-text filter (no value help) - any value is accepted, so the
+      // filter bar never rejects input. Only ReportMode is a dropdown.
       @EndUserText.label: 'Shipment / Visit List'
-      @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_SHIP_VH', element: 'ShipmentNo' } } ]
       ShipmentNo       : tknum;
 
       @EndUserText.label: 'Tour ID'
@@ -35,16 +36,13 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       Tpp              : tplst;
 
       @EndUserText.label: 'Status'
-      @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_STATUS_VH', element: 'StatusId' } } ]
       StatusId         : /dsd/st_status_id;
 
       @EndUserText.label: 'Plant'
-      @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_PLANT_VH', element: 'Plant' } } ]
       @Consumption.filter.mandatory: true
       Plant            : werks_d;
 
       @EndUserText.label: 'Route'
-      @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_ROUTE_VH', element: 'Route' } } ]
       @Consumption.filter.mandatory: true
       Route            : route;
 
