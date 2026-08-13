@@ -1,7 +1,6 @@
 @EndUserText.label: 'OTC DSD Settlement Details (all modes)'
 @ObjectModel.query.implementedBy: 'ABAP:/CCBJI/CL_FSV_STLMNT_QRY'
 @Metadata.allowExtensions: true
-@AccessControl.authorizationCheck: #NOT_REQUIRED
 @ObjectModel.usageType: { serviceQuality: #A,
                           sizeCategory:   #L,
                           dataClass:      #MIXED }
