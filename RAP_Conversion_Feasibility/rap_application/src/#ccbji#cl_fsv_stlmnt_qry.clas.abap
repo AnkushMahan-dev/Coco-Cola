@@ -167,25 +167,30 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
     "    @Consumption.filter.mandatory (ReportMode / Plant / Route / Date),
     "    so no backend validation exception is needed here.
 
-    " 3. Resolve tours (needed by every /DSD/-based reportmode)
-    DATA(lt_tour) = get_tours(
-      it_shipment = lt_shipment  it_route = lt_route
-      it_settle_date = lt_settle_date  it_plant = lt_plant
-      it_status = lt_status ).
-
-    " 4. Per-reportmode dispatch (classic FORM f_mode_choose)
+    " 3. + 4. Resolve tours and read the selected mode. Wrapped so the
+    "    OData service can NEVER short-dump - any unexpected DB/data error
+    "    returns an empty result instead of terminating the request.
     DATA lt_result TYPE tt_result.
-    CASE lv_mode.
-      WHEN 'TOUR'.  lt_result = read_tour( it_shipment = lt_shipment it_route = lt_route it_date = lt_settle_date ).
-      WHEN 'VISI'.  lt_result = read_visit(   it_tour = lt_tour ).
-      WHEN 'SLRP'.  lt_result = read_sales(   it_tour = lt_tour ).
-      WHEN 'PAYT'.  lt_result = read_payment( it_tour = lt_tour ).
-      WHEN 'CHCK'.  lt_result = read_check(   it_tour = lt_tour ).
-      WHEN 'MONY'.  lt_result = read_money(   it_tour = lt_tour ).
-      WHEN 'QUAN'.  lt_result = read_quan(    it_tour = lt_tour ).
-      WHEN 'FSRD'.  lt_result = read_fsr(     it_tour = lt_tour ).
-      WHEN OTHERS.  CLEAR lt_result.   " CASH: port f_get_cash similarly
-    ENDCASE.
+    TRY.
+        DATA(lt_tour) = get_tours(
+          it_shipment = lt_shipment  it_route = lt_route
+          it_settle_date = lt_settle_date  it_plant = lt_plant
+          it_status = lt_status ).
+
+        CASE lv_mode.
+          WHEN 'TOUR'.  lt_result = read_tour( it_shipment = lt_shipment it_route = lt_route it_date = lt_settle_date ).
+          WHEN 'VISI'.  lt_result = read_visit(   it_tour = lt_tour ).
+          WHEN 'SLRP'.  lt_result = read_sales(   it_tour = lt_tour ).
+          WHEN 'PAYT'.  lt_result = read_payment( it_tour = lt_tour ).
+          WHEN 'CHCK'.  lt_result = read_check(   it_tour = lt_tour ).
+          WHEN 'MONY'.  lt_result = read_money(   it_tour = lt_tour ).
+          WHEN 'QUAN'.  lt_result = read_quan(    it_tour = lt_tour ).
+          WHEN 'FSRD'.  lt_result = read_fsr(     it_tour = lt_tour ).
+          WHEN OTHERS.  CLEAR lt_result.   " CASH: port f_get_cash similarly
+        ENDCASE.
+      CATCH cx_root.
+        CLEAR lt_result.
+    ENDTRY.
 
     " 5. Stamp reportmode + running key
     LOOP AT lt_result ASSIGNING FIELD-SYMBOL(<r>).
@@ -234,10 +239,14 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
     " Plant + Route + Date -> Visit Lists (/CCEJ/T_INB_STAT).
     " Real column names (from the classic report SELECT): the visit list
     " is VISITLIST and the settlement date is CREATION_DATE.
+    " NOTE: route is intentionally NOT used here - the entity Route is the
+    " standard SD route (CHAR 6) while /CCEJ/T_INB_STAT-ROUTE is CHAR 4,
+    " so comparing them raises CX_SY_OPEN_SQL_DATA_ERROR. Plant + date
+    " already resolve the visit lists; route still filters VTTK in read_tour.
     DATA lt_inb TYPE STANDARD TABLE OF /ccej/t_inb_stat.
     IF it_shipment IS INITIAL.
       SELECT * FROM /ccej/t_inb_stat
-        WHERE werks IN @it_plant AND route IN @it_route
+        WHERE werks IN @it_plant
           AND creation_date IN @it_settle_date
         INTO TABLE @lt_inb.
     ENDIF.
