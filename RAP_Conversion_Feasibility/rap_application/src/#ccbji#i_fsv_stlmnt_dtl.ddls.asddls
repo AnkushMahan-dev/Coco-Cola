@@ -6,19 +6,17 @@
                           sizeCategory:   #L,
                           dataClass:      #MIXED }
 define custom entity /CCBJI/I_FSV_STLMNT_DTL
-  with parameters
-    // Report mode = the classic g2 radio group. Mandatory dropdown.
-    // NOTE: @Consumption.defaultValue is NOT allowed on a custom-entity
-    // parameter - the query class defaults lv_mode to 'TOUR' instead.
-    @EndUserText.label: 'Report Mode'
-    P_Mode : /ccbji/fsv_mode
 {
       // Running key - a settlement row can come from any mode, so a
       // generated sequence guarantees uniqueness for the OData list.
   key Seqno            : abap.int4;
 
-      @EndUserText.label: 'Mode'
-      ReportMode       : abap.char(4);
+      // Report mode = the classic g2 radio group. As a SELECTION FIELD
+      // typed with the fixed-value domain /CCBJI/FSV_MODE it renders as a
+      // single-select DROPDOWN, is mandatory, and defaults to Tour Details.
+      @EndUserText.label: 'Report Mode'
+      @Consumption.filter: { mandatory: true, selectionType: #SINGLE, defaultValue: 'TOUR' }
+      ReportMode       : /ccbji/fsv_mode;
 
       @EndUserText.label: 'Shipment / Visit List'
       @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_SHIP_VH', element: 'ShipmentNo' } } ]

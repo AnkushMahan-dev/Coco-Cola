@@ -32,7 +32,8 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
            tt_r_status TYPE RANGE OF /dsd/st_status_id,
            tt_r_tplst  TYPE RANGE OF tplst,
            tt_r_driver TYPE RANGE OF /dsd/rp_driver1,
-           tt_r_truck  TYPE RANGE OF /dsd/rp_truck.
+           tt_r_truck  TYPE RANGE OF /dsd/rp_truck,
+           tt_r_mode   TYPE RANGE OF /ccbji/fsv_mode.
 
     " Resolved tour (selection -> inb_stat -> st_status)
     TYPES: BEGIN OF ty_tour,
@@ -139,6 +140,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
     DATA lt_tpp         TYPE tt_r_tplst.
     DATA lt_driver      TYPE tt_r_driver.
     DATA lt_vehicle     TYPE tt_r_truck.
+    DATA lt_mode        TYPE tt_r_mode.
 
     " 1. RAP filter -> ABAP ranges
     TRY.
@@ -157,17 +159,16 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         WHEN 'TPP'.            lt_tpp         = CORRESPONDING #( ls_range-range ).
         WHEN 'DRIVER'.         lt_driver      = CORRESPONDING #( ls_range-range ).
         WHEN 'VEHICLE'.        lt_vehicle     = CORRESPONDING #( ls_range-range ).
+        WHEN 'REPORTMODE'.     lt_mode        = CORRESPONDING #( ls_range-range ).
         WHEN OTHERS.
       ENDCASE.
     ENDLOOP.
 
-    " 1b. Mode (dropdown parameter P_Mode = classic g2 radio group)
+    " 1b. Report mode - from the ReportMode single-select dropdown filter.
     DATA lv_mode TYPE c LENGTH 4 VALUE 'TOUR'.
-    LOOP AT io_request->get_parameters( ) INTO DATA(ls_param).
-      IF to_upper( ls_param-name ) = 'P_MODE' AND ls_param-value IS NOT INITIAL.
-        lv_mode = ls_param-value.
-      ENDIF.
-    ENDLOOP.
+    IF lt_mode IS NOT INITIAL.
+      lv_mode = lt_mode[ 1 ]-low.
+    ENDIF.
     IF lv_mode IS INITIAL.
       lv_mode = 'TOUR'.
     ENDIF.

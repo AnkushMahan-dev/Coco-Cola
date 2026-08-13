@@ -11,6 +11,7 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
   Seqno;
 
   @UI: { lineItem: [ { position: 10, importance: #HIGH } ], identification: [ { position: 10 } ] }
+  @UI.selectionField: [ { position: 5 } ]
   ReportMode;
 
   @UI: { lineItem: [ { position: 20, importance: #HIGH } ], identification: [ { position: 20 } ] }
