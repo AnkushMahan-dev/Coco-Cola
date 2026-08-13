@@ -8,8 +8,9 @@
 define custom entity /CCBJI/I_FSV_STLMNT_DTL
   with parameters
     // Report mode = the classic g2 radio group. Mandatory dropdown.
+    // NOTE: @Consumption.defaultValue is NOT allowed on a custom-entity
+    // parameter - the query class defaults lv_mode to 'TOUR' instead.
     @EndUserText.label: 'Report Mode'
-    @Consumption.defaultValue: 'TOUR'
     P_Mode : /ccbji/fsv_mode
 {
       // Running key - a settlement row can come from any mode, so a
