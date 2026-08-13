@@ -4,58 +4,83 @@
                      title:          { type: #STANDARD, value: 'ShipmentNo' } } }
 annotate entity /CCBJI/I_FSV_STLMNT_DTL with
 {
-  @UI.facet: [ { id:       'Tour',
-                 purpose:  #STANDARD,
-                 type:     #IDENTIFICATION_REFERENCE,
-                 label:    'Tour Header',
-                 position: 10 } ]
+  @UI.facet: [ { id: 'Gen', purpose: #STANDARD, type: #IDENTIFICATION_REFERENCE,
+                 label: 'Settlement Detail', position: 10 } ]
 
-  @UI: { lineItem:       [ { position: 10, importance: #HIGH } ],
-         identification: [ { position: 10 } ] }
+  @UI.hidden: true
+  Seqno;
+
+  @UI: { lineItem: [ { position: 10, importance: #HIGH } ], identification: [ { position: 10 } ] }
+  Mode;
+
+  @UI: { lineItem: [ { position: 20, importance: #HIGH } ], identification: [ { position: 20 } ] }
   @UI.selectionField: [ { position: 10 } ]
   ShipmentNo;
 
-  @UI: { lineItem:       [ { position: 20, importance: #HIGH } ],
-         identification: [ { position: 20 } ] }
-  ProcessingStatus;
-
   @UI: { lineItem: [ { position: 30 } ], identification: [ { position: 30 } ] }
-  @UI.selectionField: [ { position: 20 } ]
-  Route;
+  TourId;
 
   @UI: { lineItem: [ { position: 40 } ], identification: [ { position: 40 } ] }
-  @UI.selectionField: [ { position: 30 } ]
-  SettlementDate;
+  ProcessingStatus;
 
   @UI: { lineItem: [ { position: 50 } ], identification: [ { position: 50 } ] }
-  Tpp;
-
-  @UI: { lineItem: [ { position: 60 } ], identification: [ { position: 60 } ] }
-  @UI.selectionField: [ { position: 40 } ]
-  StatusId;
-
-  @UI: { lineItem: [ { position: 70 } ], identification: [ { position: 70 } ] }
   @UI.selectionField: [ { position: 50 } ]
   Plant;
 
+  @UI: { lineItem: [ { position: 60 } ], identification: [ { position: 60 } ] }
+  @UI.selectionField: [ { position: 20 } ]
+  Route;
+
+  @UI: { lineItem: [ { position: 70 } ], identification: [ { position: 70 } ] }
+  @UI.selectionField: [ { position: 30 } ]
+  SettlementDate;
+
   @UI: { lineItem: [ { position: 80 } ], identification: [ { position: 80 } ] }
-  Driver;
+  @UI.selectionField: [ { position: 40 } ]
+  StatusId;
 
   @UI: { lineItem: [ { position: 90 } ], identification: [ { position: 90 } ] }
-  Vehicle;
+  Customer;
 
   @UI: { lineItem: [ { position: 100 } ], identification: [ { position: 100 } ] }
-  Scenario;
+  Material;
 
   @UI: { lineItem: [ { position: 110 } ], identification: [ { position: 110 } ] }
-  Warnings;
+  MaterialDesc;
 
   @UI: { lineItem: [ { position: 120 } ], identification: [ { position: 120 } ] }
-  Errors;
+  Quantity;
 
-  @UI: { identification: [ { position: 130 } ] }
+  @UI: { lineItem: [ { position: 130 } ], identification: [ { position: 130 } ] }
+  QuanDiff;
+
+  @UI: { lineItem: [ { position: 140 } ], identification: [ { position: 140 } ] }
+  Amount;
+
+  @UI: { lineItem: [ { position: 150 } ], identification: [ { position: 150 } ] }
+  Currency;
+
+  @UI: { lineItem: [ { position: 160 } ], identification: [ { position: 160 } ] }
+  PaymentMethod;
+
+  @UI: { lineItem: [ { position: 170 } ], identification: [ { position: 170 } ] }
+  SldDocId;
+
+  @UI: { lineItem: [ { position: 180 } ], identification: [ { position: 180 } ] }
+  DeliveryNo;
+
+  @UI: { lineItem: [ { position: 190 } ], identification: [ { position: 190 } ] }
+  Driver;
+
+  @UI: { identification: [ { position: 200 } ] }
+  Vehicle;
+
+  @UI: { identification: [ { position: 210 } ] }
+  VisitId;
+
+  @UI: { identification: [ { position: 220 } ] }
+  Vkorg;
+
+  @UI: { identification: [ { position: 230 } ] }
   ReferenceDoc;
-
-  @UI: { identification: [ { position: 140 } ] }
-  HeaderText;
 }
