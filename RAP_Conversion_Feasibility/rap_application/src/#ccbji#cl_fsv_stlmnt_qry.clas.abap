@@ -456,7 +456,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
       ls_m-amount   = <mb>-amount_diff.        " difference amount
       IF <it> IS ASSIGNED.
         ls_m-tourid     = <it>-tour_id.
-        ls_m-shipmentno = <it>-shipment.
+        ls_m-shipmentno = <it>-obj_id.
         READ TABLE it_tour ASSIGNING FIELD-SYMBOL(<t>) WITH KEY tourid = <it>-tour_id.
         IF sy-subrc = 0.
           ls_m-plant = <t>-werks.  ls_m-route = <t>-route.
@@ -505,7 +505,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
       ENDIF.
       IF <it> IS ASSIGNED.
         ls_q-tourid     = <it>-tour_id.
-        ls_q-shipmentno = <it>-shipment.
+        ls_q-shipmentno = <it>-obj_id.
         READ TABLE it_tour ASSIGNING FIELD-SYMBOL(<t>) WITH KEY tourid = <it>-tour_id.
         IF sy-subrc = 0.
           ls_q-plant = <t>-werks.  ls_q-route = <t>-route.

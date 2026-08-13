@@ -1,4 +1,4 @@
-*&==== ALL-9-MODES RAP APP (no custom exception; UI enforces mandatory). Activation: domain/dtel /CCBJI/FSV_MODE -> VH views (incl /CCBJI/I_FSV_MODE_VH) -> query class -> entity -> MDE -> service def -> binding. ====
+*&==== ALL-9-MODES RAP APP. Activation: domain/dtel /CCBJI/FSV_MODE -> VH views (incl /CCBJI/I_FSV_MODE_VH) -> query class -> entity -> MDE -> service def -> binding. ====
 *&---- QUERY CLASS /CCBJI/CL_FSV_STLMNT_QRY ----
 *&---------------------------------------------------------------------*
 *&  Class  /CCBJI/CL_FSV_STLMNT_QRY
@@ -458,7 +458,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
       ls_m-amount   = <mb>-amount_diff.        " difference amount
       IF <it> IS ASSIGNED.
         ls_m-tourid     = <it>-tour_id.
-        ls_m-shipmentno = <it>-shipment.
+        ls_m-shipmentno = <it>-obj_id.
         READ TABLE it_tour ASSIGNING FIELD-SYMBOL(<t>) WITH KEY tourid = <it>-tour_id.
         IF sy-subrc = 0.
           ls_m-plant = <t>-werks.  ls_m-route = <t>-route.
@@ -507,7 +507,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
       ENDIF.
       IF <it> IS ASSIGNED.
         ls_q-tourid     = <it>-tour_id.
-        ls_q-shipmentno = <it>-shipment.
+        ls_q-shipmentno = <it>-obj_id.
         READ TABLE it_tour ASSIGNING FIELD-SYMBOL(<t>) WITH KEY tourid = <it>-tour_id.
         IF sy-subrc = 0.
           ls_q-plant = <t>-werks.  ls_q-route = <t>-route.
