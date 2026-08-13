@@ -245,11 +245,14 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
 
   METHOD get_tours.
 
-    " Plant + Route + Date -> Visit Lists (/CCEJ/T_INB_STAT)
+    " Plant + Route + Date -> Visit Lists (/CCEJ/T_INB_STAT).
+    " Real column names (from the classic report SELECT): the visit list
+    " is VISITLIST and the settlement date is CREATION_DATE.
     DATA lt_inb TYPE STANDARD TABLE OF /ccej/t_inb_stat.
     IF it_shipment IS INITIAL.
       SELECT * FROM /ccej/t_inb_stat
-        WHERE werks IN @it_plant AND route IN @it_route AND date IN @it_settle_date
+        WHERE werks IN @it_plant AND route IN @it_route
+          AND creation_date IN @it_settle_date
         INTO TABLE @lt_inb.
     ENDIF.
 
@@ -262,7 +265,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
     ELSEIF lt_inb IS NOT INITIAL.
       SELECT * FROM /dsd/st_status
         FOR ALL ENTRIES IN @lt_inb
-        WHERE vlid = @lt_inb-vlid AND status_id IN @it_status
+        WHERE vlid = @lt_inb-visitlist AND status_id IN @it_status
         INTO TABLE @lt_status.
     ENDIF.
 
@@ -271,11 +274,11 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         tourid    = <s>-tourid
         vlid      = <s>-vlid
         status_id = <s>-status_id ).
-      READ TABLE lt_inb ASSIGNING FIELD-SYMBOL(<i>) WITH KEY vlid = <s>-vlid.
+      READ TABLE lt_inb ASSIGNING FIELD-SYMBOL(<i>) WITH KEY visitlist = <s>-vlid.
       IF sy-subrc = 0.
         ls_tour-werks = <i>-werks.
         ls_tour-route = <i>-route.
-        ls_tour-date  = <i>-date.
+        ls_tour-date  = <i>-creation_date.
       ENDIF.
       APPEND ls_tour TO rt_tour.
     ENDLOOP.

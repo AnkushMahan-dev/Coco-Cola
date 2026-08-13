@@ -1,5 +1,5 @@
-*&==== ALL-9-MODES RAP APP. Activation order: domain/dtel /CCBJI/FSV_MODE -> /CCBJI/CX_FSV_STLMNT -> VH views (incl /CCBJI/I_FSV_MODE_VH) -> query class -> entity -> MDE -> service def -> binding (Publish). ====
-*&---- EXCEPTION CLASS /CCBJI/CX_FSV_STLMNT ----
+*&==== ALL-9-MODES RAP APP. Activation: domain/dtel /CCBJI/FSV_MODE -> /CCBJI/CX_FSV_STLMNT -> VH views (incl /CCBJI/I_FSV_MODE_VH) -> query class -> entity -> MDE -> service def -> binding. ====
+*&---- EXCEPTION CLASS ----
 CLASS /ccbji/cx_fsv_stlmnt DEFINITION
   PUBLIC
   INHERITING FROM cx_rap_query_provider
@@ -30,7 +30,7 @@ CLASS /ccbji/cx_fsv_stlmnt IMPLEMENTATION.
 
 ENDCLASS.
 
-*&---- QUERY CLASS /CCBJI/CL_FSV_STLMNT_QRY ----
+*&---- QUERY CLASS ----
 *&---------------------------------------------------------------------*
 *&  Class  /CCBJI/CL_FSV_STLMNT_QRY
 *&---------------------------------------------------------------------*
@@ -278,11 +278,14 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
 
   METHOD get_tours.
 
-    " Plant + Route + Date -> Visit Lists (/CCEJ/T_INB_STAT)
+    " Plant + Route + Date -> Visit Lists (/CCEJ/T_INB_STAT).
+    " Real column names (from the classic report SELECT): the visit list
+    " is VISITLIST and the settlement date is CREATION_DATE.
     DATA lt_inb TYPE STANDARD TABLE OF /ccej/t_inb_stat.
     IF it_shipment IS INITIAL.
       SELECT * FROM /ccej/t_inb_stat
-        WHERE werks IN @it_plant AND route IN @it_route AND date IN @it_settle_date
+        WHERE werks IN @it_plant AND route IN @it_route
+          AND creation_date IN @it_settle_date
         INTO TABLE @lt_inb.
     ENDIF.
 
@@ -295,7 +298,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
     ELSEIF lt_inb IS NOT INITIAL.
       SELECT * FROM /dsd/st_status
         FOR ALL ENTRIES IN @lt_inb
-        WHERE vlid = @lt_inb-vlid AND status_id IN @it_status
+        WHERE vlid = @lt_inb-visitlist AND status_id IN @it_status
         INTO TABLE @lt_status.
     ENDIF.
 
@@ -304,11 +307,11 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         tourid    = <s>-tourid
         vlid      = <s>-vlid
         status_id = <s>-status_id ).
-      READ TABLE lt_inb ASSIGNING FIELD-SYMBOL(<i>) WITH KEY vlid = <s>-vlid.
+      READ TABLE lt_inb ASSIGNING FIELD-SYMBOL(<i>) WITH KEY visitlist = <s>-vlid.
       IF sy-subrc = 0.
         ls_tour-werks = <i>-werks.
         ls_tour-route = <i>-route.
-        ls_tour-date  = <i>-date.
+        ls_tour-date  = <i>-creation_date.
       ENDIF.
       APPEND ls_tour TO rt_tour.
     ENDLOOP.
@@ -674,7 +677,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
 
 ENDCLASS.
 
-*&---- CUSTOM ENTITY /CCBJI/I_FSV_STLMNT_DTL ----
+*&---- CUSTOM ENTITY ----
 @EndUserText.label: 'OTC DSD Settlement Details (all modes)'
 @ObjectModel.query.implementedBy: 'ABAP:/CCBJI/CL_FSV_STLMNT_QRY'
 @Metadata.allowExtensions: true
@@ -809,7 +812,7 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       HeaderText       : bktxt;
 }
 
-*&---- METADATA EXTENSION /CCBJI/I_FSV_STLMNT_DTL ----
+*&---- METADATA EXTENSION ----
 @Metadata.layer: #CORE
 @UI: { headerInfo: { typeName:       'Settlement Detail',
                      typeNamePlural: 'Settlement Details',
@@ -976,7 +979,7 @@ define view entity /CCBJI/I_FSV_SHIP_VH
       erdat as CreatedOn
 }
 
-*&---- SERVICE DEFINITION /CCBJI/FSV_STLMNT_SRVD ----
+*&---- SERVICE DEFINITION ----
 @EndUserText.label: 'OTC DSD Settlement Details Service'
 define service /CCBJI/FSV_STLMNT_SRVD {
   expose /CCBJI/I_FSV_STLMNT_DTL as SettlementDetail;
