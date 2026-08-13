@@ -120,6 +120,24 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
     ENDLOOP.
 
     " -----------------------------------------------------------------
+    " 1b. Report mode = the classic g2 radio-button group, now the
+    "     mandatory dropdown parameter P_Mode. Defaults to TOUR.
+    "     Values: TOUR VISI SLRP PAYT CHCK MONY QUAN FSRD CASH.
+    " -----------------------------------------------------------------
+    DATA lv_mode TYPE c LENGTH 4 VALUE 'TOUR'.
+    LOOP AT io_request->get_parameters( ) INTO DATA(ls_param).
+      IF to_upper( ls_param-name ) = 'P_MODE' AND ls_param-value IS NOT INITIAL.
+        lv_mode = ls_param-value.
+      ENDIF.
+    ENDLOOP.
+    IF lv_mode IS INITIAL.
+      lv_mode = 'TOUR'.
+    ENDIF.
+    " Per-mode branching hook: TOUR is implemented in read_settlement_data.
+    " For the other modes, move that mode's report SELECT/PERFORM logic
+    " into a mode-specific read (keyed by lv_mode) to complete Option B.
+
+    " -----------------------------------------------------------------
     " 2. VALIDATION - same checks / same /CCEJ/OTC messages as
     "    report FORM f_validation. A failure aborts the query
     "    (= LEAVE LIST-PROCESSING) and shows the message in Fiori.

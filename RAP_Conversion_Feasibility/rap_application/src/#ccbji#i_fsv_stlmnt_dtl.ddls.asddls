@@ -1,4 +1,4 @@
-@EndUserText.label: 'OTC DSD Settlement Details - Tour Header'
+@EndUserText.label: 'OTC DSD Settlement Details'
 @ObjectModel.query.implementedBy: 'ABAP:/CCBJI/CL_FSV_STLMNT_QRY'
 @Metadata.allowExtensions: true
 @AccessControl.authorizationCheck: #NOT_REQUIRED
@@ -6,10 +6,16 @@
                           sizeCategory:   #M,
                           dataClass:      #MIXED }
 define custom entity /CCBJI/I_FSV_STLMNT_DTL
+  with parameters
+    // Report mode = the classic g2 radio-button group. Rendered as a
+    // MANDATORY dropdown (fixed values from domain /CCBJI/FSV_MODE).
+    @EndUserText.label: 'Report Mode'
+    @Consumption.defaultValue: 'TOUR'
+    P_Mode : /ccbji/fsv_mode
 {
       // Key of the settlement tour header row (one row per shipment / visit list)
-      // Value help: a released shipment VH view or a custom one over VTTK.
-      // @Consumption.valueHelpDefinition: [{ entity: { name: 'I_Shipment', element: 'Shipment' } }]
+      @EndUserText.label: 'Shipment / Visit List'
+      @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_SHIP_VH', element: 'ShipmentNo' } } ]
   key ShipmentNo       : tknum;
 
       // Derived traffic light  G = ok , Y = warnings , R = errors  (source: f_traffic_light)
@@ -20,20 +26,16 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       Tpp              : tplst;
 
       @EndUserText.label: 'Status'
-      // Value help over the settlement status check table /DSD/ST_CSTATUS
-      // (build a small VH custom entity/view and reference it here):
-      // @Consumption.valueHelpDefinition: [{ entity: { name: '/CCBJI/I_FSV_STATUS_VH', element: 'StatusId' } }]
+      @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_STATUS_VH', element: 'StatusId' } } ]
       StatusId         : /dsd/st_status_id;
 
       @EndUserText.label: 'Plant'
-      // Plant F4 from the released VDM plant view (key element = Plant).
-      @Consumption.valueHelpDefinition: [ { entity: { name: 'I_Plant', element: 'Plant' } } ]
+      @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_PLANT_VH', element: 'Plant' } } ]
       @Consumption.filter.mandatory: true
       Plant            : werks_d;
 
       @EndUserText.label: 'Route'
-      // Route F4 from the released route view (verify the name on your system).
-      @Consumption.valueHelpDefinition: [ { entity: { name: 'I_Route', element: 'Route' } } ]
+      @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_ROUTE_VH', element: 'Route' } } ]
       @Consumption.filter.mandatory: true
       Route            : route;
 

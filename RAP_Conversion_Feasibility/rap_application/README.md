@@ -141,6 +141,79 @@ A ready ZIP is provided: **`CCBJI_OTC_STLMNT_RAP_abapGit.zip`** (in the parent
 
 ---
 
+## 4b. Filters — Mode dropdown (Option B), mandatory & value help
+
+### Value help (F4) — for every filter
+Provided as 4 CDS value-help views over the exact check tables the report
+validated against, referenced from the entity via `@Consumption.valueHelpDefinition`:
+
+| Filter | Value-help view | Source table |
+|--------|-----------------|--------------|
+| Shipment / Visit List | `/CCBJI/I_FSV_SHIP_VH` | `VTTK` |
+| Plant | `/CCBJI/I_FSV_PLANT_VH` | `T001W` |
+| Route | `/CCBJI/I_FSV_ROUTE_VH` | `TVRO` |
+| Status | `/CCBJI/I_FSV_STATUS_VH` | `/DSD/ST_CSTATUS` |
+
+(Settlement Date uses the native date picker.)
+
+### Mode dropdown (Option B) — the radio-button replacement
+`P_Mode` is a **mandatory input parameter** on the custom entity, typed with data
+element `/CCBJI/FSV_MODE` whose domain carries the 9 fixed values — so Fiori
+renders it as a **mandatory dropdown**:
+
+`TOUR` Tour Details · `VISI` Visit Details · `SLRP` Sales/Replenishment ·
+`PAYT` Payment · `CHCK` Check Out/In · `MONY` Money Diff · `QUAN` Quantity Diff ·
+`FSRD` FSR Documents · `CASH` Cash Difference.
+
+The query class reads it via `io_request->get_parameters( )` and branches
+(`lv_mode`). Create these DDIC objects **before** activating the entity/class:
+- Domain `/CCBJI/FSV_MODE` (CHAR 4, the 9 fixed values above) — in ZIP as `#ccbji#fsv_mode.doma.xml`, or ADT → New → Domain → Value Range.
+- Data element `/CCBJI/FSV_MODE` on that domain — `#ccbji#fsv_mode.dtel.xml`.
+
+### Mandatory — same rule as the report, for every mode
+`f_validation` runs the **same** mandatory check regardless of the mode radio:
+**ShipmentNo OR (Plant + Route + Settlement Date)** — message `i525`. It is
+enforced in `validate_selection( )`. `@Consumption.filter.mandatory: true` is set
+on Plant/Route/SettlementDate for the visual asterisk; remove those three lines
+if you also want shipment-only search (the class still enforces the OR rule).
+
+### Which optional filters are VISIBLE per mode (from the source MODIF ID groups)
+Derived from the selection screen `MODIF ID` groups + `f_output`:
+
+| MODIF group | Fields |
+|-------------|--------|
+| base (always) | Shipment/Visit List, Plant, Route, Settlement Date |
+| M1 | TPP, Route (shipment), Created date |
+| M3 | PO, Sales/Delivery/Invoice/FI doc, Traffic light, FSR log |
+| M4 | Status |
+| M5 | Customer, Equipment Owner, Business-type ext, Business type, Visit Type, Summary Status |
+| M6 | Scenario, Log status, Planned Route, Driver Swap |
+| M7 | Quantity difference |
+| M8 | Dummy, Material, Check id, Money diff, Payment method, Object type, Document no, Payment log, Visit log, Posting key, Doc type |
+
+| Mode | Visible optional filters (groups) |
+|------|-----------------------------------|
+| Tour Details (`TOUR`) | Scenario, Processing status (traffic light), Driver Swap, Log, Planned Route (M6 + light) |
+| Visit Details (`VISI`) | M5 (Customer, Equip.Owner, Business type, Visit Type, Summary Status) |
+| Sales/Replenishment (`SLRP`) | Business type ext, Business type, Scenario |
+| Payment (`PAYT`) | M8 payment fields (Payment method, Posting key, Doc type, Payment log) |
+| Check Out/In (`CHCK`) | M8 (Material, Check id …) |
+| Money Diff (`MONY`) | M8 (Money diff, Object type, Document no …) |
+| Quantity Diff (`QUAN`) | M7 (Quantity difference), Material |
+| FSR Documents (`FSRD`) | M3 (all document fields), M4 Status |
+| Cash Difference (`CASH`) | cash-specific |
+
+> ⚠️ **Native Fiori Elements limitation:** a List Report **cannot dynamically
+> show/hide filter fields or change which are mandatory based on the dropdown
+> value** — that was a classic dynpro `MODIFY SCREEN` behaviour. Option B gives
+> the mandatory Mode dropdown + per-mode *data* (query branches on `lv_mode`) +
+> the per-mode *mandatory validation* in the class; the per-mode filter
+> *visibility* above is documentation for that branching. To also get the
+> dynamic show/hide UI, use **Option A** (one Fiori app per mode, each with only
+> its own filters) or a **Fiori Elements UI5 extension** (custom filter fragment).
+
+---
+
 ## 5. Activate & run (dependency order)
 
 1. `/CCBJI/CL_FSV_STLMNT_QRY` (class)

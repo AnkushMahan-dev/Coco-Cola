@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<abapGit version="v1.0.0" serializer="LCL_OBJECT_DOMA" serializer_version="v1.0.0">
+ <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
+  <asx:values>
+   <DD01V>
+    <DOMNAME>/CCBJI/FSV_MODE</DOMNAME>
+    <DDLANGUAGE>E</DDLANGUAGE>
+    <DATATYPE>CHAR</DATATYPE>
+    <LENG>000004</LENG>
+    <OUTPUTLEN>000004</OUTPUTLEN>
+    <VALEXI>X</VALEXI>
+    <DDTEXT>OTC DSD Settlement Report Mode</DDTEXT>
+   </DD01V>
+   <DD07V_TAB>
+    <DD07V>
+     <VALPOS>0001</VALPOS>
+     <DDLANGUAGE>E</DDLANGUAGE>
+     <DOMVALUE_L>TOUR</DOMVALUE_L>
+     <DDTEXT>Tour Details</DDTEXT>
+    </DD07V>
+    <DD07V>
+     <VALPOS>0002</VALPOS>
+     <DDLANGUAGE>E</DDLANGUAGE>
+     <DOMVALUE_L>VISI</DOMVALUE_L>
+     <DDTEXT>Visit Details</DDTEXT>
+    </DD07V>
+    <DD07V>
+     <VALPOS>0003</VALPOS>
+     <DDLANGUAGE>E</DDLANGUAGE>
+     <DOMVALUE_L>SLRP</DOMVALUE_L>
+     <DDTEXT>Sales / Replenishment Info.</DDTEXT>
+    </DD07V>
+    <DD07V>
+     <VALPOS>0004</VALPOS>
+     <DDLANGUAGE>E</DDLANGUAGE>
+     <DOMVALUE_L>PAYT</DOMVALUE_L>
+     <DDTEXT>Payment Details</DDTEXT>
+    </DD07V>
+    <DD07V>
+     <VALPOS>0005</VALPOS>
+     <DDLANGUAGE>E</DDLANGUAGE>
+     <DOMVALUE_L>CHCK</DOMVALUE_L>
+     <DDTEXT>Check Out / Check In</DDTEXT>
+    </DD07V>
+    <DD07V>
+     <VALPOS>0006</VALPOS>
+     <DDLANGUAGE>E</DDLANGUAGE>
+     <DOMVALUE_L>MONY</DOMVALUE_L>
+     <DDTEXT>Money Differences</DDTEXT>
+    </DD07V>
+    <DD07V>
+     <VALPOS>0007</VALPOS>
+     <DDLANGUAGE>E</DDLANGUAGE>
+     <DOMVALUE_L>QUAN</DOMVALUE_L>
+     <DDTEXT>Quantity Differences</DDTEXT>
+    </DD07V>
+    <DD07V>
+     <VALPOS>0008</VALPOS>
+     <DDLANGUAGE>E</DDLANGUAGE>
+     <DOMVALUE_L>FSRD</DOMVALUE_L>
+     <DDTEXT>FSR Documents</DDTEXT>
+    </DD07V>
+    <DD07V>
+     <VALPOS>0009</VALPOS>
+     <DDLANGUAGE>E</DDLANGUAGE>
+     <DOMVALUE_L>CASH</DOMVALUE_L>
+     <DDTEXT>Cash Difference</DDTEXT>
+    </DD07V>
+   </DD07V_TAB>
+  </asx:values>
+ </asx:abap>
+</abapGit>
