@@ -16,6 +16,7 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       // single-select DROPDOWN, is mandatory, and defaults to Tour Details.
       @EndUserText.label: 'Report Mode'
       @Consumption.filter: { mandatory: true, selectionType: #SINGLE, defaultValue: 'TOUR' }
+      @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_MODE_VH', element: 'ReportMode' } } ]
       ReportMode       : /ccbji/fsv_mode;
 
       @EndUserText.label: 'Shipment / Visit List'
