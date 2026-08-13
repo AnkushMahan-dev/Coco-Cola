@@ -169,6 +169,17 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
       ENDCASE.
     ENDLOOP.
 
+    " 1b. Report mode (dropdown parameter P_Mode = classic g2 radio group).
+    DATA lv_mode TYPE c LENGTH 4 VALUE 'TOUR'.
+    LOOP AT io_request->get_parameters( ) INTO DATA(ls_param).
+      IF to_upper( ls_param-name ) = 'P_MODE' AND ls_param-value IS NOT INITIAL.
+        lv_mode = ls_param-value.
+      ENDIF.
+    ENDLOOP.
+    IF lv_mode IS INITIAL.
+      lv_mode = 'TOUR'.
+    ENDIF.
+
     " 2. VALIDATION - same checks / same /CCEJ/OTC messages as
     "    report FORM f_validation. A failure aborts the query
     "    (= LEAVE LIST-PROCESSING) and shows the message in Fiori.
@@ -194,12 +205,20 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
       lv_max_rows = lv_offset + lv_page_sz.
     ENDIF.
 
-    " 4. Read + derive (reused report logic)
-    DATA(lt_result) = read_settlement_data(
-                        it_shipment    = lt_shipment
-                        it_route       = lt_route
-                        it_settle_date = lt_settle_date
-                        iv_max_rows    = lv_max_rows ).
+    " 4. Read + derive PER MODE (classic f_mode_choose dispatch).
+    DATA lt_result TYPE tt_result.
+    CASE lv_mode.
+      WHEN 'TOUR'.                       " Tour Details (implemented)
+        lt_result = read_settlement_data(
+                      it_shipment    = lt_shipment
+                      it_route       = lt_route
+                      it_settle_date = lt_settle_date
+                      iv_max_rows    = lv_max_rows ).
+      WHEN OTHERS.
+        " VISI/SLRP/PAYT/CHCK/MONY/QUAN/FSRD/CASH: port each classic form
+        " into its own read method. Returns empty until the mode is ported.
+        CLEAR lt_result.
+    ENDCASE.
 
     " 5. Sorting
     DATA lt_sort_order TYPE abap_sortorder_tab.

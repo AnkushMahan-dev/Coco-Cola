@@ -167,13 +167,25 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
     ENDIF.
 
     " -----------------------------------------------------------------
-    " 4. Read + derive the data (the reused report logic).
+    " 4. Read + derive the data PER MODE - the RAP equivalent of the
+    "    classic FORM f_mode_choose radio dispatch.
     " -----------------------------------------------------------------
-    DATA(lt_result) = read_settlement_data(
-                        it_shipment    = lt_shipment
-                        it_route       = lt_route
-                        it_settle_date = lt_settle_date
-                        iv_max_rows    = lv_max_rows ).
+    DATA lt_result TYPE tt_result.
+    CASE lv_mode.
+      WHEN 'TOUR'.                       " Tour Details (implemented)
+        lt_result = read_settlement_data(
+                      it_shipment    = lt_shipment
+                      it_route       = lt_route
+                      it_settle_date = lt_settle_date
+                      iv_max_rows    = lv_max_rows ).
+      WHEN OTHERS.
+        " VISI / SLRP / PAYT / CHCK / MONY / QUAN / FSRD / CASH.
+        " Port each classic form into its own read method and map the
+        " result into ty_result here (f_get_visit_details / f_get_sales /
+        " f_get_payment / f_get_check / f_get_money / f_get_quan /
+        " f_get_shipment_data). Returns empty until the mode is ported.
+        CLEAR lt_result.
+    ENDCASE.
 
     " -----------------------------------------------------------------
     " 5. Sorting requested by the consumer (ALV sort equivalent).
