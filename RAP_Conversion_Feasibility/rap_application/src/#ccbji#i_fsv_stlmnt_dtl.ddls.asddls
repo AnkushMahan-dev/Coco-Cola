@@ -38,18 +38,19 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       @EndUserText.label: 'Status'
       StatusId         : /dsd/st_status_id;
 
+      // Not mandatory - the classic report has NO obligatory selection
+      // fields; Tour Details runs on the Visit List alone.
       @EndUserText.label: 'Plant'
-      @Consumption.filter.mandatory: true
       Plant            : werks_d;
 
       @EndUserText.label: 'Route'
-      @Consumption.filter.mandatory: true
       Route            : route;
 
       // #INTERVAL renders a Fiori calendar date-range picker (from - to),
       // instead of the frustrating multi-value "conditions" input.
+      // Filters VTTK created date (erdat) exactly like the classic report.
       @EndUserText.label: 'Settlement Date'
-      @Consumption.filter: { mandatory: true, selectionType: #INTERVAL }
+      @Consumption.filter: { selectionType: #INTERVAL }
       SettlementDate   : erdat;
 
       @EndUserText.label: 'Driver'
