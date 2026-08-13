@@ -17,7 +17,7 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
   key Seqno            : abap.int4;
 
       @EndUserText.label: 'Mode'
-      Mode             : abap.char(4);
+      ReportMode       : abap.char(4);
 
       @EndUserText.label: 'Shipment / Visit List'
       @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_SHIP_VH', element: 'ShipmentNo' } } ]

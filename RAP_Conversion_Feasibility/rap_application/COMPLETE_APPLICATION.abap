@@ -1,25 +1,5 @@
-*&=====================================================================*
-*&  COMPLETE RAP APPLICATION - ALL 9 MODES (copy-paste reference)
-*&  Modernization of /CCBJI/RDSDFSVG_STLMNT_DETAILS (Settlement Details)
-*&  Namespace /CCBJI/  Package /CCBJI/OTC
-*&
-*&  ACTIVATION ORDER
-*&    0. Domain  /CCBJI/FSV_MODE   + Data element /CCBJI/FSV_MODE
-*&    1. Exception class /CCBJI/CX_FSV_STLMNT
-*&    2. Value-help views /CCBJI/I_FSV_PLANT_VH / _ROUTE_VH / _STATUS_VH / _SHIP_VH
-*&    3. Query class /CCBJI/CL_FSV_STLMNT_QRY
-*&    4. Custom entity /CCBJI/I_FSV_STLMNT_DTL
-*&    5. Metadata extension /CCBJI/I_FSV_STLMNT_DTL
-*&    6. Service definition /CCBJI/FSV_STLMNT_SRVD
-*&    7. Service binding /CCBJI/FSV_STLMNT_SRVB (OData V4 UI) -> Publish
-*&
-*&  NOTE: the /DSD/* + /CCEJ/* mode reads are best-effort ports using the
-*&  field names the classic report already uses. Verify custom-table
-*&  field names on your system; each mode is isolated in its own method.
-*&=====================================================================*
-
-
-*&----- OBJECT 1 : EXCEPTION CLASS  /CCBJI/CX_FSV_STLMNT ---------------*
+*&==== ALL-9-MODES RAP APP - see README. Activation order: domain/dtel /CCBJI/FSV_MODE -> /CCBJI/CX_FSV_STLMNT -> VH views -> query class -> entity -> MDE -> service def -> binding. ====
+*&---- EXCEPTION CLASS /CCBJI/CX_FSV_STLMNT ----
 CLASS /ccbji/cx_fsv_stlmnt DEFINITION
   PUBLIC
   INHERITING FROM cx_rap_query_provider
@@ -50,7 +30,7 @@ CLASS /ccbji/cx_fsv_stlmnt IMPLEMENTATION.
 
 ENDCLASS.
 
-*&----- OBJECT 3 : QUERY CLASS  /CCBJI/CL_FSV_STLMNT_QRY -------------*
+*&---- QUERY CLASS /CCBJI/CL_FSV_STLMNT_QRY ----
 *&---------------------------------------------------------------------*
 *&  Class  /CCBJI/CL_FSV_STLMNT_QRY
 *&---------------------------------------------------------------------*
@@ -61,7 +41,7 @@ ENDCLASS.
 *&  ARCHITECTURE (mirrors the report):
 *&    selection -> /CCEJ/T_INB_STAT (plant/route/date -> vlid)
 *&              -> /DSD/ST_STATUS   (-> tour_id)         = get_tours( )
-*&              -> per-mode table by tour_id / shipment  = read_<mode>( )
+*&              -> per-reportmode table by tour_id / shipment  = read_<reportmode>( )
 *&
 *&  NOTE: the /DSD/* + /CCEJ/* tables are read with SELECT * and the
 *&  fields the classic report already uses, so no field-list guessing.
@@ -101,7 +81,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
     " Output = superset of all modes (matches the custom entity)
     TYPES: BEGIN OF ty_result,
              seqno            TYPE i,
-             mode             TYPE c LENGTH 4,
+             reportmode             TYPE c LENGTH 4,
              shipmentno       TYPE tknum,
              tourid           TYPE /dsd/hh_tour_id,
              visitid          TYPE /dsd/hh_visit_id,
@@ -232,13 +212,13 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
       it_status = lt_status  it_tpp = lt_tpp
       it_driver = lt_driver  it_vehicle = lt_vehicle ).
 
-    " 3. Resolve tours (needed by every /DSD/-based mode)
+    " 3. Resolve tours (needed by every /DSD/-based reportmode)
     DATA(lt_tour) = get_tours(
       it_shipment = lt_shipment  it_route = lt_route
       it_settle_date = lt_settle_date  it_plant = lt_plant
       it_status = lt_status ).
 
-    " 4. Per-mode dispatch (classic FORM f_mode_choose)
+    " 4. Per-reportmode dispatch (classic FORM f_mode_choose)
     DATA lt_result TYPE tt_result.
     CASE lv_mode.
       WHEN 'TOUR'.  lt_result = read_tour( it_shipment = lt_shipment it_route = lt_route it_date = lt_settle_date ).
@@ -252,11 +232,11 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
       WHEN OTHERS.  CLEAR lt_result.   " CASH: port f_get_cash similarly
     ENDCASE.
 
-    " 5. Stamp mode + running key
+    " 5. Stamp reportmode + running key
     LOOP AT lt_result ASSIGNING FIELD-SYMBOL(<r>).
       <r>-seqno = sy-tabix.
-      IF <r>-mode IS INITIAL.
-        <r>-mode = lv_mode.
+      IF <r>-reportmode IS INITIAL.
+        <r>-reportmode = lv_mode.
       ENDIF.
     ENDLOOP.
 
@@ -348,7 +328,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
       lv_ref = <v>-tknum.
       SHIFT lv_ref LEFT DELETING LEADING '0'.
       APPEND VALUE ty_result(
-        mode           = 'TOUR'
+        reportmode           = 'TOUR'
         shipmentno     = <v>-tknum
         tpp            = <v>-tplst
         route          = <v>-route
@@ -376,7 +356,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
     LOOP AT lt_racvhd ASSIGNING FIELD-SYMBOL(<c>).
       READ TABLE it_tour ASSIGNING FIELD-SYMBOL(<t>) WITH KEY tourid = <c>-tour_id.
       APPEND VALUE ty_result(
-        mode        = 'VISI'
+        reportmode        = 'VISI'
         tourid      = <c>-tour_id
         visitid     = <c>-visit_id
         customer    = <c>-custnr
@@ -405,7 +385,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
     LOOP AT lt_del ASSIGNING FIELD-SYMBOL(<d>).
       READ TABLE it_tour ASSIGNING FIELD-SYMBOL(<t>) WITH KEY tourid = <d>-tour_id.
       APPEND VALUE ty_result(
-        mode       = 'SLRP'
+        reportmode       = 'SLRP'
         tourid     = <d>-tour_id
         visitid    = <d>-visit_id
         objtype    = <d>-obj_typ
@@ -435,7 +415,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
       READ TABLE it_tour ASSIGNING FIELD-SYMBOL(<t>) WITH KEY tourid = <p>-tour_id.
       DATA ls_p TYPE ty_result.
       CLEAR ls_p.
-      ls_p-mode   = 'PAYT'.
+      ls_p-reportmode   = 'PAYT'.
       ls_p-tourid = <p>-tour_id.
       " Common payment fields (present in /DSD/HH_RAEC per the report):
       ls_p-paymentmethod = <p>-paymt.
@@ -474,7 +454,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
       READ TABLE it_tour ASSIGNING FIELD-SYMBOL(<t>) WITH KEY tourid = <m>-tour_id.
       DATA ls_c TYPE ty_result.
       CLEAR ls_c.
-      ls_c-mode     = 'CHCK'.
+      ls_c-reportmode     = 'CHCK'.
       ls_c-tourid   = <m>-tour_id.
       ls_c-material = <m>-matnr.
       READ TABLE lt_makt ASSIGNING FIELD-SYMBOL(<mk>) WITH KEY matnr = <m>-matnr.
@@ -513,7 +493,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
       READ TABLE lt_item ASSIGNING FIELD-SYMBOL(<it>) WITH KEY sld_doc_id = <mb>-sld_doc_id.
       DATA ls_m TYPE ty_result.
       CLEAR ls_m.
-      ls_m-mode     = 'MONY'.
+      ls_m-reportmode     = 'MONY'.
       ls_m-slddocid = <mb>-sld_doc_id.
       ls_m-amount   = <mb>-amount_diff.        " difference amount
       IF <it> IS ASSIGNED.
@@ -557,7 +537,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
       READ TABLE lt_item ASSIGNING FIELD-SYMBOL(<it>) WITH KEY sld_doc_id = <qb>-sld_doc_id.
       DATA ls_q TYPE ty_result.
       CLEAR ls_q.
-      ls_q-mode     = 'QUAN'.
+      ls_q-reportmode     = 'QUAN'.
       ls_q-slddocid = <qb>-sld_doc_id.
       ls_q-material = <qb>-matnr.
       ls_q-quandiff = <qb>-quan_final_diff.
@@ -603,7 +583,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
     LOOP AT lt_vbak ASSIGNING FIELD-SYMBOL(<o>).
       READ TABLE it_tour ASSIGNING <t> WITH KEY vlid = |{ <o>-xblnr ALPHA = IN }|.
       APPEND VALUE ty_result(
-        mode         = 'FSRD'
+        reportmode         = 'FSRD'
         shipmentno   = COND #( WHEN <t> IS ASSIGNED THEN <t>-vlid )
         tourid       = COND #( WHEN <t> IS ASSIGNED THEN <t>-tourid )
         plant        = COND #( WHEN <t> IS ASSIGNED THEN <t>-werks )
@@ -692,7 +672,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
 
 ENDCLASS.
 
-*&----- OBJECT 4 : CUSTOM ENTITY  /CCBJI/I_FSV_STLMNT_DTL (DDL) ------*
+*&---- CUSTOM ENTITY /CCBJI/I_FSV_STLMNT_DTL ----
 @EndUserText.label: 'OTC DSD Settlement Details (all modes)'
 @ObjectModel.query.implementedBy: 'ABAP:/CCBJI/CL_FSV_STLMNT_QRY'
 @Metadata.allowExtensions: true
@@ -712,7 +692,7 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
   key Seqno            : abap.int4;
 
       @EndUserText.label: 'Mode'
-      Mode             : abap.char(4);
+      ReportMode       : abap.char(4);
 
       @EndUserText.label: 'Shipment / Visit List'
       @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_SHIP_VH', element: 'ShipmentNo' } } ]
@@ -827,7 +807,7 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       HeaderText       : bktxt;
 }
 
-*&----- OBJECT 5 : METADATA EXTENSION  /CCBJI/I_FSV_STLMNT_DTL -------*
+*&---- METADATA EXTENSION /CCBJI/I_FSV_STLMNT_DTL ----
 @Metadata.layer: #CORE
 @UI: { headerInfo: { typeName:       'Settlement Detail',
                      typeNamePlural: 'Settlement Details',
@@ -841,7 +821,7 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
   Seqno;
 
   @UI: { lineItem: [ { position: 10, importance: #HIGH } ], identification: [ { position: 10 } ] }
-  Mode;
+  ReportMode;
 
   @UI: { lineItem: [ { position: 20, importance: #HIGH } ], identification: [ { position: 20 } ] }
   @UI.selectionField: [ { position: 10 } ]
@@ -915,7 +895,7 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
   ReferenceDoc;
 }
 
-*&----- VALUE HELP VIEWS --------------------------------------------*
+*&---- VALUE HELP VIEWS ----
 * --- #ccbji#i_fsv_plant_vh.ddls.asddls ---
 @EndUserText.label: 'Plant Value Help (Settlement Details)'
 @AccessControl.authorizationCheck: #NOT_REQUIRED
@@ -969,10 +949,10 @@ define view entity /CCBJI/I_FSV_SHIP_VH
       erdat as CreatedOn
 }
 
-*&----- OBJECT 6 : SERVICE DEFINITION  /CCBJI/FSV_STLMNT_SRVD --------*
+*&---- SERVICE DEFINITION /CCBJI/FSV_STLMNT_SRVD ----
 @EndUserText.label: 'OTC DSD Settlement Details Service'
 define service /CCBJI/FSV_STLMNT_SRVD {
   expose /CCBJI/I_FSV_STLMNT_DTL as SettlementDetail;
 }
 
-*&  OBJECT 7 : SERVICE BINDING /CCBJI/FSV_STLMNT_SRVB (ODATA_V4_UI) - create in ADT, Publish.
+*&  SERVICE BINDING /CCBJI/FSV_STLMNT_SRVB (ODATA_V4_UI) - create in ADT, Publish.
