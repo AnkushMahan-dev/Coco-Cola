@@ -152,7 +152,12 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         ENDTRY.
 
         LOOP AT lt_ranges INTO DATA(ls_range).
-          CASE ls_range-name.
+          " Upper-case the element name so matching is case-insensitive -
+          " get_as_ranges may return the CDS element name in mixed case
+          " (e.g. 'ShipmentNo'); a case-sensitive CASE would silently ignore
+          " every filter and return no data.
+          DATA(lv_name) = to_upper( ls_range-name ).
+          CASE lv_name.
             WHEN 'SHIPMENTNO'.     lt_shipment    = CORRESPONDING #( ls_range-range ).
             WHEN 'ROUTE'.          lt_route       = CORRESPONDING #( ls_range-range ).
             WHEN 'SETTLEMENTDATE'. lt_settle_date = CORRESPONDING #( ls_range-range ).
