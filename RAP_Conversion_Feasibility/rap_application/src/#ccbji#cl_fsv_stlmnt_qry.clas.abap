@@ -287,6 +287,20 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           WHERE visitlist = @lt_status-vlid
           INTO TABLE @DATA(lt_inb).
 
+        " Route filter is applied here (post-read) and is LEADING-ZERO
+        " INSENSITIVE - the entity Route is CHAR(6) while /CCEJ route is
+        " CHAR(4), so a direct SQL compare is impossible/dumps. Normalize
+        " both sides (strip leading zeros) so 3408 and 003408 both match.
+        DATA lt_rnorm TYPE STANDARD TABLE OF route.
+        LOOP AT it_route INTO DATA(ls_rr).
+          DATA lv_rn TYPE route.
+          lv_rn = ls_rr-low.
+          SHIFT lv_rn LEFT DELETING LEADING '0'.
+          IF lv_rn IS NOT INITIAL.
+            APPEND lv_rn TO lt_rnorm.
+          ENDIF.
+        ENDLOOP.
+
         LOOP AT lt_status ASSIGNING FIELD-SYMBOL(<s>).
           DATA(ls_tour) = VALUE ty_tour(
             tourid    = <s>-tourid
@@ -295,10 +309,22 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           READ TABLE lt_inb ASSIGNING FIELD-SYMBOL(<i>) WITH KEY visitlist = <s>-vlid.
           IF sy-subrc = 0.
             ls_tour-werks = <i>-werks.
+            " Display route without leading zeros.
             ls_tour-route = <i>-route.
+            SHIFT ls_tour-route LEFT DELETING LEADING '0'.
             ls_tour-date  = <i>-creation_date.
             ls_tour-idoc  = <i>-idoc_number.
           ENDIF.
+
+          " Apply the route filter (leading-zero insensitive equality/list).
+          IF lt_rnorm IS NOT INITIAL.
+            READ TABLE lt_rnorm TRANSPORTING NO FIELDS
+              WITH KEY table_line = ls_tour-route.
+            IF sy-subrc <> 0.
+              CONTINUE.
+            ENDIF.
+          ENDIF.
+
           APPEND ls_tour TO rt_tour.
         ENDLOOP.
       CATCH cx_root.
