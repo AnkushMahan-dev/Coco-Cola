@@ -728,10 +728,10 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_MODE_VH', element: 'ReportMode' } } ]
       ReportMode       : /ccbji/fsv_mode;
 
-      // Value help SUGGESTS shipments/visit lists (F4 + type-ahead) but does
-      // not restrict - any typed value is still accepted.
+      // NO value help - the user types the Visit List (a /DSD/ST_STATUS-VLID)
+      // which is NOT a VTTK shipment, so a value help would wrongly reject it.
+      // Free text: any value is accepted.
       @EndUserText.label: 'Shipment / Visit List'
-      @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_SHIP_VH', element: 'ShipmentNo' } } ]
       ShipmentNo       : tknum;
 
       @EndUserText.label: 'Tour ID'
@@ -757,8 +757,9 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_PLANT_VH', element: 'Plant' } } ]
       Plant            : werks_d;
 
+      // NO value help - route values differ in format (2501 vs 002501) from
+      // the check table, so a value help would reject valid input. Free text.
       @EndUserText.label: 'Route'
-      @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_ROUTE_VH', element: 'Route' } } ]
       Route            : route;
 
       // #INTERVAL renders a Fiori calendar date-range picker (from - to),
