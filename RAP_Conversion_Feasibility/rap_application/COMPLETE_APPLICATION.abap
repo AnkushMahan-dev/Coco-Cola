@@ -751,15 +751,15 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       @EndUserText.label: 'Transp. Planning Point'
       Tpp              : tplst;
 
+      // NO value help - the status list did not contain the actual data
+      // values. Free text: type any status.
       @EndUserText.label: 'Status'
-      @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_STATUS_VH', element: 'StatusId' } } ]
       StatusId         : /dsd/st_status_id;
 
-      // Not mandatory - the classic report has NO obligatory selection
-      // fields; Tour Details runs on the Visit List alone. Value help
-      // suggests values without restricting free input.
+      // NO value help - the plant list (T001W) did not contain the DSD
+      // plant JW64 that the data actually uses, so it could not be selected.
+      // Free text: type any plant (e.g. JW64). Not mandatory.
       @EndUserText.label: 'Plant'
-      @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_PLANT_VH', element: 'Plant' } } ]
       Plant            : werks_d;
 
       // NO value help - route values differ in format (2501 vs 002501) from
