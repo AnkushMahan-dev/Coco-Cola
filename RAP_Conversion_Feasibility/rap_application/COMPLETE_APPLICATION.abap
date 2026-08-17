@@ -52,8 +52,8 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
              seqno            TYPE i,
              reportmode       TYPE c LENGTH 4,
              shipmentno       TYPE tknum,
-             tourid           TYPE /dsd/hh_tour_id,
-             visitid          TYPE /dsd/hh_visit_id,
+             tourid           TYPE c LENGTH 20,
+             visitid          TYPE c LENGTH 20,
              processingstatus TYPE c LENGTH 1,
              tpp              TYPE tplst,
              statusid         TYPE /dsd/st_status_id,
@@ -765,11 +765,14 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       @EndUserText.label: 'Shipment / Visit List'
       ShipmentNo       : tknum;
 
+      // Plain character type on purpose: the data element /dsd/hh_tour_id
+      // maps to Edm.Guid in OData V4, which fails to serialize the numeric
+      // tour id (e.g. 209162643559 -> "not a valid UUID"). Same for Visit ID.
       @EndUserText.label: 'Tour ID'
-      TourId           : /dsd/hh_tour_id;
+      TourId           : abap.char(20);
 
       @EndUserText.label: 'Visit ID'
-      VisitId          : /dsd/hh_visit_id;
+      VisitId          : abap.char(20);
 
       @EndUserText.label: 'Processing Status'
       ProcessingStatus : abap.char(1);

@@ -24,11 +24,14 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       @EndUserText.label: 'Shipment / Visit List'
       ShipmentNo       : tknum;
 
+      // Plain character type on purpose: the data element /dsd/hh_tour_id
+      // maps to Edm.Guid in OData V4, which fails to serialize the numeric
+      // tour id (e.g. 209162643559 -> "not a valid UUID"). Same for Visit ID.
       @EndUserText.label: 'Tour ID'
-      TourId           : /dsd/hh_tour_id;
+      TourId           : abap.char(20);
 
       @EndUserText.label: 'Visit ID'
-      VisitId          : /dsd/hh_visit_id;
+      VisitId          : abap.char(20);
 
       @EndUserText.label: 'Processing Status'
       ProcessingStatus : abap.char(1);
