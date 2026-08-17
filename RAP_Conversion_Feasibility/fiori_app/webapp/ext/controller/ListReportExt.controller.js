@@ -66,6 +66,33 @@ sap.ui.define([
         "CASH": ["ShipmentNo", "CashType", "Currency", "Driver"]                  // Cash
     };
 
+    // Table COLUMNS shown per mode (property keys = CDS element names).
+    // Reproduces the classic f_set_columns* per-mode column layouts, so each
+    // mode shows only its own columns instead of the superset. ReportMode is
+    // always shown; everything not listed for the current mode is hidden.
+    var MODE_COLUMNS = {
+        "TOUR": ["ReportMode", "ProcessingStatus", "ShipmentNo", "Plant", "Route", "SettlementDate",
+                 "Driver", "CoDriver", "CreatedOn", "CreatedTime", "CreatedBy",
+                 "ChangedOn", "ChangedTime", "ChangedBy", "Scenario", "DriverSwap",
+                 "VisitGroup", "IDocNo", "TourId"],
+        "VISI": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "StatusId",
+                 "TourId", "VisitId", "Customer", "Vkorg", "VisitReason"],
+        "SLRP": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "StatusId",
+                 "TourId", "VisitId", "ObjType", "DeliveryNo", "PoNumber"],
+        "PAYT": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "StatusId",
+                 "TourId", "PaymentMethod", "CardNo", "Amount", "Currency"],
+        "CHCK": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "StatusId",
+                 "TourId", "Material", "MaterialDesc"],
+        "MONY": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "StatusId",
+                 "SldDocId", "Amount"],
+        "QUAN": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "StatusId",
+                 "SldDocId", "Material", "MaterialDesc", "QuanDiff"],
+        "FSRD": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "StatusId",
+                 "TourId", "Vkorg", "ReferenceDoc"],
+        "CASH": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "StatusId",
+                 "CashType", "Amount", "Currency"]
+    };
+
     return ControllerExtension.extend("ccbji.otc.stlmnt.ext.controller.ListReportExt", {
 
         override: {
@@ -88,8 +115,10 @@ sap.ui.define([
             var oFilterBar = this._findFilterBar();
             if (oFilterBar) {
                 this._oFilterBar = oFilterBar;
+                this._oTable = this._findTable();
                 this._attach(oFilterBar);
                 this._applyModeVisibility();
+                this._applyModeColumns();
                 return;
             }
             if (iAttempt < 50) {
@@ -113,11 +142,30 @@ sap.ui.define([
         },
 
         /**
+         * Locate the single MDC Table of the List Report.
+         * @returns {sap.ui.mdc.Table|null}
+         */
+        _findTable: function () {
+            var oView = this.base.getView();
+            if (!oView) {
+                return null;
+            }
+            var aTables = oView.findAggregatedObjects(true, function (oCtrl) {
+                return oCtrl.isA && oCtrl.isA("sap.ui.mdc.Table");
+            });
+            return (aTables && aTables.length) ? aTables[0] : null;
+        },
+
+        /**
          * Attach to every signal that can change the mode or rebuild the bar.
          * @param {sap.ui.mdc.FilterBar} oFilterBar the filter bar
          */
         _attach: function (oFilterBar) {
-            var fnApply = this._applyModeVisibility.bind(this);
+            var that = this;
+            var fnApply = function () {
+                that._applyModeVisibility();
+                that._applyModeColumns();
+            };
 
             // Value of any filter (including ReportMode) changed.
             if (oFilterBar.attachFiltersChanged) {
@@ -168,6 +216,33 @@ sap.ui.define([
                 var bVisible = aAllowed.indexOf(sPath) !== -1;
                 if (oField.getVisible && oField.getVisible() !== bVisible) {
                     oField.setVisible(bVisible);
+                }
+            });
+        },
+
+        /**
+         * Show only the table columns relevant to the current mode; hide the
+         * rest - reproduces the classic per-mode column layout so Tour mode
+         * does not show empty Payment/Money/etc. columns.
+         */
+        _applyModeColumns: function () {
+            var oTable = this._oTable;
+            if (!oTable || !oTable.getColumns) {
+                return;
+            }
+            var sMode = this._getCurrentMode();
+            var aAllowed = MODE_COLUMNS[sMode];
+            // Unknown mode: show everything (no hiding).
+            if (!aAllowed) {
+                return;
+            }
+
+            oTable.getColumns().forEach(function (oColumn) {
+                var sKey = (oColumn.getPropertyKey && oColumn.getPropertyKey()) ||
+                           (oColumn.getDataProperty && oColumn.getDataProperty()) || "";
+                var bVisible = aAllowed.indexOf(sKey) !== -1;
+                if (oColumn.getVisible && oColumn.getVisible() !== bVisible) {
+                    oColumn.setVisible(bVisible);
                 }
             });
         }

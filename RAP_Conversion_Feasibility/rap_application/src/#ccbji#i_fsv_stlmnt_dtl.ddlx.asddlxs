@@ -81,7 +81,7 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
   @UI.selectionField: [ { position: 100 } ]
   Vehicle;
 
-  @UI: { identification: [ { position: 210 } ] }
+  @UI: { lineItem: [ { position: 215 } ], identification: [ { position: 210 } ] }
   @UI.selectionField: [ { position: 120 } ]
   VisitId;
 
@@ -89,24 +89,30 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
   @UI.selectionField: [ { position: 130 } ]
   TourId;
 
-  @UI: { identification: [ { position: 230 } ] }
+  @UI: { lineItem: [ { position: 216 } ], identification: [ { position: 230 } ] }
   @UI.selectionField: [ { position: 110 } ]
   Vkorg;
 
-  @UI: { identification: [ { position: 240 } ] }
+  @UI: { lineItem: [ { position: 217 } ], identification: [ { position: 240 } ] }
   @UI.selectionField: [ { position: 140 } ]
   CashType;
 
-  @UI: { identification: [ { position: 250 } ] }
+  @UI: { lineItem: [ { position: 218 } ], identification: [ { position: 250 } ] }
   @UI.selectionField: [ { position: 180 } ]
   VisitReason;
 
-  @UI: { identification: [ { position: 260 } ] }
+  @UI: { lineItem: [ { position: 219 } ], identification: [ { position: 260 } ] }
   @UI.selectionField: [ { position: 190 } ]
   ObjType;
 
-  @UI: { identification: [ { position: 270 } ] }
+  @UI: { lineItem: [ { position: 220 } ], identification: [ { position: 270 } ] }
   ReferenceDoc;
+
+  @UI: { lineItem: [ { position: 221 } ], identification: [ { position: 280 } ] }
+  PoNumber;
+
+  @UI: { lineItem: [ { position: 222 } ], identification: [ { position: 290 } ] }
+  CardNo;
 
   // ---- Tour Details columns (classic f_get_driver_details) ---------------
   // Processing status coloured by the Exception traffic light (Light).

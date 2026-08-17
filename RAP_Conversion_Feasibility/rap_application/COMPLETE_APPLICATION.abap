@@ -122,6 +122,14 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
                 iv_errors        TYPE i
       RETURNING VALUE(rv_status) TYPE ty_status.
 
+    "! Convert a UTC date/time to Japan local time (classic
+    "! f_get_local_timezone via ISU_DATE_TIME_CONVERT_TIMEZONE, zone JAPAN).
+    METHODS to_local_time
+      IMPORTING iv_date TYPE dats
+                iv_time TYPE tims
+      EXPORTING ev_date TYPE dats
+                ev_time TYPE tims.
+
 ENDCLASS.
 
 
@@ -245,17 +253,13 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
 
   METHOD get_tours.
 
-    " Route is deliberately NOT used here: entity Route is SD route CHAR(6)
-    " while /CCEJ/T_INB_STAT-ROUTE is CHAR(4). Comparing them raises
-    " CX_SY_OPEN_SQL_DATA_ERROR ('002051' not valid for C(4)). Plant + date
-    " resolve the visit lists. Wrapped so no data error can ever dump.
-    " PERFORMANCE GUARD: never issue an unbounded full-table read. If the
-    " user gave no selective key (no visit list, no plant, no date), return
-    " empty - this is what prevents TSV_TNEW_PAGE_ALLOC_FAILED on a blank
-    " search (which TRY/CATCH cannot trap, being a resource error).
-    IF it_shipment IS INITIAL AND it_plant IS INITIAL AND it_settle_date IS INITIAL.
-      RETURN.
-    ENDIF.
+    " Route is deliberately NOT used in a WHERE here: entity Route is SD route
+    " CHAR(6) while /CCEJ/T_INB_STAT-ROUTE is CHAR(4); a direct compare raises
+    " CX_SY_OPEN_SQL_DATA_ERROR. Route is applied as a post-filter below.
+    " NO UNBOUNDED READ: with a key we bound by it; with NO key we still show
+    " a capped sample (UP TO 100 ROWS) so 'Go' returns something - never a
+    " full-table read (which would raise the un-catchable TSV dump).
+    CONSTANTS lc_max_default TYPE i VALUE 100.
 
     TRY.
         DATA lt_status TYPE STANDARD TABLE OF /dsd/st_status.
@@ -266,7 +270,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           SELECT * FROM /dsd/st_status
             WHERE vlid IN @it_shipment AND status_id IN @it_status
             INTO TABLE @lt_status.
-        ELSE.
+        ELSEIF it_plant IS NOT INITIAL OR it_settle_date IS NOT INITIAL.
           " Plant/date -> visit lists -> status / tour
           SELECT * FROM /ccej/t_inb_stat
             WHERE werks IN @it_plant AND creation_date IN @it_settle_date
@@ -277,6 +281,11 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
               WHERE vlid = @lt_inb0-visitlist AND status_id IN @it_status
               INTO TABLE @lt_status.
           ENDIF.
+        ELSE.
+          " No selection at all: bounded sample so Go still shows data.
+          SELECT * FROM /dsd/st_status UP TO @lc_max_default ROWS
+            WHERE status_id IN @it_status
+            INTO TABLE @lt_status.
         ENDIF.
 
         IF lt_status IS INITIAL.
@@ -393,12 +402,13 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             ls_r-driver           = <h>-driver.
             ls_r-codriver         = <h>-codriver.
             ls_r-processingstatus = <h>-procstat.
-            ls_r-createdon        = <h>-credate.
-            ls_r-createdtime      = <h>-cretime.
             ls_r-createdby        = <h>-creuser.
-            ls_r-changedon        = <h>-cngdate.
-            ls_r-changedtime      = <h>-cngtime.
             ls_r-changedby        = <h>-cnguser.
+            " Created / Changed stamps converted UTC -> Japan local time.
+            to_local_time( EXPORTING iv_date = <h>-credate iv_time = <h>-cretime
+                           IMPORTING ev_date = ls_r-createdon ev_time = ls_r-createdtime ).
+            to_local_time( EXPORTING iv_date = <h>-cngdate iv_time = <h>-cngtime
+                           IMPORTING ev_date = ls_r-changedon ev_time = ls_r-changedtime ).
             IF <h>-plant IS NOT INITIAL.
               ls_r-plant = <h>-plant.
             ENDIF.
@@ -736,6 +746,23 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 
+
+  METHOD to_local_time.
+    ev_date = iv_date.
+    ev_time = iv_time.
+    IF iv_date IS INITIAL.
+      RETURN.
+    ENDIF.
+    TRY.
+        DATA lv_ts TYPE timestamp.
+        CONVERT DATE iv_date TIME iv_time INTO TIME STAMP lv_ts TIME ZONE 'UTC'.
+        CONVERT TIME STAMP lv_ts TIME ZONE 'JAPAN' INTO DATE ev_date TIME ev_time.
+      CATCH cx_root.
+        ev_date = iv_date.
+        ev_time = iv_time.
+    ENDTRY.
+  ENDMETHOD.
+
 ENDCLASS.
 
 *&---- CUSTOM ENTITY ----
@@ -1001,7 +1028,7 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
   @UI.selectionField: [ { position: 100 } ]
   Vehicle;
 
-  @UI: { identification: [ { position: 210 } ] }
+  @UI: { lineItem: [ { position: 215 } ], identification: [ { position: 210 } ] }
   @UI.selectionField: [ { position: 120 } ]
   VisitId;
 
@@ -1009,24 +1036,30 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
   @UI.selectionField: [ { position: 130 } ]
   TourId;
 
-  @UI: { identification: [ { position: 230 } ] }
+  @UI: { lineItem: [ { position: 216 } ], identification: [ { position: 230 } ] }
   @UI.selectionField: [ { position: 110 } ]
   Vkorg;
 
-  @UI: { identification: [ { position: 240 } ] }
+  @UI: { lineItem: [ { position: 217 } ], identification: [ { position: 240 } ] }
   @UI.selectionField: [ { position: 140 } ]
   CashType;
 
-  @UI: { identification: [ { position: 250 } ] }
+  @UI: { lineItem: [ { position: 218 } ], identification: [ { position: 250 } ] }
   @UI.selectionField: [ { position: 180 } ]
   VisitReason;
 
-  @UI: { identification: [ { position: 260 } ] }
+  @UI: { lineItem: [ { position: 219 } ], identification: [ { position: 260 } ] }
   @UI.selectionField: [ { position: 190 } ]
   ObjType;
 
-  @UI: { identification: [ { position: 270 } ] }
+  @UI: { lineItem: [ { position: 220 } ], identification: [ { position: 270 } ] }
   ReferenceDoc;
+
+  @UI: { lineItem: [ { position: 221 } ], identification: [ { position: 280 } ] }
+  PoNumber;
+
+  @UI: { lineItem: [ { position: 222 } ], identification: [ { position: 290 } ] }
+  CardNo;
 
   // ---- Tour Details columns (classic f_get_driver_details) ---------------
   // Processing status coloured by the Exception traffic light (Light).
@@ -1154,4 +1187,5 @@ define view entity /CCBJI/I_FSV_SHIP_VH
 define service /CCBJI/FSV_STLMNT_SRVD {
   expose /CCBJI/I_FSV_STLMNT_DTL as SettlementDetail;
 }
+
 
