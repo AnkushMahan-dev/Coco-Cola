@@ -8,6 +8,9 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
                  label: 'Settlement Detail', position: 10 } ]
 
   @UI.hidden: true
+  RowId;
+
+  @UI.hidden: true
   Seqno;
 
   // ---- Report Mode : the driving dropdown (classic radio group) ----------

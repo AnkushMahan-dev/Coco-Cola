@@ -6,9 +6,13 @@
                           dataClass:      #MIXED }
 define custom entity /CCBJI/I_FSV_STLMNT_DTL
 {
-      // Running key - a settlement row can come from any mode, so a
-      // generated sequence guarantees uniqueness for the OData list.
-  key Seqno            : abap.int4;
+      // Content-based key: mode(4) + tour(32) + natural keys. Stable and
+      // reconstructable, so the Object Page can read a single row by key
+      // (a running number could not be reproduced on the by-key read).
+  key RowId            : abap.char(120);
+
+      // Running row number (display only, no longer the key).
+      Seqno            : abap.int4;
 
       // Report mode = the classic g2 radio group. As a SELECTION FIELD
       // typed with the fixed-value domain /CCBJI/FSV_MODE it renders as a
