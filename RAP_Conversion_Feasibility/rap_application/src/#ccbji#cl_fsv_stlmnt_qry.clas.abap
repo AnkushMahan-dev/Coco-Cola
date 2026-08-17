@@ -213,7 +213,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         " the selected mode's own detail table, so every mode returns data.
         DATA lt_tour TYPE tt_tour.
         IF lt_shipment IS INITIAL AND lt_plant IS INITIAL AND lt_settle_date IS INITIAL.
-          lt_tour = sample_tours( iv_mode = CONV #( lv_mode ) ).
+          lt_tour = sample_tours( iv_mode = lv_mode ).
         ELSE.
           lt_tour = get_tours(
             it_shipment = lt_shipment  it_route = lt_route
@@ -400,10 +400,15 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           RETURN.
         ENDIF.
 
+        " Use a range (not FOR ALL ENTRIES) so the tour-id type mismatch
+        " between the detail tables (/dsd/hh_tour_id) and /DSD/ST_STATUS-TOURID
+        " is handled by implicit range conversion.
+        DATA lr_tid TYPE RANGE OF /dsd/hh_tour_id.
+        lr_tid = VALUE #( FOR t IN lt_tid ( sign = 'I' option = 'EQ' low = t ) ).
+
         DATA lt_status TYPE tt_status.
         SELECT * FROM /dsd/st_status
-          FOR ALL ENTRIES IN @lt_tid
-          WHERE tourid = @lt_tid-table_line
+          WHERE tourid IN @lr_tid
           INTO TABLE @lt_status.
 
         rt_tour = enrich_tours( it_status = lt_status it_route = VALUE #( ) ).
