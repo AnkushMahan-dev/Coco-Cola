@@ -33,7 +33,8 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
            tt_r_driver TYPE RANGE OF /dsd/rp_driver1,
            tt_r_truck  TYPE RANGE OF /dsd/rp_truck,
            tt_r_mode   TYPE RANGE OF /ccbji/fsv_mode,
-           ty_status   TYPE c LENGTH 1.
+           ty_status   TYPE c LENGTH 1,
+           ty_rowkey   TYPE c LENGTH 120.
 
     TYPES: BEGIN OF ty_tour,
              tourid    TYPE /dsd/hh_tour_id,
@@ -170,7 +171,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
     DATA lt_vehicle     TYPE tt_r_truck.
     DATA lt_mode        TYPE tt_r_mode.
     DATA lt_seqno       TYPE RANGE OF int4.
-    DATA lt_rowkey       TYPE RANGE OF c LENGTH 120.
+    DATA lt_rowkey      TYPE RANGE OF ty_rowkey.
 
     " Everything that can touch the DB is inside ONE TRY/CATCH so the
     " OData service can NEVER short-dump - any error returns empty rows.
