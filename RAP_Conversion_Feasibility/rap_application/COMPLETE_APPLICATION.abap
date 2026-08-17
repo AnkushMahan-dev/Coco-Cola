@@ -170,6 +170,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
     DATA lt_driver      TYPE tt_r_driver.
     DATA lt_vehicle     TYPE tt_r_truck.
     DATA lt_mode        TYPE tt_r_mode.
+    DATA lt_seqno       TYPE RANGE OF int4.
 
     " Everything that can touch the DB is inside ONE TRY/CATCH so the
     " OData service can NEVER short-dump - any error returns empty rows.
@@ -199,6 +200,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             WHEN 'DRIVER'.         lt_driver      = CORRESPONDING #( ls_range-range ).
             WHEN 'VEHICLE'.        lt_vehicle     = CORRESPONDING #( ls_range-range ).
             WHEN 'REPORTMODE'.     lt_mode        = CORRESPONDING #( ls_range-range ).
+            WHEN 'SEQNO'.          lt_seqno       = CORRESPONDING #( ls_range-range ).
             WHEN OTHERS.
           ENDCASE.
         ENDLOOP.
@@ -244,6 +246,12 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         <r>-reportmode = lv_mode.
       ENDIF.
     ENDLOOP.
+
+    " Read-by-key (Object Page navigation) sends the Seqno key - return only
+    " that row so the framework never sees "multiple instances for key".
+    IF lt_seqno IS NOT INITIAL.
+      DELETE lt_result WHERE seqno NOT IN lt_seqno.
+    ENDIF.
 
     DATA lt_sort_order TYPE abap_sortorder_tab.
     LOOP AT io_request->get_sort_elements( ) INTO DATA(ls_sort).
@@ -1396,6 +1404,7 @@ define view entity /CCBJI/I_FSV_SHIP_VH
 define service /CCBJI/FSV_STLMNT_SRVD {
   expose /CCBJI/I_FSV_STLMNT_DTL as SettlementDetail;
 }
+
 
 
 

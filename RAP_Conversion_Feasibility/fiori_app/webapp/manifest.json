@@ -86,11 +86,6 @@
           "pattern": ":?query:",
           "name": "SettlementDetailList",
           "target": "SettlementDetailList"
-        },
-        {
-          "pattern": "SettlementDetail({key}):?query:",
-          "name": "SettlementDetailObjectPage",
-          "target": "SettlementDetailObjectPage"
         }
       ],
       "targets": {
@@ -103,13 +98,6 @@
               "entitySet": "SettlementDetail",
               "variantManagement": "Page",
               "initialLoad": "Disabled",
-              "navigation": {
-                "SettlementDetail": {
-                  "detail": {
-                    "route": "SettlementDetailObjectPage"
-                  }
-                }
-              },
               "controlConfiguration": {
                 "@com.sap.vocabularies.UI.v1.LineItem": {
                   "tableSettings": {
@@ -118,16 +106,6 @@
                   }
                 }
               }
-            }
-          }
-        },
-        "SettlementDetailObjectPage": {
-          "type": "Component",
-          "id": "SettlementDetailObjectPage",
-          "name": "sap.fe.templates.ObjectPage",
-          "options": {
-            "settings": {
-              "entitySet": "SettlementDetail"
             }
           }
         }
