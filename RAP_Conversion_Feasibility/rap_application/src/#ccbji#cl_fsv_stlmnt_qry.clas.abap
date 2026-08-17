@@ -46,6 +46,8 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
            END OF ty_tour,
            tt_tour TYPE STANDARD TABLE OF ty_tour WITH DEFAULT KEY.
 
+    TYPES tt_status TYPE STANDARD TABLE OF /dsd/st_status WITH DEFAULT KEY.
+
     TYPES: BEGIN OF ty_result,
              seqno            TYPE i,
              reportmode       TYPE c LENGTH 4,
@@ -111,6 +113,21 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
                 it_settle_date TYPE tt_r_erdat
                 it_plant       TYPE tt_r_werks
                 it_status      TYPE tt_r_status
+      RETURNING VALUE(rt_tour) TYPE tt_tour.
+
+    "! Build tours from status rows (enrich plant/route/date from /CCEJ,
+    "! apply the leading-zero-insensitive route filter). Shared by get_tours
+    "! and sample_tours.
+    METHODS enrich_tours
+      IMPORTING it_status      TYPE tt_status
+                it_route       TYPE tt_r_route
+      RETURNING VALUE(rt_tour) TYPE tt_tour.
+
+    "! Blank search: sample up to 100 tours FROM THE SELECTED MODE'S detail
+    "! table, so every mode (not just Tour) returns data when Go is pressed
+    "! with no filter.
+    METHODS sample_tours
+      IMPORTING iv_mode        TYPE /ccbji/fsv_mode
       RETURNING VALUE(rt_tour) TYPE tt_tour.
 
     METHODS read_tour     IMPORTING it_tour TYPE tt_tour RETURNING VALUE(rt) TYPE tt_result.
@@ -191,13 +208,18 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           lv_mode = 'TOUR'.
         ENDIF.
 
-        " Resolve the selection -> tours (visit list -> /dsd/st_status ->
-        " tour_id, enriched with plant/route/date). get_tours has the
-        " performance guard, so a blank search yields no tours = no scan.
-        DATA(lt_tour) = get_tours(
-          it_shipment = lt_shipment  it_route = lt_route
-          it_settle_date = lt_settle_date  it_plant = lt_plant
-          it_status = lt_status ).
+        " Resolve the selection -> tours. With a key, get_tours resolves via
+        " visit list or plant/date. With NO key (blank Go), sample tours from
+        " the selected mode's own detail table, so every mode returns data.
+        DATA lt_tour TYPE tt_tour.
+        IF lt_shipment IS INITIAL AND lt_plant IS INITIAL AND lt_settle_date IS INITIAL.
+          lt_tour = sample_tours( iv_mode = CONV #( lv_mode ) ).
+        ELSE.
+          lt_tour = get_tours(
+            it_shipment = lt_shipment  it_route = lt_route
+            it_settle_date = lt_settle_date  it_plant = lt_plant
+            it_status = lt_status ).
+        ENDIF.
 
         CASE lv_mode.
           WHEN 'TOUR'.  lt_result = read_tour(    it_tour = lt_tour ).
@@ -258,16 +280,15 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
 
   METHOD get_tours.
 
-    " Route is deliberately NOT used in a WHERE here: entity Route is SD route
-    " CHAR(6) while /CCEJ/T_INB_STAT-ROUTE is CHAR(4); a direct compare raises
-    " CX_SY_OPEN_SQL_DATA_ERROR. Route is applied as a post-filter below.
-    " NO UNBOUNDED READ: with a key we bound by it; with NO key we still show
-    " a capped sample (UP TO 100 ROWS) so 'Go' returns something - never a
-    " full-table read (which would raise the un-catchable TSV dump).
-    CONSTANTS lc_max_default TYPE i VALUE 100.
+    " Resolve tours from a KEY (visit list, or plant/date). Blank searches are
+    " handled by sample_tours, so this returns empty when no key is given -
+    " never an unbounded full-table read.
+    IF it_shipment IS INITIAL AND it_plant IS INITIAL AND it_settle_date IS INITIAL.
+      RETURN.
+    ENDIF.
 
     TRY.
-        DATA lt_status TYPE STANDARD TABLE OF /dsd/st_status.
+        DATA lt_status TYPE tt_status.
 
         IF it_shipment IS NOT INITIAL.
           " Visit List -> status / tour   (classic f_status, rb_visi branch:
@@ -275,7 +296,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           SELECT * FROM /dsd/st_status
             WHERE vlid IN @it_shipment AND status_id IN @it_status
             INTO TABLE @lt_status.
-        ELSEIF it_plant IS NOT INITIAL OR it_settle_date IS NOT INITIAL.
+        ELSE.
           " Plant/date -> visit lists -> status / tour
           SELECT * FROM /ccej/t_inb_stat
             WHERE werks IN @it_plant AND creation_date IN @it_settle_date
@@ -286,28 +307,30 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
               WHERE vlid = @lt_inb0-visitlist AND status_id IN @it_status
               INTO TABLE @lt_status.
           ENDIF.
-        ELSE.
-          " No selection at all: bounded sample so Go still shows data.
-          SELECT * FROM /dsd/st_status
-            WHERE status_id IN @it_status
-            INTO TABLE @lt_status
-            UP TO @lc_max_default ROWS.
         ENDIF.
 
-        IF lt_status IS INITIAL.
-          RETURN.
-        ENDIF.
+        rt_tour = enrich_tours( it_status = lt_status it_route = it_route ).
+      CATCH cx_root.
+        CLEAR rt_tour.
+    ENDTRY.
 
-        " Enrich Plant / Route / Settlement date from /CCEJ by visit list.
+  ENDMETHOD.
+
+
+  METHOD enrich_tours.
+
+    IF it_status IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    TRY.
+        " Enrich Plant / Route / Settlement date / IDoc from /CCEJ by visit list.
         SELECT * FROM /ccej/t_inb_stat
-          FOR ALL ENTRIES IN @lt_status
-          WHERE visitlist = @lt_status-vlid
+          FOR ALL ENTRIES IN @it_status
+          WHERE visitlist = @it_status-vlid
           INTO TABLE @DATA(lt_inb).
 
-        " Route filter is applied here (post-read) and is LEADING-ZERO
-        " INSENSITIVE - the entity Route is CHAR(6) while /CCEJ route is
-        " CHAR(4), so a direct SQL compare is impossible/dumps. Normalize
-        " both sides (strip leading zeros) so 3408 and 003408 both match.
+        " Route filter (leading-zero insensitive: 3408 and 003408 both match).
         DATA lt_rnorm TYPE STANDARD TABLE OF route.
         LOOP AT it_route INTO DATA(ls_rr).
           DATA lv_rn TYPE route.
@@ -318,7 +341,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           ENDIF.
         ENDLOOP.
 
-        LOOP AT lt_status ASSIGNING FIELD-SYMBOL(<s>).
+        LOOP AT it_status ASSIGNING FIELD-SYMBOL(<s>).
           DATA(ls_tour) = VALUE ty_tour(
             tourid    = <s>-tourid
             vlid      = <s>-vlid
@@ -326,14 +349,12 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           READ TABLE lt_inb ASSIGNING FIELD-SYMBOL(<i>) WITH KEY visitlist = <s>-vlid.
           IF sy-subrc = 0.
             ls_tour-werks = <i>-werks.
-            " Display route without leading zeros.
             ls_tour-route = <i>-route.
             SHIFT ls_tour-route LEFT DELETING LEADING '0'.
             ls_tour-date  = <i>-creation_date.
             ls_tour-idoc  = <i>-idoc_number.
           ENDIF.
 
-          " Apply the route filter (leading-zero insensitive equality/list).
           IF lt_rnorm IS NOT INITIAL.
             READ TABLE lt_rnorm TRANSPORTING NO FIELDS
               WITH KEY table_line = ls_tour-route.
@@ -344,6 +365,48 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
 
           APPEND ls_tour TO rt_tour.
         ENDLOOP.
+      CATCH cx_root.
+        CLEAR rt_tour.
+    ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD sample_tours.
+
+    " Blank Go: take up to 100 tour ids from the SELECTED MODE's detail table
+    " (so Visit/Sales/Payment/... return their own data, not only Tour), then
+    " resolve them into full tours. Bounded read - no TSV dump.
+    CONSTANTS lc_max TYPE i VALUE 100.
+
+    TRY.
+        DATA lt_tid TYPE STANDARD TABLE OF /dsd/hh_tour_id.
+        CASE iv_mode.
+          WHEN 'VISI'.
+            SELECT DISTINCT tour_id FROM /dsd/hh_racvhd   INTO TABLE @lt_tid UP TO @lc_max ROWS.
+          WHEN 'SLRP'.
+            SELECT DISTINCT tour_id FROM /dsd/hh_radelhd  INTO TABLE @lt_tid UP TO @lc_max ROWS.
+          WHEN 'PAYT'.
+            SELECT DISTINCT tour_id FROM /dsd/hh_raec     INTO TABLE @lt_tid UP TO @lc_max ROWS.
+          WHEN 'CHCK'.
+            SELECT DISTINCT tour_id FROM /dsd/hh_racocimi INTO TABLE @lt_tid UP TO @lc_max ROWS.
+          WHEN 'MONY' OR 'QUAN'.
+            SELECT DISTINCT tour_id FROM /dsd/sl_sld_item INTO TABLE @lt_tid UP TO @lc_max ROWS.
+          WHEN OTHERS.
+            " TOUR / FSRD / CASH: sample from the tour header.
+            SELECT DISTINCT tour_id FROM /dsd/hh_rahd     INTO TABLE @lt_tid UP TO @lc_max ROWS.
+        ENDCASE.
+        IF lt_tid IS INITIAL.
+          RETURN.
+        ENDIF.
+
+        DATA lt_status TYPE tt_status.
+        SELECT * FROM /dsd/st_status
+          FOR ALL ENTRIES IN @lt_tid
+          WHERE tourid = @lt_tid-table_line
+          INTO TABLE @lt_status.
+
+        rt_tour = enrich_tours( it_status = lt_status it_route = VALUE #( ) ).
       CATCH cx_root.
         CLEAR rt_tour.
     ENDTRY.
