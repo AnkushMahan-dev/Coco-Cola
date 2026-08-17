@@ -52,9 +52,9 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
              seqno            TYPE i,
              reportmode       TYPE c LENGTH 4,
              shipmentno       TYPE tknum,
-             tourid           TYPE c LENGTH 20,
-             visitid          TYPE c LENGTH 20,
-             processingstatus TYPE c LENGTH 1,
+             tourid           TYPE c LENGTH 32,
+             visitid          TYPE n LENGTH 6,
+             processingstatus TYPE c LENGTH 2,
              tpp              TYPE tplst,
              statusid         TYPE /dsd/st_status_id,
              plant            TYPE werks_d,
@@ -81,7 +81,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
              division         TYPE spart,
              accountgroup     TYPE ktokd,
              businesstype     TYPE katr4,
-             equipowner       TYPE c LENGTH 10,
+             equipowner       TYPE c LENGTH 2,
              manproc          TYPE c LENGTH 1,
              visitlog         TYPE c LENGTH 1,
              objtype          TYPE /dsd/hh_del_doctyp,
@@ -884,17 +884,19 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       @EndUserText.label: 'Shipment / Visit List'
       ShipmentNo       : tknum;
 
-      // Plain character type on purpose: the data element /dsd/hh_tour_id
-      // maps to Edm.Guid in OData V4, which fails to serialize the numeric
-      // tour id (e.g. 209162643559 -> "not a valid UUID"). Same for Visit ID.
+      // Plain char(32): matches /dsd/hh_tour_id length (CHAR 32) but avoids its
+      // /DSD/HH_GUID domain which OData V4 maps to Edm.Guid (fails on the
+      // numeric tour id 209162643559 -> "not a valid UUID").
       @EndUserText.label: 'Tour ID'
-      TourId           : abap.char(20);
+      TourId           : abap.char(32);
 
+      // /dsd/hh_visit_id is NUMC 6.
       @EndUserText.label: 'Visit ID'
-      VisitId          : abap.char(20);
+      VisitId          : abap.numc(6);
 
+      // /dsd/hh_recstat / procstat are CHAR 2.
       @EndUserText.label: 'Processing Status'
-      ProcessingStatus : abap.char(1);
+      ProcessingStatus : abap.char(2);
 
       @EndUserText.label: 'Transp. Planning Point'
       Tpp              : tplst;
@@ -990,8 +992,9 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       // Plain character types: the original data elements (/scl/mdmd_equp_own,
       // /dsd/de_man_proc, /ccej/sls_vlog_status) break OData V4 $metadata
       // compilation. Char maps cleanly to Edm.String.
+      // /scl/mdmd_equp_own is CHAR 2.
       @EndUserText.label: 'Equipment Owner'
-      EquipOwner       : abap.char(10);
+      EquipOwner       : abap.char(2);
 
       @EndUserText.label: 'Processing Indicator'
       ManProc          : abap.char(1);
@@ -1325,6 +1328,7 @@ define view entity /CCBJI/I_FSV_SHIP_VH
 define service /CCBJI/FSV_STLMNT_SRVD {
   expose /CCBJI/I_FSV_STLMNT_DTL as SettlementDetail;
 }
+
 
 
 

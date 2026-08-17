@@ -24,17 +24,19 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       @EndUserText.label: 'Shipment / Visit List'
       ShipmentNo       : tknum;
 
-      // Plain character type on purpose: the data element /dsd/hh_tour_id
-      // maps to Edm.Guid in OData V4, which fails to serialize the numeric
-      // tour id (e.g. 209162643559 -> "not a valid UUID"). Same for Visit ID.
+      // Plain char(32): matches /dsd/hh_tour_id length (CHAR 32) but avoids its
+      // /DSD/HH_GUID domain which OData V4 maps to Edm.Guid (fails on the
+      // numeric tour id 209162643559 -> "not a valid UUID").
       @EndUserText.label: 'Tour ID'
-      TourId           : abap.char(20);
+      TourId           : abap.char(32);
 
+      // /dsd/hh_visit_id is NUMC 6.
       @EndUserText.label: 'Visit ID'
-      VisitId          : abap.char(20);
+      VisitId          : abap.numc(6);
 
+      // /dsd/hh_recstat / procstat are CHAR 2.
       @EndUserText.label: 'Processing Status'
-      ProcessingStatus : abap.char(1);
+      ProcessingStatus : abap.char(2);
 
       @EndUserText.label: 'Transp. Planning Point'
       Tpp              : tplst;
@@ -130,8 +132,9 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       // Plain character types: the original data elements (/scl/mdmd_equp_own,
       // /dsd/de_man_proc, /ccej/sls_vlog_status) break OData V4 $metadata
       // compilation. Char maps cleanly to Edm.String.
+      // /scl/mdmd_equp_own is CHAR 2.
       @EndUserText.label: 'Equipment Owner'
-      EquipOwner       : abap.char(10);
+      EquipOwner       : abap.char(2);
 
       @EndUserText.label: 'Processing Indicator'
       ManProc          : abap.char(1);
