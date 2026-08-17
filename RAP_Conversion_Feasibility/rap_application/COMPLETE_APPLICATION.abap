@@ -81,9 +81,9 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
              division         TYPE spart,
              accountgroup     TYPE ktokd,
              businesstype     TYPE katr4,
-             equipowner       TYPE /scl/mdmd_equp_own,
-             manproc          TYPE /dsd/de_man_proc,
-             visitlog         TYPE /ccej/sls_vlog_status,
+             equipowner       TYPE c LENGTH 10,
+             manproc          TYPE c LENGTH 1,
+             visitlog         TYPE c LENGTH 1,
              objtype          TYPE /dsd/hh_del_doctyp,
              material         TYPE matnr,
              materialdesc     TYPE maktx,
@@ -487,9 +487,9 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
 
     CONSTANTS: lc_green    TYPE int1 VALUE 3,
                lc_yellow   TYPE int1 VALUE 2,
-               lc_visited  TYPE /ccej/sls_vlog_status VALUE 'V',
-               lc_plan_nv  TYPE /ccej/sls_vlog_status VALUE 'N',
-               lc_unplan   TYPE /ccej/sls_vlog_status VALUE 'U'.
+               lc_visited  TYPE c LENGTH 1 VALUE 'V',
+               lc_plan_nv  TYPE c LENGTH 1 VALUE 'N',
+               lc_unplan   TYPE c LENGTH 1 VALUE 'U'.
 
     TRY.
         SELECT tour_id, visit_id, custnr, vkorg, vtweg, spart, viscod,
@@ -987,14 +987,17 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       @EndUserText.label: 'Business Type'
       BusinessType     : katr4;
 
+      // Plain character types: the original data elements (/scl/mdmd_equp_own,
+      // /dsd/de_man_proc, /ccej/sls_vlog_status) break OData V4 $metadata
+      // compilation. Char maps cleanly to Edm.String.
       @EndUserText.label: 'Equipment Owner'
-      EquipOwner       : /scl/mdmd_equp_own;
+      EquipOwner       : abap.char(10);
 
       @EndUserText.label: 'Processing Indicator'
-      ManProc          : /dsd/de_man_proc;
+      ManProc          : abap.char(1);
 
       @EndUserText.label: 'Visit Log Status'
-      VisitLog         : /ccej/sls_vlog_status;
+      VisitLog         : abap.char(1);
 
       @EndUserText.label: 'Object Type'
       ObjType          : /dsd/hh_del_doctyp;
@@ -1322,6 +1325,7 @@ define view entity /CCBJI/I_FSV_SHIP_VH
 define service /CCBJI/FSV_STLMNT_SRVD {
   expose /CCBJI/I_FSV_STLMNT_DTL as SettlementDetail;
 }
+
 
 
 

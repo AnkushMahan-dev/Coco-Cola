@@ -79,9 +79,9 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
              division         TYPE spart,
              accountgroup     TYPE ktokd,
              businesstype     TYPE katr4,
-             equipowner       TYPE /scl/mdmd_equp_own,
-             manproc          TYPE /dsd/de_man_proc,
-             visitlog         TYPE /ccej/sls_vlog_status,
+             equipowner       TYPE c LENGTH 10,
+             manproc          TYPE c LENGTH 1,
+             visitlog         TYPE c LENGTH 1,
              objtype          TYPE /dsd/hh_del_doctyp,
              material         TYPE matnr,
              materialdesc     TYPE maktx,
@@ -485,9 +485,9 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
 
     CONSTANTS: lc_green    TYPE int1 VALUE 3,
                lc_yellow   TYPE int1 VALUE 2,
-               lc_visited  TYPE /ccej/sls_vlog_status VALUE 'V',
-               lc_plan_nv  TYPE /ccej/sls_vlog_status VALUE 'N',
-               lc_unplan   TYPE /ccej/sls_vlog_status VALUE 'U'.
+               lc_visited  TYPE c LENGTH 1 VALUE 'V',
+               lc_plan_nv  TYPE c LENGTH 1 VALUE 'N',
+               lc_unplan   TYPE c LENGTH 1 VALUE 'U'.
 
     TRY.
         SELECT tour_id, visit_id, custnr, vkorg, vtweg, spart, viscod,

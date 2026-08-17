@@ -127,14 +127,17 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       @EndUserText.label: 'Business Type'
       BusinessType     : katr4;
 
+      // Plain character types: the original data elements (/scl/mdmd_equp_own,
+      // /dsd/de_man_proc, /ccej/sls_vlog_status) break OData V4 $metadata
+      // compilation. Char maps cleanly to Edm.String.
       @EndUserText.label: 'Equipment Owner'
-      EquipOwner       : /scl/mdmd_equp_own;
+      EquipOwner       : abap.char(10);
 
       @EndUserText.label: 'Processing Indicator'
-      ManProc          : /dsd/de_man_proc;
+      ManProc          : abap.char(1);
 
       @EndUserText.label: 'Visit Log Status'
-      VisitLog         : /ccej/sls_vlog_status;
+      VisitLog         : abap.char(1);
 
       @EndUserText.label: 'Object Type'
       ObjType          : /dsd/hh_del_doctyp;
