@@ -49,7 +49,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
     TYPES tt_status TYPE STANDARD TABLE OF /dsd/st_status WITH DEFAULT KEY.
 
     TYPES: BEGIN OF ty_result,
-             rowid            TYPE c LENGTH 120,
+             rowkey            TYPE c LENGTH 120,
              seqno            TYPE i,
              reportmode       TYPE c LENGTH 4,
              shipmentno       TYPE tknum,
@@ -170,7 +170,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
     DATA lt_vehicle     TYPE tt_r_truck.
     DATA lt_mode        TYPE tt_r_mode.
     DATA lt_seqno       TYPE RANGE OF int4.
-    DATA lt_rowid       TYPE RANGE OF c LENGTH 120.
+    DATA lt_rowkey       TYPE RANGE OF c LENGTH 120.
 
     " Everything that can touch the DB is inside ONE TRY/CATCH so the
     " OData service can NEVER short-dump - any error returns empty rows.
@@ -201,7 +201,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             WHEN 'VEHICLE'.        lt_vehicle     = CORRESPONDING #( ls_range-range ).
             WHEN 'REPORTMODE'.     lt_mode        = CORRESPONDING #( ls_range-range ).
             WHEN 'SEQNO'.          lt_seqno       = CORRESPONDING #( ls_range-range ).
-            WHEN 'ROWID'.          lt_rowid       = CORRESPONDING #( ls_range-range ).
+            WHEN 'ROWKEY'.          lt_rowkey       = CORRESPONDING #( ls_range-range ).
             WHEN OTHERS.
           ENDCASE.
         ENDLOOP.
@@ -214,13 +214,13 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         ENDIF.
 
         " Resolve tours:
-        "  - Object Page by-key read (RowId): decode mode+tour from the key
+        "  - Object Page by-key read (RowKey): decode mode+tour from the key
         "    and rebuild just that tour, so the single clicked row is reproduced.
         "  - blank Go: sample from the selected mode's own detail table.
         "  - otherwise: resolve from the entered key (visit list / plant+date).
         DATA lt_tour TYPE tt_tour.
-        IF lt_rowid IS NOT INITIAL.
-          DATA(lv_key) = CONV string( lt_rowid[ 1 ]-low ).
+        IF lt_rowkey IS NOT INITIAL.
+          DATA(lv_key) = CONV string( lt_rowkey[ 1 ]-low ).
           SPLIT lv_key AT '~' INTO TABLE DATA(lt_parts).
           DATA lr_tid TYPE RANGE OF /dsd/hh_tour_id.
           IF lines( lt_parts ) >= 2.
@@ -263,13 +263,13 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
       ENDIF.
       " Content-based key: mode~tour~natural-keys. Delimiter-separated so a
       " by-key read can split out mode + tour and rebuild exactly this row.
-      <r>-rowid = |{ <r>-reportmode }~{ <r>-tourid }~{ <r>-visitid }~{ <r>-slddocid }~{ <r>-material }~{ <r>-deliveryno }~{ <r>-shipmentno }|.
+      <r>-rowkey = |{ <r>-reportmode }~{ <r>-tourid }~{ <r>-visitid }~{ <r>-slddocid }~{ <r>-material }~{ <r>-deliveryno }~{ <r>-shipmentno }|.
     ENDLOOP.
 
-    " Read-by-key (Object Page): keep only the requested row. RowId is the key;
+    " Read-by-key (Object Page): keep only the requested row. RowKey is the key;
     " seqno kept as a legacy safety net. Guarantee at most one row.
-    IF lt_rowid IS NOT INITIAL.
-      DELETE lt_result WHERE rowid NOT IN lt_rowid.
+    IF lt_rowkey IS NOT INITIAL.
+      DELETE lt_result WHERE rowkey NOT IN lt_rowkey.
       IF lines( lt_result ) > 1.
         DELETE lt_result FROM 2.
       ENDIF.

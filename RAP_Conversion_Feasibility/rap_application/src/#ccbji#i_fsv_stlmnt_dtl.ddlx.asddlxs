@@ -8,7 +8,7 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
                  label: 'Settlement Detail', position: 10 } ]
 
   @UI.hidden: true
-  RowId;
+  RowKey;
 
   @UI.hidden: true
   Seqno;

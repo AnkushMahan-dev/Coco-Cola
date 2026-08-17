@@ -9,7 +9,7 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       // Content-based key: mode(4) + tour(32) + natural keys. Stable and
       // reconstructable, so the Object Page can read a single row by key
       // (a running number could not be reproduced on the by-key read).
-  key RowId            : abap.char(120);
+  key RowKey            : abap.char(120);
 
       // Running row number (display only, no longer the key).
       Seqno            : abap.int4;
