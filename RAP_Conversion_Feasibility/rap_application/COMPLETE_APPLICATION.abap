@@ -290,9 +290,10 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           ENDIF.
         ELSE.
           " No selection at all: bounded sample so Go still shows data.
-          SELECT * FROM /dsd/st_status UP TO @lc_max_default ROWS
+          SELECT * FROM /dsd/st_status
             WHERE status_id IN @it_status
-            INTO TABLE @lt_status.
+            INTO TABLE @lt_status
+            UP TO @lc_max_default ROWS.
         ENDIF.
 
         IF lt_status IS INITIAL.
@@ -535,7 +536,6 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           ls_v-distchannel = <c>-vtweg.
           ls_v-division    = <c>-spart.
           ls_v-visitreason = <c>-viscod.
-          ls_v-cngdate     = <c>-cngdate.
           ls_v-changedby   = <c>-cnguser.
           ls_v-processingstatus = <c>-status.
           ls_v-manproc     = <c>-man_proc.
@@ -1325,6 +1325,7 @@ define view entity /CCBJI/I_FSV_SHIP_VH
 define service /CCBJI/FSV_STLMNT_SRVD {
   expose /CCBJI/I_FSV_STLMNT_DTL as SettlementDetail;
 }
+
 
 
 
