@@ -75,6 +75,13 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
              customer         TYPE kunnr,
              vkorg            TYPE vkorg,
              visitreason      TYPE /dsd/hh_viscod,
+             distchannel      TYPE vtweg,
+             division         TYPE spart,
+             accountgroup     TYPE ktokd,
+             businesstype     TYPE katr4,
+             equipowner       TYPE /scl/mdmd_equp_own,
+             manproc          TYPE /dsd/de_man_proc,
+             visitlog         TYPE /ccej/sls_vlog_status,
              objtype          TYPE /dsd/hh_del_doctyp,
              material         TYPE matnr,
              materialdesc     TYPE maktx,
@@ -466,28 +473,113 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
 
   METHOD read_visit.
 
+    " Mode 2 - Visit Details, ported column-for-column from the classic
+    " f_get_visit_details:
+    "   /DSD/HH_RACVHD (by tour_id) -> visit, customer, sales area, reason,
+    "                                  changed on/time/by, status, man_proc
+    "   KNA1           (by custnr)  -> account group, business type, equip owner
+    "   /DSD/HH_RAHD   (by tour_id) -> driver, created date
+    "   /DSD/VC_VLP    (vlid+kunnr) -> visit log status + Exception light
+    "   resolved tour  (/CCEJ)      -> plant, route, settlement date, status
     IF it_tour IS INITIAL. RETURN. ENDIF.
+
+    CONSTANTS: lc_green    TYPE int1 VALUE 3,
+               lc_yellow   TYPE int1 VALUE 2,
+               lc_visited  TYPE /ccej/sls_vlog_status VALUE 'V',
+               lc_plan_nv  TYPE /ccej/sls_vlog_status VALUE 'N',
+               lc_unplan   TYPE /ccej/sls_vlog_status VALUE 'U'.
+
     TRY.
-        SELECT * FROM /dsd/hh_racvhd
+        SELECT tour_id, visit_id, custnr, vkorg, vtweg, spart, viscod,
+               cngdate, cngtime, cnguser, status, man_proc
+          FROM /dsd/hh_racvhd
           FOR ALL ENTRIES IN @it_tour
           WHERE tour_id = @it_tour-tourid
-          INTO TABLE @DATA(lt_racvhd).
+          INTO TABLE @DATA(lt_visit).
+        IF lt_visit IS INITIAL. RETURN. ENDIF.
 
-        LOOP AT lt_racvhd ASSIGNING FIELD-SYMBOL(<c>).
+        " Customer master: account group, business type, equipment owner.
+        SELECT kunnr, ktokd, katr4, /scl/equp_ownr FROM kna1
+          FOR ALL ENTRIES IN @lt_visit
+          WHERE kunnr = @lt_visit-custnr
+          INTO TABLE @DATA(lt_kna1).
+
+        " Tour header: driver + created stamp.
+        SELECT tour_id, driver, credate, cretime, creuser FROM /dsd/hh_rahd
+          FOR ALL ENTRIES IN @it_tour
+          WHERE tour_id = @it_tour-tourid
+          INTO TABLE @DATA(lt_rahd).
+
+        " Visit-list item (planned customers): vlid = tour_id+2(10), kunnr.
+        DATA lt_vlpkey TYPE STANDARD TABLE OF /dsd/vc_vlp.
+        LOOP AT lt_visit ASSIGNING FIELD-SYMBOL(<vk>).
+          APPEND VALUE #( vlid = <vk>-tour_id+2(10) kunnr = <vk>-custnr ) TO lt_vlpkey.
+        ENDLOOP.
+        IF lt_vlpkey IS NOT INITIAL.
+          SELECT vlid, kunnr FROM /dsd/vc_vlp
+            FOR ALL ENTRIES IN @lt_vlpkey
+            WHERE vlid = @lt_vlpkey-vlid AND kunnr = @lt_vlpkey-kunnr
+            INTO TABLE @DATA(lt_vlp).
+        ENDIF.
+
+        LOOP AT lt_visit ASSIGNING FIELD-SYMBOL(<c>).
+          DATA ls_v TYPE ty_result.
+          CLEAR ls_v.
+          ls_v-reportmode  = 'VISI'.
+          ls_v-tourid      = <c>-tour_id.
+          ls_v-visitid     = <c>-visit_id.
+          ls_v-customer    = <c>-custnr.
+          ls_v-vkorg       = <c>-vkorg.
+          ls_v-distchannel = <c>-vtweg.
+          ls_v-division    = <c>-spart.
+          ls_v-visitreason = <c>-viscod.
+          ls_v-cngdate     = <c>-cngdate.
+          ls_v-changedby   = <c>-cnguser.
+          ls_v-processingstatus = <c>-status.
+          ls_v-manproc     = <c>-man_proc.
+          to_local_time( EXPORTING iv_date = <c>-cngdate iv_time = <c>-cngtime
+                         IMPORTING ev_date = ls_v-changedon ev_time = ls_v-changedtime ).
+
+          " Customer master.
+          READ TABLE lt_kna1 ASSIGNING FIELD-SYMBOL(<k>) WITH KEY kunnr = <c>-custnr.
+          IF sy-subrc = 0.
+            ls_v-accountgroup = <k>-ktokd.
+            ls_v-businesstype = <k>-katr4.
+            ls_v-equipowner   = <k>-/scl/equp_ownr.
+          ENDIF.
+
+          " Tour header -> driver + created stamp.
+          READ TABLE lt_rahd ASSIGNING FIELD-SYMBOL(<h>) WITH KEY tour_id = <c>-tour_id.
+          IF sy-subrc = 0.
+            ls_v-driver = <h>-driver.
+            to_local_time( EXPORTING iv_date = <h>-credate iv_time = <h>-cretime
+                           IMPORTING ev_date = ls_v-createdon ev_time = ls_v-createdtime ).
+          ENDIF.
+
+          " Plant / route / settlement date / document from the resolved tour.
           READ TABLE it_tour ASSIGNING FIELD-SYMBOL(<t>) WITH KEY tourid = <c>-tour_id.
-          APPEND VALUE ty_result(
-            reportmode  = 'VISI'
-            tourid      = <c>-tour_id
-            visitid     = <c>-visit_id
-            customer    = <c>-custnr
-            vkorg       = <c>-vkorg
-            visitreason = <c>-viscod
-            shipmentno  = COND #( WHEN <t> IS ASSIGNED THEN <t>-vlid )
-            plant       = COND #( WHEN <t> IS ASSIGNED THEN <t>-werks )
-            route       = COND #( WHEN <t> IS ASSIGNED THEN <t>-route )
-            settlementdate = COND #( WHEN <t> IS ASSIGNED THEN <t>-date )
-            statusid    = COND #( WHEN <t> IS ASSIGNED THEN <t>-status_id )
-          ) TO rt.
+          IF sy-subrc = 0.
+            ls_v-shipmentno     = <t>-vlid.
+            ls_v-plant          = <t>-werks.
+            ls_v-route          = <t>-route.
+            ls_v-settlementdate = <t>-date.
+            ls_v-statusid       = <t>-status_id.
+          ENDIF.
+
+          " Visit log status + Exception light (classic MOD-020 rules).
+          READ TABLE lt_vlp TRANSPORTING NO FIELDS
+            WITH KEY vlid = <c>-tour_id+2(10) kunnr = <c>-custnr.
+          IF sy-subrc = 0.
+            IF <c>-man_proc = abap_true.
+              ls_v-light = lc_green.  ls_v-visitlog = lc_visited.
+            ELSE.
+              ls_v-light = lc_yellow. ls_v-visitlog = lc_plan_nv.
+            ENDIF.
+          ELSE.
+            ls_v-light = lc_yellow.   ls_v-visitlog = lc_unplan.
+          ENDIF.
+
+          APPEND ls_v TO rt.
         ENDLOOP.
       CATCH cx_root.
         CLEAR rt.

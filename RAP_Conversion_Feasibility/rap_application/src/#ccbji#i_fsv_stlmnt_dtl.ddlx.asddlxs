@@ -153,6 +153,28 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
   @UI: { lineItem: [ { position: 214 } ], identification: [ { position: 214 } ] }
   IDocNo;
 
+  // ---- Visit Details extra columns (classic f_get_visit_details) ---------
+  @UI: { lineItem: [ { position: 230 } ], identification: [ { position: 300 } ] }
+  DistChannel;
+
+  @UI: { lineItem: [ { position: 231 } ], identification: [ { position: 301 } ] }
+  Division;
+
+  @UI: { lineItem: [ { position: 232 } ], identification: [ { position: 302 } ] }
+  AccountGroup;
+
+  @UI: { lineItem: [ { position: 233 } ], identification: [ { position: 303 } ] }
+  BusinessType;
+
+  @UI: { lineItem: [ { position: 234 } ], identification: [ { position: 304 } ] }
+  EquipOwner;
+
+  @UI: { lineItem: [ { position: 235 } ], identification: [ { position: 305 } ] }
+  ManProc;
+
+  @UI: { lineItem: [ { position: 236 } ], identification: [ { position: 306 } ] }
+  VisitLog;
+
   @UI.hidden: true
   Light;
 }

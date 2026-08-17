@@ -115,6 +115,27 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       @EndUserText.label: 'Visit Reason'
       VisitReason      : /dsd/hh_viscod;
 
+      @EndUserText.label: 'Distribution Channel'
+      DistChannel      : vtweg;
+
+      @EndUserText.label: 'Division'
+      Division         : spart;
+
+      @EndUserText.label: 'Account Group'
+      AccountGroup     : ktokd;
+
+      @EndUserText.label: 'Business Type'
+      BusinessType     : katr4;
+
+      @EndUserText.label: 'Equipment Owner'
+      EquipOwner       : /scl/mdmd_equp_own;
+
+      @EndUserText.label: 'Processing Indicator'
+      ManProc          : /dsd/de_man_proc;
+
+      @EndUserText.label: 'Visit Log Status'
+      VisitLog         : /ccej/sls_vlog_status;
+
       @EndUserText.label: 'Object Type'
       ObjType          : /dsd/hh_del_doctyp;
 
