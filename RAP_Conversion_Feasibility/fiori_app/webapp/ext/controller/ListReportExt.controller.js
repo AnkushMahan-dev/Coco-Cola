@@ -42,6 +42,22 @@ sap.ui.define([
     // Field path of the driving dropdown.
     var MODE_FIELD = "ReportMode";
 
+    // The nine report modes (code + text) - the fixed values of domain
+    // /CCBJI/FSV_MODE. Used to render ReportMode as a real dropdown on the
+    // front end (a custom entity does not expose domain fixed values as a
+    // dropdown automatically).
+    var MODE_ORDER = [
+        { key: "TOUR", text: "Tour Details" },
+        { key: "VISI", text: "Visit Details" },
+        { key: "SLRP", text: "Sales / Replenishment Info." },
+        { key: "PAYT", text: "Payment Details" },
+        { key: "CHCK", text: "Check Out / Check In" },
+        { key: "MONY", text: "Money Differences" },
+        { key: "QUAN", text: "Quantity Differences" },
+        { key: "FSRD", text: "FSR Documents" },
+        { key: "CASH", text: "Cash Difference" }
+    ];
+
     // Filters that are ALWAYS visible regardless of mode. These mirror the
     // mandatory header block of the original selection screen.
     var ALWAYS = [MODE_FIELD, "Plant", "Route", "SettlementDate"];
@@ -119,6 +135,7 @@ sap.ui.define([
                 this._oFilterBar = oFilterBar;
                 this._oTable = this._findTable();
                 this._attach(oFilterBar);
+                this._setupModeDropdown();
                 this._applyModeVisibility();
                 this._applyModeColumns();
                 return;
@@ -199,6 +216,81 @@ sap.ui.define([
                 return String(aMode[0].values[0]).toUpperCase();
             }
             return "";
+        },
+
+        /**
+         * Locate the ReportMode MDC FilterField.
+         * @returns {sap.ui.mdc.FilterField|null}
+         */
+        _getModeField: function () {
+            var oFB = this._oFilterBar;
+            if (!oFB || !oFB.getFilterItems) {
+                return null;
+            }
+            var aItems = oFB.getFilterItems();
+            for (var i = 0; i < aItems.length; i++) {
+                var sPath = (aItems[i].getFieldPath && aItems[i].getFieldPath()) ||
+                            (aItems[i].getPropertyKey && aItems[i].getPropertyKey()) || "";
+                if (sPath === MODE_FIELD) {
+                    return aItems[i];
+                }
+            }
+            return null;
+        },
+
+        /**
+         * Render ReportMode as a real dropdown (fixed value list), not an F4
+         * value-help / condition dialog. A custom entity does not surface its
+         * domain fixed values as a dropdown, so we attach an MDC ValueHelp with
+         * a FixedList (the nine modes) to the field. Fully guarded - if the MDC
+         * modules differ, the field is simply left as-is.
+         */
+        _setupModeDropdown: function () {
+            var that = this;
+            var oField = this._getModeField();
+            if (!oField || oField.__modeDropdownDone) {
+                return;
+            }
+            sap.ui.require([
+                "sap/ui/mdc/ValueHelp",
+                "sap/ui/mdc/valuehelp/Popover",
+                "sap/ui/mdc/valuehelp/content/FixedList",
+                "sap/ui/mdc/valuehelp/content/FixedListItem"
+            ], function (ValueHelp, Popover, FixedList, FixedListItem) {
+                try {
+                    var fnItems = function () {
+                        return MODE_ORDER.map(function (m) {
+                            return new FixedListItem({ key: m.key, text: m.text });
+                        });
+                    };
+                    var oVH = new ValueHelp({
+                        typeahead: new Popover({
+                            content: [ new FixedList({
+                                useFirstMatch: true,
+                                filterList: false,
+                                caseSensitive: false,
+                                items: fnItems()
+                            }) ]
+                        }),
+                        dialog: new Popover({
+                            content: [ new FixedList({ items: fnItems() }) ]
+                        })
+                    });
+                    that.base.getView().addDependent(oVH);
+                    if (oField.setValueHelp) {
+                        oField.setValueHelp(oVH.getId());
+                    }
+                    if (oField.setOperators) {
+                        oField.setOperators(["EQ"]);   // single-select dropdown, no ranges
+                    }
+                    if (oField.setDisplay) {
+                        oField.setDisplay("Description");  // show the mode text
+                    }
+                    oField.__modeDropdownDone = true;
+                } catch (e) {
+                    // Leave the field as-is on any MDC API difference.
+                }
+            });
         },
 
         /**

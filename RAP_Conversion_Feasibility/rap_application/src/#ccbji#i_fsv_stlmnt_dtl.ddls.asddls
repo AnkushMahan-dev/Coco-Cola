@@ -25,12 +25,11 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       @Consumption.filter: { mandatory: true, selectionType: #SINGLE, defaultValue: 'TOUR' }
       ReportMode       : /ccbji/fsv_mode;
 
-      // Value help = the real Visit Lists (/DSD/ST_STATUS-VLID), shown without
-      // leading zeros. It is a PLAIN (non-fixed) value list, so it only
-      // SUGGESTS - a Visit List that is not in the list is still accepted, and
-      // the backend matches it with or without leading zeros.
+      // NO value help - a value help over the Visit List (/DSD/ST_STATUS is a
+      // very large table) made the F4 dialog extremely slow. Free text instead:
+      // type the Visit List with or without leading zeros; the backend matches
+      // both. (Plant / Route / Status keep their value helps - small, fast tables.)
       @EndUserText.label: 'Shipment / Visit List'
-      @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_VLIST_VH', element: 'ShipmentNo' } } ]
       ShipmentNo       : tknum;
 
       // Plain char(32): matches /dsd/hh_tour_id length (CHAR 32) but avoids its
