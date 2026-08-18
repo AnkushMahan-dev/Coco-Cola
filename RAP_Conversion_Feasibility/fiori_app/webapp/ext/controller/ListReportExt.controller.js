@@ -347,15 +347,15 @@ sap.ui.define([
             oTable.getColumns().forEach(function (oColumn) {
                 var sKey = (oColumn.getPropertyKey && oColumn.getPropertyKey()) ||
                            (oColumn.getDataProperty && oColumn.getDataProperty()) || "";
-                // SAFETY: never touch a column whose key we cannot resolve -
-                // hiding it would leave a blank header. Leave it visible.
+                var bVisible;
                 if (!sKey) {
-                    if (oColumn.getVisible && oColumn.setVisible && oColumn.getVisible() !== true) {
-                        oColumn.setVisible(true);
-                    }
-                    return;
+                    // A column whose key/header we cannot resolve renders as a
+                    // BLANK header if shown. While a mode is active it can't be
+                    // matched, so hide it - that removes the blank columns.
+                    bVisible = false;
+                } else {
+                    bVisible = aAllowed.indexOf(sKey) !== -1;
                 }
-                var bVisible = aAllowed.indexOf(sKey) !== -1;
                 if (oColumn.getVisible && oColumn.setVisible && oColumn.getVisible() !== bVisible) {
                     oColumn.setVisible(bVisible);
                 }
