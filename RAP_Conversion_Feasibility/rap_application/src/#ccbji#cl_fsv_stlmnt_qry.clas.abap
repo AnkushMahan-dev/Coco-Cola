@@ -207,6 +207,13 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
                 iv_comp TYPE string
       CHANGING  cv      TYPE any.
 
+    "! Convert an internal amount to JPY external format, exactly like the
+    "! classic f_currency_conversion (BAPI_CURRENCY_CONV_TO_EXTERNAL, JPY).
+    "! Guarded - on any error the input value is returned unchanged (no dump).
+    METHODS conv_jpy
+      IMPORTING iv_in       TYPE p
+      RETURNING VALUE(rv_out) TYPE p.
+
     "! Convert a UTC date/time to Japan local time (classic
     "! f_get_local_timezone via ISU_DATE_TIME_CONVERT_TIMEZONE, zone JAPAN).
     METHODS to_local_time
@@ -992,7 +999,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
                      hh_delvry = <i>-hh_delvry hh_delvry_it = <i>-hh_delvry_it.
           IF sy-subrc = 0.
             ls_s-condtype = <cn>-cond.
-            ls_s-amount   = <cn>-amount.
+            ls_s-amount   = conv_jpy( <cn>-amount ).
           ENDIF.
 
           READ TABLE lt_cv ASSIGNING FIELD-SYMBOL(<cv>)
@@ -1063,7 +1070,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           ls_p-paymentdescr  = <p>-paymt_descr.
           ls_p-cardno        = <p>-cardnr.
           ls_p-checkno       = <p>-checknr.
-          ls_p-amount        = <p>-amount.
+          ls_p-amount        = conv_jpy( <p>-amount ).
           ls_p-currency      = <p>-curr.
           ls_p-cashid        = <p>-cash_id.
           ls_p-cashtype      = <p>-cash_typ.
@@ -1144,7 +1151,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           READ TABLE lt_ci ASSIGNING FIELD-SYMBOL(<ci>)
             WITH KEY tour_id = <m>-tour_id check_id = <m>-check_id itemnr = <m>-itemnr.
           IF sy-subrc = 0.
-            ls_c-amount        = <ci>-amount.
+            ls_c-amount        = conv_jpy( <ci>-amount ).
             ls_c-currency      = <ci>-curr.
             ls_c-paymentmethod = <ci>-paymt.
           ENDIF.
@@ -1188,12 +1195,12 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           ls_m-reportmode     = 'MONY'.
           ls_m-slddocid       = <mb>-sld_doc_id.
           ls_m-paymentmethod  = <mb>-payment_type.
-          ls_m-amountco       = <mb>-amount_co.
-          ls_m-amountexpenses = <mb>-amount_expenses.
-          ls_m-amountearnings = <mb>-amount_earnings.
-          ls_m-amountci       = <mb>-amount_ci.
-          ls_m-amount         = <mb>-amount_diff.
-          ls_m-amountplan     = <mb>-amount_plan.
+          ls_m-amountco       = conv_jpy( <mb>-amount_co ).
+          ls_m-amountexpenses = conv_jpy( <mb>-amount_expenses ).
+          ls_m-amountearnings = conv_jpy( <mb>-amount_earnings ).
+          ls_m-amountci       = conv_jpy( <mb>-amount_ci ).
+          ls_m-amount         = conv_jpy( <mb>-amount_diff ).
+          ls_m-amountplan     = conv_jpy( <mb>-amount_plan ).
           ls_m-reason         = <mb>-reason.
           ls_m-currency       = <mb>-currency_amount.
           IF <it> IS ASSIGNED.
@@ -1422,6 +1429,26 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         CATCH cx_root.
       ENDTRY.
     ENDIF.
+  ENDMETHOD.
+
+
+  METHOD conv_jpy.
+    rv_out = iv_in.
+    IF iv_in IS INITIAL.
+      RETURN.
+    ENDIF.
+    TRY.
+        DATA lv_ext TYPE bapicurr-bapicurr.
+        CALL FUNCTION 'BAPI_CURRENCY_CONV_TO_EXTERNAL'
+          EXPORTING
+            currency        = 'JPY'
+            amount_internal = iv_in
+          IMPORTING
+            amount_external = lv_ext.
+        rv_out = lv_ext.
+      CATCH cx_root.
+        rv_out = iv_in.
+    ENDTRY.
   ENDMETHOD.
 
 
