@@ -1,0 +1,33 @@
+# yaml-language-server: $schema=https://sap.github.io/ui5-tooling/schema/ui5-deploy.yaml.json
+specVersion: "4.0"
+metadata:
+  name: ccbji.otc.stlmnt
+type: application
+builder:
+  resources:
+    excludes:
+      - /test/**
+      - /localService/**
+  customTasks:
+    - name: deploy-to-abap
+      afterTask: generateCachebusterInfo
+      configuration:
+        target:
+          # Same reachable endpoint as the runtime proxy (confirmed by the
+          # service test client): HTTPS on 44300, client 100.
+          url: https://vhc2jq4rci.rise.ccbji.co.jp:44300
+          client: "100"
+        # No 'credentials:' block -> fiori deploy prompts for user/password
+        # (or reuses your stored logon). Do NOT hard-code credentials here.
+        app:
+          # BSP (SAPUI5 ABAP repository) name. MAX 15 chars. Change if this
+          # clashes with an existing repository.
+          name: ZFSV_STLMNT_APP
+          # ABAP package the BSP goes into. Use your DSD/OTC package.
+          package: ZCCBJI_OTC
+          # Transport request number (e.g. NPLK900123). Leave the placeholder
+          # and fiori deploy will prompt / let you pick one interactively.
+          transport: <YOUR_TRANSPORT>
+          description: OTC DSD Settlement Details
+        exclude:
+          - /test/
