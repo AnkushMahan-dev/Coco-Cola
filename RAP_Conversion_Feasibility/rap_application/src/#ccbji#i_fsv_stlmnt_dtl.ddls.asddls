@@ -263,6 +263,25 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       @EndUserText.label: 'Company Code'
       CompCode         : abap.char(4);
 
+      // Payment FI posting detail (from CDS I_OperationalAcctgDocItem + BKPF)
+      @EndUserText.label: 'Posting Item'
+      PostingItem      : abap.numc(3);
+
+      @EndUserText.label: 'Posting Amount'
+      PostingAmount    : abap.dec(15, 2);
+
+      @EndUserText.label: 'Posting Currency'
+      PostingCurrency  : abap.char(5);
+
+      @EndUserText.label: 'Posting Date'
+      PostingDate      : abap.dats;
+
+      @EndUserText.label: 'Document Type'
+      DocType          : abap.char(2);
+
+      @EndUserText.label: 'Reversal Document'
+      ReversalDoc      : abap.char(10);
+
       // Money difference (classic ty_final4)
       @EndUserText.label: 'Amount Check-Out'
       AmountCo         : abap.dec(15, 2);

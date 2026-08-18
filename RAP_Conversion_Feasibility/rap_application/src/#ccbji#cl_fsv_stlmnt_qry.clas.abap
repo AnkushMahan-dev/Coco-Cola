@@ -36,7 +36,8 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
            ty_status   TYPE c LENGTH 1,
            ty_rowkey   TYPE c LENGTH 120,
            ty_tour32   TYPE c LENGTH 32,
-           ty_visit6   TYPE n LENGTH 6.
+           ty_visit6   TYPE n LENGTH 6,
+           ty_amt      TYPE p LENGTH 15 DECIMALS 2.
 
     " Detail-level filter ranges (Option A - every exposed filter is applied
     " as a post-filter on the built result, so filters that are not part of
@@ -144,6 +145,13 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
              checkno          TYPE c LENGTH 13,
              fiscyear         TYPE n LENGTH 4,
              compcode         TYPE c LENGTH 4,
+             " Payment FI posting detail (from CDS I_OperationalAcctgDocItem + BKPF)
+             postingitem      TYPE n LENGTH 3,
+             postingamount    TYPE p LENGTH 8 DECIMALS 2,
+             postingcurrency  TYPE c LENGTH 5,
+             postingdate      TYPE dats,
+             doctype          TYPE c LENGTH 2,
+             reversaldoc      TYPE c LENGTH 10,
              " Money (ty_final4)
              amountco         TYPE p LENGTH 8 DECIMALS 2,
              amountexpenses   TYPE p LENGTH 8 DECIMALS 2,
@@ -211,8 +219,8 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
     "! classic f_currency_conversion (BAPI_CURRENCY_CONV_TO_EXTERNAL, JPY).
     "! Guarded - on any error the input value is returned unchanged (no dump).
     METHODS conv_jpy
-      IMPORTING iv_in       TYPE p
-      RETURNING VALUE(rv_out) TYPE p.
+      IMPORTING iv_in         TYPE p
+      RETURNING VALUE(rv_out) TYPE ty_amt.
 
     "! Convert a UTC date/time to Japan local time (classic
     "! f_get_local_timezone via ISU_DATE_TIME_CONVERT_TIMEZONE, zone JAPAN).
@@ -1061,6 +1069,40 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             INTO TABLE @DATA(lt_kna1).
         ENDIF.
 
+        " FI posting detail. Instead of the classic FI_DOCUMENT_READ (RFC into
+        " BSEG), read the released CDS view I_OperationalAcctgDocItem - exactly
+        " the replacement the classic report itself adopted for S/4 (MOD-027).
+        " Keyed by company code / accounting document / fiscal year from RAEC.
+        DATA lt_fikey TYPE STANDARD TABLE OF /dsd/hh_raec.
+        lt_fikey = lt_pay.
+        SORT lt_fikey BY compcod oi_csh_post fisc_year.
+        DELETE ADJACENT DUPLICATES FROM lt_fikey COMPARING compcod oi_csh_post fisc_year.
+        DELETE lt_fikey WHERE oi_csh_post IS INITIAL.
+
+        IF lt_fikey IS NOT INITIAL.
+          SELECT companycode          AS bukrs,
+                 accountingdocument    AS belnr,
+                 fiscalyear            AS gjahr,
+                 accountingdocumentitem AS buzei,
+                 postingkey            AS bschl,
+                 absltamtinbalancetransaccrcy AS pswbt,
+                 balancetransactioncurrency   AS pswsl,
+                 customer              AS kunnr
+            FROM i_operationalacctgdocitem
+            FOR ALL ENTRIES IN @lt_fikey
+            WHERE companycode       = @lt_fikey-compcod
+              AND accountingdocument = @lt_fikey-oi_csh_post
+              AND fiscalyear        = @lt_fikey-fisc_year
+            INTO TABLE @DATA(lt_item).
+
+          SELECT bukrs, belnr, gjahr, blart, budat, stblg FROM bkpf
+            FOR ALL ENTRIES IN @lt_fikey
+            WHERE bukrs = @lt_fikey-compcod
+              AND belnr = @lt_fikey-oi_csh_post
+              AND gjahr = @lt_fikey-fisc_year
+            INTO TABLE @DATA(lt_bkpf).
+        ENDIF.
+
         LOOP AT lt_pay ASSIGNING FIELD-SYMBOL(<p>).
           DATA ls_p TYPE ty_result.
           CLEAR ls_p.
@@ -1086,6 +1128,26 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             IF sy-subrc = 0.
               ls_p-businesstype = <k>-katr4.
               ls_p-equipowner   = <k>-/scl/equp_ownr.
+            ENDIF.
+          ENDIF.
+
+          " FI posting-key detail from the CDS view (first item of the document).
+          IF <p>-oi_csh_post IS NOT INITIAL.
+            READ TABLE lt_item ASSIGNING FIELD-SYMBOL(<fi>)
+              WITH KEY bukrs = <p>-compcod belnr = <p>-oi_csh_post gjahr = <p>-fisc_year.
+            IF sy-subrc = 0.
+              ls_p-postingitem     = <fi>-buzei.
+              ls_p-postingkey      = <fi>-bschl.
+              ls_p-postingamount   = <fi>-pswbt.
+              ls_p-postingcurrency = <fi>-pswsl.
+              IF ls_p-customer IS INITIAL. ls_p-customer = <fi>-kunnr. ENDIF.
+            ENDIF.
+            READ TABLE lt_bkpf ASSIGNING FIELD-SYMBOL(<bk>)
+              WITH KEY bukrs = <p>-compcod belnr = <p>-oi_csh_post gjahr = <p>-fisc_year.
+            IF sy-subrc = 0.
+              ls_p-doctype     = <bk>-blart.
+              ls_p-postingdate = <bk>-budat.
+              ls_p-reversaldoc = <bk>-stblg.
             ENDIF.
           ENDIF.
 

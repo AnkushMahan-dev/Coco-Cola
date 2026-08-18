@@ -260,6 +260,25 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
   @UI: { lineItem: [ { position: 266 } ], identification: [ { position: 426 } ] }
   ValueFinDiff;
 
+  // ---- Payment FI posting detail (from CDS, replacing FI_DOCUMENT_READ) ----
+  @UI: { lineItem: [ { position: 267 } ], identification: [ { position: 427 } ] }
+  PostingItem;
+
+  @UI: { lineItem: [ { position: 268 } ], identification: [ { position: 428 } ] }
+  PostingAmount;
+
+  @UI: { lineItem: [ { position: 269 } ], identification: [ { position: 429 } ] }
+  PostingCurrency;
+
+  @UI: { lineItem: [ { position: 270 } ], identification: [ { position: 430 } ] }
+  PostingDate;
+
+  @UI: { lineItem: [ { position: 271 } ], identification: [ { position: 431 } ] }
+  DocType;
+
+  @UI: { lineItem: [ { position: 272 } ], identification: [ { position: 432 } ] }
+  ReversalDoc;
+
   @UI.hidden: true
   Light;
 }
