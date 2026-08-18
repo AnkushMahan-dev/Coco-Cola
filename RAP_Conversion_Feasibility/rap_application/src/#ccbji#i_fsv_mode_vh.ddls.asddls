@@ -1,6 +1,5 @@
 @EndUserText.label: 'Report Mode Value Help'
 @AccessControl.authorizationCheck: #NOT_REQUIRED
-@ObjectModel.resultSet.sizeCategory: #XS
 @Search.searchable: true
 define view entity /CCBJI/I_FSV_MODE_VH
   as select from dd07l as val

@@ -1,7 +1,6 @@
 @EndUserText.label: 'Shipment / Visit List Value Help'
 @AccessControl.authorizationCheck: #NOT_REQUIRED
 @Search.searchable: true
-@ObjectModel.resultSet.sizeCategory: #M
 define view entity /CCBJI/I_FSV_SHIP_VH
   as select from vttk
 {

@@ -1,7 +1,6 @@
 @EndUserText.label: 'Visit List Value Help'
 @AccessControl.authorizationCheck: #NOT_REQUIRED
 @Search.searchable: true
-@ObjectModel.resultSet.sizeCategory: #M
 define view entity /CCBJI/I_FSV_VLIST_VH
   as select distinct from /dsd/st_status
 {

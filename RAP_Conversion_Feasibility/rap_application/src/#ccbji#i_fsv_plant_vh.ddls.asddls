@@ -1,7 +1,6 @@
 @EndUserText.label: 'Plant Value Help (Settlement Details)'
 @AccessControl.authorizationCheck: #NOT_REQUIRED
 @Search.searchable: true
-@ObjectModel.resultSet.sizeCategory: #XS
 define view entity /CCBJI/I_FSV_PLANT_VH
   as select from t001w
 {
