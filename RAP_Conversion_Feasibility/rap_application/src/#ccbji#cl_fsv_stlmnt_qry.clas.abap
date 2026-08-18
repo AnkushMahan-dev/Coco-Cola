@@ -34,7 +34,25 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
            tt_r_truck  TYPE RANGE OF /dsd/rp_truck,
            tt_r_mode   TYPE RANGE OF /ccbji/fsv_mode,
            ty_status   TYPE c LENGTH 1,
-           ty_rowkey   TYPE c LENGTH 120.
+           ty_rowkey   TYPE c LENGTH 120,
+           ty_tour32   TYPE c LENGTH 32,
+           ty_visit6   TYPE n LENGTH 6.
+
+    " Detail-level filter ranges (Option A - every exposed filter is applied
+    " as a post-filter on the built result, so filters that are not part of
+    " tour resolution - Customer, Material, etc. - genuinely narrow the list).
+    TYPES: tt_r_kunnr  TYPE RANGE OF kunnr,
+           tt_r_matnr  TYPE RANGE OF matnr,
+           tt_r_vkorg  TYPE RANGE OF vkorg,
+           tt_r_paymt  TYPE RANGE OF /dsd/hh_paymt,
+           tt_r_waers  TYPE RANGE OF waers,
+           tt_r_sldid  TYPE RANGE OF /dsd/sl_sld_id,
+           tt_r_visit  TYPE RANGE OF ty_visit6,
+           tt_r_tour   TYPE RANGE OF ty_tour32,
+           tt_r_viscod TYPE RANGE OF /dsd/hh_viscod,
+           tt_r_objtyp TYPE RANGE OF /dsd/hh_del_doctyp,
+           tt_r_vbeln  TYPE RANGE OF vbeln_vl,
+           tt_r_casht  TYPE RANGE OF /dsd/hh_csh_typ.
 
     TYPES: BEGIN OF ty_tour,
              tourid    TYPE /dsd/hh_tour_id,
@@ -106,6 +124,39 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
              errors           TYPE i,
              referencedoc     TYPE xblnr,
              headertext       TYPE bktxt,
+             " ---- Option B: exact per-mode columns from the classic report ----
+             " Sales (ty_final1)
+             deliveryitem     TYPE c LENGTH 6,
+             podate           TYPE dats,
+             tacode           TYPE c LENGTH 4,
+             reason           TYPE c LENGTH 4,
+             batch            TYPE c LENGTH 10,
+             condtype         TYPE c LENGTH 4,
+             origqty          TYPE p LENGTH 8 DECIMALS 3,
+             " Check (ty_final3)
+             checkid          TYPE c LENGTH 12,
+             itemno           TYPE c LENGTH 6,
+             quanplan         TYPE p LENGTH 8 DECIMALS 3,
+             quancount        TYPE p LENGTH 8 DECIMALS 3,
+             " Payment (ty_final2)
+             cashid           TYPE c LENGTH 20,
+             paymentdescr     TYPE c LENGTH 20,
+             checkno          TYPE c LENGTH 13,
+             fiscyear         TYPE n LENGTH 4,
+             compcode         TYPE c LENGTH 4,
+             " Money (ty_final4)
+             amountco         TYPE p LENGTH 8 DECIMALS 2,
+             amountexpenses   TYPE p LENGTH 8 DECIMALS 2,
+             amountearnings   TYPE p LENGTH 8 DECIMALS 2,
+             amountci         TYPE p LENGTH 8 DECIMALS 2,
+             amountplan       TYPE p LENGTH 8 DECIMALS 2,
+             " Quantity (ty_final5)
+             quancheckout     TYPE p LENGTH 8 DECIMALS 3,
+             quandelivered    TYPE p LENGTH 8 DECIMALS 3,
+             quanreturn       TYPE p LENGTH 8 DECIMALS 3,
+             quancheckin      TYPE p LENGTH 8 DECIMALS 3,
+             quanfinaldiff    TYPE p LENGTH 8 DECIMALS 3,
+             valuefindiff     TYPE p LENGTH 8 DECIMALS 2,
            END OF ty_result,
            tt_result TYPE STANDARD TABLE OF ty_result WITH DEFAULT KEY.
 
@@ -143,11 +194,18 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
     METHODS read_money    IMPORTING it_tour TYPE tt_tour RETURNING VALUE(rt) TYPE tt_result.
     METHODS read_quan     IMPORTING it_tour TYPE tt_tour RETURNING VALUE(rt) TYPE tt_result.
     METHODS read_fsr      IMPORTING it_tour TYPE tt_tour RETURNING VALUE(rt) TYPE tt_result.
+    METHODS read_cash     IMPORTING it_tour TYPE tt_tour RETURNING VALUE(rt) TYPE tt_result.
 
     METHODS derive_processing_status
       IMPORTING iv_warnings      TYPE i
                 iv_errors        TYPE i
       RETURNING VALUE(rv_status) TYPE ty_status.
+
+    "! Safe dynamic component copy (used by the CASH mode's dynamic ALV mapping).
+    METHODS move_comp
+      IMPORTING is_row  TYPE any
+                iv_comp TYPE string
+      CHANGING  cv      TYPE any.
 
     "! Convert a UTC date/time to Japan local time (classic
     "! f_get_local_timezone via ISU_DATE_TIME_CONVERT_TIMEZONE, zone JAPAN).
@@ -175,6 +233,20 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
     DATA lt_mode        TYPE tt_r_mode.
     DATA lt_seqno       TYPE RANGE OF int4.
     DATA lt_rowkey      TYPE RANGE OF ty_rowkey.
+
+    " Detail-level (post) filters.
+    DATA lt_f_customer  TYPE tt_r_kunnr.
+    DATA lt_f_material  TYPE tt_r_matnr.
+    DATA lt_f_vkorg     TYPE tt_r_vkorg.
+    DATA lt_f_paymt     TYPE tt_r_paymt.
+    DATA lt_f_currency  TYPE tt_r_waers.
+    DATA lt_f_slddoc    TYPE tt_r_sldid.
+    DATA lt_f_visitid   TYPE tt_r_visit.
+    DATA lt_f_tourid    TYPE tt_r_tour.
+    DATA lt_f_viscod    TYPE tt_r_viscod.
+    DATA lt_f_objtyp    TYPE tt_r_objtyp.
+    DATA lt_f_delivery  TYPE tt_r_vbeln.
+    DATA lt_f_cashtype  TYPE tt_r_casht.
 
     " Everything that can touch the DB is inside ONE TRY/CATCH so the
     " OData service can NEVER short-dump - any error returns empty rows.
@@ -206,8 +278,70 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             WHEN 'REPORTMODE'.     lt_mode        = CORRESPONDING #( ls_range-range ).
             WHEN 'SEQNO'.          lt_seqno       = CORRESPONDING #( ls_range-range ).
             WHEN 'ROWKEY'.          lt_rowkey       = CORRESPONDING #( ls_range-range ).
+            " Detail-level filters (applied as post-filters on the result).
+            WHEN 'CUSTOMER'.       lt_f_customer  = CORRESPONDING #( ls_range-range ).
+            WHEN 'MATERIAL'.       lt_f_material  = CORRESPONDING #( ls_range-range ).
+            WHEN 'VKORG'.          lt_f_vkorg     = CORRESPONDING #( ls_range-range ).
+            WHEN 'PAYMENTMETHOD'.  lt_f_paymt     = CORRESPONDING #( ls_range-range ).
+            WHEN 'CURRENCY'.       lt_f_currency  = CORRESPONDING #( ls_range-range ).
+            WHEN 'SLDDOCID'.       lt_f_slddoc    = CORRESPONDING #( ls_range-range ).
+            WHEN 'VISITID'.        lt_f_visitid   = CORRESPONDING #( ls_range-range ).
+            WHEN 'TOURID'.         lt_f_tourid    = CORRESPONDING #( ls_range-range ).
+            WHEN 'VISITREASON'.    lt_f_viscod    = CORRESPONDING #( ls_range-range ).
+            WHEN 'OBJTYPE'.        lt_f_objtyp    = CORRESPONDING #( ls_range-range ).
+            WHEN 'DELIVERYNO'.     lt_f_delivery  = CORRESPONDING #( ls_range-range ).
+            WHEN 'CASHTYPE'.       lt_f_cashtype  = CORRESPONDING #( ls_range-range ).
             WHEN OTHERS.
           ENDCASE.
+        ENDLOOP.
+
+        " Leading-zero tolerance: for code fields that are commonly stored
+        " zero-padded (customer, material, delivery, settlement doc, visit,
+        " tour), add stripped + ALPHA-padded EQ variants so the filter matches
+        " whether or not the user typed leading zeros.
+        DATA lt_cust_x TYPE tt_r_kunnr.
+        lt_cust_x = lt_f_customer.
+        LOOP AT lt_cust_x INTO DATA(ls_cx) WHERE sign = 'I' AND option = 'EQ'.
+          DATA lv_cs TYPE kunnr.  lv_cs = ls_cx-low.  SHIFT lv_cs LEFT DELETING LEADING '0'.
+          APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_cs ) TO lt_f_customer.
+          APPEND VALUE #( sign = 'I' option = 'EQ' low = |{ ls_cx-low ALPHA = IN }| ) TO lt_f_customer.
+        ENDLOOP.
+
+        DATA lt_mat_x TYPE tt_r_matnr.
+        lt_mat_x = lt_f_material.
+        LOOP AT lt_mat_x INTO DATA(ls_mx) WHERE sign = 'I' AND option = 'EQ'.
+          DATA lv_ms TYPE matnr.  lv_ms = ls_mx-low.  SHIFT lv_ms LEFT DELETING LEADING '0'.
+          APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_ms ) TO lt_f_material.
+          APPEND VALUE #( sign = 'I' option = 'EQ' low = |{ ls_mx-low ALPHA = IN }| ) TO lt_f_material.
+        ENDLOOP.
+
+        DATA lt_dlv_x TYPE tt_r_vbeln.
+        lt_dlv_x = lt_f_delivery.
+        LOOP AT lt_dlv_x INTO DATA(ls_dx) WHERE sign = 'I' AND option = 'EQ'.
+          DATA lv_ds TYPE vbeln_vl.  lv_ds = ls_dx-low.  SHIFT lv_ds LEFT DELETING LEADING '0'.
+          APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_ds ) TO lt_f_delivery.
+          APPEND VALUE #( sign = 'I' option = 'EQ' low = |{ ls_dx-low ALPHA = IN }| ) TO lt_f_delivery.
+        ENDLOOP.
+
+        DATA lt_sld_x TYPE tt_r_sldid.
+        lt_sld_x = lt_f_slddoc.
+        LOOP AT lt_sld_x INTO DATA(ls_sx) WHERE sign = 'I' AND option = 'EQ'.
+          DATA lv_ss TYPE /dsd/sl_sld_id.  lv_ss = ls_sx-low.  SHIFT lv_ss LEFT DELETING LEADING '0'.
+          APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_ss ) TO lt_f_slddoc.
+        ENDLOOP.
+
+        DATA lt_vis_x TYPE tt_r_visit.
+        lt_vis_x = lt_f_visitid.
+        LOOP AT lt_vis_x INTO DATA(ls_vx) WHERE sign = 'I' AND option = 'EQ'.
+          DATA lv_vs TYPE ty_visit6.  lv_vs = ls_vx-low.
+          APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_vs ) TO lt_f_visitid.
+        ENDLOOP.
+
+        DATA lt_tour_x TYPE tt_r_tour.
+        lt_tour_x = lt_f_tourid.
+        LOOP AT lt_tour_x INTO DATA(ls_tx) WHERE sign = 'I' AND option = 'EQ'.
+          DATA lv_ts TYPE ty_tour32.  lv_ts = ls_tx-low.  SHIFT lv_ts LEFT DELETING LEADING '0'.
+          APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_ts ) TO lt_f_tourid.
         ENDLOOP.
 
         IF lt_mode IS NOT INITIAL.
@@ -274,8 +408,28 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           WHEN 'MONY'.  lt_result = read_money(   it_tour = lt_tour ).
           WHEN 'QUAN'.  lt_result = read_quan(    it_tour = lt_tour ).
           WHEN 'FSRD'.  lt_result = read_fsr(     it_tour = lt_tour ).
+          WHEN 'CASH'.  lt_result = read_cash(    it_tour = lt_tour ).
           WHEN OTHERS.  CLEAR lt_result.
         ENDCASE.
+
+        " Option A - apply every detail-level filter as a post-filter, so
+        " filters that are not part of tour resolution genuinely narrow the
+        " output. Empty ranges are no-ops.
+        IF lt_f_customer IS NOT INITIAL. DELETE lt_result WHERE customer      NOT IN lt_f_customer. ENDIF.
+        IF lt_f_material IS NOT INITIAL. DELETE lt_result WHERE material      NOT IN lt_f_material. ENDIF.
+        IF lt_f_vkorg    IS NOT INITIAL. DELETE lt_result WHERE vkorg         NOT IN lt_f_vkorg.    ENDIF.
+        IF lt_f_paymt    IS NOT INITIAL. DELETE lt_result WHERE paymentmethod NOT IN lt_f_paymt.    ENDIF.
+        IF lt_f_currency IS NOT INITIAL. DELETE lt_result WHERE currency      NOT IN lt_f_currency. ENDIF.
+        IF lt_f_slddoc   IS NOT INITIAL. DELETE lt_result WHERE slddocid      NOT IN lt_f_slddoc.   ENDIF.
+        IF lt_f_visitid  IS NOT INITIAL. DELETE lt_result WHERE visitid       NOT IN lt_f_visitid.  ENDIF.
+        IF lt_f_tourid   IS NOT INITIAL. DELETE lt_result WHERE tourid        NOT IN lt_f_tourid.   ENDIF.
+        IF lt_f_viscod   IS NOT INITIAL. DELETE lt_result WHERE visitreason   NOT IN lt_f_viscod.   ENDIF.
+        IF lt_f_objtyp   IS NOT INITIAL. DELETE lt_result WHERE objtype       NOT IN lt_f_objtyp.   ENDIF.
+        IF lt_f_delivery IS NOT INITIAL. DELETE lt_result WHERE deliveryno    NOT IN lt_f_delivery. ENDIF.
+        IF lt_f_cashtype IS NOT INITIAL. DELETE lt_result WHERE cashtype      NOT IN lt_f_cashtype. ENDIF.
+        IF lt_driver     IS NOT INITIAL. DELETE lt_result WHERE driver        NOT IN lt_driver.     ENDIF.
+        IF lt_vehicle    IS NOT INITIAL. DELETE lt_result WHERE vehicle       NOT IN lt_vehicle.    ENDIF.
+        IF lt_tpp        IS NOT INITIAL. DELETE lt_result WHERE tpp           NOT IN lt_tpp.        ENDIF.
       CATCH cx_root.
         CLEAR lt_result.
     ENDTRY.
@@ -760,28 +914,113 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
 
   METHOD read_sales.
 
+    " Mode SLRP - Sales / Replenishment, ported from classic f_get_sales.
+    " Main loop driver = /DSD/HH_RADELIT (delivery items). Enriched with
+    " material text (MAKT), delivery header (RADELHD: obj type / PO / PO date),
+    " conditions (RADELCND: condition type + amount), customer (RACVHD + KNA1),
+    " and scenario (RACOCIHD checker).
     IF it_tour IS INITIAL. RETURN. ENDIF.
     TRY.
+        SELECT * FROM /dsd/hh_radelit
+          FOR ALL ENTRIES IN @it_tour
+          WHERE tour_id = @it_tour-tourid
+          INTO TABLE @DATA(lt_it).
+        IF lt_it IS INITIAL. RETURN. ENDIF.
+
+        SELECT matnr, maktx FROM makt
+          FOR ALL ENTRIES IN @lt_it
+          WHERE matnr = @lt_it-matnr AND spras = @sy-langu
+          INTO TABLE @DATA(lt_makt).
+
         SELECT * FROM /dsd/hh_radelhd
           FOR ALL ENTRIES IN @it_tour
           WHERE tour_id = @it_tour-tourid
-          INTO TABLE @DATA(lt_del).
+          INTO TABLE @DATA(lt_hd).
 
-        LOOP AT lt_del ASSIGNING FIELD-SYMBOL(<d>).
-          READ TABLE it_tour ASSIGNING FIELD-SYMBOL(<t>) WITH KEY tourid = <d>-tour_id.
-          APPEND VALUE ty_result(
-            reportmode = 'SLRP'
-            tourid     = <d>-tour_id
-            visitid    = <d>-visit_id
-            objtype    = <d>-obj_typ
-            plant      = <d>-plant
-            deliveryno = <d>-hh_delvry
-            ponumber   = <d>-bstkd
-            shipmentno = COND #( WHEN <t> IS ASSIGNED THEN <t>-vlid )
-            route      = COND #( WHEN <t> IS ASSIGNED THEN <t>-route )
-            settlementdate = COND #( WHEN <t> IS ASSIGNED THEN <t>-date )
-            statusid   = COND #( WHEN <t> IS ASSIGNED THEN <t>-status_id )
-          ) TO rt.
+        SELECT * FROM /dsd/hh_radelcnd
+          FOR ALL ENTRIES IN @it_tour
+          WHERE tour_id = @it_tour-tourid
+          INTO TABLE @DATA(lt_cnd).
+
+        SELECT tour_id, visit_id, custnr FROM /dsd/hh_racvhd
+          FOR ALL ENTRIES IN @it_tour
+          WHERE tour_id = @it_tour-tourid
+          INTO TABLE @DATA(lt_cv).
+
+        IF lt_cv IS NOT INITIAL.
+          SELECT kunnr, katr3, katr4, /scl/equp_ownr FROM kna1
+            FOR ALL ENTRIES IN @lt_cv
+            WHERE kunnr = @lt_cv-custnr
+            INTO TABLE @DATA(lt_kna1).
+        ENDIF.
+
+        SELECT tour_id, checker FROM /dsd/hh_racocihd
+          FOR ALL ENTRIES IN @it_tour
+          WHERE tour_id = @it_tour-tourid
+          INTO TABLE @DATA(lt_coci).
+
+        LOOP AT lt_it ASSIGNING FIELD-SYMBOL(<i>).
+          DATA ls_s TYPE ty_result.
+          CLEAR ls_s.
+          ls_s-reportmode   = 'SLRP'.
+          ls_s-tourid       = <i>-tour_id.
+          ls_s-visitid      = <i>-visit_id.
+          ls_s-deliveryno   = <i>-hh_delvry.
+          ls_s-deliveryitem = <i>-hh_delvry_it.
+          ls_s-material     = <i>-matnr.
+          ls_s-plant        = <i>-plant.
+          ls_s-quantity     = <i>-quan.
+          ls_s-uom          = <i>-uom.
+          ls_s-tacode       = <i>-ta_code.
+          ls_s-reason       = <i>-reason.
+          ls_s-batch        = <i>-charg.
+          ls_s-origqty      = <i>-/scl/orig_qty.
+
+          READ TABLE lt_makt ASSIGNING FIELD-SYMBOL(<mk>) WITH KEY matnr = <i>-matnr.
+          IF sy-subrc = 0. ls_s-materialdesc = <mk>-maktx. ENDIF.
+
+          READ TABLE lt_hd ASSIGNING FIELD-SYMBOL(<h>)
+            WITH KEY tour_id = <i>-tour_id visit_id = <i>-visit_id hh_delvry = <i>-hh_delvry.
+          IF sy-subrc = 0.
+            ls_s-objtype  = <h>-obj_typ.
+            ls_s-ponumber = <h>-bstkd.
+            ls_s-podate   = <h>-bstdk.
+          ENDIF.
+
+          READ TABLE lt_cnd ASSIGNING FIELD-SYMBOL(<cn>)
+            WITH KEY tour_id = <i>-tour_id visit_id = <i>-visit_id
+                     hh_delvry = <i>-hh_delvry hh_delvry_it = <i>-hh_delvry_it.
+          IF sy-subrc = 0.
+            ls_s-condtype = <cn>-cond.
+            ls_s-amount   = <cn>-amount.
+          ENDIF.
+
+          READ TABLE lt_cv ASSIGNING FIELD-SYMBOL(<cv>)
+            WITH KEY tour_id = <i>-tour_id visit_id = <i>-visit_id.
+          IF sy-subrc = 0.
+            ls_s-customer = <cv>-custnr.
+            READ TABLE lt_kna1 ASSIGNING FIELD-SYMBOL(<k>) WITH KEY kunnr = <cv>-custnr.
+            IF sy-subrc = 0.
+              ls_s-businesstype = <k>-katr4.
+              ls_s-equipowner   = <k>-/scl/equp_ownr.
+            ENDIF.
+          ENDIF.
+
+          READ TABLE lt_coci ASSIGNING FIELD-SYMBOL(<co>) WITH KEY tour_id = <i>-tour_id.
+          IF sy-subrc = 0 AND strlen( <co>-checker ) > 10.
+            ls_s-scenario = <co>-checker+10(1).
+          ENDIF.
+
+          READ TABLE it_tour ASSIGNING FIELD-SYMBOL(<t>) WITH KEY tourid = <i>-tour_id.
+          IF sy-subrc = 0.
+            ls_s-shipmentno     = <t>-vlid.
+            ls_s-route          = <t>-route.
+            ls_s-settlementdate = <t>-date.
+            ls_s-statusid       = <t>-status_id.
+            IF ls_s-plant IS INITIAL. ls_s-plant = <t>-werks. ENDIF.
+          ENDIF.
+
+          APPEND ls_s TO rt.
         ENDLOOP.
       CATCH cx_root.
         CLEAR rt.
@@ -792,23 +1031,59 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
 
   METHOD read_payment.
 
+    " Mode PAYT - Payment details, ported from classic f_get_payment. Main
+    " loop driver = /DSD/HH_RAEC. Customer resolved via RACVHD + KNA1. (The
+    " classic BSEG/FI posting-key enrichment via FI_DOCUMENT_READ is omitted -
+    " it would need a per-row RFC and is not required for the core payment view.)
     IF it_tour IS INITIAL. RETURN. ENDIF.
     TRY.
         SELECT * FROM /dsd/hh_raec
           FOR ALL ENTRIES IN @it_tour
           WHERE tour_id = @it_tour-tourid
           INTO TABLE @DATA(lt_pay).
+        IF lt_pay IS INITIAL. RETURN. ENDIF.
+
+        SELECT tour_id, visit_id, custnr FROM /dsd/hh_racvhd
+          FOR ALL ENTRIES IN @it_tour
+          WHERE tour_id = @it_tour-tourid
+          INTO TABLE @DATA(lt_cv).
+        IF lt_cv IS NOT INITIAL.
+          SELECT kunnr, katr4, /scl/equp_ownr FROM kna1
+            FOR ALL ENTRIES IN @lt_cv
+            WHERE kunnr = @lt_cv-custnr
+            INTO TABLE @DATA(lt_kna1).
+        ENDIF.
 
         LOOP AT lt_pay ASSIGNING FIELD-SYMBOL(<p>).
-          READ TABLE it_tour ASSIGNING FIELD-SYMBOL(<t>) WITH KEY tourid = <p>-tour_id.
           DATA ls_p TYPE ty_result.
           CLEAR ls_p.
           ls_p-reportmode    = 'PAYT'.
           ls_p-tourid        = <p>-tour_id.
           ls_p-paymentmethod = <p>-paymt.
+          ls_p-paymentdescr  = <p>-paymt_descr.
           ls_p-cardno        = <p>-cardnr.
+          ls_p-checkno       = <p>-checknr.
           ls_p-amount        = <p>-amount.
-          IF <t> IS ASSIGNED.
+          ls_p-currency      = <p>-curr.
+          ls_p-cashid        = <p>-cash_id.
+          ls_p-cashtype      = <p>-cash_typ.
+          ls_p-accountingdoc = <p>-oi_csh_post.
+          ls_p-fiscyear      = <p>-fisc_year.
+          ls_p-compcode      = <p>-compcod.
+
+          READ TABLE lt_cv ASSIGNING FIELD-SYMBOL(<cv>) WITH KEY tour_id = <p>-tour_id.
+          IF sy-subrc = 0.
+            ls_p-customer = <cv>-custnr.
+            ls_p-visitid  = <cv>-visit_id.
+            READ TABLE lt_kna1 ASSIGNING FIELD-SYMBOL(<k>) WITH KEY kunnr = <cv>-custnr.
+            IF sy-subrc = 0.
+              ls_p-businesstype = <k>-katr4.
+              ls_p-equipowner   = <k>-/scl/equp_ownr.
+            ENDIF.
+          ENDIF.
+
+          READ TABLE it_tour ASSIGNING FIELD-SYMBOL(<t>) WITH KEY tourid = <p>-tour_id.
+          IF sy-subrc = 0.
             ls_p-shipmentno     = <t>-vlid.
             ls_p-plant          = <t>-werks.
             ls_p-route          = <t>-route.
@@ -826,37 +1101,61 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
 
   METHOD read_check.
 
+    " Mode CHCK - Check Out/In, ported from classic f_get_check. Main loop
+    " driver = /DSD/HH_RACOCIMI (check items). Material text from MAKT; amount /
+    " currency / payment method from /DSD/HH_RACOCICI (by tour + check + item).
     IF it_tour IS INITIAL. RETURN. ENDIF.
     TRY.
         SELECT * FROM /dsd/hh_racocimi
           FOR ALL ENTRIES IN @it_tour
           WHERE tour_id = @it_tour-tourid
           INTO TABLE @DATA(lt_mi).
+        IF lt_mi IS INITIAL. RETURN. ENDIF.
 
-        IF lt_mi IS NOT INITIAL.
-          SELECT matnr, maktx FROM makt
-            FOR ALL ENTRIES IN @lt_mi
-            WHERE matnr = @lt_mi-matnr AND spras = @sy-langu
-            INTO TABLE @DATA(lt_makt).
-        ENDIF.
+        SELECT matnr, maktx FROM makt
+          FOR ALL ENTRIES IN @lt_mi
+          WHERE matnr = @lt_mi-matnr AND spras = @sy-langu
+          INTO TABLE @DATA(lt_makt).
+
+        SELECT * FROM /dsd/hh_racocici
+          FOR ALL ENTRIES IN @it_tour
+          WHERE tour_id = @it_tour-tourid
+          INTO TABLE @DATA(lt_ci).
 
         LOOP AT lt_mi ASSIGNING FIELD-SYMBOL(<m>).
-          READ TABLE it_tour ASSIGNING FIELD-SYMBOL(<t>) WITH KEY tourid = <m>-tour_id.
           DATA ls_c TYPE ty_result.
           CLEAR ls_c.
           ls_c-reportmode = 'CHCK'.
           ls_c-tourid     = <m>-tour_id.
+          ls_c-checkid    = <m>-check_id.
+          ls_c-itemno     = <m>-itemnr.
           ls_c-material   = <m>-matnr.
+          ls_c-plant      = <m>-plant.
+          ls_c-quanplan   = <m>-quan_plan.
+          ls_c-quancount  = <m>-quan_count.
+          ls_c-quandiff   = <m>-quan_diff.
+          ls_c-uom        = <m>-uom.
+          ls_c-reason     = <m>-reason.
+          ls_c-batch      = <m>-charg.
+
           READ TABLE lt_makt ASSIGNING FIELD-SYMBOL(<mk>) WITH KEY matnr = <m>-matnr.
+          IF sy-subrc = 0. ls_c-materialdesc = <mk>-maktx. ENDIF.
+
+          READ TABLE lt_ci ASSIGNING FIELD-SYMBOL(<ci>)
+            WITH KEY tour_id = <m>-tour_id check_id = <m>-check_id itemnr = <m>-itemnr.
           IF sy-subrc = 0.
-            ls_c-materialdesc = <mk>-maktx.
+            ls_c-amount        = <ci>-amount.
+            ls_c-currency      = <ci>-curr.
+            ls_c-paymentmethod = <ci>-paymt.
           ENDIF.
-          IF <t> IS ASSIGNED.
+
+          READ TABLE it_tour ASSIGNING FIELD-SYMBOL(<t>) WITH KEY tourid = <m>-tour_id.
+          IF sy-subrc = 0.
             ls_c-shipmentno     = <t>-vlid.
-            ls_c-plant          = <t>-werks.
             ls_c-route          = <t>-route.
             ls_c-settlementdate = <t>-date.
             ls_c-statusid       = <t>-status_id.
+            IF ls_c-plant IS INITIAL. ls_c-plant = <t>-werks. ENDIF.
           ENDIF.
           APPEND ls_c TO rt.
         ENDLOOP.
@@ -886,9 +1185,17 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           READ TABLE lt_item ASSIGNING FIELD-SYMBOL(<it>) WITH KEY sld_doc_id = <mb>-sld_doc_id.
           DATA ls_m TYPE ty_result.
           CLEAR ls_m.
-          ls_m-reportmode = 'MONY'.
-          ls_m-slddocid   = <mb>-sld_doc_id.
-          ls_m-amount     = <mb>-amount_diff.
+          ls_m-reportmode     = 'MONY'.
+          ls_m-slddocid       = <mb>-sld_doc_id.
+          ls_m-paymentmethod  = <mb>-payment_type.
+          ls_m-amountco       = <mb>-amount_co.
+          ls_m-amountexpenses = <mb>-amount_expenses.
+          ls_m-amountearnings = <mb>-amount_earnings.
+          ls_m-amountci       = <mb>-amount_ci.
+          ls_m-amount         = <mb>-amount_diff.
+          ls_m-amountplan     = <mb>-amount_plan.
+          ls_m-reason         = <mb>-reason.
+          ls_m-currency       = <mb>-currency_amount.
           IF <it> IS ASSIGNED.
             ls_m-tourid     = <it>-tour_id.
             ls_m-shipmentno = <it>-obj_id.
@@ -933,10 +1240,21 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           READ TABLE lt_item ASSIGNING FIELD-SYMBOL(<it>) WITH KEY sld_doc_id = <qb>-sld_doc_id.
           DATA ls_q TYPE ty_result.
           CLEAR ls_q.
-          ls_q-reportmode = 'QUAN'.
-          ls_q-slddocid   = <qb>-sld_doc_id.
-          ls_q-material   = <qb>-matnr.
-          ls_q-quandiff   = <qb>-quan_final_diff.
+          ls_q-reportmode    = 'QUAN'.
+          ls_q-slddocid      = <qb>-sld_doc_id.
+          ls_q-material      = <qb>-matnr.
+          ls_q-quanplan      = <qb>-quan_planned.
+          ls_q-quancheckout  = <qb>-quan_checkout.
+          ls_q-quandiff      = <qb>-quan_diff.
+          ls_q-quandelivered = <qb>-quan_delivered.
+          ls_q-quanreturn    = <qb>-quan_return.
+          ls_q-quancheckin   = <qb>-quan_checkin.
+          ls_q-quanfinaldiff = <qb>-quan_final_diff.
+          ls_q-uom           = <qb>-uom_for_quan.
+          ls_q-valuefindiff  = <qb>-value_fin_diff.
+          ls_q-currency      = <qb>-currency_fin_dif.
+          ls_q-plant         = <qb>-plant.
+          ls_q-batch         = <qb>-charg.
           READ TABLE lt_makt ASSIGNING FIELD-SYMBOL(<mk>) WITH KEY matnr = <qb>-matnr.
           IF sy-subrc = 0.
             ls_q-materialdesc = <mk>-maktx.
@@ -946,7 +1264,8 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             ls_q-shipmentno = <it>-obj_id.
             READ TABLE it_tour ASSIGNING FIELD-SYMBOL(<t>) WITH KEY tourid = <it>-tour_id.
             IF sy-subrc = 0.
-              ls_q-plant = <t>-werks.  ls_q-route = <t>-route.
+              IF ls_q-plant IS INITIAL. ls_q-plant = <t>-werks. ENDIF.
+              ls_q-route = <t>-route.
               ls_q-settlementdate = <t>-date.  ls_q-statusid = <t>-status_id.
             ENDIF.
           ENDIF.
@@ -994,6 +1313,115 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         CLEAR rt.
     ENDTRY.
 
+  ENDMETHOD.
+
+
+  METHOD read_cash.
+
+    " Mode CASH - Cash difference. The classic report does NOT read cash tables
+    " itself; f_cash_diff SUBMITs external program /CCEJ/RDSDFSVR_CASH_DIFF and
+    " captures its SALV output via cl_salv_bs_runtime_info. We reproduce that
+    " faithfully: bound the external run to the resolved tours (S_VLID), run it
+    " headless, and map the captured ALV columns into our result. Everything is
+    " guarded so a missing program or capture failure just yields no rows.
+    IF it_tour IS INITIAL. RETURN. ENDIF.
+
+    CONSTANTS lc_prog TYPE progname VALUE '/CCEJ/RDSDFSVR_CASH_DIFF'.
+
+    TRY.
+        " Do not attempt SUBMIT if the program does not exist (prevents dump).
+        SELECT SINGLE name FROM trdir WHERE name = @lc_prog INTO @DATA(lv_name).
+        IF sy-subrc <> 0 OR lv_name IS INITIAL.
+          RETURN.
+        ENDIF.
+
+        " Selection table: restrict to the resolved visit lists (S_VLID).
+        DATA lt_params TYPE STANDARD TABLE OF rsparams.
+        LOOP AT it_tour ASSIGNING FIELD-SYMBOL(<t>).
+          IF <t>-vlid IS NOT INITIAL.
+            APPEND VALUE #( selname = 'S_VLID' kind = 'S'
+                            sign = 'I' option = 'EQ' low = <t>-vlid ) TO lt_params.
+          ENDIF.
+        ENDLOOP.
+
+        " Capture the external ALV headlessly (no display).
+        cl_salv_bs_runtime_info=>set( display  = abap_false
+                                      metadata = abap_false
+                                      data     = abap_true ).
+
+        SUBMIT (lc_prog) WITH SELECTION-TABLE lt_params AND RETURN.
+
+        cl_salv_bs_runtime_info=>get_data_ref( IMPORTING r_data = DATA(lr_data) ).
+        cl_salv_bs_runtime_info=>clear_all( ).
+
+        IF lr_data IS NOT BOUND.
+          RETURN.
+        ENDIF.
+
+        FIELD-SYMBOLS <tab> TYPE ANY TABLE.
+        ASSIGN lr_data->* TO <tab>.
+        IF <tab> IS NOT ASSIGNED.
+          RETURN.
+        ENDIF.
+
+        LOOP AT <tab> ASSIGNING FIELD-SYMBOL(<row>).
+          DATA ls_h TYPE ty_result.
+          CLEAR ls_h.
+          ls_h-reportmode = 'CASH'.
+          " Dynamic mapping - the external ALV column names (from the classic
+          " f_set_columns4). Each is optional; ASSIGN COMPONENT is guarded.
+          move_comp( EXPORTING is_row = <row> iv_comp = 'VISITLIST'      CHANGING cv = ls_h-shipmentno ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'MAIN_DRIVER'    CHANGING cv = ls_h-driver ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'VISIT_ID'       CHANGING cv = ls_h-visitid ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'KUNNR'          CHANGING cv = ls_h-customer ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'WERKS'          CHANGING cv = ls_h-plant ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'ROUTE'          CHANGING cv = ls_h-route ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'SETTLMNT_DATE'  CHANGING cv = ls_h-settlementdate ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'KATR4'          CHANGING cv = ls_h-businesstype ).
+          move_comp( EXPORTING is_row = <row> iv_comp = '/SCL/EQUP_OWNR' CHANGING cv = ls_h-equipowner ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'VISIT_TYPE'     CHANGING cv = ls_h-visitreason ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'AGG_QTY'        CHANGING cv = ls_h-quantity ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'UOM'            CHANGING cv = ls_h-uom ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'SALES_AMT'      CHANGING cv = ls_h-amountco ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'TOT_CASH'       CHANGING cv = ls_h-amountci ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'TOT_PAYMENT'    CHANGING cv = ls_h-amountplan ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'DIFF_AMT'       CHANGING cv = ls_h-amount ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'SUMMARY_STATUS' CHANGING cv = ls_h-processingstatus ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'CASHTYPE'       CHANGING cv = ls_h-cashtype ).
+
+          " Traffic light (LIGHT) -> Fiori criticality.
+          DATA lv_light TYPE string.
+          move_comp( EXPORTING is_row = <row> iv_comp = 'LIGHT' CHANGING cv = lv_light ).
+          CASE lv_light.
+            WHEN '1' OR 'G'. ls_h-light = 3.
+            WHEN '2' OR 'Y'. ls_h-light = 2.
+            WHEN '3' OR 'R'. ls_h-light = 1.
+            WHEN OTHERS.     ls_h-light = 0.
+          ENDCASE.
+
+          APPEND ls_h TO rt.
+        ENDLOOP.
+      CATCH cx_root.
+        TRY.
+            cl_salv_bs_runtime_info=>clear_all( ).
+          CATCH cx_root.
+        ENDTRY.
+        CLEAR rt.
+    ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD move_comp.
+    " Safe dynamic component read: copy is_row-(iv_comp) into cv if present.
+    FIELD-SYMBOLS <f> TYPE any.
+    ASSIGN COMPONENT iv_comp OF STRUCTURE is_row TO <f>.
+    IF sy-subrc = 0.
+      TRY.
+          cv = <f>.
+        CATCH cx_root.
+      ENDTRY.
+    ENDIF.
   ENDMETHOD.
 
 

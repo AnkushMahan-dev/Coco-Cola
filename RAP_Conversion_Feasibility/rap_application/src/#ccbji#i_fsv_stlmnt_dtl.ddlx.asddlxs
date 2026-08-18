@@ -178,6 +178,88 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
   @UI: { lineItem: [ { position: 236 } ], identification: [ { position: 306 } ] }
   VisitLog;
 
+  // ---- Option B: exact per-mode columns (Sales/Check/Payment/Money/Qty) ----
+  @UI: { lineItem: [ { position: 240 } ], identification: [ { position: 400 } ] }
+  DeliveryItem;
+
+  @UI: { lineItem: [ { position: 241 } ], identification: [ { position: 401 } ] }
+  PoDate;
+
+  @UI: { lineItem: [ { position: 242 } ], identification: [ { position: 402 } ] }
+  TaCode;
+
+  @UI: { lineItem: [ { position: 243 } ], identification: [ { position: 403 } ] }
+  Reason;
+
+  @UI: { lineItem: [ { position: 244 } ], identification: [ { position: 404 } ] }
+  Batch;
+
+  @UI: { lineItem: [ { position: 245 } ], identification: [ { position: 405 } ] }
+  CondType;
+
+  @UI: { lineItem: [ { position: 246 } ], identification: [ { position: 406 } ] }
+  OrigQty;
+
+  @UI: { lineItem: [ { position: 247 } ], identification: [ { position: 407 } ] }
+  CheckId;
+
+  @UI: { lineItem: [ { position: 248 } ], identification: [ { position: 408 } ] }
+  ItemNo;
+
+  @UI: { lineItem: [ { position: 249 } ], identification: [ { position: 409 } ] }
+  QuanPlan;
+
+  @UI: { lineItem: [ { position: 250 } ], identification: [ { position: 410 } ] }
+  QuanCount;
+
+  @UI: { lineItem: [ { position: 251 } ], identification: [ { position: 411 } ] }
+  CashId;
+
+  @UI: { lineItem: [ { position: 252 } ], identification: [ { position: 412 } ] }
+  PaymentDescr;
+
+  @UI: { lineItem: [ { position: 253 } ], identification: [ { position: 413 } ] }
+  CheckNo;
+
+  @UI: { lineItem: [ { position: 254 } ], identification: [ { position: 414 } ] }
+  FiscYear;
+
+  @UI: { lineItem: [ { position: 255 } ], identification: [ { position: 415 } ] }
+  CompCode;
+
+  @UI: { lineItem: [ { position: 256 } ], identification: [ { position: 416 } ] }
+  AmountCo;
+
+  @UI: { lineItem: [ { position: 257 } ], identification: [ { position: 417 } ] }
+  AmountExpenses;
+
+  @UI: { lineItem: [ { position: 258 } ], identification: [ { position: 418 } ] }
+  AmountEarnings;
+
+  @UI: { lineItem: [ { position: 259 } ], identification: [ { position: 419 } ] }
+  AmountCi;
+
+  @UI: { lineItem: [ { position: 260 } ], identification: [ { position: 420 } ] }
+  AmountPlan;
+
+  @UI: { lineItem: [ { position: 261 } ], identification: [ { position: 421 } ] }
+  QuanCheckout;
+
+  @UI: { lineItem: [ { position: 262 } ], identification: [ { position: 422 } ] }
+  QuanDelivered;
+
+  @UI: { lineItem: [ { position: 263 } ], identification: [ { position: 423 } ] }
+  QuanReturn;
+
+  @UI: { lineItem: [ { position: 264 } ], identification: [ { position: 424 } ] }
+  QuanCheckin;
+
+  @UI: { lineItem: [ { position: 265 } ], identification: [ { position: 425 } ] }
+  QuanFinalDiff;
+
+  @UI: { lineItem: [ { position: 266 } ], identification: [ { position: 426 } ] }
+  ValueFinDiff;
+
   @UI.hidden: true
   Light;
 }

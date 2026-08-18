@@ -210,4 +210,91 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
 
       @EndUserText.label: 'Header Text'
       HeaderText       : bktxt;
+
+      // ---- Option B: exact per-mode columns from the classic report --------
+      // Sales / Replenishment (classic ty_final1)
+      @EndUserText.label: 'Delivery Item'
+      DeliveryItem     : abap.char(6);
+
+      @EndUserText.label: 'PO Date'
+      PoDate           : abap.dats;
+
+      @EndUserText.label: 'Transaction Code'
+      TaCode           : abap.char(4);
+
+      @EndUserText.label: 'Reason'
+      Reason           : abap.char(4);
+
+      @EndUserText.label: 'Batch'
+      Batch            : abap.char(10);
+
+      @EndUserText.label: 'Condition Type'
+      CondType         : abap.char(4);
+
+      @EndUserText.label: 'Original Quantity'
+      OrigQty          : abap.dec(15, 3);
+
+      // Check Out/In (classic ty_final3)
+      @EndUserText.label: 'Check ID'
+      CheckId          : abap.char(12);
+
+      @EndUserText.label: 'Item No.'
+      ItemNo           : abap.char(6);
+
+      @EndUserText.label: 'Planned Quantity'
+      QuanPlan         : abap.dec(15, 3);
+
+      @EndUserText.label: 'Counted Quantity'
+      QuanCount        : abap.dec(15, 3);
+
+      // Payment (classic ty_final2)
+      @EndUserText.label: 'Cash ID'
+      CashId           : abap.char(20);
+
+      @EndUserText.label: 'Payment Description'
+      PaymentDescr     : abap.char(20);
+
+      @EndUserText.label: 'Check Number'
+      CheckNo          : abap.char(13);
+
+      @EndUserText.label: 'Fiscal Year'
+      FiscYear         : abap.numc(4);
+
+      @EndUserText.label: 'Company Code'
+      CompCode         : abap.char(4);
+
+      // Money difference (classic ty_final4)
+      @EndUserText.label: 'Amount Check-Out'
+      AmountCo         : abap.dec(15, 2);
+
+      @EndUserText.label: 'Amount Expenses'
+      AmountExpenses   : abap.dec(15, 2);
+
+      @EndUserText.label: 'Amount Earnings'
+      AmountEarnings   : abap.dec(15, 2);
+
+      @EndUserText.label: 'Amount Check-In'
+      AmountCi         : abap.dec(15, 2);
+
+      @EndUserText.label: 'Amount Planned'
+      AmountPlan       : abap.dec(15, 2);
+
+      // Quantity difference (classic ty_final5)
+      @EndUserText.label: 'Quantity Check-Out'
+      QuanCheckout     : abap.dec(15, 3);
+
+      @EndUserText.label: 'Quantity Delivered'
+      QuanDelivered    : abap.dec(15, 3);
+
+      @EndUserText.label: 'Quantity Returned'
+      QuanReturn       : abap.dec(15, 3);
+
+      @EndUserText.label: 'Quantity Check-In'
+      QuanCheckin      : abap.dec(15, 3);
+
+      @EndUserText.label: 'Quantity Final Diff.'
+      QuanFinalDiff    : abap.dec(15, 3);
+
+      @EndUserText.label: 'Value Final Diff.'
+      ValueFinDiff     : abap.dec(15, 2);
 }
