@@ -125,11 +125,14 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
                 it_route       TYPE tt_r_route
       RETURNING VALUE(rt_tour) TYPE tt_tour.
 
-    "! Blank search: sample up to 100 tours FROM THE SELECTED MODE'S detail
-    "! table, so every mode (not just Tour) returns data when Go is pressed
-    "! with no filter.
+    "! Blank search: sample tours FROM THE SELECTED MODE'S detail table, so
+    "! every mode (not just Tour) returns data when Go is pressed with no
+    "! filter. iv_max is DERIVED FROM THE PAGING WINDOW (offset + page size),
+    "! so the count grows as the client scrolls instead of being a hard 100;
+    "! a per-mode cap keeps in-memory rows bounded (no TSV dump).
     METHODS sample_tours
       IMPORTING iv_mode        TYPE /ccbji/fsv_mode
+                iv_max         TYPE i
       RETURNING VALUE(rt_tour) TYPE tt_tour.
 
     METHODS read_tour     IMPORTING it_tour TYPE tt_tour RETURNING VALUE(rt) TYPE tt_result.
@@ -214,6 +217,26 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           lv_mode = 'TOUR'.
         ENDIF.
 
+        " Paging window (read once, reused for the slice at the end). The blank
+        " search samples a number of tours DERIVED from this window, so the row
+        " count is no longer a hard 100 - it grows as the client scrolls
+        " (server-side paging) yet stays bounded so it can never TSV-dump.
+        DATA(lo_paging)  = io_request->get_paging( ).
+        DATA(lv_offset)  = lo_paging->get_offset( ).
+        DATA(lv_page_sz) = lo_paging->get_page_size( ).
+
+        DATA lv_sample_max TYPE i.
+        IF lv_page_sz = if_rap_query_paging=>page_size_unlimited OR lv_page_sz <= 0.
+          " "Load all" / count request: use a generous but safe default.
+          lv_sample_max = 2000.
+        ELSE.
+          " Enough tours to fill the requested window plus one page of buffer.
+          lv_sample_max = lv_offset + ( 2 * lv_page_sz ).
+        ENDIF.
+        " Absolute safety ceiling and floor (never unbounded, never trivially small).
+        IF lv_sample_max > 10000. lv_sample_max = 10000. ENDIF.
+        IF lv_sample_max < 200.   lv_sample_max = 200.   ENDIF.
+
         " Resolve tours:
         "  - Object Page by-key read (RowKey): decode mode+tour from the key
         "    and rebuild just that tour, so the single clicked row is reproduced.
@@ -234,7 +257,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             INTO TABLE @lt_st.
           lt_tour = enrich_tours( it_status = lt_st it_route = VALUE #( ) ).
         ELSEIF lt_shipment IS INITIAL AND lt_plant IS INITIAL AND lt_settle_date IS INITIAL.
-          lt_tour = sample_tours( iv_mode = lv_mode ).
+          lt_tour = sample_tours( iv_mode = lv_mode iv_max = lv_sample_max ).
         ELSE.
           lt_tour = get_tours(
             it_shipment = lt_shipment  it_route = lt_route
@@ -294,9 +317,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
     ENDIF.
 
     IF io_request->is_data_requested( ).
-      DATA(lo_paging)  = io_request->get_paging( ).
-      DATA(lv_offset)  = lo_paging->get_offset( ).
-      DATA(lv_page_sz) = lo_paging->get_page_size( ).
+      " lo_paging / lv_offset / lv_page_sz were read once near the top.
       IF lv_page_sz <> if_rap_query_paging=>page_size_unlimited.
         DATA lt_page TYPE tt_result.
         DATA(lv_from) = lv_offset + 1.
@@ -328,8 +349,34 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         IF it_shipment IS NOT INITIAL.
           " Visit List -> status / tour   (classic f_status, rb_visi branch:
           " the Visit List matches /DSD/ST_STATUS-VLID, giving TOUR_ID).
+          "
+          " LEADING-ZERO INSENSITIVE: the user may type the Visit List with or
+          " without leading zeros (e.g. 9162643559 or 0009162643559). VLID is
+          " stored zero-padded, so for every entered value we match THREE forms
+          " - the raw value, the ALPHA (zero-padded) value, and the stripped
+          " value - so it resolves regardless of how it was keyed in.
+          DATA lr_vlid TYPE RANGE OF /dsd/vc_vlid.
+          LOOP AT it_shipment INTO DATA(ls_sh).
+            IF ls_sh-low IS NOT INITIAL.
+              " raw
+              APPEND VALUE #( sign = ls_sh-sign option = 'EQ' low = ls_sh-low ) TO lr_vlid.
+              " zero-padded (ALPHA IN)
+              DATA lv_pad TYPE /dsd/vc_vlid.
+              lv_pad = |{ ls_sh-low ALPHA = IN }|.
+              APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_pad ) TO lr_vlid.
+              " leading-zeros stripped
+              DATA lv_str TYPE /dsd/vc_vlid.
+              lv_str = ls_sh-low.
+              SHIFT lv_str LEFT DELETING LEADING '0'.
+              APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_str ) TO lr_vlid.
+            ENDIF.
+            IF ls_sh-high IS NOT INITIAL.
+              APPEND VALUE #( sign = ls_sh-sign option = ls_sh-option low = ls_sh-low high = ls_sh-high ) TO lr_vlid.
+            ENDIF.
+          ENDLOOP.
+
           SELECT * FROM /dsd/st_status
-            WHERE vlid IN @it_shipment AND status_id IN @it_status
+            WHERE vlid IN @lr_vlid AND status_id IN @it_status
             INTO TABLE @lt_status.
         ELSE.
           " Plant/date -> visit lists -> status / tour
@@ -409,27 +456,47 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
 
   METHOD sample_tours.
 
-    " Blank Go: take up to 100 tour ids from the SELECTED MODE's detail table
-    " (so Visit/Sales/Payment/... return their own data, not only Tour), then
-    " resolve them into full tours. Bounded read - no TSV dump.
-    CONSTANTS lc_max TYPE i VALUE 100.
+    " Blank Go: take a bounded set of tour ids from the SELECTED MODE's detail
+    " table (so Visit/Sales/Payment/... return their own data, not only Tour),
+    " then resolve them into full tours.
+    "
+    " DYNAMIC COUNT: iv_max comes from the paging window, so the number of
+    " tours (and therefore rows) grows as the client scrolls - it is NOT the
+    " old fixed 100. ORDER BY tour_id makes the first-N prefix stable, so each
+    " larger page is a superset of the previous one (consistent paging).
+    "
+    " NO DUMP: single-row-per-tour modes (Tour / FSR / Cash) may take the full
+    " requested window; row-explosive modes (Check / Money / Quantity, which
+    " emit many detail rows per tour) are capped harder so the in-memory result
+    " stays bounded and can never TSV-dump.
+    DATA lv_max TYPE i.
+    lv_max = iv_max.
+    IF lv_max <= 0. lv_max = 2000. ENDIF.
+
+    DATA lv_cap TYPE i.
+    CASE iv_mode.
+      WHEN 'CHCK' OR 'MONY' OR 'QUAN'. lv_cap = 500.
+      WHEN 'VISI' OR 'SLRP' OR 'PAYT'. lv_cap = 3000.
+      WHEN OTHERS.                     lv_cap = 10000.
+    ENDCASE.
+    IF lv_max > lv_cap. lv_max = lv_cap. ENDIF.
 
     TRY.
         DATA lt_tid TYPE STANDARD TABLE OF /dsd/hh_tour_id.
         CASE iv_mode.
           WHEN 'VISI'.
-            SELECT DISTINCT tour_id FROM /dsd/hh_racvhd   INTO TABLE @lt_tid UP TO @lc_max ROWS.
+            SELECT DISTINCT tour_id FROM /dsd/hh_racvhd   ORDER BY tour_id INTO TABLE @lt_tid UP TO @lv_max ROWS.
           WHEN 'SLRP'.
-            SELECT DISTINCT tour_id FROM /dsd/hh_radelhd  INTO TABLE @lt_tid UP TO @lc_max ROWS.
+            SELECT DISTINCT tour_id FROM /dsd/hh_radelhd  ORDER BY tour_id INTO TABLE @lt_tid UP TO @lv_max ROWS.
           WHEN 'PAYT'.
-            SELECT DISTINCT tour_id FROM /dsd/hh_raec     INTO TABLE @lt_tid UP TO @lc_max ROWS.
+            SELECT DISTINCT tour_id FROM /dsd/hh_raec     ORDER BY tour_id INTO TABLE @lt_tid UP TO @lv_max ROWS.
           WHEN 'CHCK'.
-            SELECT DISTINCT tour_id FROM /dsd/hh_racocimi INTO TABLE @lt_tid UP TO @lc_max ROWS.
+            SELECT DISTINCT tour_id FROM /dsd/hh_racocimi ORDER BY tour_id INTO TABLE @lt_tid UP TO @lv_max ROWS.
           WHEN 'MONY' OR 'QUAN'.
-            SELECT DISTINCT tour_id FROM /dsd/sl_sld_item INTO TABLE @lt_tid UP TO @lc_max ROWS.
+            SELECT DISTINCT tour_id FROM /dsd/sl_sld_item ORDER BY tour_id INTO TABLE @lt_tid UP TO @lv_max ROWS.
           WHEN OTHERS.
             " TOUR / FSRD / CASH: sample from the tour header.
-            SELECT DISTINCT tour_id FROM /dsd/hh_rahd     INTO TABLE @lt_tid UP TO @lc_max ROWS.
+            SELECT DISTINCT tour_id FROM /dsd/hh_rahd     ORDER BY tour_id INTO TABLE @lt_tid UP TO @lv_max ROWS.
         ENDCASE.
         IF lt_tid IS INITIAL.
           RETURN.

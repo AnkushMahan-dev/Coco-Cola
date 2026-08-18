@@ -1,4 +1,14 @@
 @EndUserText.label: 'OTC DSD Settlement Details Service'
 define service /CCBJI/FSV_STLMNT_SRVD {
   expose /CCBJI/I_FSV_STLMNT_DTL as SettlementDetail;
+
+  // Value-help providers. They MUST be exposed in the same service so the
+  // OData V4 $metadata can resolve the value-help associations. All are plain
+  // (non-fixed) value lists, so they only SUGGEST - typed values that are not
+  // in the list are still accepted.
+  expose /CCBJI/I_FSV_MODE_VH   as ReportModeVH;
+  expose /CCBJI/I_FSV_VLIST_VH  as VisitListVH;
+  expose /CCBJI/I_FSV_PLANT_VH  as PlantVH;
+  expose /CCBJI/I_FSV_ROUTE_VH  as RouteVH;
+  expose /CCBJI/I_FSV_STATUS_VH as StatusVH;
 }

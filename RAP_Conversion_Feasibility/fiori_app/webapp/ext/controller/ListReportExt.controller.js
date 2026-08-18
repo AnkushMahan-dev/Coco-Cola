@@ -223,28 +223,32 @@ sap.ui.define([
         },
 
         /**
-         * Show only the table columns relevant to the current mode; hide the
-         * rest - reproduces the classic per-mode column layout so Tour mode
-         * does not show empty Payment/Money/etc. columns.
+         * Guarantee that EVERY table column stays visible with its header.
+         *
+         * WHY NOT PER-MODE COLUMN HIDING ANY MORE
+         * ---------------------------------------
+         * The previous version hid columns not relevant to the current mode via
+         * sap.ui.mdc.Column#setVisible(false). On the ResponsiveTable that
+         * technique does not fully remove the column - it leaves an EMPTY header
+         * cell, which is exactly the "blank column name after Status" the user
+         * reported in Check mode. The hard requirement is now "no column header
+         * may be blank", so this method instead FORCES every column visible
+         * (undoing any stale hidden state), so each column always shows its
+         * proper label. Columns that carry no data for the current mode simply
+         * render empty cells - never a blank header - and the user can still
+         * hide any column via the table personalization (Settings) dialog.
+         *
+         * The MODE_COLUMNS map above is retained only as documentation of the
+         * classic per-mode column layout; it no longer drives visibility.
          */
         _applyModeColumns: function () {
             var oTable = this._oTable;
             if (!oTable || !oTable.getColumns) {
                 return;
             }
-            var sMode = this._getCurrentMode();
-            var aAllowed = MODE_COLUMNS[sMode];
-            // Unknown mode: show everything (no hiding).
-            if (!aAllowed) {
-                return;
-            }
-
             oTable.getColumns().forEach(function (oColumn) {
-                var sKey = (oColumn.getPropertyKey && oColumn.getPropertyKey()) ||
-                           (oColumn.getDataProperty && oColumn.getDataProperty()) || "";
-                var bVisible = aAllowed.indexOf(sKey) !== -1;
-                if (oColumn.getVisible && oColumn.getVisible() !== bVisible) {
-                    oColumn.setVisible(bVisible);
+                if (oColumn.getVisible && oColumn.setVisible && oColumn.getVisible() !== true) {
+                    oColumn.setVisible(true);
                 }
             });
         }

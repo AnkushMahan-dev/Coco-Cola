@@ -22,10 +22,12 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_MODE_VH', element: 'ReportMode' } } ]
       ReportMode       : /ccbji/fsv_mode;
 
-      // NO value help - the user types the Visit List (a /DSD/ST_STATUS-VLID)
-      // which is NOT a VTTK shipment, so a value help would wrongly reject it.
-      // Free text: any value is accepted.
+      // Value help = the real Visit Lists (/DSD/ST_STATUS-VLID), shown without
+      // leading zeros. It is a PLAIN (non-fixed) value list, so it only
+      // SUGGESTS - a Visit List that is not in the list is still accepted, and
+      // the backend matches it with or without leading zeros.
       @EndUserText.label: 'Shipment / Visit List'
+      @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_VLIST_VH', element: 'ShipmentNo' } } ]
       ShipmentNo       : tknum;
 
       // Plain char(32): matches /dsd/hh_tour_id length (CHAR 32) but avoids its
@@ -45,20 +47,23 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       @EndUserText.label: 'Transp. Planning Point'
       Tpp              : tplst;
 
-      // NO value help - the status list did not contain the actual data
-      // values. Free text: type any status.
+      // Value help = /DSD/ST_CSTATUS status codes. Plain (non-fixed) list, so a
+      // status not in the list is still accepted.
       @EndUserText.label: 'Status'
+      @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_STATUS_VH', element: 'StatusId' } } ]
       StatusId         : /dsd/st_status_id;
 
-      // NO value help - the plant list (T001W) did not contain the DSD
-      // plant JW64 that the data actually uses, so it could not be selected.
-      // Free text: type any plant (e.g. JW64). Not mandatory.
+      // Value help = plants from T001W (includes DSD plants such as JW64).
+      // Plain (non-fixed) list, so any plant typed is still accepted.
       @EndUserText.label: 'Plant'
+      @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_PLANT_VH', element: 'Plant' } } ]
       Plant            : werks_d;
 
-      // NO value help - route values differ in format (2501 vs 002501) from
-      // the check table, so a value help would reject valid input. Free text.
+      // Value help = routes from TVRO shown WITHOUT leading zeros (2501, not
+      // 002501). Plain (non-fixed) list; the backend normalizes leading zeros
+      // so both 2501 and 002501 resolve, and a route not in the list is accepted.
       @EndUserText.label: 'Route'
+      @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_ROUTE_VH', element: 'Route' } } ]
       Route            : route;
 
       // #INTERVAL renders a Fiori calendar date-range picker (from - to),
