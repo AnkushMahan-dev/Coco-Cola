@@ -137,6 +137,9 @@
         "sap.ui.controllerExtensions": {
           "sap.fe.templates.ListReport.ListReportController": {
             "controllerName": "ccbji.otc.stlmnt.ext.controller.ListReportExt"
+          },
+          "sap.fe.templates.ObjectPage.ObjectPageController": {
+            "controllerName": "ccbji.otc.stlmnt.ext.controller.ObjectPageExt"
           }
         }
       }

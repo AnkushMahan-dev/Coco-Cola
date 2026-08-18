@@ -223,32 +223,49 @@ sap.ui.define([
         },
 
         /**
-         * Guarantee that EVERY table column stays visible with its header.
+         * Show only the table columns relevant to the current mode; hide the
+         * rest - reproducing the classic per-mode column layout.
          *
-         * WHY NOT PER-MODE COLUMN HIDING ANY MORE
-         * ---------------------------------------
-         * The previous version hid columns not relevant to the current mode via
-         * sap.ui.mdc.Column#setVisible(false). On the ResponsiveTable that
-         * technique does not fully remove the column - it leaves an EMPTY header
-         * cell, which is exactly the "blank column name after Status" the user
-         * reported in Check mode. The hard requirement is now "no column header
-         * may be blank", so this method instead FORCES every column visible
-         * (undoing any stale hidden state), so each column always shows its
-         * proper label. Columns that carry no data for the current mode simply
-         * render empty cells - never a blank header - and the user can still
-         * hide any column via the table personalization (Settings) dialog.
-         *
-         * The MODE_COLUMNS map above is retained only as documentation of the
-         * classic per-mode column layout; it no longer drives visibility.
+         * NO BLANK HEADERS: the earlier blank "column name after Status" was
+         * caused by hiding columns whose property key could NOT be resolved
+         * (an empty key is never in the allowed list, so it was hidden and left
+         * an empty header cell). The guard below SKIPS any column with no
+         * resolvable key - such a column is always left visible with its label,
+         * so a header can never render blank. Only columns whose key is known
+         * are shown/hidden by mode. Users can further tune columns via the
+         * table personalization (Settings) dialog.
          */
         _applyModeColumns: function () {
             var oTable = this._oTable;
             if (!oTable || !oTable.getColumns) {
                 return;
             }
+            var sMode = this._getCurrentMode();
+            var aAllowed = MODE_COLUMNS[sMode];
+            // Unknown / empty mode: show everything (never hide).
+            if (!aAllowed || !aAllowed.length) {
+                oTable.getColumns().forEach(function (oColumn) {
+                    if (oColumn.getVisible && oColumn.setVisible && oColumn.getVisible() !== true) {
+                        oColumn.setVisible(true);
+                    }
+                });
+                return;
+            }
+
             oTable.getColumns().forEach(function (oColumn) {
-                if (oColumn.getVisible && oColumn.setVisible && oColumn.getVisible() !== true) {
-                    oColumn.setVisible(true);
+                var sKey = (oColumn.getPropertyKey && oColumn.getPropertyKey()) ||
+                           (oColumn.getDataProperty && oColumn.getDataProperty()) || "";
+                // SAFETY: never touch a column whose key we cannot resolve -
+                // hiding it would leave a blank header. Leave it visible.
+                if (!sKey) {
+                    if (oColumn.getVisible && oColumn.setVisible && oColumn.getVisible() !== true) {
+                        oColumn.setVisible(true);
+                    }
+                    return;
+                }
+                var bVisible = aAllowed.indexOf(sKey) !== -1;
+                if (oColumn.getVisible && oColumn.setVisible && oColumn.getVisible() !== bVisible) {
+                    oColumn.setVisible(bVisible);
                 }
             });
         }

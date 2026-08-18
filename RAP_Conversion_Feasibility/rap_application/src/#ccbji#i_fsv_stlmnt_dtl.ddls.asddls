@@ -17,9 +17,12 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       // Report mode = the classic g2 radio group. As a SELECTION FIELD
       // typed with the fixed-value domain /CCBJI/FSV_MODE it renders as a
       // single-select DROPDOWN, is mandatory, and defaults to Tour Details.
+      // NO value help annotation: the data element's domain /CCBJI/FSV_MODE has
+      // fixed values (TOUR/VISI/SLRP/PAYT/CHCK/MONY/QUAN/FSRD/CASH), so Fiori
+      // Elements renders this SINGLE-select mandatory filter as a real DROPDOWN
+      // (showing the value texts) instead of an F4 value-help input.
       @EndUserText.label: 'Report Mode'
       @Consumption.filter: { mandatory: true, selectionType: #SINGLE, defaultValue: 'TOUR' }
-      @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_MODE_VH', element: 'ReportMode' } } ]
       ReportMode       : /ccbji/fsv_mode;
 
       // Value help = the real Visit Lists (/DSD/ST_STATUS-VLID), shown without
