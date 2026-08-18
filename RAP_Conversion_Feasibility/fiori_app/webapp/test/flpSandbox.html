@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTC DSD Settlement Details - Launchpad Sandbox</title>
+
+    <!--
+      Clean Fiori Launchpad sandbox for local preview.
+
+      WHY THIS FILE EXISTS
+      --------------------
+      The previous test/flp.html bootstrapped UI5 from the local /resources,
+      which was an inconsistent/incomplete copy (core UI5 modules such as
+      sap/ui/dom/isElementCovered.js and sap/base/util/clamp.js returned 404,
+      and sap/m/Link.js failed on a missing enum). That is a UI5 RUNTIME
+      version mismatch, not an application error.
+
+      This sandbox instead loads a COMPLETE, self-consistent UI5 distribution
+      from the public CDN, so the shell, sap.m and sap.fe.templates all come
+      from the same version and no core module can 404.
+
+      Open:  http://localhost:8080/test/flpSandbox.html
+    -->
+
+    <script type="text/javascript">
+        // Register this app as a launchpad tile / intent so it can start.
+        window["sap-ushell-config"] = {
+            defaultRenderer: "fiori2",
+            applications: {
+                "SettlementDetail-display": {
+                    title: "OTC DSD Settlement Details",
+                    description: "DSD / OTC Settlement Details (all modes)",
+                    additionalInformation: "SAPUI5.Component=ccbji.otc.stlmnt",
+                    applicationType: "URL",
+                    url: "../",
+                    navigationMode: "embedded"
+                }
+            }
+        };
+    </script>
+
+    <!-- FLP sandbox bootstrap (same version as the core below) -->
+    <script src="https://sapui5.hana.ondemand.com/test-resources/sap/ushell/bootstrap/sandbox.js"
+            id="sap-ushell-bootstrap"></script>
+
+    <!-- UI5 core from the CDN: one complete, consistent version -->
+    <script id="sap-ui-bootstrap"
+            src="https://sapui5.hana.ondemand.com/resources/sap-ui-core.js"
+            data-sap-ui-libs="sap.m, sap.ushell, sap.fe.templates, sap.ui.mdc"
+            data-sap-ui-theme="sap_horizon"
+            data-sap-ui-compatVersion="edge"
+            data-sap-ui-frameOptions="allow"
+            data-sap-ui-bindingSyntax="complex"
+            data-sap-ui-async="true"
+            data-sap-ui-resourceroots='{"ccbji.otc.stlmnt": "../"}'>
+    </script>
+
+    <script type="text/javascript">
+        sap.ui.getCore().attachInit(function () {
+            sap.ushell.Container.createRenderer().placeAt("content");
+        });
+    </script>
+</head>
+<body class="sapUiBody" id="content"></body>
+</html>
