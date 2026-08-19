@@ -2,6 +2,11 @@
 define service /CCBJI/FSV_STLMNT_SRVD {
   expose /CCBJI/I_FSV_STLMNT_DTL as SettlementDetail;
 
+  // Application log (BAL /DSD/RTACC / FSR) of a tour - read by the
+  // "Display Logs" action, filtered by TourId. Reproduces the classic
+  // report's hotspot -> /DSD/ST_APPLOG_VIEW popup.
+  expose /CCBJI/I_FSV_STLMNT_LOG as SettlementLog;
+
   // Value-help providers. They MUST be exposed in the same service so the
   // OData V4 $metadata can resolve the value-help associations. All are plain
   // (non-fixed) value lists, so they only SUGGEST - typed values that are not
