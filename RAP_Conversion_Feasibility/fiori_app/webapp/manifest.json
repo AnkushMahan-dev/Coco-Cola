@@ -114,7 +114,7 @@
                   },
                   "actions": {
                     "DisplayLogs": {
-                      "press": "ccbji.otc.stlmnt.ext.controller.ListReportExt.onDisplayLogs",
+                      "press": "ccbji.otc.stlmnt.ext.controller.DisplayLogsHandler.onDisplayLogs",
                       "text": "Display Logs",
                       "requiresSelection": true,
                       "position": {

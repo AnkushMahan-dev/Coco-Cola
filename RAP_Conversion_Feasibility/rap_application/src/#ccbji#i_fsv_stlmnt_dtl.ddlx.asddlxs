@@ -118,6 +118,12 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
   CardNo;
 
   // ---- Tour Details columns (classic f_get_driver_details) ---------------
+  // Exception traffic light as a readable, colour-coded column (classic ALV
+  // exception column). Coloured by the Light criticality.
+  @UI: { lineItem:       [ { position: 34, criticality: 'Light' } ],
+         identification: [ { position: 34, criticality: 'Light' } ] }
+  ExceptionText;
+
   // Processing status coloured by the Exception traffic light (Light).
   @UI: { lineItem:       [ { position: 35, criticality: 'Light' } ],
          identification: [ { position: 35, criticality: 'Light' } ] }

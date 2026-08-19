@@ -28,10 +28,10 @@ sap.ui.define([
     // Mode -> fields relevant on the object page. Mirrors the List Report's
     // per-mode column layout. Codes are the fixed values of /CCBJI/FSV_MODE.
     var MODE_FIELDS = {
-        "TOUR": ["Driver", "CoDriver", "CreatedOn", "CreatedTime", "CreatedBy",
+        "TOUR": ["ExceptionText", "Driver", "CoDriver", "CreatedOn", "CreatedTime", "CreatedBy",
                  "ChangedOn", "ChangedTime", "ChangedBy", "Scenario", "DriverSwap",
                  "VisitGroup", "IDocNo"],
-        "VISI": ["CreatedOn", "Driver", "VisitId", "Customer", "EquipOwner",
+        "VISI": ["ExceptionText", "CreatedOn", "Driver", "VisitId", "Customer", "EquipOwner",
                  "AccountGroup", "BusinessType", "Vkorg", "DistChannel", "Division",
                  "VisitReason", "ChangedOn", "ChangedTime", "ChangedBy", "ManProc", "VisitLog"],
         "SLRP": ["VisitId", "ObjType", "DeliveryNo", "DeliveryItem", "PoNumber", "PoDate",

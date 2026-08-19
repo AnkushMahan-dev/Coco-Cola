@@ -119,6 +119,11 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       @EndUserText.label: 'Exception'
       Light            : abap.int1;
 
+      // Readable Exception text (OK / Warning / Error), coloured in the UI by
+      // the Light criticality - the classic Tour "Exception" traffic-light column.
+      @EndUserText.label: 'Exception'
+      ExceptionText    : abap.char(10);
+
       @EndUserText.label: 'Customer'
       Customer         : kunnr;
 

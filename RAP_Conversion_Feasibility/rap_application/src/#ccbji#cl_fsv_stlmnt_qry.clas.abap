@@ -85,7 +85,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
              codriver         TYPE /dsd/rp_driver1,
              vehicle          TYPE /dsd/rp_truck,
              scenario         TYPE c LENGTH 1,
-             drvswap          TYPE c LENGTH 1,
+             driverswap          TYPE c LENGTH 1,
              visitgroup       TYPE /dsd/vc_authority,
              idocno           TYPE edi_docnum,
              createdon        TYPE dats,
@@ -95,6 +95,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
              changedtime      TYPE tims,
              changedby        TYPE c LENGTH 12,
              light            TYPE int1,
+             exceptiontext    TYPE c LENGTH 10,
              customer         TYPE kunnr,
              vkorg            TYPE vkorg,
              visitreason      TYPE /dsd/hh_viscod,
@@ -807,22 +808,22 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             IF sy-subrc = 0 AND <co>-checker IS NOT INITIAL.
               DATA(lv_len) = strlen( <co>-checker ) - 1.
               ls_r-scenario = <co>-checker+lv_len(1).
-              ls_r-drvswap  = <co>-checker+0(1).
+              ls_r-driverswap  = <co>-checker+0(1).
             ELSE.
-              ls_r-drvswap = 'N'.
+              ls_r-driverswap = 'N'.
             ENDIF.
             " Scenario valid only for R/V/H, else blank.
             IF ls_r-scenario <> 'R' AND ls_r-scenario <> 'V' AND ls_r-scenario <> 'H'.
               CLEAR ls_r-scenario.
             ENDIF.
             " Driver swap valid only for B/G/A, else N.
-            IF ls_r-drvswap <> 'B' AND ls_r-drvswap <> 'G' AND ls_r-drvswap <> 'A'.
-              ls_r-drvswap = 'N'.
+            IF ls_r-driverswap <> 'B' AND ls_r-driverswap <> 'G' AND ls_r-driverswap <> 'A'.
+              ls_r-driverswap = 'N'.
             ENDIF.
             " MOD-030: visit group CCEJPAPER -> scenario R, driver swap N.
             IF ls_r-visitgroup = lc_paper.
               ls_r-scenario = 'R'.
-              ls_r-drvswap  = 'N'.
+              ls_r-driverswap  = 'N'.
             ENDIF.
           ENDIF.
 
@@ -832,6 +833,15 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             WHEN '804000'. ls_r-light = lc_red.
             WHEN '803000'. ls_r-light = lc_yellow.
             WHEN OTHERS.   ls_r-light = lc_gray.
+          ENDCASE.
+
+          " Exception column text (classic ALV exception light -> readable
+          " label, coloured by the Light criticality in the UI).
+          CASE ls_r-light.
+            WHEN lc_green.  ls_r-exceptiontext = 'OK'.
+            WHEN lc_yellow. ls_r-exceptiontext = 'Warning'.
+            WHEN lc_red.    ls_r-exceptiontext = 'Error'.
+            WHEN OTHERS.    CLEAR ls_r-exceptiontext.
           ENDCASE.
 
           DATA lv_ref TYPE xblnr.
@@ -1615,15 +1625,36 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
 
 
   METHOD to_local_time.
+    " Convert UTC created/changed stamp to Japan local time EXACTLY like the
+    " classic report's f_get_local_time (ISU_DATE_TIME_CONVERT_TIMEZONE, zone
+    " JAPAN), so the RAP "Created On" matches the GUI to the day. Using the same
+    " FM avoids the off-by-one that a raw CONVERT TIME STAMP produced when the
+    " 'JAPAN' zone entry was not resolvable and the value fell back to raw UTC.
     ev_date = iv_date.
     ev_time = iv_time.
     IF iv_date IS INITIAL.
       RETURN.
     ENDIF.
     TRY.
-        DATA lv_ts TYPE timestamp.
-        CONVERT DATE iv_date TIME iv_time INTO TIME STAMP lv_ts TIME ZONE 'UTC'.
-        CONVERT TIME STAMP lv_ts TIME ZONE 'JAPAN' INTO DATE ev_date TIME ev_time.
+        DATA lv_date TYPE dats.
+        DATA lv_time TYPE tims.
+        lv_date = iv_date.
+        lv_time = iv_time.
+        CALL FUNCTION 'ISU_DATE_TIME_CONVERT_TIMEZONE'
+          EXPORTING
+            x_date_utc    = lv_date
+            x_time_utc    = lv_time
+            x_timezone    = 'JAPAN'
+          IMPORTING
+            y_date_lcl    = ev_date
+            y_time_lcl    = ev_time
+          EXCEPTIONS
+            general_fault = 1
+            OTHERS        = 2.
+        IF sy-subrc <> 0.
+          ev_date = iv_date.
+          ev_time = iv_time.
+        ENDIF.
       CATCH cx_root.
         ev_date = iv_date.
         ev_time = iv_time.
