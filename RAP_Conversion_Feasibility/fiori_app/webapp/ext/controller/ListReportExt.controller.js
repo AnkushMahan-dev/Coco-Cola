@@ -55,7 +55,7 @@ sap.ui.define([
         { key: "MONY", text: "Money Differences" },
         { key: "QUAN", text: "Quantity Differences" },
         { key: "FSRD", text: "FSR Documents" },
-        { key: "CASH", text: "Cash Difference" }
+        { key: "CASH", text: "Route Summary" }   // classic rb_cash label = "Route summary"
     ];
 
     // Filters that are ALWAYS visible regardless of mode. These mirror the

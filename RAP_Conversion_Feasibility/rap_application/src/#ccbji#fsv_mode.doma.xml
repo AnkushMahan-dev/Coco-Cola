@@ -64,7 +64,7 @@
      <VALPOS>0009</VALPOS>
      <DDLANGUAGE>E</DDLANGUAGE>
      <DOMVALUE_L>CASH</DOMVALUE_L>
-     <DDTEXT>Cash Difference</DDTEXT>
+     <DDTEXT>Route Summary</DDTEXT>
     </DD07V>
    </DD07V_TAB>
   </asx:values>
