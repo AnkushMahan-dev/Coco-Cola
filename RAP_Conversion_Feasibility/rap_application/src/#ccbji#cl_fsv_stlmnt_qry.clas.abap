@@ -396,15 +396,40 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           DATA(lv_key) = CONV string( lt_rowkey[ 1 ]-low ).
           SPLIT lv_key AT '~' INTO TABLE DATA(lt_parts).
           DATA lr_tid TYPE RANGE OF /dsd/hh_tour_id.
-          IF lines( lt_parts ) >= 2.
+          IF lines( lt_parts ) >= 1.
             lv_mode = lt_parts[ 1 ].
-            APPEND VALUE #( sign = 'I' option = 'EQ' low = lt_parts[ 2 ] ) TO lr_tid.
           ENDIF.
-          DATA lt_st TYPE tt_status.
-          SELECT * FROM /dsd/st_status
-            WHERE tourid IN @lr_tid
-            INTO TABLE @lt_st.
-          lt_tour = enrich_tours( it_status = lt_st it_route = VALUE #( ) ).
+          IF lv_mode = 'CASH'.
+            " CASH rows carry NO tour id in the key: the classic cash-difference
+            " program is keyed by visit list, not by tour, so read_cash cannot
+            " stamp a tour id. The row's identity is the visit list = shipment no
+            " = key part 7. Rebuild that single visit list so read_cash re-runs
+            " the external program bounded to exactly this row. Feed both the raw
+            " and the zero-padded visit list id (the ALV output may drop leading
+            " zeros that S_VLID still expects), so at least one variant matches.
+            IF lines( lt_parts ) >= 7 AND lt_parts[ 7 ] IS NOT INITIAL.
+              DATA lv_vlid_raw TYPE /dsd/vc_vlid.
+              DATA lv_vlid_pad TYPE /dsd/vc_vlid.
+              lv_vlid_raw = lt_parts[ 7 ].
+              lv_vlid_pad = lt_parts[ 7 ].
+              " Right-justify with leading zeros to the field's full width.
+              SHIFT lv_vlid_pad RIGHT DELETING TRAILING space.
+              OVERLAY lv_vlid_pad WITH '00000000000000000000000000000000'.
+              APPEND VALUE #( vlid = lv_vlid_raw ) TO lt_tour.
+              IF lv_vlid_pad <> lv_vlid_raw.
+                APPEND VALUE #( vlid = lv_vlid_pad ) TO lt_tour.
+              ENDIF.
+            ENDIF.
+          ELSE.
+            IF lines( lt_parts ) >= 2.
+              APPEND VALUE #( sign = 'I' option = 'EQ' low = lt_parts[ 2 ] ) TO lr_tid.
+            ENDIF.
+            DATA lt_st TYPE tt_status.
+            SELECT * FROM /dsd/st_status
+              WHERE tourid IN @lr_tid
+              INTO TABLE @lt_st.
+            lt_tour = enrich_tours( it_status = lt_st it_route = VALUE #( ) ).
+          ENDIF.
         ELSEIF lt_shipment IS INITIAL AND lt_plant IS INITIAL AND lt_settle_date IS INITIAL.
           lt_tour = sample_tours( iv_mode = lv_mode iv_max = lv_sample_max ).
         ELSE.
