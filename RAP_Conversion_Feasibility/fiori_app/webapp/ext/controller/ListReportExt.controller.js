@@ -136,6 +136,7 @@ sap.ui.define([
                 this._oTable = this._findTable();
                 this._attach(oFilterBar);
                 this._setupModeDropdown();
+                this._setupDisplayLogs();
                 this._applyModeVisibility();
                 this._applyModeColumns();
                 return;
@@ -387,6 +388,188 @@ sap.ui.define([
                         oColumn.setVisible(false);
                     }
                 }
+            });
+        },
+
+        /* =================================================================
+         * "Display Logs" (classic report document hotspot -> application log)
+         * -----------------------------------------------------------------
+         * IMPORTANT: this is wired up entirely in JS (button added to the MDC
+         * table toolbar here), NOT via a manifest custom action. A manifest
+         * action "press" is a MODULE PATH that FE loads as a plain module
+         * (".js"); pointing it at anything under ext/controller made FE try to
+         * load "...ListReportExt.js" (a controller is ".controller.js"), which
+         * 404'd with "script load error" and ALSO aborted this controller
+         * extension (so the per-mode column hiding stopped, leaving blank
+         * headers). Doing it here - the press handler is a JS function, never a
+         * module path - makes that failure impossible.
+         * ================================================================= */
+
+        /**
+         * Enable row selection and add a "Display Logs" button to the table
+         * toolbar. Fully guarded: any MDC API difference just skips the button,
+         * never breaks the controller.
+         */
+        _setupDisplayLogs: function () {
+            var that = this;
+            var oTable = this._oTable;
+            if (!oTable || oTable.__logBtnDone) {
+                return;
+            }
+            // Need row selection so the user can pick a row for its log.
+            try {
+                if (oTable.getSelectionMode && oTable.setSelectionMode &&
+                    oTable.getSelectionMode() === "None") {
+                    oTable.setSelectionMode("Multi");
+                }
+            } catch (e) { /* ignore */ }
+
+            sap.ui.require([
+                "sap/m/Button", "sap/ui/mdc/actiontoolbar/ActionToolbarAction"
+            ], function (Button, ActionToolbarAction) {
+                try {
+                    var oBtn = new Button({
+                        text: "Display Logs",
+                        press: function () { that._onDisplayLogs(); }
+                    });
+                    var bAdded = false;
+                    if (ActionToolbarAction && oTable.addAction) {
+                        try {
+                            oTable.addAction(new ActionToolbarAction({ action: oBtn }));
+                            bAdded = true;
+                        } catch (e1) { bAdded = false; }
+                    }
+                    if (!bAdded && oTable.addAction) {
+                        try { oTable.addAction(oBtn); bAdded = true; } catch (e2) { bAdded = false; }
+                    }
+                    if (bAdded) {
+                        oTable.__logBtnDone = true;
+                    }
+                } catch (e) { /* leave table as-is */ }
+            });
+        },
+
+        /**
+         * Open the application log of the selected row's tour.
+         */
+        _onDisplayLogs: function () {
+            var oCtx = null;
+            try {
+                var aSel = this._oTable && this._oTable.getSelectedContexts &&
+                           this._oTable.getSelectedContexts();
+                if (aSel && aSel.length) { oCtx = aSel[0]; }
+            } catch (e) { /* ignore */ }
+            if (!oCtx) {
+                this._toast("Select a row first (tick the checkbox), then press Display Logs.");
+                return;
+            }
+            var sTour = "";
+            try { sTour = oCtx.getProperty("TourId") || ""; } catch (e2) { sTour = ""; }
+            if (!sTour) {
+                this._toast("This row has no Tour ID, so it has no application log.");
+                return;
+            }
+            this._openLogDialog(sTour, oCtx.getModel());
+        },
+
+        /**
+         * Build (once) and open the log dialog, then load the data.
+         * @param {string} sTour tour id
+         * @param {sap.ui.model.odata.v4.ODataModel} oModel the OData model
+         */
+        _openLogDialog: function (sTour, oModel) {
+            var that = this;
+            if (!oModel || !oModel.bindList) {
+                this._toast("OData model not available.");
+                return;
+            }
+            sap.ui.require([
+                "sap/m/Dialog", "sap/m/Button", "sap/m/Table", "sap/m/Column",
+                "sap/m/ColumnListItem", "sap/m/Text", "sap/m/ObjectStatus", "sap/m/Label",
+                "sap/ui/model/Filter", "sap/ui/model/FilterOperator",
+                "sap/ui/model/json/JSONModel", "sap/ui/core/library"
+            ], function (Dialog, Button, Table, Column, ColumnListItem, Text,
+                         ObjectStatus, Label, Filter, FilterOperator, JSONModel, coreLib) {
+                try {
+                    var ValueState = coreLib.ValueState;
+                    if (!that._oLogDialog) {
+                        var oLogTable = new Table({
+                            inset: false,
+                            growing: true,
+                            growingThreshold: 500,
+                            columns: [
+                                new Column({ width: "6rem", header: new Label({ text: "Type" }) }),
+                                new Column({ header: new Label({ text: "Message Text" }) })
+                            ]
+                        });
+                        oLogTable.bindItems({
+                            path: "logModel>/",
+                            template: new ColumnListItem({
+                                cells: [
+                                    new ObjectStatus({
+                                        text: "{logModel>MessageType}",
+                                        state: {
+                                            path: "logModel>Criticality",
+                                            formatter: function (iCrit) {
+                                                switch (iCrit) {
+                                                    case 1: return ValueState.Error;
+                                                    case 2: return ValueState.Warning;
+                                                    case 3: return ValueState.Success;
+                                                    default: return ValueState.None;
+                                                }
+                                            }
+                                        }
+                                    }),
+                                    new Text({ text: "{logModel>MessageText}" })
+                                ]
+                            })
+                        });
+                        that._oLogTable = oLogTable;
+                        that._oLogDialog = new Dialog({
+                            title: "Application Log",
+                            contentWidth: "44rem",
+                            contentHeight: "34rem",
+                            resizable: true,
+                            draggable: true,
+                            content: [oLogTable],
+                            endButton: new Button({
+                                text: "Close",
+                                press: function () { that._oLogDialog.close(); }
+                            })
+                        });
+                        that.base.getView().addDependent(that._oLogDialog);
+                    }
+                    that._oLogDialog.setTitle("Application Log - Tour " + sTour);
+                    that._oLogDialog.setBusy(true);
+                    that._oLogDialog.open();
+
+                    var oLB = oModel.bindList("/SettlementLog", null, null, [
+                        new Filter("TourId", FilterOperator.EQ, sTour)
+                    ], { $count: true });
+                    oLB.requestContexts(0, 2000).then(function (aContexts) {
+                        var aRows = aContexts.map(function (c) { return c.getObject(); });
+                        that._oLogTable.setModel(new JSONModel(aRows), "logModel");
+                        that._oLogDialog.setBusy(false);
+                        if (!aRows.length) {
+                            that._toast("No application log found for this tour.");
+                        }
+                    }).catch(function () {
+                        that._oLogDialog.setBusy(false);
+                        that._toast("Could not read the application log.");
+                    });
+                } catch (e) {
+                    that._toast("Could not open the log dialog.");
+                }
+            });
+        },
+
+        /**
+         * Small non-blocking message.
+         * @param {string} sMsg text
+         */
+        _toast: function (sMsg) {
+            sap.ui.require(["sap/m/MessageToast"], function (MessageToast) {
+                try { MessageToast.show(sMsg); } catch (e) { /* ignore */ }
             });
         }
     });

@@ -111,16 +111,6 @@
                 "@com.sap.vocabularies.UI.v1.LineItem": {
                   "tableSettings": {
                     "type": "ResponsiveTable"
-                  },
-                  "actions": {
-                    "DisplayLogs": {
-                      "press": "ccbji.otc.stlmnt.ext.controller.DisplayLogsHandler.onDisplayLogs",
-                      "text": "Display Logs",
-                      "requiresSelection": true,
-                      "position": {
-                        "placement": "After"
-                      }
-                    }
                   }
                 }
               }
