@@ -204,6 +204,15 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
     METHODS read_fsr      IMPORTING it_tour TYPE tt_tour RETURNING VALUE(rt) TYPE tt_result.
     METHODS read_cash     IMPORTING it_tour TYPE tt_tour RETURNING VALUE(rt) TYPE tt_result.
 
+    "! CASH Object Page single-row read: reconstruct exactly the clicked row
+    "! from its RowKey (mode + visit id + visit list) WITHOUT re-running the
+    "! external cash-difference program, and enrich the cheap header fields.
+    "! Keeps tour id EMPTY so the rebuilt RowKey matches the list row.
+    METHODS read_cash_key
+      IMPORTING iv_vlid       TYPE /dsd/vc_vlid
+                iv_visit      TYPE ty_visit6
+      RETURNING VALUE(rt)     TYPE tt_result.
+
     METHODS derive_processing_status
       IMPORTING iv_warnings      TYPE i
                 iv_errors        TYPE i
@@ -267,6 +276,12 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
     " OData service can NEVER short-dump - any error returns empty rows.
     DATA lt_result TYPE tt_result.
     DATA lv_mode   TYPE c LENGTH 4 VALUE 'TOUR'.
+
+    " CASH Object Page (by-key) reconstruction, WITHOUT re-running the external
+    " cash-difference program. Its identity comes straight from the RowKey.
+    DATA lv_bykey_cash TYPE abap_bool.
+    DATA lv_cash_vlid  TYPE /dsd/vc_vlid.
+    DATA lv_cash_visit TYPE n LENGTH 6.
 
     TRY.
         TRY.
@@ -400,26 +415,17 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             lv_mode = lt_parts[ 1 ].
           ENDIF.
           IF lv_mode = 'CASH'.
-            " CASH rows carry NO tour id in the key: the classic cash-difference
-            " program is keyed by visit list, not by tour, so read_cash cannot
-            " stamp a tour id. The row's identity is the visit list = shipment no
-            " = key part 7. Rebuild that single visit list so read_cash re-runs
-            " the external program bounded to exactly this row. Feed both the raw
-            " and the zero-padded visit list id (the ALV output may drop leading
-            " zeros that S_VLID still expects), so at least one variant matches.
-            IF lines( lt_parts ) >= 7 AND lt_parts[ 7 ] IS NOT INITIAL.
-              DATA lv_vlid_raw TYPE /dsd/vc_vlid.
-              DATA lv_vlid_pad TYPE /dsd/vc_vlid.
-              lv_vlid_raw = lt_parts[ 7 ].
-              lv_vlid_pad = lt_parts[ 7 ].
-              " Right-justify with leading zeros to the field's full width.
-              SHIFT lv_vlid_pad RIGHT DELETING TRAILING space.
-              OVERLAY lv_vlid_pad WITH '00000000000000000000000000000000'.
-              APPEND VALUE #( vlid = lv_vlid_raw ) TO lt_tour.
-              IF lv_vlid_pad <> lv_vlid_raw.
-                APPEND VALUE #( vlid = lv_vlid_pad ) TO lt_tour.
-              ENDIF.
-            ENDIF.
+            " CASH Object Page read. The classic cash-difference program is an
+            " external SUBMIT (/CCEJ/RDSDFSVR_CASH_DIFF) that is expensive AND
+            " can hard-dump (MESSAGE A) inside an OData $batch -> HTTP 500. So
+            " for the single-row by-key read we do NOT re-run it. Instead we
+            " reconstruct the one row straight from the RowKey (mode + visit id
+            " + shipment/visit list) and enrich only the cheap header fields
+            " (plant / route / date / driver) from master data. Amounts that
+            " ONLY the external program produces are left blank on the OP.
+            lv_bykey_cash = abap_true.
+            IF lines( lt_parts ) >= 3. lv_cash_visit = lt_parts[ 3 ]. ENDIF.
+            IF lines( lt_parts ) >= 7. lv_cash_vlid  = lt_parts[ 7 ]. ENDIF.
           ELSE.
             IF lines( lt_parts ) >= 2.
               APPEND VALUE #( sign = 'I' option = 'EQ' low = lt_parts[ 2 ] ) TO lr_tid.
@@ -448,7 +454,14 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           WHEN 'MONY'.  lt_result = read_money(   it_tour = lt_tour ).
           WHEN 'QUAN'.  lt_result = read_quan(    it_tour = lt_tour ).
           WHEN 'FSRD'.  lt_result = read_fsr(     it_tour = lt_tour ).
-          WHEN 'CASH'.  lt_result = read_cash(    it_tour = lt_tour ).
+          WHEN 'CASH'.
+            IF lv_bykey_cash = abap_true.
+              " Object Page single row: reconstruct from the key (no SUBMIT).
+              lt_result = read_cash_key( iv_vlid = lv_cash_vlid iv_visit = lv_cash_visit ).
+            ELSE.
+              " List: run the external cash-difference program as before.
+              lt_result = read_cash( it_tour = lt_tour ).
+            ENDIF.
           WHEN OTHERS.  CLEAR lt_result.
         ENDCASE.
 
@@ -1500,6 +1513,58 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             cl_salv_bs_runtime_info=>clear_all( ).
           CATCH cx_root.
         ENDTRY.
+        CLEAR rt.
+    ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD read_cash_key.
+
+    " Object Page single row for CASH - rebuilt from the RowKey, no external
+    " program (that SUBMIT can dump inside a $batch -> HTTP 500). Tour id is
+    " kept EMPTY so the rebuilt RowKey matches the list row exactly.
+    IF iv_vlid IS INITIAL. RETURN. ENDIF.
+
+    TRY.
+        " Match the visit list with and without leading zeros (it may be
+        " stored zero-padded even though the key carries it stripped).
+        DATA lr_vlid TYPE RANGE OF /dsd/vc_vlid.
+        APPEND VALUE #( sign = 'I' option = 'EQ' low = iv_vlid ) TO lr_vlid.
+        DATA lv_pad TYPE /dsd/vc_vlid.
+        lv_pad = |{ iv_vlid ALPHA = IN }|.
+        IF lv_pad <> iv_vlid.
+          APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_pad ) TO lr_vlid.
+        ENDIF.
+
+        DATA ls_r TYPE ty_result.
+        CLEAR ls_r.
+        ls_r-reportmode = 'CASH'.
+        ls_r-shipmentno = iv_vlid.
+        ls_r-visitid    = iv_visit.
+        " tourid left EMPTY on purpose (matches the CASH list RowKey).
+
+        " Plant / route / settlement date / idoc from the inbound-status table.
+        SELECT SINGLE werks, route, creation_date, idoc_number
+          FROM /ccej/t_inb_stat
+          WHERE visitlist IN @lr_vlid
+          INTO ( @ls_r-plant, @ls_r-route, @ls_r-settlementdate, @ls_r-idocno ).
+        IF ls_r-route IS NOT INITIAL.
+          SHIFT ls_r-route LEFT DELETING LEADING '0'.
+        ENDIF.
+
+        " Status id from the visit-list status table.
+        SELECT SINGLE status_id FROM /dsd/st_status
+          WHERE vlid IN @lr_vlid
+          INTO @ls_r-statusid.
+
+        " Driver + visit group from the visit-list header.
+        SELECT SINGLE driver1, auth FROM /dsd/vc_vlh
+          WHERE vlid IN @lr_vlid
+          INTO ( @ls_r-driver, @ls_r-visitgroup ).
+
+        APPEND ls_r TO rt.
+      CATCH cx_root.
         CLEAR rt.
     ENDTRY.
 

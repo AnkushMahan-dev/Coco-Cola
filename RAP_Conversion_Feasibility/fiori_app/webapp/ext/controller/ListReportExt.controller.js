@@ -184,6 +184,13 @@ sap.ui.define([
             var fnApply = function () {
                 that._applyModeVisibility();
                 that._applyModeColumns();
+                // Re-apply shortly after: on Go the MDC table may (re)create
+                // its columns asynchronously, so a single synchronous pass can
+                // miss a late-rendered column and leave a blank header. A short
+                // deferred pass catches those.
+                setTimeout(function () {
+                    that._applyModeColumns();
+                }, 350);
             };
 
             // Value of any filter (including ReportMode) changed.
