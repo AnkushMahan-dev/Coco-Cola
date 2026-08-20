@@ -356,11 +356,20 @@ sap.ui.define([
             oTable.getColumns().forEach(function (oColumn) {
                 var sKey = (oColumn.getPropertyKey && oColumn.getPropertyKey()) ||
                            (oColumn.getDataProperty && oColumn.getDataProperty()) || "";
+                // Fallback: some MDC columns (e.g. value-help fields like Status)
+                // don't return a property key here; derive it from the column id
+                // (FE builds ids like "...::LineItem::StatusId" / "...-StatusId").
+                if (!sKey) {
+                    try {
+                        var sId = (oColumn.getId && oColumn.getId()) || "";
+                        var m = sId.match(/(?:::|--|-|\.)([A-Za-z][A-Za-z0-9_]*)$/);
+                        if (m && m[1]) { sKey = m[1]; }
+                    } catch (e) { /* ignore */ }
+                }
                 var bVisible;
                 if (!sKey) {
-                    // A column whose key/header we cannot resolve renders as a
-                    // BLANK header if shown. While a mode is active it can't be
-                    // matched, so hide it - that removes the blank columns.
+                    // Still unresolved -> renders as a BLANK header if shown.
+                    // While a mode is active it can't belong, so hide it.
                     bVisible = false;
                 } else {
                     bVisible = aAllowed.indexOf(sKey) !== -1;
@@ -470,7 +479,11 @@ sap.ui.define([
                 this._toast("This row has no Tour ID, so it has no application log.");
                 return;
             }
-            this._openLogDialog(sTour, oCtx.getModel());
+            // Title by the visit list (shipment no) - that is what users
+            // recognise; the tour id is just "20" + visit list internally.
+            var sShip = "";
+            try { sShip = oCtx.getProperty("ShipmentNo") || ""; } catch (e3) { sShip = ""; }
+            this._openLogDialog(sTour, oCtx.getModel(), sShip);
         },
 
         /**
@@ -478,7 +491,7 @@ sap.ui.define([
          * @param {string} sTour tour id
          * @param {sap.ui.model.odata.v4.ODataModel} oModel the OData model
          */
-        _openLogDialog: function (sTour, oModel) {
+        _openLogDialog: function (sTour, oModel, sShip) {
             var that = this;
             if (!oModel || !oModel.bindList) {
                 this._toast("OData model not available.");
@@ -540,7 +553,7 @@ sap.ui.define([
                         });
                         that.base.getView().addDependent(that._oLogDialog);
                     }
-                    that._oLogDialog.setTitle("Application Log - Tour " + sTour);
+                    that._oLogDialog.setTitle("Application Log - Visit List " + (sShip || sTour));
                     that._oLogDialog.setBusy(true);
                     that._oLogDialog.open();
 

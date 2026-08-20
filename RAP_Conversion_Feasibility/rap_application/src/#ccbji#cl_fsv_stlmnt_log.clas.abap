@@ -132,28 +132,43 @@ CLASS /ccbji/cl_fsv_stlmnt_log IMPLEMENTATION.
     lv_ext_str = iv_tour.
     SHIFT lv_ext_str LEFT DELETING LEADING '0'.
 
+    " The BAL log external number can be EITHER the tour id (209162643559)
+    " OR the visit list (9162643559) - the tour id is a 2-char prefix + the
+    " visit list (the report itself derives vlid = tour_id+2(10)). We try both
+    " (and their leading-zero-stripped forms), so the log resolves regardless
+    " of which one the /DSD/RTACC / FSR log was written under.
+    DATA lv_vlid     TYPE balnrext.
+    DATA lv_vlid_str TYPE balnrext.
+    IF strlen( lv_ext_raw ) > 2.
+      lv_vlid     = lv_ext_raw+2.
+      lv_vlid_str = lv_vlid.
+      SHIFT lv_vlid_str LEFT DELETING LEADING '0'.
+    ENDIF.
+
+    DATA lr_ext TYPE RANGE OF balnrext.
+    APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_ext_raw ) TO lr_ext.
+    IF lv_ext_str <> lv_ext_raw AND lv_ext_str IS NOT INITIAL.
+      APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_ext_str ) TO lr_ext.
+    ENDIF.
+    IF lv_vlid IS NOT INITIAL.
+      APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_vlid ) TO lr_ext.
+    ENDIF.
+    IF lv_vlid_str IS NOT INITIAL AND lv_vlid_str <> lv_vlid.
+      APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_vlid_str ) TO lr_ext.
+    ENDIF.
+
     TRY.
-        " Log filter: object /DSD/RTACC, subobject FSR, extnumber = tour id
-        " (match raw and leading-zero-stripped, so it resolves either way).
+        " Log filter for the in-memory search (BAL_GLB_SEARCH_LOG) - same object,
+        " subobject and the full set of external-number candidates.
         DATA ls_lfil TYPE bal_s_lfil.
-        ls_lfil-object    = VALUE bal_r_obj(  ( sign = 'I' option = 'EQ' low = lc_object ) ).
-        ls_lfil-subobject = VALUE bal_r_sub(  ( sign = 'I' option = 'EQ' low = lc_subobj ) ).
-        ls_lfil-extnumber = VALUE bal_r_extn( ( sign = 'I' option = 'EQ' low = lv_ext_raw ) ).
-        IF lv_ext_str <> lv_ext_raw AND lv_ext_str IS NOT INITIAL.
-          APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_ext_str ) TO ls_lfil-extnumber.
-        ENDIF.
+        ls_lfil-object    = VALUE bal_r_obj( ( sign = 'I' option = 'EQ' low = lc_object ) ).
+        ls_lfil-subobject = VALUE bal_r_sub( ( sign = 'I' option = 'EQ' low = lc_subobj ) ).
+        ls_lfil-extnumber = CORRESPONDING #( lr_ext ).
 
-        " 1) Find the matching log headers DIRECTLY from BALHDR - exactly like
-        "    the classic report (SELECT ... FROM balhdr WHERE object = c_rtacc
-        "    AND subobject = c_fsr AND extnumber = tour_id). BAL_DB_SEARCH was
-        "    unreliable here (date defaulting / index), so we read the header
-        "    table straight, then hand those headers to BAL_DB_LOAD.
-        DATA lr_ext TYPE RANGE OF balnrext.
-        APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_ext_raw ) TO lr_ext.
-        IF lv_ext_str <> lv_ext_raw AND lv_ext_str IS NOT INITIAL.
-          APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_ext_str ) TO lr_ext.
-        ENDIF.
-
+        " 1) Find the matching log headers DIRECTLY from BALHDR - like the
+        "    classic report (SELECT ... FROM balhdr WHERE object = c_rtacc AND
+        "    subobject = c_fsr AND extnumber = <tour or visit list>). Reading the
+        "    header table straight is more reliable than BAL_DB_SEARCH here.
         DATA lt_hdr TYPE balhdr_t.
         SELECT * FROM balhdr
           WHERE object    = @lc_object
