@@ -58,6 +58,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
     TYPES: BEGIN OF ty_tour,
              tourid    TYPE /dsd/hh_tour_id,
              vlid      TYPE /dsd/vc_vlid,
+             shipment  TYPE tknum,
              werks     TYPE werks_d,
              route     TYPE route,
              date      TYPE erdat,
@@ -635,6 +636,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           DATA(ls_tour) = VALUE ty_tour(
             tourid    = <s>-tourid
             vlid      = <s>-vlid
+            shipment  = <s>-shipment
             status_id = <s>-status_id ).
           READ TABLE lt_inb ASSIGNING FIELD-SYMBOL(<i>) WITH KEY visitlist = <s>-vlid.
           IF sy-subrc = 0.
@@ -1399,12 +1401,25 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
 
     IF it_tour IS INITIAL. RETURN. ENDIF.
     TRY.
+        " Classic FSR keys the sales documents by VBAK-XBLNR = the SHIPMENT
+        " number (VTTK-TKNUM), matched WITHOUT leading zeros. We build the
+        " XBLNR candidates from BOTH the shipment (tknum) AND the visit list
+        " (they coincide for many records, differ for some), so it resolves
+        " either way.
         DATA lr_xblnr TYPE RANGE OF xblnr.
         LOOP AT it_tour ASSIGNING FIELD-SYMBOL(<t>).
+          DATA lv_s TYPE xblnr.
+          lv_s = <t>-shipment.
+          SHIFT lv_s LEFT DELETING LEADING '0'.
+          IF lv_s IS NOT INITIAL.
+            APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_s ) TO lr_xblnr.
+          ENDIF.
           DATA lv_x TYPE xblnr.
           lv_x = <t>-vlid.
           SHIFT lv_x LEFT DELETING LEADING '0'.
-          APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_x ) TO lr_xblnr.
+          IF lv_x IS NOT INITIAL.
+            APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_x ) TO lr_xblnr.
+          ENDIF.
         ENDLOOP.
         IF lr_xblnr IS INITIAL. RETURN. ENDIF.
 
@@ -1413,17 +1428,36 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           INTO TABLE @DATA(lt_vbak).
 
         LOOP AT lt_vbak ASSIGNING FIELD-SYMBOL(<o>).
-          READ TABLE it_tour ASSIGNING <t> WITH KEY vlid = |{ <o>-xblnr ALPHA = IN }|.
+          " Find the tour whose SHIPMENT or VISIT LIST matches this xblnr
+          " (both compared leading-zero-insensitive).
+          DATA lv_xb TYPE xblnr.
+          lv_xb = <o>-xblnr.
+          SHIFT lv_xb LEFT DELETING LEADING '0'.
+          DATA lv_found TYPE abap_bool.
+          CLEAR lv_found.
+          LOOP AT it_tour ASSIGNING FIELD-SYMBOL(<tf>).
+            DATA lv_ts TYPE xblnr.
+            lv_ts = <tf>-shipment.
+            SHIFT lv_ts LEFT DELETING LEADING '0'.
+            DATA lv_tv TYPE xblnr.
+            lv_tv = <tf>-vlid.
+            SHIFT lv_tv LEFT DELETING LEADING '0'.
+            IF lv_ts = lv_xb OR lv_tv = lv_xb.
+              lv_found = abap_true.
+              EXIT.
+            ENDIF.
+          ENDLOOP.
+
           APPEND VALUE ty_result(
-            reportmode   = 'FSRD'
-            shipmentno   = COND #( WHEN <t> IS ASSIGNED THEN <t>-vlid )
-            tourid       = COND #( WHEN <t> IS ASSIGNED THEN <t>-tourid )
-            plant        = COND #( WHEN <t> IS ASSIGNED THEN <t>-werks )
-            route        = COND #( WHEN <t> IS ASSIGNED THEN <t>-route )
-            settlementdate = COND #( WHEN <t> IS ASSIGNED THEN <t>-date )
-            statusid     = COND #( WHEN <t> IS ASSIGNED THEN <t>-status_id )
-            vkorg        = <o>-vkorg
-            referencedoc = <o>-xblnr
+            reportmode     = 'FSRD'
+            shipmentno     = COND #( WHEN lv_found = abap_true THEN <tf>-vlid )
+            tourid         = COND #( WHEN lv_found = abap_true THEN <tf>-tourid )
+            plant          = COND #( WHEN lv_found = abap_true THEN <tf>-werks )
+            route          = COND #( WHEN lv_found = abap_true THEN <tf>-route )
+            settlementdate = COND #( WHEN lv_found = abap_true THEN <tf>-date )
+            statusid       = COND #( WHEN lv_found = abap_true THEN <tf>-status_id )
+            vkorg          = <o>-vkorg
+            referencedoc   = <o>-xblnr
           ) TO rt.
         ENDLOOP.
       CATCH cx_root.

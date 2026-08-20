@@ -347,41 +347,32 @@ sap.ui.define([
             var aAllowed = MODE_COLUMNS[sMode];
             var bShowAll = !aAllowed || !aAllowed.length;
 
+            // Build the visibility list from ALL columns. CRITICAL: a column
+            // whose key is not yet resolved defaults to VISIBLE (true), never
+            // hidden - hiding unresolved-key columns is what over-hid the table
+            // to ~5 columns / half a screen. Resolved-key columns hide/show by
+            // mode. No .filter() (that dropped columns and hid them).
+            var fnItems = function () {
+                return oTable.getColumns().map(function (oColumn) {
+                    var sKey = (oColumn.getPropertyKey && oColumn.getPropertyKey()) ||
+                               (oColumn.getDataProperty && oColumn.getDataProperty()) || "";
+                    var bVis = !sKey ? true : (bShowAll || (aAllowed.indexOf(sKey) > -1));
+                    return { key: sKey, visible: bVis };
+                });
+            };
+
             sap.ui.require(
                 ["sap/ui/mdc/p13n/StateUtil"],
                 function (StateUtil) {
                     try {
-                        // Read the table's OWN current state - it already lists
-                        // every column with its correct key - then flip only the
-                        // `visible` flag per mode and apply it back. This avoids
-                        // the earlier over-hiding: building the list from
-                        // getColumns()/getPropertyKey() dropped columns whose key
-                        // had not resolved yet, and applyExternalState then hid
-                        // them (only ~5 Tour columns survived).
-                        StateUtil.retrieveExternalState(oTable).then(function (oState) {
-                            try {
-                                var aStateItems = (oState && oState.items) || [];
-                                if (!aStateItems.length) {
-                                    return;
-                                }
-                                var aItems = aStateItems.map(function (oItem) {
-                                    var sKey = oItem.key || oItem.name || "";
-                                    return {
-                                        key: sKey,
-                                        visible: bShowAll ? true : (aAllowed.indexOf(sKey) > -1)
-                                    };
-                                });
-                                var oApply = StateUtil.applyExternalState(oTable, { items: aItems });
-                                if (oApply && oApply.catch) {
-                                    oApply.catch(function () { /* ignore */ });
-                                }
-                            } catch (e) { /* ignore */ }
-                        }).catch(function () { /* ignore */ });
+                        var oApply = StateUtil.applyExternalState(oTable, { items: fnItems() });
+                        if (oApply && oApply.catch) {
+                            oApply.catch(function () { /* ignore */ });
+                        }
                     } catch (e) { /* ignore */ }
                 },
                 function () {
-                    // Runtime without StateUtil: best-effort setVisible (note it
-                    // only half-hides MDC columns, but it is the only fallback).
+                    // Runtime without StateUtil: best-effort setVisible.
                     oTable.getColumns().forEach(function (oColumn) {
                         var sKey = (oColumn.getPropertyKey && oColumn.getPropertyKey()) ||
                                    (oColumn.getDataProperty && oColumn.getDataProperty()) || "";
@@ -467,16 +458,25 @@ sap.ui.define([
                 this._toast("Select a row first (tick the checkbox), then press Display Logs.");
                 return;
             }
+            // Read the tour id. The TourId column is often hidden per mode, and
+            // FE only $selects VISIBLE columns, so getProperty("TourId") can be
+            // empty. The RowKey is the entity KEY (always fetched) and encodes
+            // the tour: "{mode}~{tour}~{visit}~{sld}~{material}~{delivery}~{ship}".
             var sTour = "";
             try { sTour = oCtx.getProperty("TourId") || ""; } catch (e2) { sTour = ""; }
+            var sShip = "";
+            try { sShip = oCtx.getProperty("ShipmentNo") || ""; } catch (e3) { sShip = ""; }
+            if (!sTour || !sShip) {
+                var sKey = "";
+                try { sKey = oCtx.getProperty("RowKey") || ""; } catch (e4) { sKey = ""; }
+                var aParts = sKey.split("~");
+                if (!sTour && aParts.length >= 2) { sTour = aParts[1] || ""; }
+                if (!sShip && aParts.length >= 7) { sShip = aParts[6] || ""; }
+            }
             if (!sTour) {
                 this._toast("This row has no Tour ID, so it has no application log.");
                 return;
             }
-            // Title by the visit list (shipment no) - that is what users
-            // recognise; the tour id is just "20" + visit list internally.
-            var sShip = "";
-            try { sShip = oCtx.getProperty("ShipmentNo") || ""; } catch (e3) { sShip = ""; }
             this._openLogDialog(sTour, oCtx.getModel(), sShip);
         },
 
