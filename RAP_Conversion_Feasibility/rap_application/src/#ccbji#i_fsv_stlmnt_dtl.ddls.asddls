@@ -49,14 +49,14 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       @EndUserText.label: 'Transp. Planning Point'
       Tpp              : tplst;
 
-      // NO value help on StatusId. A value-help COLUMN in the MDC table cannot
-      // be cleanly hidden by the per-mode logic - MDC only "half-hides" it
-      // (drops the header, keeps the data cell), which showed the status value
-      // (e.g. 804090) under a BLANK header in Tour mode. As a plain column it
-      // hides cleanly when a mode excludes it and shows with its 'Status'
-      // header where it belongs. The status filter is free-text (type the
-      // code); the backend still accepts any status entered.
+      // Value help = /DSD/ST_CSTATUS status codes. Plain (non-fixed) list, so a
+      // status not in the list is still accepted. (The earlier blank 'Status'
+      // header was NOT caused by this value help - it was the mode column-hide
+      // using Column.setVisible, which only half-hides MDC columns. That is now
+      // fixed via StateUtil.applyExternalState in the ListReport controller, so
+      // the value help is safely restored and the Status filter keeps its F4.)
       @EndUserText.label: 'Status'
+      @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_STATUS_VH', element: 'StatusId' } } ]
       StatusId         : /dsd/st_status_id;
 
       // Value help = plants from T001W (includes DSD plants such as JW64).
