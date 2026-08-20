@@ -327,14 +327,16 @@ sap.ui.define([
          * Show only the table columns relevant to the current mode; hide the
          * rest - reproducing the classic per-mode column layout.
          *
-         * NO BLANK HEADERS: the earlier blank "column name after Status" was
-         * caused by hiding columns whose property key could NOT be resolved
-         * (an empty key is never in the allowed list, so it was hidden and left
-         * an empty header cell). The guard below SKIPS any column with no
-         * resolvable key - such a column is always left visible with its label,
-         * so a header can never render blank. Only columns whose key is known
-         * are shown/hidden by mode. Users can further tune columns via the
-         * table personalization (Settings) dialog.
+         * MUST use the MDC p13n STATE ENGINE, not Column.setVisible(): on an
+         * sap.ui.mdc.Table, setVisible(false) only suppresses the header label
+         * of the OUTER MDC column - the INNER sap.m.Column keeps rendering the
+         * data cell, so the column is not actually removed. That produced the
+         * "value under a blank header" artifact (e.g. StatusId 804090 in Tour
+         * mode) and meant the mode filtering never really took effect.
+         *
+         * StateUtil.applyExternalState removes the inner column properly, keeps
+         * the personalization dialog in sync, and persists into the variant.
+         * A setVisible fallback is kept only for runtimes without StateUtil.
          */
         _applyModeColumns: function () {
             var oTable = this._oTable;
@@ -343,35 +345,47 @@ sap.ui.define([
             }
             var sMode = this._getCurrentMode();
             var aAllowed = MODE_COLUMNS[sMode];
-            // Unknown / empty mode: show everything (never hide).
-            if (!aAllowed || !aAllowed.length) {
-                oTable.getColumns().forEach(function (oColumn) {
-                    if (oColumn.getVisible && oColumn.setVisible && oColumn.getVisible() !== true) {
-                        oColumn.setVisible(true);
-                    }
-                });
-                return;
-            }
+            var bShowAll = !aAllowed || !aAllowed.length;
 
-            oTable.getColumns().forEach(function (oColumn) {
-                var sKey = (oColumn.getPropertyKey && oColumn.getPropertyKey()) ||
-                           (oColumn.getDataProperty && oColumn.getDataProperty()) || "";
-                // IMPORTANT: only touch visibility of columns whose property key
-                // resolves through the proper MDC API. Special columns (e.g. the
-                // value-help "Status" column) do NOT expose a key here, and
-                // calling setVisible(false) on them only HALF-hides them - MDC
-                // drops the header but keeps the data cell, which is exactly the
-                // "804090 under a blank header" artifact. So we leave those
-                // columns untouched: they stay visible WITH their real header.
-                // Normal (key-resolving) columns hide/show cleanly by mode.
-                if (!sKey) {
-                    return;
+            var fnBuild = function () {
+                return oTable.getColumns().map(function (oColumn) {
+                    var sKey = (oColumn.getPropertyKey && oColumn.getPropertyKey()) ||
+                               (oColumn.getDataProperty && oColumn.getDataProperty()) || "";
+                    return {
+                        key: sKey,
+                        visible: bShowAll ? true : (aAllowed.indexOf(sKey) > -1)
+                    };
+                }).filter(function (o) { return o.key; });
+            };
+
+            sap.ui.require(
+                ["sap/ui/mdc/p13n/StateUtil"],
+                function (StateUtil) {
+                    try {
+                        var aItems = fnBuild();
+                        if (!aItems.length) {
+                            return;
+                        }
+                        var oPromise = StateUtil.applyExternalState(oTable, { items: aItems });
+                        if (oPromise && oPromise.catch) {
+                            oPromise.catch(function () { /* ignore */ });
+                        }
+                    } catch (e) { /* ignore */ }
+                },
+                function () {
+                    // Runtime without StateUtil: best-effort setVisible (note it
+                    // only half-hides MDC columns, but it is the only fallback).
+                    oTable.getColumns().forEach(function (oColumn) {
+                        var sKey = (oColumn.getPropertyKey && oColumn.getPropertyKey()) ||
+                                   (oColumn.getDataProperty && oColumn.getDataProperty()) || "";
+                        if (!sKey) { return; }
+                        var bVisible = bShowAll || (aAllowed.indexOf(sKey) > -1);
+                        if (oColumn.getVisible && oColumn.setVisible && oColumn.getVisible() !== bVisible) {
+                            oColumn.setVisible(bVisible);
+                        }
+                    });
                 }
-                var bVisible = aAllowed.indexOf(sKey) !== -1;
-                if (oColumn.getVisible && oColumn.setVisible && oColumn.getVisible() !== bVisible) {
-                    oColumn.setVisible(bVisible);
-                }
-            });
+            );
         },
 
         /* =================================================================
