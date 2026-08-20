@@ -448,16 +448,23 @@ sap.ui.define([
          * Open the application log of the selected row's tour.
          */
         _onDisplayLogs: function () {
-            var oCtx = null;
+            var aSel = [];
             try {
-                var aSel = this._oTable && this._oTable.getSelectedContexts &&
-                           this._oTable.getSelectedContexts();
-                if (aSel && aSel.length) { oCtx = aSel[0]; }
-            } catch (e) { /* ignore */ }
-            if (!oCtx) {
+                aSel = (this._oTable && this._oTable.getSelectedContexts &&
+                        this._oTable.getSelectedContexts()) || [];
+            } catch (e) { aSel = []; }
+            if (!aSel.length) {
                 this._toast("Select a row first (tick the checkbox), then press Display Logs.");
                 return;
             }
+            // The application log is per document/tour. If several rows are
+            // ticked, ask for exactly one instead of silently showing only the
+            // first row's log.
+            if (aSel.length > 1) {
+                this._toast("Please select only ONE row to display its application log.");
+                return;
+            }
+            var oCtx = aSel[0];
             // Read the tour id. The TourId column is often hidden per mode, and
             // FE only $selects VISIBLE columns, so getProperty("TourId") can be
             // empty. The RowKey is the entity KEY (always fetched) and encodes
