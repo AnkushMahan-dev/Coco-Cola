@@ -171,12 +171,11 @@ CLASS /ccbji/cl_fsv_stlmnt_log IMPLEMENTATION.
     ENDIF.
 
     TRY.
-        " Log filter for the in-memory search (BAL_GLB_SEARCH_LOG) - same object,
-        " subobject and the full set of external-number candidates.
-        DATA ls_lfil TYPE bal_s_lfil.
-        ls_lfil-object    = VALUE bal_r_obj( ( sign = 'I' option = 'EQ' low = lc_object ) ).
-        ls_lfil-subobject = VALUE bal_r_sub( ( sign = 'I' option = 'EQ' low = lc_subobj ) ).
-        ls_lfil-extnumber = CORRESPONDING #( lr_ext ).
+        " Start from a clean in-memory state so, after loading, the only logs
+        " in memory are THIS tour's - we can then read every in-memory message
+        " without any fragile log/handle filtering.
+        CALL FUNCTION 'BAL_GLB_MEMORY_REFRESH'
+          EXCEPTIONS OTHERS = 0.
 
         " 1) Find the matching log headers DIRECTLY from BALHDR - like the
         "    classic report (SELECT ... FROM balhdr WHERE object = c_rtacc AND
@@ -192,46 +191,23 @@ CLASS /ccbji/cl_fsv_stlmnt_log IMPLEMENTATION.
           RETURN.
         ENDIF.
 
-        " Rebuild the in-memory filter from the ACTUAL headers we found, so the
-        " subsequent BAL_GLB_SEARCH_LOG matches them even when the stored
-        " extnumber is padded/prefixed differently from our exact candidates.
-        CLEAR ls_lfil-extnumber.
-        LOOP AT lt_hdr INTO DATA(ls_h).
-          IF NOT line_exists( ls_lfil-extnumber[ low = ls_h-extnumber ] ).
-            APPEND VALUE #( sign = 'I' option = 'EQ' low = ls_h-extnumber ) TO ls_lfil-extnumber.
-          ENDIF.
-        ENDLOOP.
-
         " 2) Load the logs (with their messages) into memory.
         CALL FUNCTION 'BAL_DB_LOAD'
           EXPORTING
-            i_t_log_header = lt_hdr
+            i_t_log_header     = lt_hdr
           EXCEPTIONS
-            no_logs_specified = 1
-            log_not_found     = 2
+            no_logs_specified  = 1
+            log_not_found      = 2
             log_already_loaded = 3
-            OTHERS            = 4.
+            OTHERS             = 4.
         " subrc 3 (already loaded) is fine - continue.
 
-        " 3) Resolve the in-memory log handles for this filter.
-        DATA lt_logh TYPE bal_t_logh.
-        CALL FUNCTION 'BAL_GLB_SEARCH_LOG'
-          EXPORTING
-            i_s_log_filter = ls_lfil
-          IMPORTING
-            e_t_log_handle = lt_logh
-          EXCEPTIONS
-            log_not_found  = 1
-            OTHERS         = 2.
-        IF sy-subrc <> 0 OR lt_logh IS INITIAL.
-          RETURN.
-        ENDIF.
-
-        " 4) Collect every message handle of those logs.
+        " 3) Collect every message handle currently in memory. Because memory
+        "    was refreshed above and we only loaded THIS tour's headers, these
+        "    are exactly this tour's messages - no log/handle filter needed
+        "    (that filter step was returning nothing before).
         DATA lt_msgh TYPE bal_t_msgh.
         CALL FUNCTION 'BAL_GLB_SEARCH_MSG'
-          EXPORTING
-            i_t_log_handle = lt_logh
           IMPORTING
             e_t_msg_handle = lt_msgh
           EXCEPTIONS
