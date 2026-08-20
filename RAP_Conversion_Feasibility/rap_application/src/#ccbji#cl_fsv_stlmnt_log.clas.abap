@@ -143,17 +143,24 @@ CLASS /ccbji/cl_fsv_stlmnt_log IMPLEMENTATION.
           APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_ext_str ) TO ls_lfil-extnumber.
         ENDIF.
 
-        " 1) Find the matching log headers on the database.
+        " 1) Find the matching log headers DIRECTLY from BALHDR - exactly like
+        "    the classic report (SELECT ... FROM balhdr WHERE object = c_rtacc
+        "    AND subobject = c_fsr AND extnumber = tour_id). BAL_DB_SEARCH was
+        "    unreliable here (date defaulting / index), so we read the header
+        "    table straight, then hand those headers to BAL_DB_LOAD.
+        DATA lr_ext TYPE RANGE OF balnrext.
+        APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_ext_raw ) TO lr_ext.
+        IF lv_ext_str <> lv_ext_raw AND lv_ext_str IS NOT INITIAL.
+          APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_ext_str ) TO lr_ext.
+        ENDIF.
+
         DATA lt_hdr TYPE balhdr_t.
-        CALL FUNCTION 'BAL_DB_SEARCH'
-          EXPORTING
-            i_s_log_filter = ls_lfil
-          IMPORTING
-            e_t_log_header = lt_hdr
-          EXCEPTIONS
-            log_not_found  = 1
-            OTHERS         = 2.
-        IF sy-subrc <> 0 OR lt_hdr IS INITIAL.
+        SELECT * FROM balhdr
+          WHERE object    = @lc_object
+            AND subobject = @lc_subobj
+            AND extnumber IN @lr_ext
+          INTO TABLE @lt_hdr.
+        IF lt_hdr IS INITIAL.
           RETURN.
         ENDIF.
 
