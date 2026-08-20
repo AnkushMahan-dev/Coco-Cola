@@ -356,47 +356,20 @@ sap.ui.define([
             oTable.getColumns().forEach(function (oColumn) {
                 var sKey = (oColumn.getPropertyKey && oColumn.getPropertyKey()) ||
                            (oColumn.getDataProperty && oColumn.getDataProperty()) || "";
-                // Fallback: some MDC columns (e.g. value-help fields like Status)
-                // don't return a property key here; derive it from the column id
-                // (FE builds ids like "...::LineItem::StatusId" / "...-StatusId").
+                // IMPORTANT: only touch visibility of columns whose property key
+                // resolves through the proper MDC API. Special columns (e.g. the
+                // value-help "Status" column) do NOT expose a key here, and
+                // calling setVisible(false) on them only HALF-hides them - MDC
+                // drops the header but keeps the data cell, which is exactly the
+                // "804090 under a blank header" artifact. So we leave those
+                // columns untouched: they stay visible WITH their real header.
+                // Normal (key-resolving) columns hide/show cleanly by mode.
                 if (!sKey) {
-                    try {
-                        var sId = (oColumn.getId && oColumn.getId()) || "";
-                        var m = sId.match(/(?:::|--|-|\.)([A-Za-z][A-Za-z0-9_]*)$/);
-                        if (m && m[1]) { sKey = m[1]; }
-                    } catch (e) { /* ignore */ }
-                }
-                var bVisible;
-                if (!sKey) {
-                    // Still unresolved -> renders as a BLANK header if shown.
-                    // While a mode is active it can't belong, so hide it.
-                    bVisible = false;
-                } else {
-                    bVisible = aAllowed.indexOf(sKey) !== -1;
-                }
-                if (oColumn.getVisible && oColumn.setVisible && oColumn.getVisible() !== bVisible) {
-                    oColumn.setVisible(bVisible);
-                }
-            });
-
-            // Final safety net against a blank header cell: hide any STILL
-            // VISIBLE column whose header text is empty (whatever the cause).
-            oTable.getColumns().forEach(function (oColumn) {
-                if (!oColumn.getVisible || !oColumn.getVisible()) {
                     return;
                 }
-                var sHdr = "";
-                try {
-                    sHdr = (oColumn.getHeader && oColumn.getHeader()) || "";
-                    // MDC column header can be a control; read its text.
-                    if (sHdr && sHdr.getText) {
-                        sHdr = sHdr.getText();
-                    }
-                } catch (e) { sHdr = ""; }
-                if (typeof sHdr === "string" && sHdr.replace(/\s/g, "") === "") {
-                    if (oColumn.setVisible) {
-                        oColumn.setVisible(false);
-                    }
+                var bVisible = aAllowed.indexOf(sKey) !== -1;
+                if (oColumn.getVisible && oColumn.setVisible && oColumn.getVisible() !== bVisible) {
+                    oColumn.setVisible(bVisible);
                 }
             });
         },

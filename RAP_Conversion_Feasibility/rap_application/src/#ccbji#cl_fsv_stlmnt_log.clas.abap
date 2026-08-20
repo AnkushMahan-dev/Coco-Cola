@@ -157,6 +157,19 @@ CLASS /ccbji/cl_fsv_stlmnt_log IMPLEMENTATION.
       APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_vlid_str ) TO lr_ext.
     ENDIF.
 
+    " Robust fallback: the stored extnumber may be padded or prefixed in ways
+    " the exact-match list above misses. Also match any extnumber that ENDS
+    " WITH the visit list (e.g. '9162643559', '209162643559', '000...9162643559').
+    DATA lv_like TYPE string.
+    DATA lv_vtrim TYPE string.
+    lv_vtrim = COND #( WHEN lv_vlid_str IS NOT INITIAL THEN lv_vlid_str ELSE lv_ext_str ).
+    CONDENSE lv_vtrim NO-GAPS.
+    IF lv_vtrim IS NOT INITIAL.
+      lv_like = |%{ lv_vtrim }|.
+    ELSE.
+      lv_like = '##NO_MATCH##'.
+    ENDIF.
+
     TRY.
         " Log filter for the in-memory search (BAL_GLB_SEARCH_LOG) - same object,
         " subobject and the full set of external-number candidates.
@@ -173,11 +186,21 @@ CLASS /ccbji/cl_fsv_stlmnt_log IMPLEMENTATION.
         SELECT * FROM balhdr
           WHERE object    = @lc_object
             AND subobject = @lc_subobj
-            AND extnumber IN @lr_ext
+            AND ( extnumber IN @lr_ext OR extnumber LIKE @lv_like )
           INTO TABLE @lt_hdr.
         IF lt_hdr IS INITIAL.
           RETURN.
         ENDIF.
+
+        " Rebuild the in-memory filter from the ACTUAL headers we found, so the
+        " subsequent BAL_GLB_SEARCH_LOG matches them even when the stored
+        " extnumber is padded/prefixed differently from our exact candidates.
+        CLEAR ls_lfil-extnumber.
+        LOOP AT lt_hdr INTO DATA(ls_h).
+          IF NOT line_exists( ls_lfil-extnumber[ low = ls_h-extnumber ] ).
+            APPEND VALUE #( sign = 'I' option = 'EQ' low = ls_h-extnumber ) TO ls_lfil-extnumber.
+          ENDIF.
+        ENDLOOP.
 
         " 2) Load the logs (with their messages) into memory.
         CALL FUNCTION 'BAL_DB_LOAD'
