@@ -190,7 +190,7 @@ sap.ui.define([
                 // asynchronously from $metadata, so a single synchronous pass
                 // can miss a late column / see a not-yet-labelled header. Several
                 // deferred passes catch those without any visible flicker.
-                [150, 500, 1200, 3000].forEach(function (iDelay) {
+                [600, 2000].forEach(function (iDelay) {
                     setTimeout(function () { that._applyModeColumns(); }, iDelay);
                 });
             };
@@ -347,29 +347,36 @@ sap.ui.define([
             var aAllowed = MODE_COLUMNS[sMode];
             var bShowAll = !aAllowed || !aAllowed.length;
 
-            var fnBuild = function () {
-                return oTable.getColumns().map(function (oColumn) {
-                    var sKey = (oColumn.getPropertyKey && oColumn.getPropertyKey()) ||
-                               (oColumn.getDataProperty && oColumn.getDataProperty()) || "";
-                    return {
-                        key: sKey,
-                        visible: bShowAll ? true : (aAllowed.indexOf(sKey) > -1)
-                    };
-                }).filter(function (o) { return o.key; });
-            };
-
             sap.ui.require(
                 ["sap/ui/mdc/p13n/StateUtil"],
                 function (StateUtil) {
                     try {
-                        var aItems = fnBuild();
-                        if (!aItems.length) {
-                            return;
-                        }
-                        var oPromise = StateUtil.applyExternalState(oTable, { items: aItems });
-                        if (oPromise && oPromise.catch) {
-                            oPromise.catch(function () { /* ignore */ });
-                        }
+                        // Read the table's OWN current state - it already lists
+                        // every column with its correct key - then flip only the
+                        // `visible` flag per mode and apply it back. This avoids
+                        // the earlier over-hiding: building the list from
+                        // getColumns()/getPropertyKey() dropped columns whose key
+                        // had not resolved yet, and applyExternalState then hid
+                        // them (only ~5 Tour columns survived).
+                        StateUtil.retrieveExternalState(oTable).then(function (oState) {
+                            try {
+                                var aStateItems = (oState && oState.items) || [];
+                                if (!aStateItems.length) {
+                                    return;
+                                }
+                                var aItems = aStateItems.map(function (oItem) {
+                                    var sKey = oItem.key || oItem.name || "";
+                                    return {
+                                        key: sKey,
+                                        visible: bShowAll ? true : (aAllowed.indexOf(sKey) > -1)
+                                    };
+                                });
+                                var oApply = StateUtil.applyExternalState(oTable, { items: aItems });
+                                if (oApply && oApply.catch) {
+                                    oApply.catch(function () { /* ignore */ });
+                                }
+                            } catch (e) { /* ignore */ }
+                        }).catch(function () { /* ignore */ });
                     } catch (e) { /* ignore */ }
                 },
                 function () {
