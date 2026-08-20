@@ -489,6 +489,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         CLEAR lt_result.
     ENDTRY.
 
+    DATA lt_seen_key TYPE HASHED TABLE OF ty_rowkey WITH UNIQUE KEY table_line.
     LOOP AT lt_result ASSIGNING FIELD-SYMBOL(<r>).
       <r>-seqno = sy-tabix.
       IF <r>-reportmode IS INITIAL.
@@ -497,6 +498,15 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
       " Content-based key: mode~tour~natural-keys. Delimiter-separated so a
       " by-key read can split out mode + tour and rebuild exactly this row.
       <r>-rowkey = |{ <r>-reportmode }~{ <r>-tourid }~{ <r>-visitid }~{ <r>-slddocid }~{ <r>-material }~{ <r>-deliveryno }~{ <r>-shipmentno }|.
+
+      " Safety net: OData V4 REJECTS a response with two identical keys
+      " ("Duplicate key predicate") and then renders NO data at all. If any
+      " mode ever produces two rows with the same natural key, append the row
+      " number so every RowKey is unique and the list still loads.
+      IF line_exists( lt_seen_key[ table_line = <r>-rowkey ] ).
+        <r>-rowkey = |{ <r>-rowkey }~{ <r>-seqno }|.
+      ENDIF.
+      INSERT <r>-rowkey INTO TABLE lt_seen_key.
     ENDLOOP.
 
     " Read-by-key (Object Page): keep only the requested row. RowKey is the key;
@@ -1458,6 +1468,12 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             statusid       = COND #( WHEN lv_found = abap_true THEN <tf>-status_id )
             vkorg          = <o>-vkorg
             referencedoc   = <o>-xblnr
+            " Sales document number - REQUIRED so each FSR row has a UNIQUE
+            " RowKey (a tour has many sales docs that otherwise collapse to the
+            " same key, which OData V4 rejects as a duplicate key predicate and
+            " then shows NO data). Carried in deliveryno, which is part of the
+            " RowKey and unused for FSR.
+            deliveryno     = <o>-vbeln
           ) TO rt.
         ENDLOOP.
       CATCH cx_root.
