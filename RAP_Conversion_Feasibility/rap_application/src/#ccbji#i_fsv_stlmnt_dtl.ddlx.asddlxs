@@ -13,276 +13,281 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
   @UI.hidden: true
   Seqno;
 
+  // Explicit column labels on every lineItem: on a CUSTOM ENTITY the element
+  // @EndUserText.label does not reliably become the MDC table column header,
+  // so each header text is set here directly (that was the "blank Status /
+  // blank column" cause on the list page).
+
   // ---- Report Mode : the driving dropdown (classic radio group) ----------
-  @UI: { lineItem: [ { position: 10, importance: #HIGH } ], identification: [ { position: 10 } ] }
+  @UI: { lineItem: [ { position: 10, label: 'Report Mode', importance: #HIGH } ], identification: [ { position: 10, label: 'Report Mode' } ] }
   @UI.selectionField: [ { position: 5 } ]
   ReportMode;
 
   // ---- Header block : always visible (mandatory in the original screen) ---
-  @UI: { lineItem: [ { position: 50 } ], identification: [ { position: 50 } ] }
+  @UI: { lineItem: [ { position: 50, label: 'Plant' } ], identification: [ { position: 50, label: 'Plant' } ] }
   @UI.selectionField: [ { position: 50 } ]
   Plant;
 
-  @UI: { lineItem: [ { position: 60 } ], identification: [ { position: 60 } ] }
+  @UI: { lineItem: [ { position: 60, label: 'Route' } ], identification: [ { position: 60, label: 'Route' } ] }
   @UI.selectionField: [ { position: 20 } ]
   Route;
 
-  @UI: { lineItem: [ { position: 70 } ], identification: [ { position: 70 } ] }
+  @UI: { lineItem: [ { position: 70, label: 'Settlement Date' } ], identification: [ { position: 70, label: 'Settlement Date' } ] }
   @UI.selectionField: [ { position: 30 } ]
   SettlementDate;
 
   // ---- Per-mode filters : shown/hidden by the ListReport controller ext ---
-  @UI: { lineItem: [ { position: 20, importance: #HIGH } ], identification: [ { position: 20 } ] }
+  @UI: { lineItem: [ { position: 20, label: 'Shipment / Visit List', importance: #HIGH } ], identification: [ { position: 20, label: 'Shipment / Visit List' } ] }
   @UI.selectionField: [ { position: 10 } ]
   ShipmentNo;
 
-  @UI: { lineItem: [ { position: 80 } ], identification: [ { position: 80 } ] }
+  @UI: { lineItem: [ { position: 80, label: 'Status' } ], identification: [ { position: 80, label: 'Status' } ] }
   @UI.selectionField: [ { position: 40 } ]
   StatusId;
 
-  @UI: { lineItem: [ { position: 90 } ], identification: [ { position: 90 } ] }
+  @UI: { lineItem: [ { position: 90, label: 'Customer' } ], identification: [ { position: 90, label: 'Customer' } ] }
   @UI.selectionField: [ { position: 60 } ]
   Customer;
 
-  @UI: { lineItem: [ { position: 100 } ], identification: [ { position: 100 } ] }
+  @UI: { lineItem: [ { position: 100, label: 'Material' } ], identification: [ { position: 100, label: 'Material' } ] }
   @UI.selectionField: [ { position: 70 } ]
   Material;
 
-  @UI: { lineItem: [ { position: 110 } ], identification: [ { position: 110 } ] }
+  @UI: { lineItem: [ { position: 110, label: 'Material Description' } ], identification: [ { position: 110, label: 'Material Description' } ] }
   MaterialDesc;
 
-  @UI: { lineItem: [ { position: 120 } ], identification: [ { position: 120 } ] }
+  @UI: { lineItem: [ { position: 120, label: 'Quantity' } ], identification: [ { position: 120, label: 'Quantity' } ] }
   Quantity;
 
-  @UI: { lineItem: [ { position: 130 } ], identification: [ { position: 130 } ] }
+  @UI: { lineItem: [ { position: 130, label: 'Quantity Difference' } ], identification: [ { position: 130, label: 'Quantity Difference' } ] }
   QuanDiff;
 
-  @UI: { lineItem: [ { position: 140 } ], identification: [ { position: 140 } ] }
+  @UI: { lineItem: [ { position: 140, label: 'Amount' } ], identification: [ { position: 140, label: 'Amount' } ] }
   Amount;
 
-  @UI: { lineItem: [ { position: 150 } ], identification: [ { position: 150 } ] }
+  @UI: { lineItem: [ { position: 150, label: 'Currency' } ], identification: [ { position: 150, label: 'Currency' } ] }
   @UI.selectionField: [ { position: 170 } ]
   Currency;
 
-  @UI: { lineItem: [ { position: 160 } ], identification: [ { position: 160 } ] }
+  @UI: { lineItem: [ { position: 160, label: 'Payment Method' } ], identification: [ { position: 160, label: 'Payment Method' } ] }
   @UI.selectionField: [ { position: 80 } ]
   PaymentMethod;
 
-  @UI: { lineItem: [ { position: 170 } ], identification: [ { position: 170 } ] }
+  @UI: { lineItem: [ { position: 170, label: 'Settlement Doc.' } ], identification: [ { position: 170, label: 'Settlement Doc.' } ] }
   @UI.selectionField: [ { position: 160 } ]
   SldDocId;
 
-  @UI: { lineItem: [ { position: 180 } ], identification: [ { position: 180 } ] }
+  @UI: { lineItem: [ { position: 180, label: 'Delivery No.' } ], identification: [ { position: 180, label: 'Delivery No.' } ] }
   @UI.selectionField: [ { position: 150 } ]
   DeliveryNo;
 
-  @UI: { lineItem: [ { position: 190 } ], identification: [ { position: 190 } ] }
+  @UI: { lineItem: [ { position: 190, label: 'Driver' } ], identification: [ { position: 190, label: 'Driver' } ] }
   @UI.selectionField: [ { position: 90 } ]
   Driver;
 
-  @UI: { identification: [ { position: 200 } ] }
+  @UI: { identification: [ { position: 200, label: 'Vehicle' } ] }
   @UI.selectionField: [ { position: 100 } ]
   Vehicle;
 
-  @UI: { lineItem: [ { position: 215 } ], identification: [ { position: 210 } ] }
+  @UI: { lineItem: [ { position: 215, label: 'Visit ID' } ], identification: [ { position: 210, label: 'Visit ID' } ] }
   @UI.selectionField: [ { position: 120 } ]
   VisitId;
 
-  @UI: { lineItem: [ { position: 200 } ], identification: [ { position: 220 } ] }
+  @UI: { lineItem: [ { position: 200, label: 'Tour ID' } ], identification: [ { position: 220, label: 'Tour ID' } ] }
   @UI.selectionField: [ { position: 130 } ]
   TourId;
 
-  @UI: { lineItem: [ { position: 216 } ], identification: [ { position: 230 } ] }
+  @UI: { lineItem: [ { position: 216, label: 'Sales Organization' } ], identification: [ { position: 230, label: 'Sales Organization' } ] }
   @UI.selectionField: [ { position: 110 } ]
   Vkorg;
 
-  @UI: { lineItem: [ { position: 217 } ], identification: [ { position: 240 } ] }
+  @UI: { lineItem: [ { position: 217, label: 'Cash Type' } ], identification: [ { position: 240, label: 'Cash Type' } ] }
   @UI.selectionField: [ { position: 140 } ]
   CashType;
 
-  @UI: { lineItem: [ { position: 218 } ], identification: [ { position: 250 } ] }
+  @UI: { lineItem: [ { position: 218, label: 'Visit Reason' } ], identification: [ { position: 250, label: 'Visit Reason' } ] }
   @UI.selectionField: [ { position: 180 } ]
   VisitReason;
 
-  @UI: { lineItem: [ { position: 219 } ], identification: [ { position: 260 } ] }
+  @UI: { lineItem: [ { position: 219, label: 'Object Type' } ], identification: [ { position: 260, label: 'Object Type' } ] }
   @UI.selectionField: [ { position: 190 } ]
   ObjType;
 
-  @UI: { lineItem: [ { position: 220 } ], identification: [ { position: 270 } ] }
+  @UI: { lineItem: [ { position: 220, label: 'Reference Document' } ], identification: [ { position: 270, label: 'Reference Document' } ] }
   ReferenceDoc;
 
-  @UI: { lineItem: [ { position: 221 } ], identification: [ { position: 280 } ] }
+  @UI: { lineItem: [ { position: 221, label: 'PO Number' } ], identification: [ { position: 280, label: 'PO Number' } ] }
   PoNumber;
 
-  @UI: { lineItem: [ { position: 222 } ], identification: [ { position: 290 } ] }
+  @UI: { lineItem: [ { position: 222, label: 'Card Number' } ], identification: [ { position: 290, label: 'Card Number' } ] }
   CardNo;
 
   // ---- Tour Details columns (classic f_get_driver_details) ---------------
   // Exception traffic light as a readable, colour-coded column (classic ALV
   // exception column). Coloured by the Light criticality.
-  @UI: { lineItem:       [ { position: 34, criticality: 'Light' } ],
-         identification: [ { position: 34, criticality: 'Light' } ] }
+  @UI: { lineItem:       [ { position: 34, label: 'Exception', criticality: 'Light' } ],
+         identification: [ { position: 34, label: 'Exception', criticality: 'Light' } ] }
   ExceptionText;
 
   // Processing status coloured by the Exception traffic light (Light).
-  @UI: { lineItem:       [ { position: 35, criticality: 'Light' } ],
-         identification: [ { position: 35, criticality: 'Light' } ] }
+  @UI: { lineItem:       [ { position: 35, label: 'Processing Status', criticality: 'Light' } ],
+         identification: [ { position: 35, label: 'Processing Status', criticality: 'Light' } ] }
   ProcessingStatus;
 
-  @UI: { lineItem: [ { position: 195 } ], identification: [ { position: 195 } ] }
+  @UI: { lineItem: [ { position: 195, label: 'Co-Driver' } ], identification: [ { position: 195, label: 'Co-Driver' } ] }
   CoDriver;
 
-  @UI: { lineItem: [ { position: 205 } ], identification: [ { position: 205 } ] }
+  @UI: { lineItem: [ { position: 205, label: 'Created On' } ], identification: [ { position: 205, label: 'Created On' } ] }
   CreatedOn;
 
-  @UI: { lineItem: [ { position: 206 } ], identification: [ { position: 206 } ] }
+  @UI: { lineItem: [ { position: 206, label: 'Created Time' } ], identification: [ { position: 206, label: 'Created Time' } ] }
   CreatedTime;
 
-  @UI: { lineItem: [ { position: 207 } ], identification: [ { position: 207 } ] }
+  @UI: { lineItem: [ { position: 207, label: 'Created By' } ], identification: [ { position: 207, label: 'Created By' } ] }
   CreatedBy;
 
-  @UI: { lineItem: [ { position: 208 } ], identification: [ { position: 208 } ] }
+  @UI: { lineItem: [ { position: 208, label: 'Changed On' } ], identification: [ { position: 208, label: 'Changed On' } ] }
   ChangedOn;
 
-  @UI: { lineItem: [ { position: 209 } ], identification: [ { position: 209 } ] }
+  @UI: { lineItem: [ { position: 209, label: 'Changed At' } ], identification: [ { position: 209, label: 'Changed At' } ] }
   ChangedTime;
 
-  @UI: { lineItem: [ { position: 210 } ], identification: [ { position: 210 } ] }
+  @UI: { lineItem: [ { position: 210, label: 'Changed By' } ], identification: [ { position: 210, label: 'Changed By' } ] }
   ChangedBy;
 
-  @UI: { lineItem: [ { position: 211 } ], identification: [ { position: 211 } ] }
+  @UI: { lineItem: [ { position: 211, label: 'Scenario' } ], identification: [ { position: 211, label: 'Scenario' } ] }
   Scenario;
 
-  @UI: { lineItem: [ { position: 212 } ], identification: [ { position: 212 } ] }
+  @UI: { lineItem: [ { position: 212, label: 'Driver Swap' } ], identification: [ { position: 212, label: 'Driver Swap' } ] }
   DriverSwap;
 
-  @UI: { lineItem: [ { position: 213 } ], identification: [ { position: 213 } ] }
+  @UI: { lineItem: [ { position: 213, label: 'Visit Group' } ], identification: [ { position: 213, label: 'Visit Group' } ] }
   VisitGroup;
 
-  @UI: { lineItem: [ { position: 214 } ], identification: [ { position: 214 } ] }
+  @UI: { lineItem: [ { position: 214, label: 'IDoc No.' } ], identification: [ { position: 214, label: 'IDoc No.' } ] }
   IDocNo;
 
   // ---- Visit Details extra columns (classic f_get_visit_details) ---------
-  @UI: { lineItem: [ { position: 230 } ], identification: [ { position: 300 } ] }
+  @UI: { lineItem: [ { position: 230, label: 'Distribution Channel' } ], identification: [ { position: 300, label: 'Distribution Channel' } ] }
   DistChannel;
 
-  @UI: { lineItem: [ { position: 231 } ], identification: [ { position: 301 } ] }
+  @UI: { lineItem: [ { position: 231, label: 'Division' } ], identification: [ { position: 301, label: 'Division' } ] }
   Division;
 
-  @UI: { lineItem: [ { position: 232 } ], identification: [ { position: 302 } ] }
+  @UI: { lineItem: [ { position: 232, label: 'Account Group' } ], identification: [ { position: 302, label: 'Account Group' } ] }
   AccountGroup;
 
-  @UI: { lineItem: [ { position: 233 } ], identification: [ { position: 303 } ] }
+  @UI: { lineItem: [ { position: 233, label: 'Business Type' } ], identification: [ { position: 303, label: 'Business Type' } ] }
   BusinessType;
 
-  @UI: { lineItem: [ { position: 234 } ], identification: [ { position: 304 } ] }
+  @UI: { lineItem: [ { position: 234, label: 'Equipment Owner' } ], identification: [ { position: 304, label: 'Equipment Owner' } ] }
   EquipOwner;
 
-  @UI: { lineItem: [ { position: 235 } ], identification: [ { position: 305 } ] }
+  @UI: { lineItem: [ { position: 235, label: 'Processing Indicator' } ], identification: [ { position: 305, label: 'Processing Indicator' } ] }
   ManProc;
 
-  @UI: { lineItem: [ { position: 236 } ], identification: [ { position: 306 } ] }
+  @UI: { lineItem: [ { position: 236, label: 'Visit Log Status' } ], identification: [ { position: 306, label: 'Visit Log Status' } ] }
   VisitLog;
 
   // ---- Option B: exact per-mode columns (Sales/Check/Payment/Money/Qty) ----
-  @UI: { lineItem: [ { position: 240 } ], identification: [ { position: 400 } ] }
+  @UI: { lineItem: [ { position: 240, label: 'Delivery Item' } ], identification: [ { position: 400, label: 'Delivery Item' } ] }
   DeliveryItem;
 
-  @UI: { lineItem: [ { position: 241 } ], identification: [ { position: 401 } ] }
+  @UI: { lineItem: [ { position: 241, label: 'PO Date' } ], identification: [ { position: 401, label: 'PO Date' } ] }
   PoDate;
 
-  @UI: { lineItem: [ { position: 242 } ], identification: [ { position: 402 } ] }
+  @UI: { lineItem: [ { position: 242, label: 'Transaction Code' } ], identification: [ { position: 402, label: 'Transaction Code' } ] }
   TaCode;
 
-  @UI: { lineItem: [ { position: 243 } ], identification: [ { position: 403 } ] }
+  @UI: { lineItem: [ { position: 243, label: 'Reason' } ], identification: [ { position: 403, label: 'Reason' } ] }
   Reason;
 
-  @UI: { lineItem: [ { position: 244 } ], identification: [ { position: 404 } ] }
+  @UI: { lineItem: [ { position: 244, label: 'Batch' } ], identification: [ { position: 404, label: 'Batch' } ] }
   Batch;
 
-  @UI: { lineItem: [ { position: 245 } ], identification: [ { position: 405 } ] }
+  @UI: { lineItem: [ { position: 245, label: 'Condition Type' } ], identification: [ { position: 405, label: 'Condition Type' } ] }
   CondType;
 
-  @UI: { lineItem: [ { position: 246 } ], identification: [ { position: 406 } ] }
+  @UI: { lineItem: [ { position: 246, label: 'Original Quantity' } ], identification: [ { position: 406, label: 'Original Quantity' } ] }
   OrigQty;
 
-  @UI: { lineItem: [ { position: 247 } ], identification: [ { position: 407 } ] }
+  @UI: { lineItem: [ { position: 247, label: 'Check ID' } ], identification: [ { position: 407, label: 'Check ID' } ] }
   CheckId;
 
-  @UI: { lineItem: [ { position: 248 } ], identification: [ { position: 408 } ] }
+  @UI: { lineItem: [ { position: 248, label: 'Item No.' } ], identification: [ { position: 408, label: 'Item No.' } ] }
   ItemNo;
 
-  @UI: { lineItem: [ { position: 249 } ], identification: [ { position: 409 } ] }
+  @UI: { lineItem: [ { position: 249, label: 'Planned Quantity' } ], identification: [ { position: 409, label: 'Planned Quantity' } ] }
   QuanPlan;
 
-  @UI: { lineItem: [ { position: 250 } ], identification: [ { position: 410 } ] }
+  @UI: { lineItem: [ { position: 250, label: 'Counted Quantity' } ], identification: [ { position: 410, label: 'Counted Quantity' } ] }
   QuanCount;
 
-  @UI: { lineItem: [ { position: 251 } ], identification: [ { position: 411 } ] }
+  @UI: { lineItem: [ { position: 251, label: 'Cash ID' } ], identification: [ { position: 411, label: 'Cash ID' } ] }
   CashId;
 
-  @UI: { lineItem: [ { position: 252 } ], identification: [ { position: 412 } ] }
+  @UI: { lineItem: [ { position: 252, label: 'Payment Description' } ], identification: [ { position: 412, label: 'Payment Description' } ] }
   PaymentDescr;
 
-  @UI: { lineItem: [ { position: 253 } ], identification: [ { position: 413 } ] }
+  @UI: { lineItem: [ { position: 253, label: 'Check Number' } ], identification: [ { position: 413, label: 'Check Number' } ] }
   CheckNo;
 
-  @UI: { lineItem: [ { position: 254 } ], identification: [ { position: 414 } ] }
+  @UI: { lineItem: [ { position: 254, label: 'Fiscal Year' } ], identification: [ { position: 414, label: 'Fiscal Year' } ] }
   FiscYear;
 
-  @UI: { lineItem: [ { position: 255 } ], identification: [ { position: 415 } ] }
+  @UI: { lineItem: [ { position: 255, label: 'Company Code' } ], identification: [ { position: 415, label: 'Company Code' } ] }
   CompCode;
 
-  @UI: { lineItem: [ { position: 256 } ], identification: [ { position: 416 } ] }
+  @UI: { lineItem: [ { position: 256, label: 'Amount Check-Out' } ], identification: [ { position: 416, label: 'Amount Check-Out' } ] }
   AmountCo;
 
-  @UI: { lineItem: [ { position: 257 } ], identification: [ { position: 417 } ] }
+  @UI: { lineItem: [ { position: 257, label: 'Amount Expenses' } ], identification: [ { position: 417, label: 'Amount Expenses' } ] }
   AmountExpenses;
 
-  @UI: { lineItem: [ { position: 258 } ], identification: [ { position: 418 } ] }
+  @UI: { lineItem: [ { position: 258, label: 'Amount Earnings' } ], identification: [ { position: 418, label: 'Amount Earnings' } ] }
   AmountEarnings;
 
-  @UI: { lineItem: [ { position: 259 } ], identification: [ { position: 419 } ] }
+  @UI: { lineItem: [ { position: 259, label: 'Amount Check-In' } ], identification: [ { position: 419, label: 'Amount Check-In' } ] }
   AmountCi;
 
-  @UI: { lineItem: [ { position: 260 } ], identification: [ { position: 420 } ] }
+  @UI: { lineItem: [ { position: 260, label: 'Amount Planned' } ], identification: [ { position: 420, label: 'Amount Planned' } ] }
   AmountPlan;
 
-  @UI: { lineItem: [ { position: 261 } ], identification: [ { position: 421 } ] }
+  @UI: { lineItem: [ { position: 261, label: 'Quantity Check-Out' } ], identification: [ { position: 421, label: 'Quantity Check-Out' } ] }
   QuanCheckout;
 
-  @UI: { lineItem: [ { position: 262 } ], identification: [ { position: 422 } ] }
+  @UI: { lineItem: [ { position: 262, label: 'Quantity Delivered' } ], identification: [ { position: 422, label: 'Quantity Delivered' } ] }
   QuanDelivered;
 
-  @UI: { lineItem: [ { position: 263 } ], identification: [ { position: 423 } ] }
+  @UI: { lineItem: [ { position: 263, label: 'Quantity Returned' } ], identification: [ { position: 423, label: 'Quantity Returned' } ] }
   QuanReturn;
 
-  @UI: { lineItem: [ { position: 264 } ], identification: [ { position: 424 } ] }
+  @UI: { lineItem: [ { position: 264, label: 'Quantity Check-In' } ], identification: [ { position: 424, label: 'Quantity Check-In' } ] }
   QuanCheckin;
 
-  @UI: { lineItem: [ { position: 265 } ], identification: [ { position: 425 } ] }
+  @UI: { lineItem: [ { position: 265, label: 'Quantity Final Diff.' } ], identification: [ { position: 425, label: 'Quantity Final Diff.' } ] }
   QuanFinalDiff;
 
-  @UI: { lineItem: [ { position: 266 } ], identification: [ { position: 426 } ] }
+  @UI: { lineItem: [ { position: 266, label: 'Value Final Diff.' } ], identification: [ { position: 426, label: 'Value Final Diff.' } ] }
   ValueFinDiff;
 
   // ---- Payment FI posting detail (from CDS, replacing FI_DOCUMENT_READ) ----
-  @UI: { lineItem: [ { position: 267 } ], identification: [ { position: 427 } ] }
+  @UI: { lineItem: [ { position: 267, label: 'Posting Item' } ], identification: [ { position: 427, label: 'Posting Item' } ] }
   PostingItem;
 
-  @UI: { lineItem: [ { position: 268 } ], identification: [ { position: 428 } ] }
+  @UI: { lineItem: [ { position: 268, label: 'Posting Amount' } ], identification: [ { position: 428, label: 'Posting Amount' } ] }
   PostingAmount;
 
-  @UI: { lineItem: [ { position: 269 } ], identification: [ { position: 429 } ] }
+  @UI: { lineItem: [ { position: 269, label: 'Posting Currency' } ], identification: [ { position: 429, label: 'Posting Currency' } ] }
   PostingCurrency;
 
-  @UI: { lineItem: [ { position: 270 } ], identification: [ { position: 430 } ] }
+  @UI: { lineItem: [ { position: 270, label: 'Posting Date' } ], identification: [ { position: 430, label: 'Posting Date' } ] }
   PostingDate;
 
-  @UI: { lineItem: [ { position: 271 } ], identification: [ { position: 431 } ] }
+  @UI: { lineItem: [ { position: 271, label: 'Document Type' } ], identification: [ { position: 431, label: 'Document Type' } ] }
   DocType;
 
-  @UI: { lineItem: [ { position: 272 } ], identification: [ { position: 432 } ] }
+  @UI: { lineItem: [ { position: 272, label: 'Reversal Document' } ], identification: [ { position: 432, label: 'Reversal Document' } ] }
   ReversalDoc;
 
   @UI.hidden: true
