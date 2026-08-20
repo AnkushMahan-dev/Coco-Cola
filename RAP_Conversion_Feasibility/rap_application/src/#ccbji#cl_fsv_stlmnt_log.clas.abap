@@ -235,21 +235,24 @@ CLASS /ccbji/cl_fsv_stlmnt_log IMPLEMENTATION.
             CONTINUE.
           ENDIF.
 
+          " Build the message text from its class/number/variables using the
+          " MESSAGE ... INTO language construct - NO function module, so it
+          " works on every release AND handles free-text messages (stored as
+          " message class '00' with the text carried in the variables).
+          " NB: we deliberately do NOT call BAL_DSP_MSG_MESSAGETEXT - that FM
+          " does not exist on this system (CALL_FUNCTION_NOT_FOUND), and the
+          " outer TRY/CATCH was swallowing that dump and returning an EMPTY
+          " log - the real cause of the 'No data' result.
           DATA lv_text TYPE c LENGTH 255.
           CLEAR lv_text.
-          CALL FUNCTION 'BAL_DSP_MSG_MESSAGETEXT'
-            EXPORTING
-              i_langu    = sy-langu
-              i_s_msg    = ls_msg
-            IMPORTING
-              e_msg_text = lv_text
-            EXCEPTIONS
-              OTHERS     = 1.
-          IF sy-subrc <> 0 OR lv_text IS INITIAL.
-            " Fall back to raw message text build from id/no/vars.
+          IF ls_msg-msgid IS NOT INITIAL.
             MESSAGE ID ls_msg-msgid TYPE 'I' NUMBER ls_msg-msgno
                     WITH ls_msg-msgv1 ls_msg-msgv2 ls_msg-msgv3 ls_msg-msgv4
                     INTO lv_text.
+          ELSE.
+            CONCATENATE ls_msg-msgv1 ls_msg-msgv2 ls_msg-msgv3 ls_msg-msgv4
+                   INTO lv_text SEPARATED BY space.
+            CONDENSE lv_text.
           ENDIF.
 
           lv_seq = lv_seq + 1.
