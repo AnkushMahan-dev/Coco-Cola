@@ -136,6 +136,13 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
              batch            TYPE c LENGTH 10,
              condtype         TYPE c LENGTH 4,
              origqty          TYPE p LENGTH 8 DECIMALS 3,
+             " Sales - extra classic columns (f_get_sales / f_split_value):
+             " Package group (MARA-/SCL/PKGGROUP), Money type + Set ID split
+             " out of /SCL/ORIG_QTY, and Sales amount (quan * amount for VL).
+             packagegroup     TYPE c LENGTH 4,
+             moneytype        TYPE c LENGTH 2,
+             setid            TYPE c LENGTH 3,
+             salesamt         TYPE p LENGTH 8 DECIMALS 2,
              " Check (ty_final3)
              checkid          TYPE c LENGTH 12,
              itemno           TYPE c LENGTH 6,
@@ -240,6 +247,15 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
                 iv_time TYPE tims
       EXPORTING ev_date TYPE dats
                 ev_time TYPE tims.
+
+    "! Split /SCL/ORIG_QTY (char17) into money code / set id / money type,
+    "! exactly like classic f_split_value: take the integer part before the
+    "! decimal point, left-pad with zeros to 9 digits, then slice
+    "! 0(4)=money code, 4(3)=set id, 7(2)=money type.
+    METHODS split_orig_qty
+      IMPORTING iv_qty        TYPE p
+      EXPORTING ev_money_type TYPE c
+                ev_set_id     TYPE c.
 
 ENDCLASS.
 
@@ -1007,6 +1023,12 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           WHERE matnr = @lt_it-matnr AND spras = @sy-langu
           INTO TABLE @DATA(lt_makt).
 
+        " Package group per material (classic reads MARA-/SCL/PKGGROUP).
+        SELECT matnr, /scl/pkggroup FROM mara
+          FOR ALL ENTRIES IN @lt_it
+          WHERE matnr = @lt_it-matnr
+          INTO TABLE @DATA(lt_mara).
+
         SELECT * FROM /dsd/hh_radelhd
           FOR ALL ENTRIES IN @it_tour
           WHERE tour_id = @it_tour-tourid
@@ -1054,6 +1076,17 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           READ TABLE lt_makt ASSIGNING FIELD-SYMBOL(<mk>) WITH KEY matnr = <i>-matnr.
           IF sy-subrc = 0. ls_s-materialdesc = <mk>-maktx. ENDIF.
 
+          READ TABLE lt_mara ASSIGNING FIELD-SYMBOL(<ma>) WITH KEY matnr = <i>-matnr.
+          IF sy-subrc = 0. ls_s-packagegroup = <ma>-/scl/pkggroup. ENDIF.
+
+          " Split /SCL/ORIG_QTY into money code(4)+set id(3)+money type(2)
+          " exactly like classic f_split_value: integer part left-padded to 9.
+          IF <i>-/scl/orig_qty IS NOT INITIAL.
+            split_orig_qty( EXPORTING iv_qty = <i>-/scl/orig_qty
+                            IMPORTING ev_money_type = ls_s-moneytype
+                                      ev_set_id     = ls_s-setid ).
+          ENDIF.
+
           READ TABLE lt_hd ASSIGNING FIELD-SYMBOL(<h>)
             WITH KEY tour_id = <i>-tour_id visit_id = <i>-visit_id hh_delvry = <i>-hh_delvry.
           IF sy-subrc = 0.
@@ -1068,6 +1101,12 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           IF sy-subrc = 0.
             ls_s-condtype = <cn>-cond.
             ls_s-amount   = conv_jpy( <cn>-amount ).
+          ENDIF.
+
+          " Sales amount = quantity * amount, only for Visit-List objects
+          " (obj type '20'), matching classic MOD-001.
+          IF ls_s-objtype = '20'.
+            ls_s-salesamt = ls_s-quantity * ls_s-amount.
           ENDIF.
 
           READ TABLE lt_cv ASSIGNING FIELD-SYMBOL(<cv>)
@@ -1667,6 +1706,33 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
       CATCH cx_root.
         rv_out = iv_in.
     ENDTRY.
+  ENDMETHOD.
+
+
+  METHOD split_orig_qty.
+    CLEAR: ev_money_type, ev_set_id.
+    DATA lv_int TYPE string.
+    DATA lv_dec TYPE string.
+    DATA(lv_split) = |{ iv_qty }|.
+    CONDENSE lv_split NO-GAPS.
+    " Keep only the integer part (before the decimal point).
+    SPLIT lv_split AT '.' INTO lv_int lv_dec.
+    " Strip a possible sign character so the digit slicing lines up.
+    REPLACE ALL OCCURRENCES OF '-' IN lv_int WITH ``.
+    " Left-pad with zeros to 9 digits (classic pads the integer part).
+    DATA(lv_len) = strlen( lv_int ).
+    IF lv_len < 9.
+      DATA(lv_pad) = 9 - lv_len.
+      DO lv_pad TIMES.
+        lv_int = |0{ lv_int }|.
+      ENDDO.
+    ELSEIF lv_len > 9.
+      " Guard against overflow: keep the least-significant 9 digits.
+      DATA(lv_off) = lv_len - 9.
+      lv_int = lv_int+lv_off.
+    ENDIF.
+    ev_set_id     = lv_int+4(3).   " next 3 chars after the money code
+    ev_money_type = lv_int+7(2).   " last 2 chars
   ENDMETHOD.
 
 

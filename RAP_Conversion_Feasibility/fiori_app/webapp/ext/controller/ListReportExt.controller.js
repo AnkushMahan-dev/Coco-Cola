@@ -95,8 +95,15 @@ sap.ui.define([
                  "SettlementDate", "Driver", "StatusId", "VisitId", "Customer", "EquipOwner",
                  "AccountGroup", "BusinessType", "Vkorg", "DistChannel", "Division", "VisitReason",
                  "ChangedOn", "ChangedTime", "ChangedBy", "ManProc", "VisitLog", "TourId"],
+        // Sales / Replenishment - full classic f_set_columns1 visible set.
+        // (Most of these were already populated by the backend but hidden by
+        // the previous short list, so they showed blank/absent; PackageGroup,
+        // MoneyType, SetId and SalesAmt are the newly added classic columns.)
         "SLRP": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "StatusId",
-                 "TourId", "VisitId", "ObjType", "DeliveryNo", "PoNumber"],
+                 "VisitId", "ObjType", "DeliveryNo", "DeliveryItem", "PoNumber", "PoDate",
+                 "Customer", "Material", "MaterialDesc", "Quantity", "Uom", "TaCode",
+                 "Reason", "Batch", "CondType", "Amount", "PackageGroup", "MoneyType",
+                 "SetId", "SalesAmt", "BusinessType", "EquipOwner", "Scenario"],
         "PAYT": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "StatusId",
                  "TourId", "PaymentMethod", "CardNo", "Amount", "Currency"],
         "CHCK": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "StatusId",

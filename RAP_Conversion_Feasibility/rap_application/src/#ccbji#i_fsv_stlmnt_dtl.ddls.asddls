@@ -245,6 +245,21 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       @EndUserText.label: 'Original Quantity'
       OrigQty          : abap.dec(15, 3);
 
+      // Sales - extra classic columns. Package group (MARA-/SCL/PKGGROUP),
+      // Money type + Set ID sliced out of /SCL/ORIG_QTY, and the derived
+      // Sales amount (quantity * amount for Visit-List objects).
+      @EndUserText.label: 'Package Group'
+      PackageGroup     : abap.char(4);
+
+      @EndUserText.label: 'Money Type'
+      MoneyType        : abap.char(2);
+
+      @EndUserText.label: 'Set ID'
+      SetId            : abap.char(3);
+
+      @EndUserText.label: 'Sales Amount'
+      SalesAmt         : abap.dec(15, 2);
+
       // Check Out/In (classic ty_final3)
       @EndUserText.label: 'Check ID'
       CheckId          : abap.char(12);
