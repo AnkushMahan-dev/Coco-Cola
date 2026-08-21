@@ -1179,6 +1179,12 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           ls_p-accountingdoc = <p>-oi_csh_post.
           ls_p-fiscyear      = <p>-fisc_year.
           ls_p-compcode      = <p>-compcod.
+          " A tour/visit has MANY payment records that would otherwise share the
+          " same RowKey (mode~tour~visit~~~~ship) and collapse to one row. Put
+          " the cash id (unique per payment) into the key slot so every payment
+          " row is distinct. Not shown as a column - only used to keep the key
+          " unique (the visible Cash ID column is CashId).
+          ls_p-slddocid      = <p>-cash_id.
 
           READ TABLE lt_cv ASSIGNING FIELD-SYMBOL(<cv>) WITH KEY tour_id = <p>-tour_id.
           IF sy-subrc = 0.
