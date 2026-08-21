@@ -473,17 +473,26 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             lv_mode = lt_parts[ 1 ].
           ENDIF.
           IF lv_mode = 'CASH'.
-            " CASH Object Page read. The classic cash-difference program is an
-            " external SUBMIT (/CCEJ/RDSDFSVR_CASH_DIFF) that is expensive AND
-            " can hard-dump (MESSAGE A) inside an OData $batch -> HTTP 500. So
-            " for the single-row by-key read we do NOT re-run it. Instead we
-            " reconstruct the one row straight from the RowKey (mode + visit id
-            " + shipment/visit list) and enrich only the cheap header fields
-            " (plant / route / date / driver) from master data. Amounts that
-            " ONLY the external program produces are left blank on the OP.
+            " CASH Object Page read. To show the FULL aggregated figures on the
+            " object page we re-run the external cash-difference program bounded
+            " to just this one visit list (same mechanism the list uses), then
+            " keep only the requested row. A header-only reconstruction from the
+            " RowKey (read_cash_key) is used as a fallback if the program yields
+            " nothing, so the page is never empty.
             lv_bykey_cash = abap_true.
             IF lines( lt_parts ) >= 3. lv_cash_visit = lt_parts[ 3 ]. ENDIF.
             IF lines( lt_parts ) >= 7. lv_cash_vlid  = lt_parts[ 7 ]. ENDIF.
+            " Resolve the tour(s) behind this visit list so read_cash can bound
+            " the external run to S_VLID (get_tours treats ShipmentNo as the
+            " visit list, matching leading-zero variants).
+            IF lv_cash_vlid IS NOT INITIAL.
+              DATA lr_cash_ship TYPE tt_r_tknum.
+              APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_cash_vlid ) TO lr_cash_ship.
+              lt_tour = get_tours(
+                it_shipment    = lr_cash_ship  it_route  = VALUE #( )
+                it_settle_date = VALUE #( )     it_plant  = VALUE #( )
+                it_status      = VALUE #( ) ).
+            ENDIF.
           ELSE.
             IF lines( lt_parts ) >= 2.
               APPEND VALUE #( sign = 'I' option = 'EQ' low = lt_parts[ 2 ] ) TO lr_tid.
@@ -514,8 +523,13 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           WHEN 'FSRD'.  lt_result = read_fsr(     it_tour = lt_tour ).
           WHEN 'CASH'.
             IF lv_bykey_cash = abap_true.
-              " Object Page single row: reconstruct from the key (no SUBMIT).
-              lt_result = read_cash_key( iv_vlid = lv_cash_vlid iv_visit = lv_cash_visit ).
+              " Object Page single row: run the external cash-difference program
+              " bounded to this one visit list so the page shows the full
+              " figures; fall back to a header-only reconstruction if empty.
+              lt_result = read_cash( it_tour = lt_tour ).
+              IF lt_result IS INITIAL.
+                lt_result = read_cash_key( iv_vlid = lv_cash_vlid iv_visit = lv_cash_visit ).
+              ENDIF.
             ELSE.
               " List: run the external cash-difference program as before.
               lt_result = read_cash( it_tour = lt_tour ).
@@ -1560,7 +1574,9 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           WHERE xblnr = @lt_vbak-xblnr
           INTO TABLE @DATA(lt_bkpf).
 
-        " ---- Material document (MKPF by header text = shipment) -----------
+        " ---- Material document (MATDOC by header text = shipment) ---------
+        " S/4HANA universal document table MATDOC (replaces MKPF/MSEG). It is
+        " at item level, so DISTINCT the header (MBLNR) per header text.
         DATA lr_bktxt TYPE RANGE OF bktxt.
         LOOP AT it_tour ASSIGNING FIELD-SYMBOL(<tb>).
           DATA lv_bktxt TYPE bktxt.
@@ -1570,10 +1586,14 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_bktxt ) TO lr_bktxt.
           ENDIF.
         ENDLOOP.
-        DATA lt_mkpf TYPE STANDARD TABLE OF mkpf.
+        TYPES: BEGIN OF ty_matdoc,
+                 mblnr TYPE mblnr,
+                 bktxt TYPE bktxt,
+               END OF ty_matdoc.
+        DATA lt_mkpf TYPE STANDARD TABLE OF ty_matdoc.
         IF lr_bktxt IS NOT INITIAL.
-          SELECT mblnr, bktxt FROM mkpf
-            WHERE bktxt IN @lr_bktxt INTO CORRESPONDING FIELDS OF TABLE @lt_mkpf.
+          SELECT DISTINCT mblnr, bktxt FROM matdoc
+            WHERE bktxt IN @lr_bktxt INTO TABLE @lt_mkpf.
         ENDIF.
 
         LOOP AT lt_vbak ASSIGNING FIELD-SYMBOL(<o>).
