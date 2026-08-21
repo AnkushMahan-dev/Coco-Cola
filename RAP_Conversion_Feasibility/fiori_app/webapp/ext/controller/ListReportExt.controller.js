@@ -104,7 +104,7 @@ sap.ui.define([
         "MONY": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "StatusId",
                  "SldDocId", "Amount"],
         "QUAN": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "StatusId",
-                 "SldDocId", "Material", "MaterialDesc", "QuanDiff"],
+                 "SldDocId", "Material", "MaterialDesc", "QuanDiff", "Uom"],
         "FSRD": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "StatusId",
                  "TourId", "Vkorg", "ReferenceDoc"],
         "CASH": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "StatusId",
