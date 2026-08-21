@@ -112,10 +112,21 @@ sap.ui.define([
                  "SldDocId", "Amount"],
         "QUAN": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "StatusId",
                  "SldDocId", "Material", "MaterialDesc", "QuanDiff", "Uom"],
+        // FSR Documents - full classic f_set_columns / f_get_shipment_data
+        // chain: sales order -> delivery -> invoice -> accounting / material doc.
         "FSRD": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "StatusId",
-                 "TourId", "Vkorg", "ReferenceDoc"],
-        "CASH": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "StatusId",
-                 "CashType", "Amount", "Currency"]
+                 "Driver", "SalesDoc", "SalesDocType", "OrderDate", "DeliveryNo",
+                 "DeliveryType", "DeliveryDate", "MaterialDoc", "BillingType", "InvoiceNo",
+                 "InvoiceDate", "DocType", "AccountingDoc", "PostingDate", "Vkorg",
+                 "ReferenceDoc", "TourId"],
+        // Route Summary - full classic f_set_columns4 aggregated cash figures.
+        "CASH": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "SummaryStatus",
+                 "VisitId", "Customer", "BusinessType", "EquipOwner", "TradingDiv", "VisitType",
+                 "Quantity", "Uom", "AggSampleQty", "SalesAmt", "PromoAmt", "AggFreeAmt",
+                 "FreeVendAmt", "SampleAmount", "NetAmt", "CashCollected", "Recharge", "Refund",
+                 "Receipt", "UncollectCash", "BankedAmt", "TheorCash", "TotCash", "EMoney",
+                 "Prepaid", "EmpId", "TotPayment", "DiffAmt", "DriverCredit", "DriverDebit",
+                 "DriverReceive", "DriverGive", "Driver"]
     };
 
     return ControllerExtension.extend("ccbji.otc.stlmnt.ext.controller.ListReportExt", {

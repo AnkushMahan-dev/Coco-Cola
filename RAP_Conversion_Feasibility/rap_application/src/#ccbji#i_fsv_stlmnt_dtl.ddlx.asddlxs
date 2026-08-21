@@ -303,6 +303,113 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
   @UI: { lineItem: [ { position: 276, label: 'Sales Amount' } ], identification: [ { position: 436, label: 'Sales Amount' } ] }
   SalesAmt;
 
+  // ---- FSR Documents : full document chain (classic f_get_shipment_data) ---
+  @UI: { lineItem: [ { position: 280, label: 'Sales Document' } ], identification: [ { position: 440, label: 'Sales Document' } ] }
+  SalesDoc;
+
+  @UI: { lineItem: [ { position: 281, label: 'Sales Doc. Type' } ], identification: [ { position: 441, label: 'Sales Doc. Type' } ] }
+  SalesDocType;
+
+  @UI: { lineItem: [ { position: 282, label: 'Order Date' } ], identification: [ { position: 442, label: 'Order Date' } ] }
+  OrderDate;
+
+  @UI: { lineItem: [ { position: 283, label: 'Delivery Type' } ], identification: [ { position: 443, label: 'Delivery Type' } ] }
+  DeliveryType;
+
+  @UI: { lineItem: [ { position: 284, label: 'Delivery Date' } ], identification: [ { position: 444, label: 'Delivery Date' } ] }
+  DeliveryDate;
+
+  @UI: { lineItem: [ { position: 285, label: 'Material Document' } ], identification: [ { position: 445, label: 'Material Document' } ] }
+  MaterialDoc;
+
+  @UI: { lineItem: [ { position: 286, label: 'Billing Type' } ], identification: [ { position: 446, label: 'Billing Type' } ] }
+  BillingType;
+
+  @UI: { lineItem: [ { position: 287, label: 'Invoice' } ], identification: [ { position: 447, label: 'Invoice' } ] }
+  InvoiceNo;
+
+  @UI: { lineItem: [ { position: 288, label: 'Invoice Date' } ], identification: [ { position: 448, label: 'Invoice Date' } ] }
+  InvoiceDate;
+
+  // ---- Route Summary (CASH) : full classic f_set_columns4 figures ----------
+  @UI: { lineItem: [ { position: 300, label: 'Summary Status' } ], identification: [ { position: 460, label: 'Summary Status' } ] }
+  SummaryStatus;
+
+  @UI: { lineItem: [ { position: 301, label: 'Trading Division' } ], identification: [ { position: 461, label: 'Trading Division' } ] }
+  TradingDiv;
+
+  @UI: { lineItem: [ { position: 302, label: 'Visit Type' } ], identification: [ { position: 462, label: 'Visit Type' } ] }
+  VisitType;
+
+  @UI: { lineItem: [ { position: 303, label: 'Employee ID' } ], identification: [ { position: 463, label: 'Employee ID' } ] }
+  EmpId;
+
+  @UI: { lineItem: [ { position: 304, label: 'Promotion Amount' } ], identification: [ { position: 464, label: 'Promotion Amount' } ] }
+  PromoAmt;
+
+  @UI: { lineItem: [ { position: 305, label: 'Aggregated Free Amount' } ], identification: [ { position: 465, label: 'Aggregated Free Amount' } ] }
+  AggFreeAmt;
+
+  @UI: { lineItem: [ { position: 306, label: 'Free Vend Amount' } ], identification: [ { position: 466, label: 'Free Vend Amount' } ] }
+  FreeVendAmt;
+
+  @UI: { lineItem: [ { position: 307, label: 'Aggregated Sample Qty' } ], identification: [ { position: 467, label: 'Aggregated Sample Qty' } ] }
+  AggSampleQty;
+
+  @UI: { lineItem: [ { position: 308, label: 'Sample Amount' } ], identification: [ { position: 468, label: 'Sample Amount' } ] }
+  SampleAmount;
+
+  @UI: { lineItem: [ { position: 309, label: 'Net Amount' } ], identification: [ { position: 469, label: 'Net Amount' } ] }
+  NetAmt;
+
+  @UI: { lineItem: [ { position: 310, label: 'Cash Collected' } ], identification: [ { position: 470, label: 'Cash Collected' } ] }
+  CashCollected;
+
+  @UI: { lineItem: [ { position: 311, label: 'Recharge' } ], identification: [ { position: 471, label: 'Recharge' } ] }
+  Recharge;
+
+  @UI: { lineItem: [ { position: 312, label: 'Refund' } ], identification: [ { position: 472, label: 'Refund' } ] }
+  Refund;
+
+  @UI: { lineItem: [ { position: 313, label: 'Receipt' } ], identification: [ { position: 473, label: 'Receipt' } ] }
+  Receipt;
+
+  @UI: { lineItem: [ { position: 314, label: 'Uncollected Cash' } ], identification: [ { position: 474, label: 'Uncollected Cash' } ] }
+  UncollectCash;
+
+  @UI: { lineItem: [ { position: 315, label: 'Banked Amount' } ], identification: [ { position: 475, label: 'Banked Amount' } ] }
+  BankedAmt;
+
+  @UI: { lineItem: [ { position: 316, label: 'Theoretical Cash' } ], identification: [ { position: 476, label: 'Theoretical Cash' } ] }
+  TheorCash;
+
+  @UI: { lineItem: [ { position: 317, label: 'Total Cash' } ], identification: [ { position: 477, label: 'Total Cash' } ] }
+  TotCash;
+
+  @UI: { lineItem: [ { position: 318, label: 'E-Money' } ], identification: [ { position: 478, label: 'E-Money' } ] }
+  EMoney;
+
+  @UI: { lineItem: [ { position: 319, label: 'Prepaid' } ], identification: [ { position: 479, label: 'Prepaid' } ] }
+  Prepaid;
+
+  @UI: { lineItem: [ { position: 320, label: 'Total Payment' } ], identification: [ { position: 480, label: 'Total Payment' } ] }
+  TotPayment;
+
+  @UI: { lineItem: [ { position: 321, label: 'Difference Amount' } ], identification: [ { position: 481, label: 'Difference Amount' } ] }
+  DiffAmt;
+
+  @UI: { lineItem: [ { position: 322, label: 'Driver Credit' } ], identification: [ { position: 482, label: 'Driver Credit' } ] }
+  DriverCredit;
+
+  @UI: { lineItem: [ { position: 323, label: 'Driver Debit' } ], identification: [ { position: 483, label: 'Driver Debit' } ] }
+  DriverDebit;
+
+  @UI: { lineItem: [ { position: 324, label: 'Driver Receive' } ], identification: [ { position: 484, label: 'Driver Receive' } ] }
+  DriverReceive;
+
+  @UI: { lineItem: [ { position: 325, label: 'Driver Give' } ], identification: [ { position: 485, label: 'Driver Give' } ] }
+  DriverGive;
+
   @UI.hidden: true
   Light;
 }

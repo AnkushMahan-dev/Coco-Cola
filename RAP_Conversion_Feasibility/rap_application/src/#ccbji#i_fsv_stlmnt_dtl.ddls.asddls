@@ -342,4 +342,111 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
 
       @EndUserText.label: 'Value Final Diff.'
       ValueFinDiff     : abap.dec(15, 2);
+
+      // ---- FSR Documents : full document chain (classic f_get_shipment_data)
+      @EndUserText.label: 'Sales Document'
+      SalesDoc         : abap.char(10);
+
+      @EndUserText.label: 'Sales Doc. Type'
+      SalesDocType     : abap.char(4);
+
+      @EndUserText.label: 'Order Date'
+      OrderDate        : abap.dats;
+
+      @EndUserText.label: 'Delivery Type'
+      DeliveryType     : abap.char(4);
+
+      @EndUserText.label: 'Delivery Date'
+      DeliveryDate     : abap.dats;
+
+      @EndUserText.label: 'Material Document'
+      MaterialDoc      : abap.char(10);
+
+      @EndUserText.label: 'Billing Type'
+      BillingType      : abap.char(4);
+
+      @EndUserText.label: 'Invoice'
+      InvoiceNo        : abap.char(10);
+
+      @EndUserText.label: 'Invoice Date'
+      InvoiceDate      : abap.dats;
+
+      // ---- Route Summary (CASH) : full classic f_set_columns4 figures -------
+      @EndUserText.label: 'Summary Status'
+      SummaryStatus    : abap.char(20);
+
+      @EndUserText.label: 'Trading Division'
+      TradingDiv       : abap.char(4);
+
+      @EndUserText.label: 'Visit Type'
+      VisitType        : abap.char(4);
+
+      @EndUserText.label: 'Employee ID'
+      EmpId            : abap.char(20);
+
+      @EndUserText.label: 'Promotion Amount'
+      PromoAmt         : abap.dec(15, 2);
+
+      @EndUserText.label: 'Aggregated Free Amount'
+      AggFreeAmt       : abap.dec(15, 2);
+
+      @EndUserText.label: 'Free Vend Amount'
+      FreeVendAmt      : abap.dec(15, 2);
+
+      @EndUserText.label: 'Aggregated Sample Qty'
+      AggSampleQty     : abap.dec(15, 3);
+
+      @EndUserText.label: 'Sample Amount'
+      SampleAmount     : abap.dec(15, 2);
+
+      @EndUserText.label: 'Net Amount'
+      NetAmt           : abap.dec(15, 2);
+
+      @EndUserText.label: 'Cash Collected'
+      CashCollected    : abap.dec(15, 2);
+
+      @EndUserText.label: 'Recharge'
+      Recharge         : abap.dec(15, 2);
+
+      @EndUserText.label: 'Refund'
+      Refund           : abap.dec(15, 2);
+
+      @EndUserText.label: 'Receipt'
+      Receipt          : abap.dec(15, 2);
+
+      @EndUserText.label: 'Uncollected Cash'
+      UncollectCash    : abap.dec(15, 2);
+
+      @EndUserText.label: 'Banked Amount'
+      BankedAmt        : abap.dec(15, 2);
+
+      @EndUserText.label: 'Theoretical Cash'
+      TheorCash        : abap.dec(15, 2);
+
+      @EndUserText.label: 'Total Cash'
+      TotCash          : abap.dec(15, 2);
+
+      @EndUserText.label: 'E-Money'
+      EMoney           : abap.dec(15, 2);
+
+      @EndUserText.label: 'Prepaid'
+      Prepaid          : abap.dec(15, 2);
+
+      @EndUserText.label: 'Total Payment'
+      TotPayment       : abap.dec(15, 2);
+
+      @EndUserText.label: 'Difference Amount'
+      DiffAmt          : abap.dec(15, 2);
+
+      @EndUserText.label: 'Driver Credit'
+      DriverCredit     : abap.dec(15, 2);
+
+      @EndUserText.label: 'Driver Debit'
+      DriverDebit      : abap.dec(15, 2);
+
+      @EndUserText.label: 'Driver Receive'
+      DriverReceive    : abap.dec(15, 2);
+
+      @EndUserText.label: 'Driver Give'
+      DriverGive       : abap.dec(15, 2);
 }

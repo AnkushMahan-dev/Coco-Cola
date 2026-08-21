@@ -174,6 +174,46 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
              quancheckin      TYPE p LENGTH 8 DECIMALS 3,
              quanfinaldiff    TYPE p LENGTH 8 DECIMALS 3,
              valuefindiff     TYPE p LENGTH 8 DECIMALS 2,
+             " FSR Documents - full document chain (classic f_get_shipment_data
+             " / f_build_itab / f_get_data): sales order, delivery, invoice,
+             " material doc and accounting doc.
+             salesdoc         TYPE c LENGTH 10,
+             salesdoctype     TYPE c LENGTH 4,
+             orderdate        TYPE dats,
+             deliverytype     TYPE c LENGTH 4,
+             deliverydate     TYPE dats,
+             materialdoc      TYPE c LENGTH 10,
+             billingtype      TYPE c LENGTH 4,
+             invoiceno        TYPE c LENGTH 10,
+             invoicedate      TYPE dats,
+             " Route Summary (CASH) - full classic f_set_columns4 figures,
+             " captured from the external cash-difference program's ALV.
+             summarystatus    TYPE c LENGTH 20,
+             tradingdiv       TYPE c LENGTH 4,
+             visittype        TYPE c LENGTH 4,
+             empid            TYPE c LENGTH 20,
+             promoamt         TYPE p LENGTH 8 DECIMALS 2,
+             aggfreeamt       TYPE p LENGTH 8 DECIMALS 2,
+             freevendamt      TYPE p LENGTH 8 DECIMALS 2,
+             aggsampleqty     TYPE p LENGTH 8 DECIMALS 3,
+             sampleamount     TYPE p LENGTH 8 DECIMALS 2,
+             netamt           TYPE p LENGTH 8 DECIMALS 2,
+             cashcollected    TYPE p LENGTH 8 DECIMALS 2,
+             recharge         TYPE p LENGTH 8 DECIMALS 2,
+             refund           TYPE p LENGTH 8 DECIMALS 2,
+             receipt          TYPE p LENGTH 8 DECIMALS 2,
+             uncollectcash    TYPE p LENGTH 8 DECIMALS 2,
+             bankedamt        TYPE p LENGTH 8 DECIMALS 2,
+             theorcash        TYPE p LENGTH 8 DECIMALS 2,
+             totcash          TYPE p LENGTH 8 DECIMALS 2,
+             emoney           TYPE p LENGTH 8 DECIMALS 2,
+             prepaid          TYPE p LENGTH 8 DECIMALS 2,
+             totpayment       TYPE p LENGTH 8 DECIMALS 2,
+             diffamt          TYPE p LENGTH 8 DECIMALS 2,
+             drivercredit     TYPE p LENGTH 8 DECIMALS 2,
+             driverdebit      TYPE p LENGTH 8 DECIMALS 2,
+             driverreceive    TYPE p LENGTH 8 DECIMALS 2,
+             drivergive       TYPE p LENGTH 8 DECIMALS 2,
            END OF ty_result,
            tt_result TYPE STANDARD TABLE OF ty_result WITH DEFAULT KEY.
 
@@ -1478,9 +1518,63 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         ENDLOOP.
         IF lr_xblnr IS INITIAL. RETURN. ENDIF.
 
-        SELECT vbeln, xblnr, auart, vkorg FROM vbak
+        SELECT vbeln, xblnr, auart, vkorg, erdat FROM vbak
           WHERE xblnr IN @lr_xblnr
           INTO TABLE @DATA(lt_vbak).
+        IF lt_vbak IS INITIAL. RETURN. ENDIF.
+
+        " ---- Document flow: sales order -> delivery / invoice --------------
+        " Classic f_build_itab reads the SD document flow (VBFA) to reach the
+        " delivery (category J/T) and the invoice / credit / debit memo
+        " (category M/O/P) for each sales order.
+        SELECT vbelv, vbeln, vbtyp_n FROM vbfa
+          FOR ALL ENTRIES IN @lt_vbak
+          WHERE vbelv = @lt_vbak-vbeln
+            AND ( vbtyp_n = 'J' OR vbtyp_n = 'T'
+               OR vbtyp_n = 'M' OR vbtyp_n = 'O' OR vbtyp_n = 'P' )
+          INTO TABLE @DATA(lt_flow).
+
+        DATA lt_dlv TYPE STANDARD TABLE OF likp.
+        DATA lt_inv TYPE STANDARD TABLE OF vbrk.
+        DATA lr_dlv TYPE RANGE OF vbeln_vl.
+        DATA lr_inv TYPE RANGE OF vbeln_vf.
+        LOOP AT lt_flow ASSIGNING FIELD-SYMBOL(<fl>).
+          IF <fl>-vbtyp_n = 'J' OR <fl>-vbtyp_n = 'T'.
+            APPEND VALUE #( sign = 'I' option = 'EQ' low = <fl>-vbeln ) TO lr_dlv.
+          ELSE.
+            APPEND VALUE #( sign = 'I' option = 'EQ' low = <fl>-vbeln ) TO lr_inv.
+          ENDIF.
+        ENDLOOP.
+        IF lr_dlv IS NOT INITIAL.
+          SELECT vbeln, lfart, lfdat FROM likp
+            WHERE vbeln IN @lr_dlv INTO CORRESPONDING FIELDS OF TABLE @lt_dlv.
+        ENDIF.
+        IF lr_inv IS NOT INITIAL.
+          SELECT vbeln, fkart, fkdat FROM vbrk
+            WHERE vbeln IN @lr_inv INTO CORRESPONDING FIELDS OF TABLE @lt_inv.
+        ENDIF.
+
+        " ---- Accounting document (BKPF by reference = shipment) -----------
+        SELECT belnr, bukrs, blart, gjahr, budat, xblnr FROM bkpf
+          FOR ALL ENTRIES IN @lt_vbak
+          WHERE xblnr = @lt_vbak-xblnr
+          INTO TABLE @DATA(lt_bkpf).
+
+        " ---- Material document (MKPF by header text = shipment) -----------
+        DATA lr_bktxt TYPE RANGE OF bktxt.
+        LOOP AT it_tour ASSIGNING FIELD-SYMBOL(<tb>).
+          DATA lv_bktxt TYPE bktxt.
+          lv_bktxt = <tb>-shipment.
+          SHIFT lv_bktxt LEFT DELETING LEADING '0'.
+          IF lv_bktxt IS NOT INITIAL.
+            APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_bktxt ) TO lr_bktxt.
+          ENDIF.
+        ENDLOOP.
+        DATA lt_mkpf TYPE STANDARD TABLE OF mkpf.
+        IF lr_bktxt IS NOT INITIAL.
+          SELECT mblnr, bktxt FROM mkpf
+            WHERE bktxt IN @lr_bktxt INTO CORRESPONDING FIELDS OF TABLE @lt_mkpf.
+        ENDIF.
 
         LOOP AT lt_vbak ASSIGNING FIELD-SYMBOL(<o>).
           " Find the tour whose SHIPMENT or VISIT LIST matches this xblnr
@@ -1503,23 +1597,86 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             ENDIF.
           ENDLOOP.
 
-          APPEND VALUE ty_result(
-            reportmode     = 'FSRD'
-            shipmentno     = COND #( WHEN lv_found = abap_true THEN <tf>-vlid )
-            tourid         = COND #( WHEN lv_found = abap_true THEN <tf>-tourid )
-            plant          = COND #( WHEN lv_found = abap_true THEN <tf>-werks )
-            route          = COND #( WHEN lv_found = abap_true THEN <tf>-route )
-            settlementdate = COND #( WHEN lv_found = abap_true THEN <tf>-date )
-            statusid       = COND #( WHEN lv_found = abap_true THEN <tf>-status_id )
-            vkorg          = <o>-vkorg
-            referencedoc   = <o>-xblnr
-            " Sales document number - REQUIRED so each FSR row has a UNIQUE
-            " RowKey (a tour has many sales docs that otherwise collapse to the
-            " same key, which OData V4 rejects as a duplicate key predicate and
-            " then shows NO data). Carried in deliveryno, which is part of the
-            " RowKey and unused for FSR.
-            deliveryno     = <o>-vbeln
-          ) TO rt.
+          DATA ls_f TYPE ty_result.
+          CLEAR ls_f.
+          ls_f-reportmode     = 'FSRD'.
+          ls_f-vkorg          = <o>-vkorg.
+          ls_f-referencedoc   = <o>-xblnr.
+          ls_f-salesdoc       = <o>-vbeln.
+          ls_f-salesdoctype   = <o>-auart.
+          ls_f-orderdate      = <o>-erdat.
+          " Sales document also carried in SldDocId, which is part of the
+          " RowKey - so each FSR sales-document row gets a UNIQUE key (many
+          " sales docs per tour otherwise collapse to one key, which OData V4
+          " rejects as a duplicate key predicate and then shows NO data).
+          ls_f-slddocid       = <o>-vbeln.
+          IF lv_found = abap_true.
+            ls_f-shipmentno     = <tf>-vlid.
+            ls_f-tourid         = <tf>-tourid.
+            ls_f-plant          = <tf>-werks.
+            ls_f-route          = <tf>-route.
+            ls_f-settlementdate = <tf>-date.
+            ls_f-statusid       = <tf>-status_id.
+          ENDIF.
+
+          " Delivery (first J/T in the flow) + delivery type / date.
+          READ TABLE lt_flow ASSIGNING <fl>
+            WITH KEY vbelv = <o>-vbeln vbtyp_n = 'J'.
+          IF sy-subrc <> 0.
+            READ TABLE lt_flow ASSIGNING <fl>
+              WITH KEY vbelv = <o>-vbeln vbtyp_n = 'T'.
+          ENDIF.
+          IF sy-subrc = 0.
+            ls_f-deliveryno = <fl>-vbeln.
+            READ TABLE lt_dlv ASSIGNING FIELD-SYMBOL(<dl>) WITH KEY vbeln = <fl>-vbeln.
+            IF sy-subrc = 0.
+              ls_f-deliverytype = <dl>-lfart.
+              ls_f-deliverydate = <dl>-lfdat.
+            ENDIF.
+          ENDIF.
+
+          " Invoice / credit / debit (first M/O/P in the flow) + billing info.
+          READ TABLE lt_flow ASSIGNING <fl>
+            WITH KEY vbelv = <o>-vbeln vbtyp_n = 'M'.
+          IF sy-subrc <> 0.
+            READ TABLE lt_flow ASSIGNING <fl>
+              WITH KEY vbelv = <o>-vbeln vbtyp_n = 'O'.
+          ENDIF.
+          IF sy-subrc <> 0.
+            READ TABLE lt_flow ASSIGNING <fl>
+              WITH KEY vbelv = <o>-vbeln vbtyp_n = 'P'.
+          ENDIF.
+          IF sy-subrc = 0.
+            ls_f-invoiceno = <fl>-vbeln.
+            READ TABLE lt_inv ASSIGNING FIELD-SYMBOL(<iv>) WITH KEY vbeln = <fl>-vbeln.
+            IF sy-subrc = 0.
+              ls_f-billingtype = <iv>-fkart.
+              ls_f-invoicedate = <iv>-fkdat.
+            ENDIF.
+          ENDIF.
+
+          " Accounting document for this shipment (BKPF by reference = xblnr).
+          READ TABLE lt_bkpf ASSIGNING FIELD-SYMBOL(<bk>) WITH KEY xblnr = <o>-xblnr.
+          IF sy-subrc = 0.
+            ls_f-accountingdoc = <bk>-belnr.
+            ls_f-compcode      = <bk>-bukrs.
+            ls_f-doctype       = <bk>-blart.
+            ls_f-fiscyear      = <bk>-gjahr.
+            ls_f-postingdate   = <bk>-budat.
+          ENDIF.
+
+          " Material document for this shipment (MKPF by header text = tknum).
+          IF lv_found = abap_true.
+            DATA lv_mb TYPE bktxt.
+            lv_mb = <tf>-shipment.
+            SHIFT lv_mb LEFT DELETING LEADING '0'.
+            READ TABLE lt_mkpf ASSIGNING FIELD-SYMBOL(<mb>) WITH KEY bktxt = lv_mb.
+            IF sy-subrc = 0.
+              ls_f-materialdoc = <mb>-mblnr.
+            ENDIF.
+          ENDIF.
+
+          APPEND ls_f TO rt.
         ENDLOOP.
       CATCH cx_root.
         CLEAR rt.
@@ -1582,6 +1739,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           ls_h-reportmode = 'CASH'.
           " Dynamic mapping - the external ALV column names (from the classic
           " f_set_columns4). Each is optional; ASSIGN COMPONENT is guarded.
+          " Header / dimension columns.
           move_comp( EXPORTING is_row = <row> iv_comp = 'VISITLIST'      CHANGING cv = ls_h-shipmentno ).
           move_comp( EXPORTING is_row = <row> iv_comp = 'MAIN_DRIVER'    CHANGING cv = ls_h-driver ).
           move_comp( EXPORTING is_row = <row> iv_comp = 'VISIT_ID'       CHANGING cv = ls_h-visitid ).
@@ -1591,15 +1749,41 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           move_comp( EXPORTING is_row = <row> iv_comp = 'SETTLMNT_DATE'  CHANGING cv = ls_h-settlementdate ).
           move_comp( EXPORTING is_row = <row> iv_comp = 'KATR4'          CHANGING cv = ls_h-businesstype ).
           move_comp( EXPORTING is_row = <row> iv_comp = '/SCL/EQUP_OWNR' CHANGING cv = ls_h-equipowner ).
-          move_comp( EXPORTING is_row = <row> iv_comp = 'VISIT_TYPE'     CHANGING cv = ls_h-visitreason ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'TRADING_DIV'    CHANGING cv = ls_h-tradingdiv ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'VISIT_TYPE'     CHANGING cv = ls_h-visittype ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'EMPID'          CHANGING cv = ls_h-empid ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'CASHTYPE'       CHANGING cv = ls_h-cashtype ).
+          " Quantities.
           move_comp( EXPORTING is_row = <row> iv_comp = 'AGG_QTY'        CHANGING cv = ls_h-quantity ).
           move_comp( EXPORTING is_row = <row> iv_comp = 'UOM'            CHANGING cv = ls_h-uom ).
-          move_comp( EXPORTING is_row = <row> iv_comp = 'SALES_AMT'      CHANGING cv = ls_h-amountco ).
-          move_comp( EXPORTING is_row = <row> iv_comp = 'TOT_CASH'       CHANGING cv = ls_h-amountci ).
-          move_comp( EXPORTING is_row = <row> iv_comp = 'TOT_PAYMENT'    CHANGING cv = ls_h-amountplan ).
-          move_comp( EXPORTING is_row = <row> iv_comp = 'DIFF_AMT'       CHANGING cv = ls_h-amount ).
-          move_comp( EXPORTING is_row = <row> iv_comp = 'SUMMARY_STATUS' CHANGING cv = ls_h-processingstatus ).
-          move_comp( EXPORTING is_row = <row> iv_comp = 'CASHTYPE'       CHANGING cv = ls_h-cashtype ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'AGG_SAMPLE_QTY' CHANGING cv = ls_h-aggsampleqty ).
+          " Amount figures - one dedicated column each (was collapsed into a
+          " few generic Amount* fields, which is why Route Summary looked wrong).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'SALES_AMT'      CHANGING cv = ls_h-salesamt ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'PROMO_AMT'      CHANGING cv = ls_h-promoamt ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'AGG_FREE_AMT'   CHANGING cv = ls_h-aggfreeamt ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'FREE_VEND_AMT'  CHANGING cv = ls_h-freevendamt ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'SAMPLE_AMOUNT'  CHANGING cv = ls_h-sampleamount ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'NET_AMT'        CHANGING cv = ls_h-netamt ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'CASH_COLLECTED' CHANGING cv = ls_h-cashcollected ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'RECHARGE'       CHANGING cv = ls_h-recharge ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'REFUND'         CHANGING cv = ls_h-refund ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'RECEIPT'        CHANGING cv = ls_h-receipt ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'UNCOLLECT_CASH' CHANGING cv = ls_h-uncollectcash ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'BANKED_AMT'     CHANGING cv = ls_h-bankedamt ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'THEOR_CASH'     CHANGING cv = ls_h-theorcash ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'TOT_CASH'       CHANGING cv = ls_h-totcash ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'EMONEY'         CHANGING cv = ls_h-emoney ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'PREPAID'        CHANGING cv = ls_h-prepaid ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'TOT_PAYMENT'    CHANGING cv = ls_h-totpayment ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'DIFF_AMT'       CHANGING cv = ls_h-diffamt ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'DRIVER_CREDIT'  CHANGING cv = ls_h-drivercredit ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'DRIVER_DEBIT'   CHANGING cv = ls_h-driverdebit ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'DRIVER_RECEIVE' CHANGING cv = ls_h-driverreceive ).
+          move_comp( EXPORTING is_row = <row> iv_comp = 'DRIVER_GIVE'    CHANGING cv = ls_h-drivergive ).
+          " Keep the generic Amount as the headline difference for compatibility.
+          ls_h-amount = ls_h-diffamt.
+          move_comp( EXPORTING is_row = <row> iv_comp = 'SUMMARY_STATUS' CHANGING cv = ls_h-summarystatus ).
 
           " Traffic light (LIGHT) -> Fiori criticality.
           DATA lv_light TYPE string.
