@@ -87,10 +87,11 @@ sap.ui.define([
     // mode shows only its own columns instead of the superset. ReportMode is
     // always shown; everything not listed for the current mode is hidden.
     var MODE_COLUMNS = {
-        "TOUR": ["ReportMode", "ExceptionText", "ProcessingStatus", "ShipmentNo", "Plant", "Route", "SettlementDate",
-                 "Driver", "CoDriver", "CreatedOn", "CreatedTime", "CreatedBy",
-                 "ChangedOn", "ChangedTime", "ChangedBy", "Scenario", "DriverSwap",
-                 "VisitGroup", "IDocNo", "TourId"],
+        "TOUR": ["ReportMode", "ExceptionText", "ChangedBy", "Scenario", "DriverSwap",
+                 "ProcessingStatus", "VisitGroup", "IDocNo", "TourId", "CheckIn", "CheckOut",
+                 "OrigEDate", "LogStatus", "ManRel", "Errors", "Warnings", "Origin", "Planned",
+                 "PresalesStatus", "TourStatus", "FsrStatus", "ShipmentNo", "Plant", "Route",
+                 "SettlementDate", "Driver", "CoDriver", "CreatedOn", "CreatedTime", "CreatedBy"],
         "VISI": ["ReportMode", "ExceptionText", "ProcessingStatus", "ShipmentNo", "CreatedOn", "Plant", "Route",
                  "SettlementDate", "Driver", "StatusId", "VisitId", "Customer", "EquipOwner",
                  "AccountGroup", "BusinessType", "Vkorg", "DistChannel", "Division", "VisitReason",
@@ -107,8 +108,9 @@ sap.ui.define([
         // Payment - one row per accounting-document line item (classic BSEG),
         // so the FI posting detail is shown alongside the payment header.
         "PAYT": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "StatusId",
-                 "VisitId", "Customer", "PaymentMethod", "PaymentDescr", "CashId", "CashType",
-                 "CardNo", "CheckNo", "Amount", "Currency", "AccountingDoc", "CompCode",
+                 "VisitId", "Customer", "Recipient", "BusinessType", "EquipOwner",
+                 "PaymentMethod", "PaymentDescr", "CashId", "CashType", "CardNo", "CheckNo",
+                 "Amount", "Currency", "DummyFlag", "Plog", "AccountingDoc", "CompCode",
                  "FiscYear", "DocType", "PostingDate", "PostingItem", "PostingKey",
                  "PostingAmount", "PostingCurrency", "ReversalDoc"],
         "CHCK": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "StatusId",

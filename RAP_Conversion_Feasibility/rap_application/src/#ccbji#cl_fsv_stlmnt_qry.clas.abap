@@ -222,6 +222,21 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
              driverdebit      TYPE p LENGTH 8 DECIMALS 2,
              driverreceive    TYPE p LENGTH 8 DECIMALS 2,
              drivergive       TYPE p LENGTH 8 DECIMALS 2,
+             " Tour Details extra columns (classic f_get_driver_details)
+             checkin          TYPE c LENGTH 1,
+             checkout         TYPE c LENGTH 1,
+             origedate        TYPE dats,
+             logstatus        TYPE c LENGTH 1,
+             manrel           TYPE c LENGTH 1,
+             origin           TYPE c LENGTH 1,
+             planned          TYPE c LENGTH 1,
+             presalesstatus   TYPE c LENGTH 1,
+             tourstatus       TYPE c LENGTH 4,
+             fsrstatus        TYPE c LENGTH 10,
+             " Payment extra columns (classic f_get_payment)
+             recipient        TYPE kunnr,
+             dummyflag        TYPE c LENGTH 1,
+             plog             TYPE c LENGTH 1,
            END OF ty_result,
            tt_result TYPE STANDARD TABLE OF ty_result WITH DEFAULT KEY.
 
@@ -875,7 +890,16 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           IF sy-subrc = 0.
             ls_r-driver           = <h>-driver.
             ls_r-codriver         = <h>-codriver.
-            ls_r-processingstatus = <h>-procstat.
+            " Raw RAHD processing status is the classic "Tour Status" (e.g. 30);
+            " the classic "Processing status" column (P/E/M/N) is DERIVED from
+            " the traffic light below.
+            ls_r-tourstatus       = <h>-procstat.
+            ls_r-checkin          = <h>-checkin.
+            ls_r-checkout         = <h>-checkout.
+            ls_r-manrel           = <h>-manrel.
+            ls_r-origin           = <h>-origin.
+            ls_r-presalesstatus   = <h>-pres_procstat.
+            ls_r-origedate        = <h>-exdat1.
             ls_r-createdby        = <h>-creuser.
             ls_r-changedby        = <h>-cnguser.
             " Created / Changed stamps converted UTC -> Japan local time.
@@ -933,6 +957,30 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             WHEN lc_red.    ls_r-exceptiontext = 'Error'.
             WHEN OTHERS.    CLEAR ls_r-exceptiontext.
           ENDCASE.
+
+          " FSR status = the settlement status id (e.g. 804090).
+          ls_r-fsrstatus = ls_r-statusid.
+          " Processing status is DERIVED from the traffic light (classic
+          " MOD-018): green = P (in process), red = E, yellow = M, gray = N.
+          CASE ls_r-light.
+            WHEN lc_green.  ls_r-processingstatus = 'P'.
+            WHEN lc_red.    ls_r-processingstatus = 'E'.
+            WHEN lc_yellow. ls_r-processingstatus = 'M'.
+            WHEN OTHERS.    ls_r-processingstatus = 'N'.
+          ENDCASE.
+          " Planned route from the visit group (classic auth mapping).
+          CASE ls_r-visitgroup.
+            WHEN 'CCEJVEND'. ls_r-planned = 'P'.
+            WHEN 'CCEJPLAN'. ls_r-planned = 'E'.
+            WHEN 'CCEJMANL'. ls_r-planned = 'U'.
+            WHEN OTHERS.     CLEAR ls_r-planned.
+          ENDCASE.
+          " Log status (simplified): success when green, else not processed.
+          IF ls_r-light = lc_green.
+            ls_r-logstatus = 'S'.
+          ELSE.
+            ls_r-logstatus = 'N'.
+          ENDIF.
 
           DATA lv_ref TYPE xblnr.
           lv_ref = <t>-vlid.
@@ -1340,7 +1388,17 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
               ls_p-postingkey      = <fi>-bschl.
               ls_p-postingamount   = conv_jpy( <fi>-pswbt ).
               ls_p-postingcurrency = <fi>-pswsl.
+              " Recipient = the posting line's customer/account (classic MOD-006:
+              " when settled, "Customer" becomes "Recipient" and the visit
+              " customer is shown separately in Customer).
+              ls_p-recipient       = <fi>-kunnr.
               IF ls_p-customer IS INITIAL. ls_p-customer = <fi>-kunnr. ENDIF.
+              " Payment log status: processed once settled (status >= 804000).
+              IF ls_p-statusid >= '804000'.
+                ls_p-plog = 'P'.
+              ELSE.
+                ls_p-plog = 'N'.
+              ENDIF.
               " Posting item into the (payment-unused) delivery slot so each
               " line item's RowKey is unique.
               ls_p-deliveryno      = |{ <fi>-buzei }|.

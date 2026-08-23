@@ -475,4 +475,45 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
 
       @EndUserText.label: 'Driver Give'
       DriverGive       : abap.dec(15, 2);
+
+      // ---- Tour Details extra columns (classic f_get_driver_details) --------
+      @EndUserText.label: 'Check-In'
+      CheckIn          : abap.char(1);
+
+      @EndUserText.label: 'Check-Out'
+      CheckOut         : abap.char(1);
+
+      @EndUserText.label: 'Orig. Execution Date'
+      OrigEDate        : abap.dats;
+
+      @EndUserText.label: 'Log Status'
+      LogStatus        : abap.char(1);
+
+      @EndUserText.label: 'Manual Release'
+      ManRel           : abap.char(1);
+
+      @EndUserText.label: 'Origin'
+      Origin           : abap.char(1);
+
+      @EndUserText.label: 'Planned'
+      Planned          : abap.char(1);
+
+      @EndUserText.label: 'Presales Status'
+      PresalesStatus   : abap.char(1);
+
+      @EndUserText.label: 'Tour Status'
+      TourStatus       : abap.char(4);
+
+      @EndUserText.label: 'FSR Status'
+      FsrStatus        : abap.char(10);
+
+      // ---- Payment extra columns (classic f_get_payment) --------------------
+      @EndUserText.label: 'Recipient'
+      Recipient        : kunnr;
+
+      @EndUserText.label: 'Dummy Account Flag'
+      DummyFlag        : abap.char(1);
+
+      @EndUserText.label: 'Payment Log'
+      Plog             : abap.char(1);
 }

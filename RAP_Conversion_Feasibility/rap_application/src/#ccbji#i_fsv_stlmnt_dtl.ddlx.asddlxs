@@ -374,6 +374,53 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
   @UI: { lineItem: [ { position: 297, label: 'Header Text' } ], identification: [ { position: 457, label: 'Header Text' } ] }
   HeaderText;
 
+  // ---- Tour Details extra columns ----------------------------------------
+  @UI: { lineItem: [ { position: 310, label: 'Check-In' } ], identification: [ { position: 510, label: 'Check-In' } ] }
+  CheckIn;
+
+  @UI: { lineItem: [ { position: 311, label: 'Check-Out' } ], identification: [ { position: 511, label: 'Check-Out' } ] }
+  CheckOut;
+
+  @UI: { lineItem: [ { position: 312, label: 'Orig. Execution Date' } ], identification: [ { position: 512, label: 'Orig. Execution Date' } ] }
+  OrigEDate;
+
+  @UI: { lineItem: [ { position: 313, label: 'Log Status' } ], identification: [ { position: 513, label: 'Log Status' } ] }
+  LogStatus;
+
+  @UI: { lineItem: [ { position: 314, label: 'Manual Release' } ], identification: [ { position: 514, label: 'Manual Release' } ] }
+  ManRel;
+
+  @UI: { lineItem: [ { position: 315, label: 'Origin' } ], identification: [ { position: 515, label: 'Origin' } ] }
+  Origin;
+
+  @UI: { lineItem: [ { position: 323, label: 'Errors' } ], identification: [ { position: 523, label: 'Errors' } ] }
+  Errors;
+
+  @UI: { lineItem: [ { position: 324, label: 'Warnings' } ], identification: [ { position: 524, label: 'Warnings' } ] }
+  Warnings;
+
+  @UI: { lineItem: [ { position: 316, label: 'Planned' } ], identification: [ { position: 516, label: 'Planned' } ] }
+  Planned;
+
+  @UI: { lineItem: [ { position: 317, label: 'Presales Status' } ], identification: [ { position: 517, label: 'Presales Status' } ] }
+  PresalesStatus;
+
+  @UI: { lineItem: [ { position: 318, label: 'Tour Status' } ], identification: [ { position: 518, label: 'Tour Status' } ] }
+  TourStatus;
+
+  @UI: { lineItem: [ { position: 319, label: 'FSR Status' } ], identification: [ { position: 519, label: 'FSR Status' } ] }
+  FsrStatus;
+
+  // ---- Payment extra columns ---------------------------------------------
+  @UI: { lineItem: [ { position: 320, label: 'Recipient' } ], identification: [ { position: 520, label: 'Recipient' } ] }
+  Recipient;
+
+  @UI: { lineItem: [ { position: 321, label: 'Dummy Account Flag' } ], identification: [ { position: 521, label: 'Dummy Account Flag' } ] }
+  DummyFlag;
+
+  @UI: { lineItem: [ { position: 322, label: 'Payment Log' } ], identification: [ { position: 522, label: 'Payment Log' } ] }
+  Plog;
+
   // ---- Route Summary (CASH) : full classic f_set_columns4 figures ----------
   @UI: { lineItem: [ { position: 300, label: 'Summary Status' } ], identification: [ { position: 460, label: 'Summary Status' } ] }
   SummaryStatus;
