@@ -1703,68 +1703,62 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           APPEND ls_f TO rt.
         ENDLOOP.
 
-        " ---- Separate FI-document rows (classic BKPF loop) ----------------
-        " The classic report appends the accounting document(s) of a shipment
-        " as their OWN rows (sales-order fields blank), so the record count
-        " includes them. One row per distinct accounting document.
+        " ---- One document row per shipment (classic BKPF / MKPF rows) -----
+        " The classic report appends the shipment's accounting document (BKPF)
+        " and material document as extra rows (sales-order fields blank). To
+        " reproduce the classic RECORD COUNT (e.g. 3 sales orders + 1 document
+        " row = 4) we emit exactly ONE combined document row per shipment
+        " carrying its accounting doc AND material doc, instead of one row per
+        " BKPF/MATDOC entry - the S/4 MATDOC table is item-level and BKPF may
+        " hold several postings, either of which would inflate the count.
         SORT lt_bkpf BY belnr.
         DELETE ADJACENT DUPLICATES FROM lt_bkpf COMPARING belnr.
-        LOOP AT lt_bkpf ASSIGNING FIELD-SYMBOL(<bk>).
+        LOOP AT it_tour ASSIGNING FIELD-SYMBOL(<tk>).
+          DATA lv_kx TYPE xblnr.
+          lv_kx = <tk>-shipment.  SHIFT lv_kx LEFT DELETING LEADING '0'.
+          DATA lv_kv TYPE xblnr.
+          lv_kv = <tk>-vlid.      SHIFT lv_kv LEFT DELETING LEADING '0'.
+
+          " First accounting document whose reference matches the shipment/VL.
+          DATA lv_have_doc TYPE abap_bool.
+          CLEAR lv_have_doc.
           DATA ls_fi TYPE ty_result.
           CLEAR ls_fi.
-          ls_fi-reportmode   = 'FSRD'.
-          ls_fi-referencedoc = <bk>-xblnr.
-          ls_fi-accountingdoc = <bk>-belnr.
-          ls_fi-compcode      = <bk>-bukrs.
-          ls_fi-doctype       = <bk>-blart.
-          ls_fi-fiscyear      = <bk>-gjahr.
-          ls_fi-postingdate   = <bk>-budat.
-          " Accounting doc into the key slot so the row is unique.
-          ls_fi-slddocid      = <bk>-belnr.
-          " Attach the header (visit list / plant / route / date) of the tour
-          " whose shipment or visit list matches this document's reference.
-          DATA lv_bx TYPE xblnr.
-          lv_bx = <bk>-xblnr.
-          SHIFT lv_bx LEFT DELETING LEADING '0'.
-          LOOP AT it_tour ASSIGNING FIELD-SYMBOL(<tk>).
-            DATA lv_ks TYPE xblnr.
-            lv_ks = <tk>-shipment.  SHIFT lv_ks LEFT DELETING LEADING '0'.
-            DATA lv_kv TYPE xblnr.
-            lv_kv = <tk>-vlid.      SHIFT lv_kv LEFT DELETING LEADING '0'.
-            IF lv_ks = lv_bx OR lv_kv = lv_bx.
-              ls_fi-shipmentno     = <tk>-vlid.
-              ls_fi-tourid         = <tk>-tourid.
-              ls_fi-plant          = <tk>-werks.
-              ls_fi-route          = <tk>-route.
-              ls_fi-settlementdate = <tk>-date.
-              ls_fi-statusid       = <tk>-status_id.
+          LOOP AT lt_bkpf ASSIGNING FIELD-SYMBOL(<bk>).
+            DATA lv_bx TYPE xblnr.
+            lv_bx = <bk>-xblnr.  SHIFT lv_bx LEFT DELETING LEADING '0'.
+            IF lv_bx = lv_kx OR lv_bx = lv_kv.
+              ls_fi-accountingdoc = <bk>-belnr.
+              ls_fi-compcode      = <bk>-bukrs.
+              ls_fi-doctype       = <bk>-blart.
+              ls_fi-fiscyear      = <bk>-gjahr.
+              ls_fi-postingdate   = <bk>-budat.
+              ls_fi-referencedoc  = <bk>-xblnr.
+              ls_fi-slddocid      = <bk>-belnr.
+              lv_have_doc = abap_true.
               EXIT.
             ENDIF.
           ENDLOOP.
-          APPEND ls_fi TO rt.
-        ENDLOOP.
 
-        " ---- Separate material-document rows (classic MKPF/MATDOC loop) ---
-        LOOP AT lt_mkpf ASSIGNING FIELD-SYMBOL(<mb>).
-          DATA ls_md TYPE ty_result.
-          CLEAR ls_md.
-          ls_md-reportmode  = 'FSRD'.
-          ls_md-materialdoc = <mb>-mblnr.
-          ls_md-slddocid    = <mb>-mblnr.
-          LOOP AT it_tour ASSIGNING <tk>.
-            DATA lv_ms TYPE bktxt.
-            lv_ms = <tk>-shipment.  SHIFT lv_ms LEFT DELETING LEADING '0'.
-            IF lv_ms = <mb>-bktxt.
-              ls_md-shipmentno     = <tk>-vlid.
-              ls_md-tourid         = <tk>-tourid.
-              ls_md-plant          = <tk>-werks.
-              ls_md-route          = <tk>-route.
-              ls_md-settlementdate = <tk>-date.
-              ls_md-statusid       = <tk>-status_id.
-              EXIT.
-            ENDIF.
-          ENDLOOP.
-          APPEND ls_md TO rt.
+          " First material document (MATDOC) for the shipment header text.
+          READ TABLE lt_mkpf ASSIGNING FIELD-SYMBOL(<mb>) WITH KEY bktxt = lv_kx.
+          IF sy-subrc = 0.
+            ls_fi-materialdoc = <mb>-mblnr.
+            IF ls_fi-slddocid IS INITIAL. ls_fi-slddocid = <mb>-mblnr. ENDIF.
+            lv_have_doc = abap_true.
+          ENDIF.
+
+          " Only emit the extra row when the shipment actually has a document.
+          IF lv_have_doc = abap_true.
+            ls_fi-reportmode     = 'FSRD'.
+            ls_fi-shipmentno     = <tk>-vlid.
+            ls_fi-tourid         = <tk>-tourid.
+            ls_fi-plant          = <tk>-werks.
+            ls_fi-route          = <tk>-route.
+            ls_fi-settlementdate = <tk>-date.
+            ls_fi-statusid       = <tk>-status_id.
+            APPEND ls_fi TO rt.
+          ENDIF.
         ENDLOOP.
       CATCH cx_root.
         CLEAR rt.
