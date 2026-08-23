@@ -447,6 +447,32 @@ sap.ui.define([
                     });
                 }
             );
+            // Give short-code columns a minimum width so their value does not
+            // wrap onto two lines (e.g. Plant "JWMR" -> "JWM/R").
+            var that = this;
+            setTimeout(function () { that._fixColumnWidths(); }, 400);
+        },
+
+        /**
+         * Set a comfortable minimum width on a few short-code columns so their
+         * values stay on one line. Guarded - any MDC API difference is ignored.
+         */
+        _fixColumnWidths: function () {
+            var oTable = this._oTable;
+            if (!oTable || !oTable.getColumns) {
+                return;
+            }
+            var oWidth = { "Plant": "6rem", "Route": "6rem", "StatusId": "7rem" };
+            try {
+                oTable.getColumns().forEach(function (oColumn) {
+                    var sKey = (oColumn.getPropertyKey && oColumn.getPropertyKey()) ||
+                               (oColumn.getDataProperty && oColumn.getDataProperty()) || "";
+                    if (oWidth[sKey] && oColumn.setWidth && oColumn.getWidth &&
+                        oColumn.getWidth() !== oWidth[sKey]) {
+                        oColumn.setWidth(oWidth[sKey]);
+                    }
+                });
+            } catch (e) { /* ignore */ }
         },
 
         /* =================================================================
