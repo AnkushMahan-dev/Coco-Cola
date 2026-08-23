@@ -406,11 +406,21 @@ sap.ui.define([
             aAllowed.forEach(function (sKey) { oAllowedSet[sKey] = true; });
 
             // Desired state from the FULL key union (so hidden mode columns can
-            // be ADDED), but in NATURAL order - we only toggle visibility and
-            // never reorder. Reordering columns is what disturbed the cell
-            // bindings; keeping the order stable avoids that churn.
-            var aItems = ALL_COLUMNS.map(function (sKey) {
-                return { key: sKey, visible: !!oAllowedSet[sKey] };
+            // be ADDED). The mode's own columns come FIRST, in mode order, so
+            // the relevant columns (Customer, Attrib. 4, Sales Doc ...) are up
+            // front and visible instead of scrolled off behind the shared
+            // header columns. Everything else is appended hidden. This DOES
+            // reorder, but it now runs ONLY on a real mode change (see the guard
+            // above) - not on every data load - so it no longer thrashes the
+            // table into blank cells.
+            var aItems = [];
+            aAllowed.forEach(function (sKey) {
+                aItems.push({ key: sKey, visible: true });
+            });
+            ALL_COLUMNS.forEach(function (sKey) {
+                if (!oAllowedSet[sKey]) {
+                    aItems.push({ key: sKey, visible: false });
+                }
             });
 
             sap.ui.require(

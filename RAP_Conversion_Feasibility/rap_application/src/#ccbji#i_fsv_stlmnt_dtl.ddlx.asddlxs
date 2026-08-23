@@ -184,7 +184,7 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
   @UI: { lineItem: [ { position: 232, label: 'Account Group' } ], identification: [ { position: 302, label: 'Account Group' } ] }
   AccountGroup;
 
-  @UI: { lineItem: [ { position: 233, label: 'Business Type' } ], identification: [ { position: 303, label: 'Business Type' } ] }
+  @UI: { lineItem: [ { position: 233, label: 'Attrib. 4' } ], identification: [ { position: 303, label: 'Attrib. 4' } ] }
   BusinessType;
 
   @UI: { lineItem: [ { position: 234, label: 'Equipment Owner' } ], identification: [ { position: 304, label: 'Equipment Owner' } ] }

@@ -146,7 +146,7 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       @EndUserText.label: 'Account Group'
       AccountGroup     : ktokd;
 
-      @EndUserText.label: 'Business Type'
+      @EndUserText.label: 'Attrib. 4'
       BusinessType     : katr4;
 
       // Plain character types: the original data elements (/scl/mdmd_equp_own,
