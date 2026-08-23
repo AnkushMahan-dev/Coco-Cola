@@ -143,6 +143,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
              moneytype        TYPE c LENGTH 2,
              setid            TYPE c LENGTH 3,
              salesamt         TYPE p LENGTH 8 DECIMALS 2,
+             attr3            TYPE c LENGTH 4,
              " Check (ty_final3)
              checkid          TYPE c LENGTH 12,
              itemno           TYPE c LENGTH 6,
@@ -1169,6 +1170,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             ls_s-customer = <cv>-custnr.
             READ TABLE lt_kna1 ASSIGNING FIELD-SYMBOL(<k>) WITH KEY kunnr = <cv>-custnr.
             IF sy-subrc = 0.
+              ls_s-attr3        = <k>-katr3.
               ls_s-businesstype = <k>-katr4.
               ls_s-equipowner   = <k>-/scl/equp_ownr.
             ENDIF.
@@ -1257,68 +1259,91 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         ENDIF.
 
         LOOP AT lt_pay ASSIGNING FIELD-SYMBOL(<p>).
-          DATA ls_p TYPE ty_result.
-          CLEAR ls_p.
-          ls_p-reportmode    = 'PAYT'.
-          ls_p-tourid        = <p>-tour_id.
-          ls_p-paymentmethod = <p>-paymt.
-          ls_p-paymentdescr  = <p>-paymt_descr.
-          ls_p-cardno        = <p>-cardnr.
-          ls_p-checkno       = <p>-checknr.
-          ls_p-amount        = conv_jpy( <p>-amount ).
-          ls_p-currency      = <p>-curr.
-          ls_p-cashid        = <p>-cash_id.
-          ls_p-cashtype      = <p>-cash_typ.
-          ls_p-accountingdoc = <p>-oi_csh_post.
-          ls_p-fiscyear      = <p>-fisc_year.
-          ls_p-compcode      = <p>-compcod.
-          " A tour/visit has MANY payment records that would otherwise share the
-          " same RowKey (mode~tour~visit~~~~ship) and collapse to one row. Put
-          " the cash id (unique per payment) into the key slot so every payment
-          " row is distinct. Not shown as a column - only used to keep the key
-          " unique (the visible Cash ID column is CashId).
-          ls_p-slddocid      = <p>-cash_id.
+          " Build the payment-header template ONCE per RAEC record. The classic
+          " f_get_payment then emits one output row PER accounting-document line
+          " item (BSEG / I_OperationalAcctgDocItem), which is why a single
+          " payment produces several rows (e.g. 4).
+          DATA ls_base TYPE ty_result.
+          CLEAR ls_base.
+          ls_base-reportmode    = 'PAYT'.
+          ls_base-tourid        = <p>-tour_id.
+          ls_base-paymentmethod = <p>-paymt.
+          ls_base-paymentdescr  = <p>-paymt_descr.
+          ls_base-cardno        = <p>-cardnr.
+          ls_base-checkno       = <p>-checknr.
+          ls_base-amount        = conv_jpy( <p>-amount ).
+          ls_base-currency      = <p>-curr.
+          ls_base-cashid        = <p>-cash_id.
+          ls_base-cashtype      = <p>-cash_typ.
+          ls_base-accountingdoc = <p>-oi_csh_post.
+          ls_base-fiscyear      = <p>-fisc_year.
+          ls_base-compcode      = <p>-compcod.
+          " Cash id in the key slot keeps payments of the same tour distinct;
+          " the posting item (below) makes each line item's row distinct too.
+          ls_base-slddocid      = <p>-cash_id.
 
           READ TABLE lt_cv ASSIGNING FIELD-SYMBOL(<cv>) WITH KEY tour_id = <p>-tour_id.
           IF sy-subrc = 0.
-            ls_p-customer = <cv>-custnr.
-            ls_p-visitid  = <cv>-visit_id.
+            ls_base-customer = <cv>-custnr.
+            ls_base-visitid  = <cv>-visit_id.
             READ TABLE lt_kna1 ASSIGNING FIELD-SYMBOL(<k>) WITH KEY kunnr = <cv>-custnr.
             IF sy-subrc = 0.
-              ls_p-businesstype = <k>-katr4.
-              ls_p-equipowner   = <k>-/scl/equp_ownr.
-            ENDIF.
-          ENDIF.
-
-          " FI posting-key detail from the CDS view (first item of the document).
-          IF <p>-oi_csh_post IS NOT INITIAL.
-            READ TABLE lt_item ASSIGNING FIELD-SYMBOL(<fi>)
-              WITH KEY bukrs = <p>-compcod belnr = <p>-oi_csh_post gjahr = <p>-fisc_year.
-            IF sy-subrc = 0.
-              ls_p-postingitem     = <fi>-buzei.
-              ls_p-postingkey      = <fi>-bschl.
-              ls_p-postingamount   = <fi>-pswbt.
-              ls_p-postingcurrency = <fi>-pswsl.
-              IF ls_p-customer IS INITIAL. ls_p-customer = <fi>-kunnr. ENDIF.
-            ENDIF.
-            READ TABLE lt_bkpf ASSIGNING FIELD-SYMBOL(<bk>)
-              WITH KEY bukrs = <p>-compcod belnr = <p>-oi_csh_post gjahr = <p>-fisc_year.
-            IF sy-subrc = 0.
-              ls_p-doctype     = <bk>-blart.
-              ls_p-postingdate = <bk>-budat.
-              ls_p-reversaldoc = <bk>-stblg.
+              ls_base-businesstype = <k>-katr4.
+              ls_base-equipowner   = <k>-/scl/equp_ownr.
             ENDIF.
           ENDIF.
 
           READ TABLE it_tour ASSIGNING FIELD-SYMBOL(<t>) WITH KEY tourid = <p>-tour_id.
           IF sy-subrc = 0.
-            ls_p-shipmentno     = <t>-vlid.
-            ls_p-plant          = <t>-werks.
-            ls_p-route          = <t>-route.
-            ls_p-settlementdate = <t>-date.
-            ls_p-statusid       = <t>-status_id.
+            ls_base-shipmentno     = <t>-vlid.
+            ls_base-plant          = <t>-werks.
+            ls_base-route          = <t>-route.
+            ls_base-settlementdate = <t>-date.
+            ls_base-statusid       = <t>-status_id.
           ENDIF.
-          APPEND ls_p TO rt.
+
+          " Document-level accounting fields (same for every line item).
+          IF <p>-oi_csh_post IS NOT INITIAL.
+            READ TABLE lt_bkpf ASSIGNING FIELD-SYMBOL(<bk>)
+              WITH KEY bukrs = <p>-compcod belnr = <p>-oi_csh_post gjahr = <p>-fisc_year.
+            IF sy-subrc = 0.
+              ls_base-doctype     = <bk>-blart.
+              ls_base-postingdate = <bk>-budat.
+              ls_base-reversaldoc = <bk>-stblg.
+            ENDIF.
+          ENDIF.
+
+          " Collect ALL line items of this payment's accounting document.
+          DATA lt_pitem LIKE lt_item.
+          CLEAR lt_pitem.
+          IF <p>-oi_csh_post IS NOT INITIAL.
+            LOOP AT lt_item ASSIGNING FIELD-SYMBOL(<fi>)
+              WHERE bukrs = <p>-compcod AND belnr = <p>-oi_csh_post
+                AND gjahr = <p>-fisc_year.
+              APPEND <fi> TO lt_pitem.
+            ENDLOOP.
+          ENDIF.
+
+          IF lt_pitem IS NOT INITIAL.
+            " One row per FI line item.
+            LOOP AT lt_pitem ASSIGNING <fi>.
+              DATA ls_p TYPE ty_result.
+              ls_p = ls_base.
+              ls_p-postingitem     = <fi>-buzei.
+              ls_p-postingkey      = <fi>-bschl.
+              ls_p-postingamount   = conv_jpy( <fi>-pswbt ).
+              ls_p-postingcurrency = <fi>-pswsl.
+              IF ls_p-customer IS INITIAL. ls_p-customer = <fi>-kunnr. ENDIF.
+              " Posting item into the (payment-unused) delivery slot so each
+              " line item's RowKey is unique.
+              ls_p-deliveryno      = |{ <fi>-buzei }|.
+              APPEND ls_p TO rt.
+            ENDLOOP.
+          ELSE.
+            " No accounting line items - emit the payment header alone
+            " (classic f_get_payment ELSE branch).
+            APPEND ls_base TO rt.
+          ENDIF.
         ENDLOOP.
       CATCH cx_root.
         CLEAR rt.
@@ -1675,28 +1700,71 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             ENDIF.
           ENDIF.
 
-          " Accounting document for this shipment (BKPF by reference = xblnr).
-          READ TABLE lt_bkpf ASSIGNING FIELD-SYMBOL(<bk>) WITH KEY xblnr = <o>-xblnr.
-          IF sy-subrc = 0.
-            ls_f-accountingdoc = <bk>-belnr.
-            ls_f-compcode      = <bk>-bukrs.
-            ls_f-doctype       = <bk>-blart.
-            ls_f-fiscyear      = <bk>-gjahr.
-            ls_f-postingdate   = <bk>-budat.
-          ENDIF.
-
-          " Material document for this shipment (MKPF by header text = tknum).
-          IF lv_found = abap_true.
-            DATA lv_mb TYPE bktxt.
-            lv_mb = <tf>-shipment.
-            SHIFT lv_mb LEFT DELETING LEADING '0'.
-            READ TABLE lt_mkpf ASSIGNING FIELD-SYMBOL(<mb>) WITH KEY bktxt = lv_mb.
-            IF sy-subrc = 0.
-              ls_f-materialdoc = <mb>-mblnr.
-            ENDIF.
-          ENDIF.
-
           APPEND ls_f TO rt.
+        ENDLOOP.
+
+        " ---- Separate FI-document rows (classic BKPF loop) ----------------
+        " The classic report appends the accounting document(s) of a shipment
+        " as their OWN rows (sales-order fields blank), so the record count
+        " includes them. One row per distinct accounting document.
+        SORT lt_bkpf BY belnr.
+        DELETE ADJACENT DUPLICATES FROM lt_bkpf COMPARING belnr.
+        LOOP AT lt_bkpf ASSIGNING FIELD-SYMBOL(<bk>).
+          DATA ls_fi TYPE ty_result.
+          CLEAR ls_fi.
+          ls_fi-reportmode   = 'FSRD'.
+          ls_fi-referencedoc = <bk>-xblnr.
+          ls_fi-accountingdoc = <bk>-belnr.
+          ls_fi-compcode      = <bk>-bukrs.
+          ls_fi-doctype       = <bk>-blart.
+          ls_fi-fiscyear      = <bk>-gjahr.
+          ls_fi-postingdate   = <bk>-budat.
+          " Accounting doc into the key slot so the row is unique.
+          ls_fi-slddocid      = <bk>-belnr.
+          " Attach the header (visit list / plant / route / date) of the tour
+          " whose shipment or visit list matches this document's reference.
+          DATA lv_bx TYPE xblnr.
+          lv_bx = <bk>-xblnr.
+          SHIFT lv_bx LEFT DELETING LEADING '0'.
+          LOOP AT it_tour ASSIGNING FIELD-SYMBOL(<tk>).
+            DATA lv_ks TYPE xblnr.
+            lv_ks = <tk>-shipment.  SHIFT lv_ks LEFT DELETING LEADING '0'.
+            DATA lv_kv TYPE xblnr.
+            lv_kv = <tk>-vlid.      SHIFT lv_kv LEFT DELETING LEADING '0'.
+            IF lv_ks = lv_bx OR lv_kv = lv_bx.
+              ls_fi-shipmentno     = <tk>-vlid.
+              ls_fi-tourid         = <tk>-tourid.
+              ls_fi-plant          = <tk>-werks.
+              ls_fi-route          = <tk>-route.
+              ls_fi-settlementdate = <tk>-date.
+              ls_fi-statusid       = <tk>-status_id.
+              EXIT.
+            ENDIF.
+          ENDLOOP.
+          APPEND ls_fi TO rt.
+        ENDLOOP.
+
+        " ---- Separate material-document rows (classic MKPF/MATDOC loop) ---
+        LOOP AT lt_mkpf ASSIGNING FIELD-SYMBOL(<mb>).
+          DATA ls_md TYPE ty_result.
+          CLEAR ls_md.
+          ls_md-reportmode  = 'FSRD'.
+          ls_md-materialdoc = <mb>-mblnr.
+          ls_md-slddocid    = <mb>-mblnr.
+          LOOP AT it_tour ASSIGNING <tk>.
+            DATA lv_ms TYPE bktxt.
+            lv_ms = <tk>-shipment.  SHIFT lv_ms LEFT DELETING LEADING '0'.
+            IF lv_ms = <mb>-bktxt.
+              ls_md-shipmentno     = <tk>-vlid.
+              ls_md-tourid         = <tk>-tourid.
+              ls_md-plant          = <tk>-werks.
+              ls_md-route          = <tk>-route.
+              ls_md-settlementdate = <tk>-date.
+              ls_md-statusid       = <tk>-status_id.
+              EXIT.
+            ENDIF.
+          ENDLOOP.
+          APPEND ls_md TO rt.
         ENDLOOP.
       CATCH cx_root.
         CLEAR rt.

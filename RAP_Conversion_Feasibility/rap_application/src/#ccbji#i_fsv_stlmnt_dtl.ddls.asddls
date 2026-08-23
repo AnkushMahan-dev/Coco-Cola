@@ -260,6 +260,10 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       @EndUserText.label: 'Sales Amount'
       SalesAmt         : abap.dec(15, 2);
 
+      // Customer attribute 3 (KNA1-KATR3), classic Sales "Attr. 3" column.
+      @EndUserText.label: 'Attr. 3'
+      Attr3            : abap.char(4);
+
       // Check Out/In (classic ty_final3)
       @EndUserText.label: 'Check ID'
       CheckId          : abap.char(12);

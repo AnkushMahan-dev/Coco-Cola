@@ -199,7 +199,7 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
   @UI: { lineItem: [ { position: 242, label: 'Transaction Code' } ], identification: [ { position: 402, label: 'Transaction Code' } ] }
   TaCode;
 
-  @UI: { lineItem: [ { position: 243, label: 'Reason' } ], identification: [ { position: 403, label: 'Reason' } ] }
+  @UI: { lineItem: [ { position: 243, label: 'Removal Indicator' } ], identification: [ { position: 403, label: 'Removal Indicator' } ] }
   Reason;
 
   @UI: { lineItem: [ { position: 244, label: 'Batch' } ], identification: [ { position: 404, label: 'Batch' } ] }
@@ -302,6 +302,9 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
 
   @UI: { lineItem: [ { position: 276, label: 'Sales Amount' } ], identification: [ { position: 436, label: 'Sales Amount' } ] }
   SalesAmt;
+
+  @UI: { lineItem: [ { position: 277, label: 'Attr. 3' } ], identification: [ { position: 437, label: 'Attr. 3' } ] }
+  Attr3;
 
   // ---- FSR Documents : full document chain (classic f_get_shipment_data) ---
   @UI: { lineItem: [ { position: 280, label: 'Sales Document' } ], identification: [ { position: 440, label: 'Sales Document' } ] }
