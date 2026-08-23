@@ -187,6 +187,13 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
              billingtype      TYPE c LENGTH 4,
              invoiceno        TYPE c LENGTH 10,
              invoicedate      TYPE dats,
+             refkey           TYPE c LENGTH 20,
+             cominv           TYPE c LENGTH 10,
+             cominvtype       TYPE c LENGTH 4,
+             cominvdate       TYPE dats,
+             comfidoc         TYPE c LENGTH 10,
+             comfitype        TYPE c LENGTH 4,
+             comfidate        TYPE dats,
              " Route Summary (CASH) - full classic f_set_columns4 figures,
              " captured from the external cash-difference program's ALV.
              summarystatus    TYPE c LENGTH 20,
@@ -1718,15 +1725,16 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           ENDLOOP.
         ENDIF.
 
-        " ---- Document flow: sales order -> delivery / invoice --------------
-        " Classic f_build_itab reads the SD document flow (VBFA) to reach the
-        " delivery (category J/T) and the invoice / credit / debit memo
-        " (category M/O/P) for each sales order.
+        " ---- Document flow: sales order -> delivery / invoice / intercompany
+        " Classic f_build_itab reads the SD document flow (VBFA): delivery
+        " (category J/T), invoice / credit / debit memo (M/O/P) and the
+        " intercompany invoice (category '5').
         SELECT vbelv, vbeln, vbtyp_n FROM vbfa
           FOR ALL ENTRIES IN @lt_vbak
           WHERE vbelv = @lt_vbak-vbeln
             AND ( vbtyp_n = 'J' OR vbtyp_n = 'T'
-               OR vbtyp_n = 'M' OR vbtyp_n = 'O' OR vbtyp_n = 'P' )
+               OR vbtyp_n = 'M' OR vbtyp_n = 'O' OR vbtyp_n = 'P'
+               OR vbtyp_n = '5' )
           INTO TABLE @DATA(lt_flow).
 
         DATA lt_dlv TYPE STANDARD TABLE OF likp.
@@ -1749,11 +1757,25 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             WHERE vbeln IN @lr_inv INTO CORRESPONDING FIELDS OF TABLE @lt_inv.
         ENDIF.
 
-        " ---- Accounting document (BKPF by reference = shipment) -----------
-        SELECT belnr, bukrs, blart, gjahr, budat, xblnr FROM bkpf
-          FOR ALL ENTRIES IN @lt_vbak
-          WHERE xblnr = @lt_vbak-xblnr
-          INTO TABLE @DATA(lt_bkpf).
+        " ---- FI document by AWKEY = invoice number (classic MOD-001) -------
+        " The classic finds the FI/accounting document via BKPF-AWKEY = the
+        " billing document number (NOT the shipment reference). AWKEY is stored
+        " leading-zero-stripped, so we match on the stripped invoice numbers.
+        DATA lr_awk TYPE RANGE OF awkey.
+        LOOP AT lr_inv ASSIGNING FIELD-SYMBOL(<ri>).
+          DATA lv_awk TYPE awkey.
+          lv_awk = <ri>-low.
+          SHIFT lv_awk LEFT DELETING LEADING '0'.
+          IF lv_awk IS NOT INITIAL.
+            APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_awk ) TO lr_awk.
+          ENDIF.
+        ENDLOOP.
+        DATA lt_bkpf TYPE STANDARD TABLE OF bkpf.
+        IF lr_awk IS NOT INITIAL.
+          SELECT bukrs, belnr, gjahr, blart, budat, awkey FROM bkpf
+            WHERE awkey IN @lr_awk
+            INTO CORRESPONDING FIELDS OF TABLE @lt_bkpf.
+        ENDIF.
 
         " ---- Material document (MATDOC by header text = shipment) ---------
         " S/4HANA universal document table MATDOC (replaces MKPF/MSEG). It is
@@ -1886,6 +1908,40 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             IF sy-subrc = 0.
               ls_f-billingtype = <iv>-fkart.
               ls_f-invoicedate = <iv>-fkdat.
+            ENDIF.
+            " FI / accounting document via BKPF-AWKEY = invoice number
+            " (classic MOD-001), leading-zero stripped. This is the correct
+            " FI document / doc type / posting date (NOT the shipment BKPF).
+            DATA lv_iawk TYPE awkey.
+            lv_iawk = <fl>-vbeln.  SHIFT lv_iawk LEFT DELETING LEADING '0'.
+            ls_f-refkey = lv_iawk.
+            READ TABLE lt_bkpf ASSIGNING FIELD-SYMBOL(<bi>) WITH KEY awkey = lv_iawk.
+            IF sy-subrc = 0.
+              ls_f-accountingdoc = <bi>-belnr.
+              ls_f-compcode      = <bi>-bukrs.
+              ls_f-doctype       = <bi>-blart.
+              ls_f-fiscyear      = <bi>-gjahr.
+              ls_f-postingdate   = <bi>-budat.
+            ENDIF.
+          ENDIF.
+
+          " Intercompany invoice (flow category '5') + intercompany FI.
+          READ TABLE lt_flow ASSIGNING <fl>
+            WITH KEY vbelv = <o>-vbeln vbtyp_n = '5'.
+          IF sy-subrc = 0.
+            DATA lv_cawk TYPE awkey.
+            lv_cawk = <fl>-vbeln.  SHIFT lv_cawk LEFT DELETING LEADING '0'.
+            ls_f-cominv = lv_cawk.
+            READ TABLE lt_inv ASSIGNING FIELD-SYMBOL(<ci>) WITH KEY vbeln = <fl>-vbeln.
+            IF sy-subrc = 0.
+              ls_f-cominvtype = <ci>-fkart.
+              ls_f-cominvdate = <ci>-fkdat.
+            ENDIF.
+            READ TABLE lt_bkpf ASSIGNING FIELD-SYMBOL(<cb>) WITH KEY awkey = lv_cawk.
+            IF sy-subrc = 0.
+              ls_f-comfidoc  = <cb>-belnr.
+              ls_f-comfitype = <cb>-blart.
+              ls_f-comfidate = <cb>-budat.
             ENDIF.
           ENDIF.
 

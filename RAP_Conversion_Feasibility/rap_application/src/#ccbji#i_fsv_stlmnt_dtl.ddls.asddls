@@ -375,6 +375,28 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       @EndUserText.label: 'Invoice Date'
       InvoiceDate      : abap.dats;
 
+      // FSR - reference key + intercompany invoice / FI (classic MOD-014/029)
+      @EndUserText.label: 'Reference Key'
+      RefKey           : abap.char(20);
+
+      @EndUserText.label: 'Intercompany Invoice'
+      ComInv           : abap.char(10);
+
+      @EndUserText.label: 'Intercomp. Invoice Type'
+      ComInvType       : abap.char(4);
+
+      @EndUserText.label: 'Intercomp. Invoice Date'
+      ComInvDate       : abap.dats;
+
+      @EndUserText.label: 'Intercompany FI Document'
+      ComFiDoc         : abap.char(10);
+
+      @EndUserText.label: 'Intercompany FI Type'
+      ComFiType        : abap.char(4);
+
+      @EndUserText.label: 'Intercompany FI Date'
+      ComFiDate        : abap.dats;
+
       // ---- Route Summary (CASH) : full classic f_set_columns4 figures -------
       @EndUserText.label: 'Summary Status'
       SummaryStatus    : abap.char(20);

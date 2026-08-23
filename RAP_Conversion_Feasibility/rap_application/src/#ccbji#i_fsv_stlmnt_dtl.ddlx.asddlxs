@@ -350,6 +350,27 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
   @UI: { lineItem: [ { position: 289, label: 'Transp. Planning Point' } ], identification: [ { position: 449, label: 'Transp. Planning Point' } ] }
   Tpp;
 
+  @UI: { lineItem: [ { position: 290, label: 'Reference Key' } ], identification: [ { position: 450, label: 'Reference Key' } ] }
+  RefKey;
+
+  @UI: { lineItem: [ { position: 291, label: 'Intercompany Invoice' } ], identification: [ { position: 451, label: 'Intercompany Invoice' } ] }
+  ComInv;
+
+  @UI: { lineItem: [ { position: 292, label: 'Intercomp. Invoice Type' } ], identification: [ { position: 452, label: 'Intercomp. Invoice Type' } ] }
+  ComInvType;
+
+  @UI: { lineItem: [ { position: 293, label: 'Intercomp. Invoice Date' } ], identification: [ { position: 453, label: 'Intercomp. Invoice Date' } ] }
+  ComInvDate;
+
+  @UI: { lineItem: [ { position: 294, label: 'Intercompany FI Document' } ], identification: [ { position: 454, label: 'Intercompany FI Document' } ] }
+  ComFiDoc;
+
+  @UI: { lineItem: [ { position: 295, label: 'Intercompany FI Type' } ], identification: [ { position: 455, label: 'Intercompany FI Type' } ] }
+  ComFiType;
+
+  @UI: { lineItem: [ { position: 296, label: 'Intercompany FI Date' } ], identification: [ { position: 456, label: 'Intercompany FI Date' } ] }
+  ComFiDate;
+
   // ---- Route Summary (CASH) : full classic f_set_columns4 figures ----------
   @UI: { lineItem: [ { position: 300, label: 'Summary Status' } ], identification: [ { position: 460, label: 'Summary Status' } ] }
   SummaryStatus;
