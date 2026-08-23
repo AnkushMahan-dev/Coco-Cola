@@ -1672,10 +1672,23 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         DATA lv_fkatr4    TYPE katr4.
         DATA lv_fkatr3    TYPE katr3.
         DATA lv_fequp     TYPE c LENGTH 2.
-        DATA lv_fdriver   TYPE kunnr.
-        " Driver dummy account = the tour's sales orders' sold-to (all equal).
-        READ TABLE lt_vbak ASSIGNING FIELD-SYMBOL(<vd>) INDEX 1.
-        IF sy-subrc = 0. lv_fdriver = <vd>-kunnr. ENDIF.
+        " Driver = the tour's driver from the shipment header VTTK-/BEV1/RPFAR1
+        " (classic FSR Driver column). It is the SAME for every row of the tour,
+        " unlike VBAK-KUNNR which is the per-order sold-to and varies.
+        DATA lr_tkn TYPE RANGE OF tknum.
+        LOOP AT it_tour ASSIGNING FIELD-SYMBOL(<tt>).
+          IF <tt>-shipment IS NOT INITIAL.
+            APPEND VALUE #( sign = 'I' option = 'EQ' low = <tt>-shipment ) TO lr_tkn.
+          ENDIF.
+        ENDLOOP.
+        DATA lv_fdriver TYPE /dsd/rp_driver1.
+        IF lr_tkn IS NOT INITIAL.
+          SELECT tknum, /bev1/rpfar1 FROM vttk
+            WHERE tknum IN @lr_tkn
+            INTO TABLE @DATA(lt_vttk).
+          READ TABLE lt_vttk ASSIGNING FIELD-SYMBOL(<vt0>) INDEX 1.
+          IF sy-subrc = 0. lv_fdriver = <vt0>-/bev1/rpfar1. ENDIF.
+        ENDIF.
         IF lt_fcv IS NOT INITIAL.
           SELECT kunnr, katr3, katr4, /scl/equp_ownr FROM kna1
             FOR ALL ENTRIES IN @lt_fcv
@@ -1784,10 +1797,9 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           ls_f-salesdoc       = <o>-vbeln.
           ls_f-salesdoctype   = <o>-auart.
           ls_f-orderdate      = <o>-erdat.
-          " Driver = the sales order's sold-to (VBAK-KUNNR) = the driver's dummy
-          " account (classic FSR Driver column). Customer / Attrib. 4 come from
-          " the visit record instead (resolved above).
-          ls_f-driver         = <o>-kunnr.
+          " Driver = the tour driver (VTTK-/BEV1/RPFAR1), constant per tour.
+          " Customer / Attrib. 4 come from the visit record (resolved above).
+          ls_f-driver         = lv_fdriver.
           ls_f-customer       = lv_fcustomer.
           ls_f-businesstype   = lv_fkatr4.
           ls_f-attr3          = lv_fkatr3.
