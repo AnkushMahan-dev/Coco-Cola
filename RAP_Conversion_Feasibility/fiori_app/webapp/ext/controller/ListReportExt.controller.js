@@ -178,7 +178,11 @@ sap.ui.define([
                 this._setupModeDropdown();
                 this._setupDisplayLogs();
                 this._applyModeVisibility();
-                this._applyModeColumns();
+                // Initial apply, plus one deferred forced re-assert once the
+                // table and any saved variant have settled.
+                this._applyModeColumns(true);
+                var that = this;
+                setTimeout(function () { that._applyModeColumns(true); }, 1500);
                 return;
             }
             if (iAttempt < 50) {
@@ -224,17 +228,12 @@ sap.ui.define([
             var that = this;
             var fnApply = function () {
                 that._applyModeVisibility();
+                // Apply columns only when the mode changed (guarded inside), then
+                // ONE deferred forced re-assert to beat a late variant apply.
+                // Deliberately NOT re-applied on every data load - that thrashed
+                // the MDC columns and produced rows with blank cells.
                 that._applyModeColumns();
-                that._attachTableDataHook();
-                // Re-apply on several delays: on Go the MDC table (re)creates its
-                // columns asynchronously, the header labels arrive asynchronously
-                // from $metadata, AND the saved variant (e.g. "Standard*") applies
-                // its own column state after our first pass - so we must re-assert
-                // the per-mode columns a few times after the table settles. These
-                // passes are idempotent (same target state) so cause no flicker.
-                [300, 800, 1500, 3000, 5000].forEach(function (iDelay) {
-                    setTimeout(function () { that._applyModeColumns(); }, iDelay);
-                });
+                setTimeout(function () { that._applyModeColumns(true); }, 1200);
             };
 
             // Value of any filter (including ReportMode) changed.
@@ -250,30 +249,6 @@ sap.ui.define([
             if (oCondModel && oCondModel.attachPropertyChange) {
                 oCondModel.attachPropertyChange(fnApply);
             }
-        },
-
-        /**
-         * Re-assert the per-mode columns every time the table finishes loading
-         * data. This is the most reliable signal that the table (and any saved
-         * variant) has fully settled - the variant applies its own column state
-         * asynchronously, and re-applying here beats it back to the mode layout.
-         * Attaches once; safe to call repeatedly.
-         */
-        _attachTableDataHook: function () {
-            var that = this;
-            var oTable = this._oTable;
-            if (!oTable || this._bDataHooked) {
-                return;
-            }
-            try {
-                var oBinding = oTable.getRowBinding && oTable.getRowBinding();
-                if (oBinding && oBinding.attachDataReceived) {
-                    oBinding.attachDataReceived(function () {
-                        that._applyModeColumns();
-                    });
-                    this._bDataHooked = true;
-                }
-            } catch (e) { /* ignore - the timed passes still cover it */ }
         },
 
         /**
@@ -404,34 +379,38 @@ sap.ui.define([
          * the personalization dialog in sync, and persists into the variant.
          * A setVisible fallback is kept only for runtimes without StateUtil.
          */
-        _applyModeColumns: function () {
+        _applyModeColumns: function (bForce) {
             var oTable = this._oTable;
             if (!oTable || !oTable.getColumns) {
                 return;
             }
             var sMode = this._getCurrentMode();
+            // GUARD: only touch the columns when the mode actually changed since
+            // the last apply. Re-running StateUtil on every data load / paging /
+            // scroll (which do NOT change the mode) thrashes the MDC column
+            // personalization and can corrupt the cell bindings - that is what
+            // showed rows with blank cells. `bForce` allows one deliberate
+            // re-assert after a mode change (to beat a late variant apply).
+            if (!bForce && this._sAppliedColMode === sMode) {
+                return;
+            }
+            this._sAppliedColMode = sMode;
+
             var aAllowed = MODE_COLUMNS[sMode];
             // Unknown / not-yet-selected mode: show everything (never hide down
-            // to a few header columns - that is the "half a page" symptom).
+            // to a few header columns - the "half a page" symptom).
             if (!aAllowed || !aAllowed.length) {
                 aAllowed = ALL_COLUMNS;
             }
             var oAllowedSet = {};
             aAllowed.forEach(function (sKey) { oAllowedSet[sKey] = true; });
 
-            // Build the desired state from the FULL key union (ALL_COLUMNS), not
-            // from oTable.getColumns() (which only lists currently-visible ones
-            // and therefore can never ADD a hidden mode column). Allowed columns
-            // come first (in mode order, so they also set the column ORDER),
-            // each visible; every other known key is appended hidden.
-            var aItems = [];
-            aAllowed.forEach(function (sKey) {
-                aItems.push({ key: sKey, visible: true });
-            });
-            ALL_COLUMNS.forEach(function (sKey) {
-                if (!oAllowedSet[sKey]) {
-                    aItems.push({ key: sKey, visible: false });
-                }
+            // Desired state from the FULL key union (so hidden mode columns can
+            // be ADDED), but in NATURAL order - we only toggle visibility and
+            // never reorder. Reordering columns is what disturbed the cell
+            // bindings; keeping the order stable avoids that churn.
+            var aItems = ALL_COLUMNS.map(function (sKey) {
+                return { key: sKey, visible: !!oAllowedSet[sKey] };
             });
 
             sap.ui.require(
