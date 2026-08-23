@@ -1345,6 +1345,104 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             APPEND ls_base TO rt.
           ENDIF.
         ENDLOOP.
+
+        " ---- "Banked In Amount" rows (classic MOD-027) --------------------
+        " Besides the RAEC payment postings, the classic report adds the bank
+        " deposit postings: DZ accounting documents whose reference (XBLNR) is
+        " the VISIT LIST. Each such document's line items become their own
+        " payment rows labelled "Banked In Amount". This is why a visit list
+        " with one RAEC payment (2 line items) still shows 4 rows.
+        DATA lr_vl TYPE RANGE OF xblnr.
+        LOOP AT it_tour ASSIGNING FIELD-SYMBOL(<tv>).
+          IF <tv>-vlid IS NOT INITIAL.
+            APPEND VALUE #( sign = 'I' option = 'EQ' low = <tv>-vlid ) TO lr_vl.
+            DATA lv_vlz TYPE xblnr.
+            lv_vlz = <tv>-vlid.
+            SHIFT lv_vlz LEFT DELETING LEADING '0'.
+            IF lv_vlz <> <tv>-vlid AND lv_vlz IS NOT INITIAL.
+              APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_vlz ) TO lr_vl.
+            ENDIF.
+          ENDIF.
+        ENDLOOP.
+
+        IF lr_vl IS NOT INITIAL.
+          " DZ bank-deposit documents referenced by the visit list.
+          SELECT bukrs, belnr, gjahr, blart, budat, stblg, xblnr FROM bkpf
+            WHERE blart = 'DZ' AND xblnr IN @lr_vl
+            INTO TABLE @DATA(lt_bank).
+
+          IF lt_bank IS NOT INITIAL.
+            SELECT companycode           AS bukrs,
+                   accountingdocument     AS belnr,
+                   fiscalyear             AS gjahr,
+                   accountingdocumentitem AS buzei,
+                   postingkey             AS bschl,
+                   absltamtinbalancetransaccrcy AS pswbt,
+                   balancetransactioncurrency   AS pswsl,
+                   customer               AS kunnr
+              FROM i_operationalacctgdocitem
+              FOR ALL ENTRIES IN @lt_bank
+              WHERE companycode        = @lt_bank-bukrs
+                AND accountingdocument = @lt_bank-belnr
+                AND fiscalyear         = @lt_bank-gjahr
+              INTO TABLE @DATA(lt_bankit).
+
+            LOOP AT lt_bank ASSIGNING FIELD-SYMBOL(<bd>).
+              " Header from the tour whose visit list = this document's ref.
+              DATA ls_bd TYPE ty_result.
+              CLEAR ls_bd.
+              ls_bd-reportmode    = 'PAYT'.
+              ls_bd-paymentmethod = 'CA'.
+              ls_bd-paymentdescr  = 'Banked In Amount'.
+              ls_bd-visitid       = '000001'.
+              ls_bd-accountingdoc = <bd>-belnr.
+              ls_bd-compcode      = <bd>-bukrs.
+              ls_bd-fiscyear      = <bd>-gjahr.
+              ls_bd-doctype       = <bd>-blart.
+              ls_bd-postingdate   = <bd>-budat.
+              ls_bd-reversaldoc   = <bd>-stblg.
+              ls_bd-slddocid      = <bd>-belnr.
+              DATA lv_bxz TYPE xblnr.
+              lv_bxz = <bd>-xblnr.  SHIFT lv_bxz LEFT DELETING LEADING '0'.
+              LOOP AT it_tour ASSIGNING <tv>.
+                DATA lv_tvz TYPE xblnr.
+                lv_tvz = <tv>-vlid.  SHIFT lv_tvz LEFT DELETING LEADING '0'.
+                IF lv_tvz = lv_bxz OR <tv>-vlid = <bd>-xblnr.
+                  ls_bd-shipmentno     = <tv>-vlid.
+                  ls_bd-tourid         = <tv>-tourid.
+                  ls_bd-plant          = <tv>-werks.
+                  ls_bd-route          = <tv>-route.
+                  ls_bd-settlementdate = <tv>-date.
+                  ls_bd-statusid       = <tv>-status_id.
+                  EXIT.
+                ENDIF.
+              ENDLOOP.
+
+              " One row per line item of the bank document.
+              DATA lv_any TYPE abap_bool.
+              CLEAR lv_any.
+              LOOP AT lt_bankit ASSIGNING FIELD-SYMBOL(<bi>)
+                WHERE bukrs = <bd>-bukrs AND belnr = <bd>-belnr
+                  AND gjahr = <bd>-gjahr.
+                DATA ls_br TYPE ty_result.
+                ls_br = ls_bd.
+                ls_br-postingitem     = <bi>-buzei.
+                ls_br-postingkey      = <bi>-bschl.
+                ls_br-postingamount   = conv_jpy( <bi>-pswbt ).
+                ls_br-postingcurrency = <bi>-pswsl.
+                ls_br-amount          = conv_jpy( <bi>-pswbt ).
+                ls_br-currency        = <bi>-pswsl.
+                ls_br-customer        = <bi>-kunnr.
+                ls_br-deliveryno      = |{ <bi>-buzei }|.
+                APPEND ls_br TO rt.
+                lv_any = abap_true.
+              ENDLOOP.
+              IF lv_any = abap_false.
+                APPEND ls_bd TO rt.
+              ENDIF.
+            ENDLOOP.
+          ENDIF.
+        ENDIF.
       CATCH cx_root.
         CLEAR rt.
     ENDTRY.

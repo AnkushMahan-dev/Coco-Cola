@@ -59,6 +59,13 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
   @UI: { lineItem: [ { position: 120, label: 'Quantity' } ], identification: [ { position: 120, label: 'Quantity' } ] }
   Quantity;
 
+  // Unit of measure (classic "Unit" / UOM column). This element previously had
+  // NO @UI annotation, so it never became a table column - that is why Unit was
+  // missing in every mode. Now a proper line item, shown per mode via the
+  // controller's MODE_COLUMNS.
+  @UI: { lineItem: [ { position: 125, label: 'Unit' } ], identification: [ { position: 125, label: 'Unit' } ] }
+  Uom;
+
   @UI: { lineItem: [ { position: 130, label: 'Quantity Difference' } ], identification: [ { position: 130, label: 'Quantity Difference' } ] }
   QuanDiff;
 
