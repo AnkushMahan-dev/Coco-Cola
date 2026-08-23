@@ -57,7 +57,7 @@ sap.ui.define([
                  "PoNumber", "SalesDocType", "SalesDoc", "OrderDate", "DeliveryType",
                  "DeliveryNo", "DeliveryDate", "MaterialDoc", "BillingType", "InvoiceNo",
                  "InvoiceDate", "DocType", "AccountingDoc", "PostingDate", "CompCode",
-                 "FiscYear", "Vkorg", "ReferenceDoc"],
+                 "FiscYear", "Tpp", "Seqno", "Vkorg", "ReferenceDoc"],
         "CASH": ["SummaryStatus", "VisitId", "Customer", "BusinessType", "EquipOwner",
                  "TradingDiv", "VisitType", "CashType", "Quantity", "Uom", "AggSampleQty",
                  "SalesAmt", "PromoAmt", "AggFreeAmt", "FreeVendAmt", "SampleAmount", "NetAmt",
@@ -65,6 +65,18 @@ sap.ui.define([
                  "TheorCash", "TotCash", "EMoney", "Prepaid", "EmpId", "TotPayment", "DiffAmt",
                  "DriverCredit", "DriverDebit", "DriverReceive", "DriverGive", "Driver"]
     };
+
+    // Set of EVERY known entity property that appears on the object page, so a
+    // field's property name can be recovered from its control ID when the
+    // binding is not directly readable.
+    var KNOWN_FIELDS = (function () {
+        var o = {};
+        ALWAYS.forEach(function (s) { o[s] = true; });
+        Object.keys(MODE_FIELDS).forEach(function (m) {
+            MODE_FIELDS[m].forEach(function (s) { o[s] = true; });
+        });
+        return o;
+    })();
 
     return ControllerExtension.extend("ccbji.otc.stlmnt.ext.controller.ObjectPageExt", {
 
@@ -153,8 +165,32 @@ sap.ui.define([
                             return this._lastSeg(oBI.parts[0].path);
                         }
                     }
+                    // 4) fall back to the field's stable ID - FE V4 encodes the
+                    //    property name in it (e.g. "...::DataField::Customer").
+                    var sIdProp = this._propFromId(oField.getId && oField.getId());
+                    if (sIdProp) { return sIdProp; }
                 }
+                // 5) last resort: the FormElement's own ID.
+                return this._propFromId(oFE.getId && oFE.getId());
             } catch (e) { /* ignore */ }
+            return "";
+        },
+
+        /**
+         * Extract a known entity property name from a FE V4 control ID. The IDs
+         * end with "...::DataField::<Prop>" or contain "::<Prop>::" - we match
+         * the id's "::"-separated tokens against our known field set.
+         * @param {string} sId control id
+         * @returns {string} the matched property name, or ""
+         */
+        _propFromId: function (sId) {
+            if (!sId) { return ""; }
+            var aTok = String(sId).split(/::|--|:/);
+            for (var i = aTok.length - 1; i >= 0; i--) {
+                if (KNOWN_FIELDS[aTok[i]]) {
+                    return aTok[i];
+                }
+            }
             return "";
         },
 

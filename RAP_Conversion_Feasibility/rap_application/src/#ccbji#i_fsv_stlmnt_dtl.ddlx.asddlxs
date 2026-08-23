@@ -10,7 +10,7 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
   @UI.hidden: true
   RowKey;
 
-  @UI.hidden: true
+  @UI: { lineItem: [ { position: 502, label: 'Seq No.' } ], identification: [ { position: 502, label: 'Seq No.' } ] }
   Seqno;
 
   // Explicit column labels on every lineItem: on a CUSTOM ENTITY the element
@@ -346,6 +346,9 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
 
   @UI: { lineItem: [ { position: 288, label: 'Invoice Date' } ], identification: [ { position: 448, label: 'Invoice Date' } ] }
   InvoiceDate;
+
+  @UI: { lineItem: [ { position: 289, label: 'Transp. Planning Point' } ], identification: [ { position: 449, label: 'Transp. Planning Point' } ] }
+  Tpp;
 
   // ---- Route Summary (CASH) : full classic f_set_columns4 figures ----------
   @UI: { lineItem: [ { position: 300, label: 'Summary Status' } ], identification: [ { position: 460, label: 'Summary Status' } ] }

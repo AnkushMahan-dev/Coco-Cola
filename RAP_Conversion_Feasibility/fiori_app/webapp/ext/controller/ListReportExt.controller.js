@@ -123,8 +123,8 @@ sap.ui.define([
                  "Driver", "VisitId", "Customer", "BusinessType", "Attr3", "EquipOwner",
                  "PoNumber", "SalesDocType", "SalesDoc", "OrderDate", "DeliveryType",
                  "DeliveryNo", "DeliveryDate", "MaterialDoc", "BillingType", "InvoiceNo",
-                 "InvoiceDate", "DocType", "AccountingDoc", "PostingDate", "Vkorg",
-                 "ReferenceDoc", "TourId"],
+                 "InvoiceDate", "DocType", "AccountingDoc", "PostingDate", "Tpp",
+                 "Seqno", "Vkorg", "ReferenceDoc", "TourId"],
         // Route Summary - full classic f_set_columns4 aggregated cash figures.
         "CASH": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "SummaryStatus",
                  "VisitId", "Customer", "BusinessType", "EquipOwner", "TradingDiv", "VisitType",
