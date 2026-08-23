@@ -279,8 +279,14 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
   ValueFinDiff;
 
   // ---- Payment FI posting detail (from CDS, replacing FI_DOCUMENT_READ) ----
+  @UI: { lineItem: [ { position: 500, label: 'Accounting Document' } ], identification: [ { position: 500, label: 'Accounting Document' } ] }
+  AccountingDoc;
+
   @UI: { lineItem: [ { position: 267, label: 'Posting Item' } ], identification: [ { position: 427, label: 'Posting Item' } ] }
   PostingItem;
+
+  @UI: { lineItem: [ { position: 501, label: 'Posting Key' } ], identification: [ { position: 501, label: 'Posting Key' } ] }
+  PostingKey;
 
   @UI: { lineItem: [ { position: 268, label: 'Posting Amount' } ], identification: [ { position: 428, label: 'Posting Amount' } ] }
   PostingAmount;

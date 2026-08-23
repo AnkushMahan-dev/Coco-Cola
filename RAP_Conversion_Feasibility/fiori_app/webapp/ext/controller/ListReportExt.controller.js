@@ -134,6 +134,23 @@ sap.ui.define([
                  "DriverReceive", "DriverGive", "Driver"]
     };
 
+    // Union of EVERY column referenced by any mode. CRITICAL for the column
+    // hiding to actually work: sap.ui.mdc.Table#getColumns() returns only the
+    // columns currently IN the table state (i.e. the visible ones), so building
+    // the p13n state from getColumns() can never ADD a hidden mode column - that
+    // is why the table only ever showed the few header columns ("half a page").
+    // Driving StateUtil from this full key list lets applyExternalState both
+    // ADD/SHOW the current mode's columns and hide the rest.
+    var ALL_COLUMNS = (function () {
+        var seen = {}, all = [];
+        Object.keys(MODE_COLUMNS).forEach(function (sMode) {
+            MODE_COLUMNS[sMode].forEach(function (sKey) {
+                if (!seen[sKey]) { seen[sKey] = true; all.push(sKey); }
+            });
+        });
+        return all;
+    })();
+
     return ControllerExtension.extend("ccbji.otc.stlmnt.ext.controller.ListReportExt", {
 
         override: {
@@ -368,39 +385,47 @@ sap.ui.define([
             }
             var sMode = this._getCurrentMode();
             var aAllowed = MODE_COLUMNS[sMode];
-            var bShowAll = !aAllowed || !aAllowed.length;
+            // Unknown / not-yet-selected mode: show everything (never hide down
+            // to a few header columns - that is the "half a page" symptom).
+            if (!aAllowed || !aAllowed.length) {
+                aAllowed = ALL_COLUMNS;
+            }
+            var oAllowedSet = {};
+            aAllowed.forEach(function (sKey) { oAllowedSet[sKey] = true; });
 
-            // Build the visibility list from ALL columns. CRITICAL: a column
-            // whose key is not yet resolved defaults to VISIBLE (true), never
-            // hidden - hiding unresolved-key columns is what over-hid the table
-            // to ~5 columns / half a screen. Resolved-key columns hide/show by
-            // mode. No .filter() (that dropped columns and hid them).
-            var fnItems = function () {
-                return oTable.getColumns().map(function (oColumn) {
-                    var sKey = (oColumn.getPropertyKey && oColumn.getPropertyKey()) ||
-                               (oColumn.getDataProperty && oColumn.getDataProperty()) || "";
-                    var bVis = !sKey ? true : (bShowAll || (aAllowed.indexOf(sKey) > -1));
-                    return { key: sKey, visible: bVis };
-                });
-            };
+            // Build the desired state from the FULL key union (ALL_COLUMNS), not
+            // from oTable.getColumns() (which only lists currently-visible ones
+            // and therefore can never ADD a hidden mode column). Allowed columns
+            // come first (in mode order, so they also set the column ORDER),
+            // each visible; every other known key is appended hidden.
+            var aItems = [];
+            aAllowed.forEach(function (sKey) {
+                aItems.push({ key: sKey, visible: true });
+            });
+            ALL_COLUMNS.forEach(function (sKey) {
+                if (!oAllowedSet[sKey]) {
+                    aItems.push({ key: sKey, visible: false });
+                }
+            });
 
             sap.ui.require(
                 ["sap/ui/mdc/p13n/StateUtil"],
                 function (StateUtil) {
                     try {
-                        var oApply = StateUtil.applyExternalState(oTable, { items: fnItems() });
+                        var oApply = StateUtil.applyExternalState(oTable, { items: aItems });
                         if (oApply && oApply.catch) {
                             oApply.catch(function () { /* ignore */ });
                         }
                     } catch (e) { /* ignore */ }
                 },
                 function () {
-                    // Runtime without StateUtil: best-effort setVisible.
+                    // Runtime without StateUtil: best-effort setVisible on the
+                    // columns that do exist.
                     oTable.getColumns().forEach(function (oColumn) {
                         var sKey = (oColumn.getPropertyKey && oColumn.getPropertyKey()) ||
                                    (oColumn.getDataProperty && oColumn.getDataProperty()) || "";
                         if (!sKey) { return; }
-                        var bVisible = bShowAll || (aAllowed.indexOf(sKey) > -1);
+                        var bVisible = !!oAllowedSet[sKey];
                         if (oColumn.getVisible && oColumn.setVisible && oColumn.getVisible() !== bVisible) {
                             oColumn.setVisible(bVisible);
                         }
