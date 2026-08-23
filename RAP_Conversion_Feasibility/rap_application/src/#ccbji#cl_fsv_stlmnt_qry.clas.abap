@@ -1655,10 +1655,17 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         ENDLOOP.
         IF lr_xblnr IS INITIAL. RETURN. ENDIF.
 
-        SELECT vbeln, xblnr, auart, vkorg, erdat FROM vbak
+        SELECT vbeln, xblnr, auart, vkorg, erdat, kunnr FROM vbak
           WHERE xblnr IN @lr_xblnr
           INTO TABLE @DATA(lt_vbak).
         IF lt_vbak IS INITIAL. RETURN. ENDIF.
+
+        " Customer master for the sold-to parties (classic FSR shows Customer
+        " and Attrib. 4 = KNA1-KATR4, with KATR3 as well).
+        SELECT kunnr, katr3, katr4 FROM kna1
+          FOR ALL ENTRIES IN @lt_vbak
+          WHERE kunnr = @lt_vbak-kunnr
+          INTO TABLE @DATA(lt_fkna1).
 
         " ---- Document flow: sales order -> delivery / invoice --------------
         " Classic f_build_itab reads the SD document flow (VBFA) to reach the
@@ -1748,6 +1755,13 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           ls_f-salesdoc       = <o>-vbeln.
           ls_f-salesdoctype   = <o>-auart.
           ls_f-orderdate      = <o>-erdat.
+          " Customer (sold-to) and its attributes (classic Customer / Attrib. 4).
+          ls_f-customer       = <o>-kunnr.
+          READ TABLE lt_fkna1 ASSIGNING FIELD-SYMBOL(<fk>) WITH KEY kunnr = <o>-kunnr.
+          IF sy-subrc = 0.
+            ls_f-businesstype = <fk>-katr4.
+            ls_f-attr3        = <fk>-katr3.
+          ENDIF.
           " Sales document also carried in SldDocId, which is part of the
           " RowKey - so each FSR sales-document row gets a UNIQUE key (many
           " sales docs per tour otherwise collapse to one key, which OData V4

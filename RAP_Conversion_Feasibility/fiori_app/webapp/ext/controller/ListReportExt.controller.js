@@ -120,10 +120,10 @@ sap.ui.define([
         // FSR Documents - full classic f_set_columns / f_get_shipment_data
         // chain: sales order -> delivery -> invoice -> accounting / material doc.
         "FSRD": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "StatusId",
-                 "Driver", "SalesDoc", "SalesDocType", "OrderDate", "DeliveryNo",
-                 "DeliveryType", "DeliveryDate", "MaterialDoc", "BillingType", "InvoiceNo",
-                 "InvoiceDate", "DocType", "AccountingDoc", "PostingDate", "Vkorg",
-                 "ReferenceDoc", "TourId"],
+                 "Driver", "Customer", "BusinessType", "Attr3", "VisitId", "SalesDoc",
+                 "SalesDocType", "OrderDate", "DeliveryNo", "DeliveryType", "DeliveryDate",
+                 "MaterialDoc", "BillingType", "InvoiceNo", "InvoiceDate", "DocType",
+                 "AccountingDoc", "PostingDate", "Vkorg", "ReferenceDoc", "TourId"],
         // Route Summary - full classic f_set_columns4 aggregated cash figures.
         "CASH": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "SummaryStatus",
                  "VisitId", "Customer", "BusinessType", "EquipOwner", "TradingDiv", "VisitType",
@@ -225,12 +225,14 @@ sap.ui.define([
             var fnApply = function () {
                 that._applyModeVisibility();
                 that._applyModeColumns();
-                // Re-apply on a few delays: on Go the MDC table (re)creates its
-                // columns asynchronously AND the column header labels arrive
-                // asynchronously from $metadata, so a single synchronous pass
-                // can miss a late column / see a not-yet-labelled header. Several
-                // deferred passes catch those without any visible flicker.
-                [600, 2000].forEach(function (iDelay) {
+                that._attachTableDataHook();
+                // Re-apply on several delays: on Go the MDC table (re)creates its
+                // columns asynchronously, the header labels arrive asynchronously
+                // from $metadata, AND the saved variant (e.g. "Standard*") applies
+                // its own column state after our first pass - so we must re-assert
+                // the per-mode columns a few times after the table settles. These
+                // passes are idempotent (same target state) so cause no flicker.
+                [300, 800, 1500, 3000, 5000].forEach(function (iDelay) {
                     setTimeout(function () { that._applyModeColumns(); }, iDelay);
                 });
             };
@@ -248,6 +250,30 @@ sap.ui.define([
             if (oCondModel && oCondModel.attachPropertyChange) {
                 oCondModel.attachPropertyChange(fnApply);
             }
+        },
+
+        /**
+         * Re-assert the per-mode columns every time the table finishes loading
+         * data. This is the most reliable signal that the table (and any saved
+         * variant) has fully settled - the variant applies its own column state
+         * asynchronously, and re-applying here beats it back to the mode layout.
+         * Attaches once; safe to call repeatedly.
+         */
+        _attachTableDataHook: function () {
+            var that = this;
+            var oTable = this._oTable;
+            if (!oTable || this._bDataHooked) {
+                return;
+            }
+            try {
+                var oBinding = oTable.getRowBinding && oTable.getRowBinding();
+                if (oBinding && oBinding.attachDataReceived) {
+                    oBinding.attachDataReceived(function () {
+                        that._applyModeColumns();
+                    });
+                    this._bDataHooked = true;
+                }
+            } catch (e) { /* ignore - the timed passes still cover it */ }
         },
 
         /**
