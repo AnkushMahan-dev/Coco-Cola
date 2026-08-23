@@ -1695,6 +1695,16 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           WHERE tour_id = @it_tour-tourid
           INTO TABLE @DATA(lt_rhd).
 
+        " Payment method (classic shows it on the banked / RAEC document row,
+        " e.g. CA). Read the tour's cash-posting payment method from /DSD/HH_RAEC.
+        DATA lv_fpaymt TYPE /dsd/hh_paymt.
+        SELECT tour_id, paymt FROM /dsd/hh_raec
+          FOR ALL ENTRIES IN @it_tour
+          WHERE tour_id = @it_tour-tourid
+          INTO TABLE @DATA(lt_fraec).
+        READ TABLE lt_fraec ASSIGNING FIELD-SYMBOL(<rc0>) INDEX 1.
+        IF sy-subrc = 0. lv_fpaymt = <rc0>-paymt. ENDIF.
+
         " Representative visit customer for the appended document row (which is
         " not itself a sales order); captured from the first order that links.
         DATA lv_fcustomer TYPE kunnr.
@@ -2037,6 +2047,8 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             ls_fi-equipowner     = lv_fequp.
             ls_fi-visitid        = lv_fvisit.
             ls_fi-ponumber       = lv_fhht.
+            " Payment method (e.g. CA) is shown on this banked/document row.
+            ls_fi-paymentmethod  = lv_fpaymt.
             APPEND ls_fi TO rt.
           ENDIF.
         ENDLOOP.
