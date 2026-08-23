@@ -371,6 +371,9 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
   @UI: { lineItem: [ { position: 296, label: 'Intercompany FI Date' } ], identification: [ { position: 456, label: 'Intercompany FI Date' } ] }
   ComFiDate;
 
+  @UI: { lineItem: [ { position: 297, label: 'Header Text' } ], identification: [ { position: 457, label: 'Header Text' } ] }
+  HeaderText;
+
   // ---- Route Summary (CASH) : full classic f_set_columns4 figures ----------
   @UI: { lineItem: [ { position: 300, label: 'Summary Status' } ], identification: [ { position: 460, label: 'Summary Status' } ] }
   SummaryStatus;

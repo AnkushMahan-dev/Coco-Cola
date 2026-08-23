@@ -24,20 +24,24 @@ sap.ui.define([
 ], function (ControllerExtension) {
     "use strict";
 
-    // Fields ALWAYS shown regardless of mode (key / header block).
+    // Fields ALWAYS shown regardless of mode (key / header block). Note:
+    // ExceptionText / ProcessingStatus are NOT here - they belong only to Tour
+    // and Visit modes (the classic FSR does not show them), so they are listed
+    // per-mode below.
     var ALWAYS = ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate",
-                  "StatusId", "TourId", "ProcessingStatus", "ExceptionText"];
+                  "StatusId", "TourId"];
 
     // Mode -> fields relevant on the object page. Mirrors the List Report's
     // per-mode column layout (MODE_COLUMNS). Codes are the fixed values of
     // /CCBJI/FSV_MODE.
     var MODE_FIELDS = {
-        "TOUR": ["Driver", "CoDriver", "CreatedOn", "CreatedTime", "CreatedBy",
-                 "ChangedOn", "ChangedTime", "ChangedBy", "Scenario", "DriverSwap",
-                 "VisitGroup", "IDocNo"],
-        "VISI": ["CreatedOn", "Driver", "VisitId", "Customer", "EquipOwner",
-                 "AccountGroup", "BusinessType", "Vkorg", "DistChannel", "Division",
-                 "VisitReason", "ChangedOn", "ChangedTime", "ChangedBy", "ManProc", "VisitLog"],
+        "TOUR": ["ExceptionText", "ProcessingStatus", "Driver", "CoDriver", "CreatedOn",
+                 "CreatedTime", "CreatedBy", "ChangedOn", "ChangedTime", "ChangedBy",
+                 "Scenario", "DriverSwap", "VisitGroup", "IDocNo"],
+        "VISI": ["ExceptionText", "ProcessingStatus", "CreatedOn", "Driver", "VisitId",
+                 "Customer", "EquipOwner", "AccountGroup", "BusinessType", "Vkorg",
+                 "DistChannel", "Division", "VisitReason", "ChangedOn", "ChangedTime",
+                 "ChangedBy", "ManProc", "VisitLog"],
         "SLRP": ["VisitId", "ObjType", "DeliveryNo", "DeliveryItem", "PoNumber", "PoDate",
                  "Customer", "Material", "MaterialDesc", "Quantity", "Uom", "TaCode",
                  "Reason", "Batch", "CondType", "Amount", "PackageGroup", "MoneyType",
@@ -56,9 +60,9 @@ sap.ui.define([
         "FSRD": ["Driver", "VisitId", "Customer", "BusinessType", "Attr3", "EquipOwner",
                  "PoNumber", "SalesDocType", "SalesDoc", "OrderDate", "DeliveryType",
                  "DeliveryNo", "DeliveryDate", "MaterialDoc", "BillingType", "InvoiceNo",
-                 "InvoiceDate", "RefKey", "DocType", "AccountingDoc", "PostingDate",
+                 "InvoiceDate", "RefKey", "DocType", "AccountingDoc",
                  "ComInvType", "ComInv", "ComInvDate", "ComFiType", "ComFiDoc", "ComFiDate",
-                 "CompCode", "FiscYear", "Tpp", "Seqno", "Vkorg", "ReferenceDoc"],
+                 "HeaderText", "CompCode", "FiscYear", "Tpp", "Vkorg", "ReferenceDoc"],
         "CASH": ["SummaryStatus", "VisitId", "Customer", "BusinessType", "EquipOwner",
                  "TradingDiv", "VisitType", "CashType", "Quantity", "Uom", "AggSampleQty",
                  "SalesAmt", "PromoAmt", "AggFreeAmt", "FreeVendAmt", "SampleAmount", "NetAmt",

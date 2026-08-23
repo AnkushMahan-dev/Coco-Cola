@@ -1734,7 +1734,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           WHERE vbelv = @lt_vbak-vbeln
             AND ( vbtyp_n = 'J' OR vbtyp_n = 'T'
                OR vbtyp_n = 'M' OR vbtyp_n = 'O' OR vbtyp_n = 'P'
-               OR vbtyp_n = '5' )
+               OR vbtyp_n = '5' OR vbtyp_n = 'R' )
           INTO TABLE @DATA(lt_flow).
 
         DATA lt_dlv TYPE STANDARD TABLE OF likp.
@@ -1753,7 +1753,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             WHERE vbeln IN @lr_dlv INTO CORRESPONDING FIELDS OF TABLE @lt_dlv.
         ENDIF.
         IF lr_inv IS NOT INITIAL.
-          SELECT vbeln, fkart, fkdat FROM vbrk
+          SELECT vbeln, fkart, fkdat, erzet FROM vbrk
             WHERE vbeln IN @lr_inv INTO CORRESPONDING FIELDS OF TABLE @lt_inv.
         ENDIF.
 
@@ -1770,11 +1770,24 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_awk ) TO lr_awk.
           ENDIF.
         ENDLOOP.
+        " Query BOTH the stripped and zero-padded forms so the match works
+        " regardless of how AWKEY is stored, then normalise when reading.
+        LOOP AT lr_inv ASSIGNING <ri>.
+          APPEND VALUE #( sign = 'I' option = 'EQ' low = <ri>-low ) TO lr_awk.
+        ENDLOOP.
         DATA lt_bkpf TYPE STANDARD TABLE OF bkpf.
         IF lr_awk IS NOT INITIAL.
-          SELECT bukrs, belnr, gjahr, blart, budat, awkey FROM bkpf
+          SELECT bukrs, belnr, gjahr, blart, budat, awkey, bktxt FROM bkpf
             WHERE awkey IN @lr_awk
             INTO CORRESPONDING FIELDS OF TABLE @lt_bkpf.
+          " Normalise each AWKEY (strip leading zeros of the doc-number part)
+          " so the per-row lookup can match on the stripped invoice number.
+          LOOP AT lt_bkpf ASSIGNING FIELD-SYMBOL(<nb>).
+            DATA lv_nawk TYPE awkey.
+            lv_nawk = <nb>-awkey.
+            SHIFT lv_nawk LEFT DELETING LEADING '0'.
+            <nb>-awkey = lv_nawk.
+          ENDLOOP.
         ENDIF.
 
         " ---- Material document (MATDOC by header text = shipment) ---------
@@ -1907,7 +1920,13 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             READ TABLE lt_inv ASSIGNING FIELD-SYMBOL(<iv>) WITH KEY vbeln = <fl>-vbeln.
             IF sy-subrc = 0.
               ls_f-billingtype = <iv>-fkart.
-              ls_f-invoicedate = <iv>-fkdat.
+              " Invoice date in Japan local time (classic f_get_local_time on
+              " FKDAT using the creation time ERZET) - can be +1 day vs the raw
+              " billing date.
+              DATA lv_itim TYPE tims.
+              to_local_time( EXPORTING iv_date = <iv>-fkdat iv_time = <iv>-erzet
+                             IMPORTING ev_date = ls_f-invoicedate ev_time = lv_itim ).
+              IF ls_f-invoicedate IS INITIAL. ls_f-invoicedate = <iv>-fkdat. ENDIF.
             ENDIF.
             " FI / accounting document via BKPF-AWKEY = invoice number
             " (classic MOD-001), leading-zero stripped. This is the correct
@@ -1922,6 +1941,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
               ls_f-doctype       = <bi>-blart.
               ls_f-fiscyear      = <bi>-gjahr.
               ls_f-postingdate   = <bi>-budat.
+              ls_f-headertext    = <bi>-bktxt.
             ENDIF.
           ENDIF.
 
@@ -1943,6 +1963,14 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
               ls_f-comfitype = <cb>-blart.
               ls_f-comfidate = <cb>-budat.
             ENDIF.
+          ENDIF.
+
+          " Material document per sales order (VBFA category 'R'), classic
+          " f_build_itab. This is the per-row Material Document (e.g. 6001915134).
+          READ TABLE lt_flow ASSIGNING <fl>
+            WITH KEY vbelv = <o>-vbeln vbtyp_n = 'R'.
+          IF sy-subrc = 0.
+            ls_f-materialdoc = <fl>-vbeln.
           ENDIF.
 
           APPEND ls_f TO rt.
