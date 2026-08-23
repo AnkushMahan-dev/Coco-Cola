@@ -207,7 +207,7 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       @EndUserText.label: 'Delivery No.'
       DeliveryNo       : vbeln_vl;
 
-      @EndUserText.label: 'PO Number'
+      @EndUserText.label: 'HHT Document No.'
       PoNumber         : bstkd;
 
       @EndUserText.label: 'Warnings'

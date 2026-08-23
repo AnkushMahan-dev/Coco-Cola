@@ -123,7 +123,7 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
   @UI: { lineItem: [ { position: 220, label: 'Reference Document' } ], identification: [ { position: 270, label: 'Reference Document' } ] }
   ReferenceDoc;
 
-  @UI: { lineItem: [ { position: 221, label: 'PO Number' } ], identification: [ { position: 280, label: 'PO Number' } ] }
+  @UI: { lineItem: [ { position: 221, label: 'HHT Document No.' } ], identification: [ { position: 280, label: 'HHT Document No.' } ] }
   PoNumber;
 
   @UI: { lineItem: [ { position: 222, label: 'Card Number' } ], identification: [ { position: 290, label: 'Card Number' } ] }

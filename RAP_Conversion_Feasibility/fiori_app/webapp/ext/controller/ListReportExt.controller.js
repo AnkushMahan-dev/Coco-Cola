@@ -120,10 +120,11 @@ sap.ui.define([
         // FSR Documents - full classic f_set_columns / f_get_shipment_data
         // chain: sales order -> delivery -> invoice -> accounting / material doc.
         "FSRD": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "StatusId",
-                 "Driver", "Customer", "BusinessType", "Attr3", "VisitId", "SalesDoc",
-                 "SalesDocType", "OrderDate", "DeliveryNo", "DeliveryType", "DeliveryDate",
-                 "MaterialDoc", "BillingType", "InvoiceNo", "InvoiceDate", "DocType",
-                 "AccountingDoc", "PostingDate", "Vkorg", "ReferenceDoc", "TourId"],
+                 "Driver", "VisitId", "Customer", "BusinessType", "Attr3", "EquipOwner",
+                 "PoNumber", "SalesDocType", "SalesDoc", "OrderDate", "DeliveryType",
+                 "DeliveryNo", "DeliveryDate", "MaterialDoc", "BillingType", "InvoiceNo",
+                 "InvoiceDate", "DocType", "AccountingDoc", "PostingDate", "Vkorg",
+                 "ReferenceDoc", "TourId"],
         // Route Summary - full classic f_set_columns4 aggregated cash figures.
         "CASH": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "SummaryStatus",
                  "VisitId", "Customer", "BusinessType", "EquipOwner", "TradingDiv", "VisitType",

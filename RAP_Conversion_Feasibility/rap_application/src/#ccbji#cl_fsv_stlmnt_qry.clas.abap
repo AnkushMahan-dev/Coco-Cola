@@ -1660,24 +1660,45 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           INTO TABLE @DATA(lt_vbak).
         IF lt_vbak IS INITIAL. RETURN. ENDIF.
 
-        " Visit customer for the tour(s). In DSD the replenishment sales order's
-        " sold-to (VBAK-KUNNR) is the DRIVER's dummy account, not the end
-        " customer - so the classic FSR shows the DRIVER from VBAK-KUNNR and the
-        " CUSTOMER (+ Attrib. 4 = KATR4) from the visit record /DSD/HH_RACVHD.
+        " Visit customer per sales order. In DSD the replenishment sales order's
+        " sold-to (VBAK-KUNNR) is the DRIVER dummy account, not the end customer.
+        " The classic links each sales order to a VISIT via its HHT document
+        " number (VBKD-BSTKD = /DSD/HH_RADELHD-PONUMBER); only orders that carry
+        " an HHT doc get a visit -> Customer / Attrib. 4 (the others stay blank,
+        " which is why the classic fills Customer on some rows only).
         SELECT tour_id, visit_id, custnr FROM /dsd/hh_racvhd
           FOR ALL ENTRIES IN @it_tour
           WHERE tour_id = @it_tour-tourid
           INTO TABLE @DATA(lt_fcv).
+        " KNA1 for the visit customers (Attrib. 4 / Attr.3 / Equipment Owner).
+        IF lt_fcv IS NOT INITIAL.
+          SELECT kunnr, katr3, katr4, /scl/equp_ownr FROM kna1
+            FOR ALL ENTRIES IN @lt_fcv
+            WHERE kunnr = @lt_fcv-custnr
+            INTO TABLE @DATA(lt_fkna1).
+        ENDIF.
+        " HHT document number (PO number) per sales order.
+        SELECT vbeln, bstkd FROM vbkd
+          FOR ALL ENTRIES IN @lt_vbak
+          WHERE vbeln = @lt_vbak-vbeln AND posnr = '000000'
+          INTO TABLE @DATA(lt_vbkd).
+        " Delivery headers of the tour: map HHT doc (PONUMBER) -> visit.
+        SELECT tour_id, visit_id, bstkd FROM /dsd/hh_radelhd
+          FOR ALL ENTRIES IN @it_tour
+          WHERE tour_id = @it_tour-tourid
+          INTO TABLE @DATA(lt_rhd).
+
+        " Representative visit customer for the appended document row (which is
+        " not itself a sales order); captured from the first order that links.
         DATA lv_fcustomer TYPE kunnr.
         DATA lv_fkatr4    TYPE katr4.
         DATA lv_fkatr3    TYPE katr3.
         DATA lv_fequp     TYPE c LENGTH 2.
-        " Driver = the sold-to party that is a DRIVER dummy account. In DSD the
-        " replenishment orders are sold to the driver, and the driver account is
-        " flagged KNA1-KATR4 = 'H'. So among the sales orders' sold-to parties,
-        " the one whose KATR4 = 'H' is the driver (e.g. R5JWMR2401) - the same
-        " value the classic shows on every FSR row. (The tour here has no
-        " shipment/tknum, being a visit-list settlement, so VTTK cannot be used.)
+        DATA lv_fvisit    TYPE /dsd/hh_visit_id.
+        DATA lv_fhht      TYPE bstkd.
+
+        " Driver = the sold-to party that is a DRIVER dummy account (KNA1-KATR4
+        " = 'H'). Same value on every FSR row (e.g. R5JWMR2401).
         DATA lv_fdriver TYPE /dsd/rp_driver1.
         DATA lr_vkun TYPE RANGE OF kunnr.
         LOOP AT lt_vbak ASSIGNING FIELD-SYMBOL(<vk>).
@@ -1692,25 +1713,6 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           LOOP AT lt_vkna ASSIGNING FIELD-SYMBOL(<vkn>).
             IF <vkn>-katr4 = 'H'.
               lv_fdriver = <vkn>-kunnr.
-              EXIT.
-            ENDIF.
-          ENDLOOP.
-        ENDIF.
-        IF lt_fcv IS NOT INITIAL.
-          SELECT kunnr, katr3, katr4, /scl/equp_ownr FROM kna1
-            FOR ALL ENTRIES IN @lt_fcv
-            WHERE kunnr = @lt_fcv-custnr
-            INTO TABLE @DATA(lt_fkna1).
-          " Pick the real visit customer = the one that is NOT a driver account
-          " (drivers are flagged KATR4 = 'H'). This is the Customer / Attrib. 4
-          " the classic shows for the tour's visits.
-          LOOP AT lt_fcv ASSIGNING FIELD-SYMBOL(<fcv>).
-            READ TABLE lt_fkna1 ASSIGNING FIELD-SYMBOL(<fkn>) WITH KEY kunnr = <fcv>-custnr.
-            IF sy-subrc = 0 AND <fkn>-katr4 <> 'H'.
-              lv_fcustomer = <fcv>-custnr.
-              lv_fkatr4    = <fkn>-katr4.
-              lv_fkatr3    = <fkn>-katr3.
-              lv_fequp     = <fkn>-/scl/equp_ownr.
               EXIT.
             ENDIF.
           ENDLOOP.
@@ -1804,13 +1806,39 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           ls_f-salesdoc       = <o>-vbeln.
           ls_f-salesdoctype   = <o>-auart.
           ls_f-orderdate      = <o>-erdat.
-          " Driver = the tour driver (VTTK-/BEV1/RPFAR1), constant per tour.
-          " Customer / Attrib. 4 come from the visit record (resolved above).
+          " Driver = the driver dummy account (constant per tour).
           ls_f-driver         = lv_fdriver.
-          ls_f-customer       = lv_fcustomer.
-          ls_f-businesstype   = lv_fkatr4.
-          ls_f-attr3          = lv_fkatr3.
-          ls_f-equipowner     = lv_fequp.
+          " HHT document number (PO number) for this sales order.
+          READ TABLE lt_vbkd ASSIGNING FIELD-SYMBOL(<vd>) WITH KEY vbeln = <o>-vbeln.
+          IF sy-subrc = 0. ls_f-ponumber = <vd>-bstkd. ENDIF.
+          " Link this order to a visit via its HHT doc, then to the customer.
+          " Only orders that carry an HHT doc get a Customer / Attrib. 4.
+          IF ls_f-ponumber IS NOT INITIAL.
+            READ TABLE lt_rhd ASSIGNING FIELD-SYMBOL(<rh>) WITH KEY bstkd = ls_f-ponumber.
+            IF sy-subrc = 0.
+              ls_f-visitid = <rh>-visit_id.
+              READ TABLE lt_fcv ASSIGNING FIELD-SYMBOL(<fcv>)
+                WITH KEY tour_id = <rh>-tour_id visit_id = <rh>-visit_id.
+              IF sy-subrc = 0.
+                ls_f-customer = <fcv>-custnr.
+                READ TABLE lt_fkna1 ASSIGNING FIELD-SYMBOL(<fkn>) WITH KEY kunnr = <fcv>-custnr.
+                IF sy-subrc = 0.
+                  ls_f-businesstype = <fkn>-katr4.
+                  ls_f-attr3        = <fkn>-katr3.
+                  ls_f-equipowner   = <fkn>-/scl/equp_ownr.
+                ENDIF.
+                " Remember the first linked visit for the document row.
+                IF lv_fcustomer IS INITIAL.
+                  lv_fcustomer = ls_f-customer.
+                  lv_fkatr4    = ls_f-businesstype.
+                  lv_fkatr3    = ls_f-attr3.
+                  lv_fequp     = ls_f-equipowner.
+                  lv_fvisit    = ls_f-visitid.
+                  lv_fhht      = ls_f-ponumber.
+                ENDIF.
+              ENDIF.
+            ENDIF.
+          ENDIF.
           " Sales document also carried in SldDocId, which is part of the
           " RowKey - so each FSR sales-document row gets a UNIQUE key (many
           " sales docs per tour otherwise collapse to one key, which OData V4
@@ -1922,6 +1950,9 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             ls_fi-customer       = lv_fcustomer.
             ls_fi-businesstype   = lv_fkatr4.
             ls_fi-attr3          = lv_fkatr3.
+            ls_fi-equipowner     = lv_fequp.
+            ls_fi-visitid        = lv_fvisit.
+            ls_fi-ponumber       = lv_fhht.
             APPEND ls_fi TO rt.
           ENDIF.
         ENDLOOP.
