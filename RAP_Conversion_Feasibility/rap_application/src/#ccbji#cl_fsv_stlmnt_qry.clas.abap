@@ -1672,22 +1672,29 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         DATA lv_fkatr4    TYPE katr4.
         DATA lv_fkatr3    TYPE katr3.
         DATA lv_fequp     TYPE c LENGTH 2.
-        " Driver = the tour's driver from the shipment header VTTK-/BEV1/RPFAR1
-        " (classic FSR Driver column). It is the SAME for every row of the tour,
-        " unlike VBAK-KUNNR which is the per-order sold-to and varies.
-        DATA lr_tkn TYPE RANGE OF tknum.
-        LOOP AT it_tour ASSIGNING FIELD-SYMBOL(<tt>).
-          IF <tt>-shipment IS NOT INITIAL.
-            APPEND VALUE #( sign = 'I' option = 'EQ' low = <tt>-shipment ) TO lr_tkn.
+        " Driver = the sold-to party that is a DRIVER dummy account. In DSD the
+        " replenishment orders are sold to the driver, and the driver account is
+        " flagged KNA1-KATR4 = 'H'. So among the sales orders' sold-to parties,
+        " the one whose KATR4 = 'H' is the driver (e.g. R5JWMR2401) - the same
+        " value the classic shows on every FSR row. (The tour here has no
+        " shipment/tknum, being a visit-list settlement, so VTTK cannot be used.)
+        DATA lv_fdriver TYPE /dsd/rp_driver1.
+        DATA lr_vkun TYPE RANGE OF kunnr.
+        LOOP AT lt_vbak ASSIGNING FIELD-SYMBOL(<vk>).
+          IF <vk>-kunnr IS NOT INITIAL.
+            APPEND VALUE #( sign = 'I' option = 'EQ' low = <vk>-kunnr ) TO lr_vkun.
           ENDIF.
         ENDLOOP.
-        DATA lv_fdriver TYPE /dsd/rp_driver1.
-        IF lr_tkn IS NOT INITIAL.
-          SELECT tknum, /bev1/rpfar1 FROM vttk
-            WHERE tknum IN @lr_tkn
-            INTO TABLE @DATA(lt_vttk).
-          READ TABLE lt_vttk ASSIGNING FIELD-SYMBOL(<vt0>) INDEX 1.
-          IF sy-subrc = 0. lv_fdriver = <vt0>-/bev1/rpfar1. ENDIF.
+        IF lr_vkun IS NOT INITIAL.
+          SELECT kunnr, katr4 FROM kna1
+            WHERE kunnr IN @lr_vkun
+            INTO TABLE @DATA(lt_vkna).
+          LOOP AT lt_vkna ASSIGNING FIELD-SYMBOL(<vkn>).
+            IF <vkn>-katr4 = 'H'.
+              lv_fdriver = <vkn>-kunnr.
+              EXIT.
+            ENDIF.
+          ENDLOOP.
         ENDIF.
         IF lt_fcv IS NOT INITIAL.
           SELECT kunnr, katr3, katr4, /scl/equp_ownr FROM kna1
