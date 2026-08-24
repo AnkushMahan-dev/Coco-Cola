@@ -313,6 +313,9 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
   @UI: { lineItem: [ { position: 275, label: 'Set ID' } ], identification: [ { position: 435, label: 'Set ID' } ] }
   SetId;
 
+  @UI: { lineItem: [ { position: 275, label: 'Money Code' } ], identification: [ { position: 435, label: 'Money Code' } ] }
+  MoneyCode;
+
   @UI: { lineItem: [ { position: 276, label: 'Sales Amount' } ], identification: [ { position: 436, label: 'Sales Amount' } ] }
   SalesAmt;
 

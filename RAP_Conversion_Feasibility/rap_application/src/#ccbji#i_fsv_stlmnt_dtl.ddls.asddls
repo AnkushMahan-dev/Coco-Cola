@@ -257,6 +257,9 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       @EndUserText.label: 'Set ID'
       SetId            : abap.char(3);
 
+      @EndUserText.label: 'Money Code'
+      MoneyCode        : abap.char(4);
+
       @EndUserText.label: 'Sales Amount'
       SalesAmt         : abap.dec(15, 2);
 

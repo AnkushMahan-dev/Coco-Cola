@@ -142,6 +142,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
              packagegroup     TYPE c LENGTH 4,
              moneytype        TYPE c LENGTH 2,
              setid            TYPE c LENGTH 3,
+             moneycode        TYPE c LENGTH 4,
              salesamt         TYPE p LENGTH 8 DECIMALS 2,
              attr3            TYPE c LENGTH 4,
              " Check (ty_final3)
@@ -316,9 +317,10 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
     "! decimal point, left-pad with zeros to 9 digits, then slice
     "! 0(4)=money code, 4(3)=set id, 7(2)=money type.
     METHODS split_orig_qty
-      IMPORTING iv_qty        TYPE p
-      EXPORTING ev_money_type TYPE c
-                ev_set_id     TYPE c.
+      IMPORTING iv_qty         TYPE p
+      EXPORTING ev_money_type  TYPE c
+                ev_set_id      TYPE c
+                ev_money_code  TYPE c.
 
 ENDCLASS.
 
@@ -1195,7 +1197,8 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           IF <i>-/scl/orig_qty IS NOT INITIAL.
             split_orig_qty( EXPORTING iv_qty = <i>-/scl/orig_qty
                             IMPORTING ev_money_type = ls_s-moneytype
-                                      ev_set_id     = ls_s-setid ).
+                                      ev_set_id     = ls_s-setid
+                                      ev_money_code = ls_s-moneycode ).
           ENDIF.
 
           READ TABLE lt_hd ASSIGNING FIELD-SYMBOL(<h>)
@@ -1206,13 +1209,26 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             ls_s-podate   = <h>-bstdk.
           ENDIF.
 
-          READ TABLE lt_cnd ASSIGNING FIELD-SYMBOL(<cn>)
-            WITH KEY tour_id = <i>-tour_id visit_id = <i>-visit_id
-                     hh_delvry = <i>-hh_delvry hh_delvry_it = <i>-hh_delvry_it.
-          IF sy-subrc = 0.
-            ls_s-condtype = <cn>-cond.
-            ls_s-amount   = conv_jpy( <cn>-amount ).
-          ENDIF.
+          " Conditions for this delivery item: YJVA/YJCN -> Amount, YJPR ->
+          " Promotion amount, YJP0 -> Free Vend amount (classic MOD-001).
+          LOOP AT lt_cnd ASSIGNING FIELD-SYMBOL(<cn>)
+            WHERE tour_id = <i>-tour_id AND visit_id = <i>-visit_id
+              AND hh_delvry = <i>-hh_delvry AND hh_delvry_it = <i>-hh_delvry_it.
+            CASE <cn>-cond.
+              WHEN 'YJVA' OR 'YJCN'.
+                ls_s-condtype = <cn>-cond.
+                ls_s-amount   = conv_jpy( <cn>-amount ).
+              WHEN 'YJPR'.
+                ls_s-promoamt = ls_s-promoamt + conv_jpy( <cn>-amount ).
+              WHEN 'YJP0'.
+                ls_s-freevendamt = ls_s-freevendamt + conv_jpy( <cn>-amount ).
+              WHEN OTHERS.
+                IF ls_s-condtype IS INITIAL.
+                  ls_s-condtype = <cn>-cond.
+                  ls_s-amount   = conv_jpy( <cn>-amount ).
+                ENDIF.
+            ENDCASE.
+          ENDLOOP.
 
           " Sales amount = quantity * amount, only for Visit-List objects
           " (obj type '20'), matching classic MOD-001.
@@ -1338,14 +1354,31 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           " the posting item (below) makes each line item's row distinct too.
           ls_base-slddocid      = <p>-cash_id.
 
-          READ TABLE lt_cv ASSIGNING FIELD-SYMBOL(<cv>) WITH KEY tour_id = <p>-tour_id.
-          IF sy-subrc = 0.
-            ls_base-customer = <cv>-custnr.
-            ls_base-visitid  = <cv>-visit_id.
+          " Pick the REAL visit customer for Attrib. 4 / Equipment Owner: the
+          " RACVHD party whose KNA1-KATR4 is not 'H' (a driver dummy account).
+          " Otherwise the first visit (often the driver) would give KATR4='H'
+          " and a blank Equipment Owner.
+          LOOP AT lt_cv ASSIGNING FIELD-SYMBOL(<cv>) WHERE tour_id = <p>-tour_id.
             READ TABLE lt_kna1 ASSIGNING FIELD-SYMBOL(<k>) WITH KEY kunnr = <cv>-custnr.
-            IF sy-subrc = 0.
+            IF sy-subrc = 0 AND <k>-katr4 <> 'H'.
+              ls_base-customer     = <cv>-custnr.
+              ls_base-visitid      = <cv>-visit_id.
               ls_base-businesstype = <k>-katr4.
               ls_base-equipowner   = <k>-/scl/equp_ownr.
+              EXIT.
+            ENDIF.
+          ENDLOOP.
+          " Fallback: if none found, take the first visit party as before.
+          IF ls_base-customer IS INITIAL.
+            READ TABLE lt_cv ASSIGNING <cv> WITH KEY tour_id = <p>-tour_id.
+            IF sy-subrc = 0.
+              ls_base-customer = <cv>-custnr.
+              ls_base-visitid  = <cv>-visit_id.
+              READ TABLE lt_kna1 ASSIGNING <k> WITH KEY kunnr = <cv>-custnr.
+              IF sy-subrc = 0.
+                ls_base-businesstype = <k>-katr4.
+                ls_base-equipowner   = <k>-/scl/equp_ownr.
+              ENDIF.
             ENDIF.
           ENDIF.
 
@@ -2327,7 +2360,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
 
 
   METHOD split_orig_qty.
-    CLEAR: ev_money_type, ev_set_id.
+    CLEAR: ev_money_type, ev_set_id, ev_money_code.
     DATA lv_int TYPE string.
     DATA lv_dec TYPE string.
     DATA(lv_split) = |{ iv_qty }|.
@@ -2348,6 +2381,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
       DATA(lv_off) = lv_len - 9.
       lv_int = lv_int+lv_off.
     ENDIF.
+    ev_money_code = lv_int+0(4).   " first 4 chars
     ev_set_id     = lv_int+4(3).   " next 3 chars after the money code
     ev_money_type = lv_int+7(2).   " last 2 chars
   ENDMETHOD.

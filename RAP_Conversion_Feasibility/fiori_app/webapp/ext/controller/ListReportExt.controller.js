@@ -92,7 +92,7 @@ sap.ui.define([
                  "OrigEDate", "LogStatus", "ManRel", "Errors", "Warnings", "Origin", "Planned",
                  "PresalesStatus", "TourStatus", "FsrStatus", "ShipmentNo", "Plant", "Route",
                  "SettlementDate", "Driver", "CoDriver", "CreatedOn", "CreatedTime", "CreatedBy"],
-        "VISI": ["ReportMode", "ExceptionText", "ProcessingStatus", "ShipmentNo", "CreatedOn", "Plant", "Route",
+        "VISI": ["ReportMode", "ExceptionText", "ShipmentNo", "CreatedOn", "Plant", "Route",
                  "SettlementDate", "Driver", "StatusId", "VisitId", "Customer", "EquipOwner",
                  "AccountGroup", "BusinessType", "Vkorg", "DistChannel", "Division", "VisitReason",
                  "ChangedOn", "ChangedTime", "ChangedBy", "ManProc", "VisitLog", "TourId"],
@@ -104,7 +104,8 @@ sap.ui.define([
                  "VisitId", "ObjType", "DeliveryNo", "DeliveryItem", "PoNumber", "PoDate",
                  "Customer", "Material", "MaterialDesc", "Quantity", "Uom", "TaCode",
                  "Reason", "Batch", "CondType", "Amount", "PackageGroup", "MoneyType",
-                 "SetId", "SalesAmt", "Attr3", "BusinessType", "EquipOwner", "Scenario"],
+                 "SetId", "MoneyCode", "SalesAmt", "PromoAmt", "FreeVendAmt", "Attr3",
+                 "BusinessType", "EquipOwner", "Scenario"],
         // Payment - one row per accounting-document line item (classic BSEG),
         // so the FI posting detail is shown alongside the payment header.
         "PAYT": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "StatusId",
