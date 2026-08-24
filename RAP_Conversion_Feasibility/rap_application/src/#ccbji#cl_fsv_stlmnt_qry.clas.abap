@@ -1648,7 +1648,17 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           ls_m-amountci       = conv_jpy( <mb>-amount_ci ).
           ls_m-amount         = conv_jpy( <mb>-amount_diff ).
           ls_m-amountplan     = conv_jpy( <mb>-amount_plan ).
-          ls_m-amountdiffeval = conv_jpy( <mb>-amount_diff_eval ).
+          " 'Mon. Diff. In/Out' (classic ty_final4-amount_diff_eval): the classic
+          " only ever fills it via MOVE-CORRESPONDING from /dsd/sl_sld_mbal, and
+          " that table has no such column on this system, so it stays blank there
+          " too. Read it dynamically so activation is safe and it populates
+          " automatically on any system where the column does exist.
+          DATA lv_deval TYPE p LENGTH 15 DECIMALS 2.
+          ASSIGN COMPONENT 'AMOUNT_DIFF_EVAL' OF STRUCTURE <mb> TO FIELD-SYMBOL(<de>).
+          IF sy-subrc = 0.
+            lv_deval = <de>.
+            ls_m-amountdiffeval = conv_jpy( lv_deval ).
+          ENDIF.
           ls_m-reason         = <mb>-reason.
           ls_m-currency       = <mb>-currency_amount.
           IF <it> IS ASSIGNED.
