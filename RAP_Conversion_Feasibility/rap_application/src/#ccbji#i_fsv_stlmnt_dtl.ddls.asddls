@@ -544,4 +544,7 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
 
       @EndUserText.label: 'Payment Log'
       Plog             : abap.char(1);
+
+      @EndUserText.label: 'Rcpt/Exp.'
+      RcptExp          : abap.char(4);
 }

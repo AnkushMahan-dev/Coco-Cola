@@ -193,7 +193,7 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
   @UI: { lineItem: [ { position: 234, label: 'Equipment Owner' } ], identification: [ { position: 304, label: 'Equipment Owner' } ] }
   EquipOwner;
 
-  @UI: { lineItem: [ { position: 235, label: 'Processing Indicator' } ], identification: [ { position: 305, label: 'Processing Indicator' } ] }
+  @UI: { lineItem: [ { position: 235, label: 'Manually Processed' } ], identification: [ { position: 305, label: 'Manually Processed' } ] }
   ManProc;
 
   @UI: { lineItem: [ { position: 236, label: 'Visit Log Status' } ], identification: [ { position: 306, label: 'Visit Log Status' } ] }
@@ -438,6 +438,9 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
 
   @UI: { lineItem: [ { position: 322, label: 'Payment Log' } ], identification: [ { position: 522, label: 'Payment Log' } ] }
   Plog;
+
+  @UI: { lineItem: [ { position: 323, label: 'Rcpt/Exp.' } ], identification: [ { position: 523, label: 'Rcpt/Exp.' } ] }
+  RcptExp;
 
   // ---- Route Summary (CASH) : full classic f_set_columns4 figures ----------
   @UI: { lineItem: [ { position: 300, label: 'Summary Status' } ], identification: [ { position: 460, label: 'Summary Status' } ] }

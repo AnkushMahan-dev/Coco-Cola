@@ -114,7 +114,7 @@ sap.ui.define([
         "PAYT": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "StatusId",
                  "VisitId", "Customer", "Recipient", "BusinessType", "EquipOwner",
                  "PaymentMethod", "PaymentDescr", "CashId", "CashType", "CardNo", "CheckNo",
-                 "Amount", "Currency", "DummyFlag", "Plog", "AccountingDoc", "CompCode",
+                 "Amount", "Currency", "RcptExp", "DummyFlag", "Plog", "AccountingDoc", "CompCode",
                  "FiscYear", "DocType", "DocumentDate", "PostingDate", "PostingItem", "PostingKey",
                  "PostingAmount", "PostingCurrency", "ReversalDoc"],
         // Check-Out / Check-In (classic check structure): includes the Reason

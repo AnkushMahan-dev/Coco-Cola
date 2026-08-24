@@ -244,6 +244,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
              recipient        TYPE kunnr,
              dummyflag        TYPE c LENGTH 1,
              plog             TYPE c LENGTH 1,
+             rcptexp          TYPE c LENGTH 4,
            END OF ty_result,
            tt_result TYPE STANDARD TABLE OF ty_result WITH DEFAULT KEY.
 
@@ -1325,6 +1326,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
                  fiscalyear            AS gjahr,
                  accountingdocumentitem AS buzei,
                  postingkey            AS bschl,
+                 debitcreditcode       AS shkzg,
                  absltamtinbalancetransaccrcy AS pswbt,
                  balancetransactioncurrency   AS pswsl,
                  customer              AS kunnr
@@ -1436,6 +1438,13 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
               ls_p-postingkey      = <fi>-bschl.
               ls_p-postingamount   = conv_jpy( <fi>-pswbt ).
               ls_p-postingcurrency = <fi>-pswsl.
+              " Rcpt/Exp = receipt vs expense from the debit/credit indicator
+              " (H = credit -> Receipt, S = debit -> Expense).
+              CASE <fi>-shkzg.
+                WHEN 'H'. ls_p-rcptexp = 'Rcpt'.
+                WHEN 'S'. ls_p-rcptexp = 'Exp'.
+                WHEN OTHERS. CLEAR ls_p-rcptexp.
+              ENDCASE.
               " Recipient = the posting line's customer/account (classic MOD-006:
               " when settled, "Customer" becomes "Recipient" and the visit
               " customer is shown separately in Customer).
@@ -1668,8 +1677,11 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           DATA lv_deval TYPE p LENGTH 15 DECIMALS 2.
           ASSIGN COMPONENT 'AMOUNT_DIFF_EVAL' OF STRUCTURE <mb> TO FIELD-SYMBOL(<de>).
           IF sy-subrc = 0.
+            " NOTE: do NOT run this through conv_jpy. amount_diff_eval already
+            " holds the external value (e.g. 2); conv_jpy converts JPY internal
+            " -> external by multiplying by 100, which turned 2 into 200.
             lv_deval = <de>.
-            ls_m-amountdiffeval = conv_jpy( lv_deval ).
+            ls_m-amountdiffeval = lv_deval.
           ENDIF.
           ls_m-reason         = <mb>-reason.
           ls_m-reasoncode     = <mb>-reason.
@@ -2438,36 +2450,23 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
 
 
   METHOD to_local_time.
-    " Convert UTC created/changed stamp to Japan local time EXACTLY like the
-    " classic report's f_get_local_time (ISU_DATE_TIME_CONVERT_TIMEZONE, zone
-    " JAPAN), so the RAP "Created On" matches the GUI to the day. Using the same
-    " FM avoids the off-by-one that a raw CONVERT TIME STAMP produced when the
-    " 'JAPAN' zone entry was not resolvable and the value fell back to raw UTC.
+    " Convert a UTC created/changed stamp to Japan local time so the RAP
+    " "Created On" matches the GUI to the day. Japan Standard Time is a fixed
+    " UTC+9 with no daylight saving, so we add 9 hours deterministically via a
+    " timestamp instead of relying on a timezone FM / TTZZ customizing (which
+    " silently fell back to raw UTC, leaving the date one day short, e.g. a
+    " 13.08 23:52 UTC stamp stayed 13.08 instead of rolling to 14.08 JST).
     ev_date = iv_date.
     ev_time = iv_time.
     IF iv_date IS INITIAL.
       RETURN.
     ENDIF.
     TRY.
-        DATA lv_date TYPE dats.
-        DATA lv_time TYPE tims.
-        lv_date = iv_date.
-        lv_time = iv_time.
-        CALL FUNCTION 'ISU_DATE_TIME_CONVERT_TIMEZONE'
-          EXPORTING
-            x_date_utc    = lv_date
-            x_time_utc    = lv_time
-            x_timezone    = 'JAPAN'
-          IMPORTING
-            y_date_lcl    = ev_date
-            y_time_lcl    = ev_time
-          EXCEPTIONS
-            general_fault = 1
-            OTHERS        = 2.
-        IF sy-subrc <> 0.
-          ev_date = iv_date.
-          ev_time = iv_time.
-        ENDIF.
+        DATA lv_ts TYPE timestamp.
+        CONVERT DATE iv_date TIME iv_time INTO TIME STAMP lv_ts TIME ZONE 'UTC  '.
+        " + 9 hours = 32400 seconds.
+        lv_ts = cl_abap_tstmp=>add( tstmp = lv_ts secs = 32400 ).
+        CONVERT TIME STAMP lv_ts TIME ZONE 'UTC  ' INTO DATE ev_date TIME ev_time.
       CATCH cx_root.
         ev_date = iv_date.
         ev_time = iv_time.
