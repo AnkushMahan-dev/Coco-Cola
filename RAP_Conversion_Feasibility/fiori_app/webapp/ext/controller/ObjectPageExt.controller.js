@@ -52,12 +52,12 @@ sap.ui.define([
         "PAYT": ["VisitId", "Customer", "Recipient", "BusinessType", "EquipOwner",
                  "PaymentMethod", "PaymentDescr", "CashId", "CashType", "CardNo", "CheckNo",
                  "Amount", "Currency", "DummyFlag", "Plog", "AccountingDoc", "CompCode",
-                 "FiscYear", "DocType", "PostingDate", "PostingItem", "PostingKey",
+                 "FiscYear", "DocType", "DocumentDate", "PostingDate", "PostingItem", "PostingKey",
                  "PostingAmount", "PostingCurrency", "ReversalDoc"],
         "CHCK": ["CheckId", "ItemNo", "Material", "MaterialDesc", "QuanPlan", "QuanCount",
                  "QuanDiff", "Uom", "Reason", "Batch", "Amount", "Currency", "PaymentMethod"],
         "MONY": ["SldDocId", "PaymentMethod", "AmountCo", "AmountExpenses", "AmountEarnings",
-                 "AmountCi", "Amount", "AmountPlan", "AmountDiffEval", "Reason", "Currency"],
+                 "AmountCi", "AmountDiff", "AmountPlan", "AmountDiffEval", "Reason", "Currency"],
         "QUAN": ["SldDocId", "Material", "MaterialDesc", "QuanPlan", "QuanCheckout", "QuanDiff",
                  "QuanDelivered", "QuanReturn", "QuanCheckin", "QuanFinalDiff", "Uom",
                  "ValueFinDiff", "Currency", "Batch"],
@@ -68,12 +68,21 @@ sap.ui.define([
                  "ComInvType", "ComInv", "ComInvDate", "ComFiType", "ComFiDoc", "ComFiDate",
                  "PaymentMethod", "CardNo", "HeaderText", "CompCode", "FiscYear", "Tpp",
                  "Vkorg", "ReferenceDoc"],
-        "CASH": ["SummaryStatus", "VisitId", "Customer", "BusinessType", "EquipOwner",
+        "CASH": ["SummaryStatus", "VisitId", "Customer", "BizTypeExt", "EquipOwner",
                  "TradingDiv", "VisitType", "CashType", "Quantity", "Uom", "AggSampleQty",
                  "SalesAmt", "PromoAmt", "AggFreeAmt", "FreeVendAmt", "SampleAmount", "NetAmt",
                  "CashCollected", "Recharge", "Refund", "Receipt", "UncollectCash", "BankedAmt",
                  "TheorCash", "TotCash", "EMoney", "Prepaid", "EmpId", "TotPayment", "DiffAmt",
                  "DriverCredit", "DriverDebit", "DriverReceive", "DriverGive", "Driver"]
+    };
+
+    // Label -> property fallback for fields whose binding/ID cannot be
+    // resolved from the control tree. Without this they stay visible in every
+    // mode (they are in no mode's whitelist but never get hidden). Keyed by the
+    // exact @UI label text (trailing ':' / spaces are stripped before lookup).
+    var LABEL_TO_PROP = {
+        "Vehicle": "Vehicle",
+        "Original Quantity": "OrigQty"
     };
 
     // Set of EVERY known entity property that appears on the object page, so a
@@ -180,8 +189,34 @@ sap.ui.define([
                     var sIdProp = this._propFromId(oField.getId && oField.getId());
                     if (sIdProp) { return sIdProp; }
                 }
-                // 5) last resort: the FormElement's own ID.
-                return this._propFromId(oFE.getId && oFE.getId());
+                // 5) the FormElement's own ID.
+                var sFEProp = this._propFromId(oFE.getId && oFE.getId());
+                if (sFEProp) { return sFEProp; }
+                // 6) last resort: the visible label text. Some fields (e.g.
+                //    Vehicle, Original Quantity) do not expose a resolvable
+                //    binding/ID, which previously left them visible in every
+                //    mode; the label maps them back to a property so the
+                //    per-mode filter can hide them.
+                return this._propFromLabel(oFE);
+            } catch (e) { /* ignore */ }
+            return "";
+        },
+
+        /**
+         * Resolve a property name from a FormElement's visible label text.
+         * @param {sap.ui.core.Control} oFE the FormElement
+         * @returns {string} the property name, or ""
+         */
+        _propFromLabel: function (oFE) {
+            try {
+                var oLbl = oFE.getLabel && oFE.getLabel();
+                var sTxt = (typeof oLbl === "string")
+                    ? oLbl
+                    : (oLbl && oLbl.getText && oLbl.getText());
+                if (sTxt) {
+                    var sKey = String(sTxt).replace(/[:\s]+$/, "").trim();
+                    if (LABEL_TO_PROP[sKey]) { return LABEL_TO_PROP[sKey]; }
+                }
             } catch (e) { /* ignore */ }
             return "";
         },

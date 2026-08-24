@@ -104,6 +104,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
              division         TYPE spart,
              accountgroup     TYPE ktokd,
              businesstype     TYPE katr4,
+             biztypeext       TYPE katr4,
              equipowner       TYPE c LENGTH 2,
              manproc          TYPE c LENGTH 1,
              visitlog         TYPE c LENGTH 1,
@@ -161,6 +162,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
              postingamount    TYPE p LENGTH 8 DECIMALS 2,
              postingcurrency  TYPE c LENGTH 5,
              postingdate      TYPE dats,
+             documentdate     TYPE dats,
              doctype          TYPE c LENGTH 2,
              reversaldoc      TYPE c LENGTH 10,
              " Money (ty_final4)
@@ -169,6 +171,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
              amountearnings   TYPE p LENGTH 8 DECIMALS 2,
              amountci         TYPE p LENGTH 8 DECIMALS 2,
              amountplan       TYPE p LENGTH 8 DECIMALS 2,
+             amountdiff       TYPE p LENGTH 8 DECIMALS 2,
              amountdiffeval   TYPE p LENGTH 8 DECIMALS 2,
              " Quantity (ty_final5)
              quancheckout     TYPE p LENGTH 8 DECIMALS 3,
@@ -1084,8 +1087,10 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           READ TABLE lt_rahd ASSIGNING FIELD-SYMBOL(<h>) WITH KEY tour_id = <c>-tour_id.
           IF sy-subrc = 0.
             ls_v-driver = <h>-driver.
-            to_local_time( EXPORTING iv_date = <h>-credate iv_time = <h>-cretime
-                           IMPORTING ev_date = ls_v-createdon ev_time = ls_v-createdtime ).
+            " Classic sets the visit Created On directly from RAHD-credate
+            " (no timezone conversion), so mirror that raw value.
+            ls_v-createdon   = <h>-credate.
+            ls_v-createdtime = <h>-cretime.
           ENDIF.
 
           " Plant / route / settlement date / document from the resolved tour.
@@ -1326,7 +1331,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
               AND fiscalyear        = @lt_fikey-fisc_year
             INTO TABLE @DATA(lt_item).
 
-          SELECT bukrs, belnr, gjahr, blart, budat, stblg FROM bkpf
+          SELECT bukrs, belnr, gjahr, blart, budat, bldat, stblg FROM bkpf
             FOR ALL ENTRIES IN @lt_fikey
             WHERE bukrs = @lt_fikey-compcod
               AND belnr = @lt_fikey-oi_csh_post
@@ -1400,9 +1405,10 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             READ TABLE lt_bkpf ASSIGNING FIELD-SYMBOL(<bk>)
               WITH KEY bukrs = <p>-compcod belnr = <p>-oi_csh_post gjahr = <p>-fisc_year.
             IF sy-subrc = 0.
-              ls_base-doctype     = <bk>-blart.
-              ls_base-postingdate = <bk>-budat.
-              ls_base-reversaldoc = <bk>-stblg.
+              ls_base-doctype      = <bk>-blart.
+              ls_base-postingdate  = <bk>-budat.
+              ls_base-documentdate = <bk>-bldat.
+              ls_base-reversaldoc  = <bk>-stblg.
             ENDIF.
           ENDIF.
 
@@ -1647,6 +1653,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           ls_m-amountearnings = conv_jpy( <mb>-amount_earnings ).
           ls_m-amountci       = conv_jpy( <mb>-amount_ci ).
           ls_m-amount         = conv_jpy( <mb>-amount_diff ).
+          ls_m-amountdiff     = conv_jpy( <mb>-amount_diff ).
           ls_m-amountplan     = conv_jpy( <mb>-amount_plan ).
           " 'Mon. Diff. In/Out' (classic ty_final4-amount_diff_eval): the classic
           " only ever fills it via MOVE-CORRESPONDING from /dsd/sl_sld_mbal, and
@@ -2072,7 +2079,12 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             READ TABLE lt_inv ASSIGNING FIELD-SYMBOL(<ci>) WITH KEY vbeln = <fl>-vbeln.
             IF sy-subrc = 0.
               ls_f-cominvtype = <ci>-fkart.
-              ls_f-cominvdate = <ci>-fkdat.
+              " Japan local time, same as the primary invoice date (billing
+              " create date + time can roll into the next day -> 14.08).
+              DATA lv_citim TYPE t.
+              to_local_time( EXPORTING iv_date = <ci>-fkdat iv_time = <ci>-erzet
+                             IMPORTING ev_date = ls_f-cominvdate ev_time = lv_citim ).
+              IF ls_f-cominvdate IS INITIAL. ls_f-cominvdate = <ci>-fkdat. ENDIF.
             ENDIF.
             READ TABLE lt_bkpf ASSIGNING FIELD-SYMBOL(<cb>) WITH KEY awkey = lv_cawk.
             IF sy-subrc = 0.
@@ -2229,6 +2241,9 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           move_comp( EXPORTING is_row = <row> iv_comp = 'ROUTE'          CHANGING cv = ls_h-route ).
           move_comp( EXPORTING is_row = <row> iv_comp = 'SETTLMNT_DATE'  CHANGING cv = ls_h-settlementdate ).
           move_comp( EXPORTING is_row = <row> iv_comp = 'KATR4'          CHANGING cv = ls_h-businesstype ).
+          " Route Summary labels KATR4 as 'Business Type Extension' (classic
+          " f_set_columns4), so surface the same value under that column too.
+          ls_h-biztypeext = ls_h-businesstype.
           move_comp( EXPORTING is_row = <row> iv_comp = '/SCL/EQUP_OWNR' CHANGING cv = ls_h-equipowner ).
           move_comp( EXPORTING is_row = <row> iv_comp = 'TRADING_DIV'    CHANGING cv = ls_h-tradingdiv ).
           move_comp( EXPORTING is_row = <row> iv_comp = 'VISIT_TYPE'     CHANGING cv = ls_h-visittype ).

@@ -149,6 +149,11 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       @EndUserText.label: 'Attrib. 4'
       BusinessType     : katr4;
 
+      // Same KATR4 value, but Route Summary labels it 'Business Type Extension'
+      // (classic f_set_columns4), so it is exposed as a separate column there.
+      @EndUserText.label: 'Business Type Extension'
+      BizTypeExt       : katr4;
+
       // Plain character types: the original data elements (/scl/mdmd_equp_own,
       // /dsd/de_man_proc, /ccej/sls_vlog_status) break OData V4 $metadata
       // compilation. Char maps cleanly to Edm.String.
@@ -274,7 +279,7 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       @EndUserText.label: 'Item No.'
       ItemNo           : abap.char(6);
 
-      @EndUserText.label: 'Planned Quantity'
+      @EndUserText.label: 'Target Quantity'
       QuanPlan         : abap.dec(15, 3);
 
       @EndUserText.label: 'Counted Quantity'
@@ -309,6 +314,9 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       @EndUserText.label: 'Posting Date'
       PostingDate      : abap.dats;
 
+      @EndUserText.label: 'Document Date'
+      DocumentDate     : abap.dats;
+
       @EndUserText.label: 'Document Type'
       DocType          : abap.char(2);
 
@@ -330,6 +338,10 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
 
       @EndUserText.label: 'Amount Planned'
       AmountPlan       : abap.dec(15, 2);
+
+      // Money difference amount (classic amount_diff, column 'Difference').
+      @EndUserText.label: 'Difference Amount'
+      AmountDiff       : abap.dec(15, 2);
 
       // Money difference In/Out evaluation (classic amount_diff_eval,
       // column label 'Mon. Diff. In/Out').

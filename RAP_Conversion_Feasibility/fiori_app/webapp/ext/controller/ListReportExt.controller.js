@@ -87,15 +87,18 @@ sap.ui.define([
     // mode shows only its own columns instead of the superset. ReportMode is
     // always shown; everything not listed for the current mode is hidden.
     var MODE_COLUMNS = {
+        // 'FsrStatus' is dropped here: it carries the same StatusId value, so
+        // showing both is redundant (user: "keep FSR Status or Status").
         "TOUR": ["ReportMode", "ExceptionText", "ChangedBy", "Scenario", "DriverSwap",
                  "ProcessingStatus", "VisitGroup", "IDocNo", "TourId", "CheckIn", "CheckOut",
                  "OrigEDate", "LogStatus", "ManRel", "Errors", "Warnings", "Origin", "Planned",
-                 "PresalesStatus", "TourStatus", "FsrStatus", "ShipmentNo", "Plant", "Route",
+                 "PresalesStatus", "TourStatus", "StatusId", "ShipmentNo", "Plant", "Route",
                  "SettlementDate", "Driver", "CoDriver", "CreatedOn", "CreatedTime", "CreatedBy"],
         "VISI": ["ReportMode", "ExceptionText", "ShipmentNo", "CreatedOn", "Plant", "Route",
-                 "SettlementDate", "Driver", "StatusId", "VisitId", "Customer", "EquipOwner",
-                 "AccountGroup", "BusinessType", "Vkorg", "DistChannel", "Division", "VisitReason",
-                 "ChangedOn", "ChangedTime", "ChangedBy", "ManProc", "VisitLog", "TourId"],
+                 "SettlementDate", "Driver", "StatusId", "ProcessingStatus", "VisitId", "Customer",
+                 "EquipOwner", "AccountGroup", "BusinessType", "Vkorg", "DistChannel", "Division",
+                 "VisitReason", "ChangedOn", "ChangedTime", "ChangedBy", "ManProc", "VisitLog",
+                 "TourId"],
         // Sales / Replenishment - full classic f_set_columns1 visible set.
         // (Most of these were already populated by the backend but hidden by
         // the previous short list, so they showed blank/absent; PackageGroup,
@@ -112,20 +115,27 @@ sap.ui.define([
                  "VisitId", "Customer", "Recipient", "BusinessType", "EquipOwner",
                  "PaymentMethod", "PaymentDescr", "CashId", "CashType", "CardNo", "CheckNo",
                  "Amount", "Currency", "DummyFlag", "Plog", "AccountingDoc", "CompCode",
-                 "FiscYear", "DocType", "PostingDate", "PostingItem", "PostingKey",
+                 "FiscYear", "DocType", "DocumentDate", "PostingDate", "PostingItem", "PostingKey",
                  "PostingAmount", "PostingCurrency", "ReversalDoc"],
+        // Check-Out / Check-In (classic check structure): includes the Reason
+        // code and the planned/counted/difference quantities.
         "CHCK": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "StatusId",
-                 "TourId", "Material", "MaterialDesc"],
+                 "TourId", "CheckId", "ItemNo", "Material", "MaterialDesc", "QuanPlan",
+                 "QuanCount", "QuanDiff", "Uom", "Reason", "Batch", "Amount", "Currency"],
         // Money difference (classic ty_final4). No quantity columns exist in
         // this mode - Planned/Original Quantity belong to Quantity difference,
         // not here. 'Amount' carries the classic Difference Amount; Reason and
         // Mon. Diff. In/Out (AmountDiffEval) complete the classic layout.
         "MONY": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "StatusId",
                  "TourId", "SldDocId", "PaymentMethod", "AmountCo", "AmountExpenses",
-                 "AmountEarnings", "AmountCi", "Amount", "Reason", "Currency",
+                 "AmountEarnings", "AmountCi", "AmountDiff", "Reason", "Currency",
                  "AmountPlan", "AmountDiffEval"],
+        // Quantity difference (classic ty_final5): Target/Check-Out/Delivered/
+        // Returned/Check-In quantities and the final difference + its value.
         "QUAN": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "StatusId",
-                 "SldDocId", "Material", "MaterialDesc", "QuanDiff", "Uom"],
+                 "SldDocId", "Material", "MaterialDesc", "QuanPlan", "QuanCheckout", "QuanDiff",
+                 "QuanDelivered", "QuanReturn", "QuanCheckin", "QuanFinalDiff", "ValueFinDiff",
+                 "Uom", "Currency", "Batch"],
         // FSR Documents - full classic f_set_columns / f_get_shipment_data
         // chain: sales order -> delivery -> invoice -> accounting / material doc.
         "FSRD": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "StatusId",
@@ -137,7 +147,7 @@ sap.ui.define([
                  "PaymentMethod", "CardNo", "HeaderText", "Tpp", "Vkorg", "ReferenceDoc", "TourId"],
         // Route Summary - full classic f_set_columns4 aggregated cash figures.
         "CASH": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "SummaryStatus",
-                 "VisitId", "Customer", "BusinessType", "EquipOwner", "TradingDiv", "VisitType",
+                 "VisitId", "Customer", "BizTypeExt", "EquipOwner", "TradingDiv", "VisitType",
                  "Quantity", "Uom", "AggSampleQty", "SalesAmt", "PromoAmt", "AggFreeAmt",
                  "FreeVendAmt", "SampleAmount", "NetAmt", "CashCollected", "Recharge", "Refund",
                  "Receipt", "UncollectCash", "BankedAmt", "TheorCash", "TotCash", "EMoney",
@@ -152,12 +162,21 @@ sap.ui.define([
     // is why the table only ever showed the few header columns ("half a page").
     // Driving StateUtil from this full key list lets applyExternalState both
     // ADD/SHOW the current mode's columns and hide the rest.
+    // Columns that carry a default @UI.lineItem annotation but belong to NO
+    // mode's layout. They must be listed here so the per-mode apply can HIDE
+    // them (a column absent from ALL_COLUMNS is never touched and therefore
+    // stays visible in every mode - that is how 'Original Quantity' leaked).
+    var EXTRA_HIDDEN = ["OrigQty"];
+
     var ALL_COLUMNS = (function () {
         var seen = {}, all = [];
         Object.keys(MODE_COLUMNS).forEach(function (sMode) {
             MODE_COLUMNS[sMode].forEach(function (sKey) {
                 if (!seen[sKey]) { seen[sKey] = true; all.push(sKey); }
             });
+        });
+        EXTRA_HIDDEN.forEach(function (sKey) {
+            if (!seen[sKey]) { seen[sKey] = true; all.push(sKey); }
         });
         return all;
     })();

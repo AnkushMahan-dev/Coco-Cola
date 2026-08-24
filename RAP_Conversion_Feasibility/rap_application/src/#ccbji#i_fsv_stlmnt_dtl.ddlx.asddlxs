@@ -187,6 +187,9 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
   @UI: { lineItem: [ { position: 233, label: 'Attrib. 4' } ], identification: [ { position: 303, label: 'Attrib. 4' } ] }
   BusinessType;
 
+  @UI: { lineItem: [ { position: 234, label: 'Business Type Extension' } ], identification: [ { position: 304, label: 'Business Type Extension' } ] }
+  BizTypeExt;
+
   @UI: { lineItem: [ { position: 234, label: 'Equipment Owner' } ], identification: [ { position: 304, label: 'Equipment Owner' } ] }
   EquipOwner;
 
@@ -224,7 +227,7 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
   @UI: { lineItem: [ { position: 248, label: 'Item No.' } ], identification: [ { position: 408, label: 'Item No.' } ] }
   ItemNo;
 
-  @UI: { lineItem: [ { position: 249, label: 'Planned Quantity' } ], identification: [ { position: 409, label: 'Planned Quantity' } ] }
+  @UI: { lineItem: [ { position: 249, label: 'Target Quantity' } ], identification: [ { position: 409, label: 'Target Quantity' } ] }
   QuanPlan;
 
   @UI: { lineItem: [ { position: 250, label: 'Counted Quantity' } ], identification: [ { position: 410, label: 'Counted Quantity' } ] }
@@ -259,6 +262,9 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
 
   @UI: { lineItem: [ { position: 260, label: 'Amount Planned' } ], identification: [ { position: 420, label: 'Amount Planned' } ] }
   AmountPlan;
+
+  @UI: { lineItem: [ { position: 259, label: 'Difference Amount' } ], identification: [ { position: 419, label: 'Difference Amount' } ] }
+  AmountDiff;
 
   @UI: { lineItem: [ { position: 260, label: 'Mon. Diff. In/Out' } ], identification: [ { position: 420, label: 'Mon. Diff. In/Out' } ] }
   AmountDiffEval;
@@ -299,6 +305,9 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
 
   @UI: { lineItem: [ { position: 270, label: 'Posting Date' } ], identification: [ { position: 430, label: 'Posting Date' } ] }
   PostingDate;
+
+  @UI: { lineItem: [ { position: 269, label: 'Document Date' } ], identification: [ { position: 429, label: 'Document Date' } ] }
+  DocumentDate;
 
   @UI: { lineItem: [ { position: 271, label: 'Document Type' } ], identification: [ { position: 431, label: 'Document Type' } ] }
   DocType;
