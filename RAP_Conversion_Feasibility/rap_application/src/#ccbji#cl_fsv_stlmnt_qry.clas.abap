@@ -1337,6 +1337,16 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
               AND fiscalyear        = @lt_fikey-fisc_year
             INTO TABLE @DATA(lt_item).
 
+          " Rcpt/Exp = BSEG-BUZID (line item identification, e.g. '1'). The CDS
+          " AccountingDocumentItemType comes back blank on this system, so read
+          " it straight from BSEG keyed by the same document/line item.
+          SELECT bukrs, belnr, gjahr, buzei, buzid FROM bseg
+            FOR ALL ENTRIES IN @lt_fikey
+            WHERE bukrs = @lt_fikey-compcod
+              AND belnr = @lt_fikey-oi_csh_post
+              AND gjahr = @lt_fikey-fisc_year
+            INTO TABLE @DATA(lt_bseg).
+
           SELECT bukrs, belnr, gjahr, blart, budat, bldat, stblg FROM bkpf
             FOR ALL ENTRIES IN @lt_fikey
             WHERE bukrs = @lt_fikey-compcod
@@ -1440,8 +1450,15 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
               ls_p-postingcurrency = <fi>-pswsl.
               " Rcpt/Exp = the FI line item identification (classic ty_final2
               " BUZID / column 'Rcpt/Exp.'), e.g. '1' for the customer/G-L
-              " settlement items, blank for the banked-in rows.
-              ls_p-rcptexp = <fi>-buzid.
+              " settlement items, blank for the banked-in rows. Read from BSEG.
+              READ TABLE lt_bseg ASSIGNING FIELD-SYMBOL(<bg>)
+                WITH KEY bukrs = <fi>-bukrs belnr = <fi>-belnr
+                         gjahr = <fi>-gjahr buzei = <fi>-buzei.
+              IF sy-subrc = 0.
+                ls_p-rcptexp = <bg>-buzid.
+              ELSE.
+                ls_p-rcptexp = <fi>-buzid.
+              ENDIF.
               " Recipient = the posting line's customer/account (classic MOD-006:
               " when settled, "Customer" becomes "Recipient" and the visit
               " customer is shown separately in Customer).
