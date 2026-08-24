@@ -10,7 +10,7 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
   @UI.hidden: true
   RowKey;
 
-  @UI: { lineItem: [ { position: 502, label: 'Seq No.' } ], identification: [ { position: 502, label: 'Seq No.' } ] }
+  @UI.hidden: true
   Seqno;
 
   // Explicit column labels on every lineItem: on a CUSTOM ENTITY the element
