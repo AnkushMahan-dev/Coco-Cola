@@ -1021,7 +1021,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
 
     TRY.
         SELECT tour_id, visit_id, custnr, vkorg, vtweg, spart, viscod,
-               cngdate, cngtime, cnguser, status, man_proc, credate, cretime
+               cngdate, cngtime, cnguser, status, man_proc
           FROM /dsd/hh_racvhd
           FOR ALL ENTRIES IN @it_tour
           WHERE tour_id = @it_tour-tourid
@@ -1077,16 +1077,16 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             ls_v-equipowner   = <k>-/scl/equp_ownr.
           ENDIF.
 
-          " Tour header -> driver + created stamp.
+          " Tour header -> driver + created stamp. Created On comes from the
+          " visit's own tour header (classic uses RAHD-credate), converted to
+          " Japan local time. Visits under different tours/shipments therefore
+          " show different created dates (e.g. shipment 9164600728 = 14.08).
           READ TABLE lt_rahd ASSIGNING FIELD-SYMBOL(<h>) WITH KEY tour_id = <c>-tour_id.
           IF sy-subrc = 0.
             ls_v-driver = <h>-driver.
+            to_local_time( EXPORTING iv_date = <h>-credate iv_time = <h>-cretime
+                           IMPORTING ev_date = ls_v-createdon ev_time = ls_v-createdtime ).
           ENDIF.
-          " Created On is per VISIT (RACVHD creation stamp), converted to Japan
-          " local time - not the tour-level RAHD date (which is the same for all
-          " visits). The classic shows a different created date per visit.
-          to_local_time( EXPORTING iv_date = <c>-credate iv_time = <c>-cretime
-                         IMPORTING ev_date = ls_v-createdon ev_time = ls_v-createdtime ).
 
           " Plant / route / settlement date / document from the resolved tour.
           READ TABLE it_tour ASSIGNING FIELD-SYMBOL(<t>) WITH KEY tourid = <c>-tour_id.
