@@ -868,7 +868,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             WHERE tour_id = @lt_rahd-tour_id
             INTO TABLE @DATA(lt_coci).
           " Visit group (AUTH) by visit list (OBJ_ID).
-          SELECT vlid, auth FROM /dsd/vc_vlh
+          SELECT vlid, auth, exdat1 FROM /dsd/vc_vlh
             FOR ALL ENTRIES IN @lt_rahd
             WHERE vlid = @lt_rahd-obj_id
             INTO TABLE @DATA(lt_vlh).
@@ -899,7 +899,6 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             ls_r-manrel           = <h>-manrel.
             ls_r-origin           = <h>-origin.
             ls_r-presalesstatus   = <h>-pres_procstat.
-            ls_r-origedate        = <h>-exdat1.
             ls_r-createdby        = <h>-creuser.
             ls_r-changedby        = <h>-cnguser.
             " Created / Changed stamps converted UTC -> Japan local time.
@@ -915,6 +914,8 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             READ TABLE lt_vlh ASSIGNING FIELD-SYMBOL(<vl>) WITH KEY vlid = <h>-obj_id.
             IF sy-subrc = 0.
               ls_r-visitgroup = <vl>-auth.
+              " Original execution date (classic MOD-030, /DSD/VC_VLH-EXDAT1).
+              ls_r-origedate  = <vl>-exdat1.
             ENDIF.
 
             " Scenario + Driver swap from CHECKER (classic MOD-008/017 rules).
