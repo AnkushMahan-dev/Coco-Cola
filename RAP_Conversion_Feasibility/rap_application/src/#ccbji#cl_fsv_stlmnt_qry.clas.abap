@@ -134,6 +134,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
              podate           TYPE dats,
              tacode           TYPE c LENGTH 4,
              reason           TYPE c LENGTH 4,
+             reasoncode       TYPE c LENGTH 4,
              batch            TYPE c LENGTH 10,
              condtype         TYPE c LENGTH 4,
              origqty          TYPE p LENGTH 8 DECIMALS 3,
@@ -202,6 +203,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
              " Route Summary (CASH) - full classic f_set_columns4 figures,
              " captured from the external cash-difference program's ALV.
              summarystatus    TYPE c LENGTH 20,
+             paymentdiffstatus TYPE c LENGTH 20,
              tradingdiv       TYPE c LENGTH 4,
              visittype        TYPE c LENGTH 4,
              empid            TYPE c LENGTH 20,
@@ -1087,10 +1089,12 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           READ TABLE lt_rahd ASSIGNING FIELD-SYMBOL(<h>) WITH KEY tour_id = <c>-tour_id.
           IF sy-subrc = 0.
             ls_v-driver = <h>-driver.
-            " Classic sets the visit Created On directly from RAHD-credate
-            " (no timezone conversion), so mirror that raw value.
-            ls_v-createdon   = <h>-credate.
-            ls_v-createdtime = <h>-cretime.
+            " Visit Created On = tour header create stamp converted to Japan
+            " local time. The stored stamp (e.g. 13.08 23:52) rolls into the
+            " next day in JST (+9h) -> 14.08, matching the GUI.
+            to_local_time( EXPORTING iv_date = <h>-credate iv_time = <h>-cretime
+                           IMPORTING ev_date = ls_v-createdon ev_time = ls_v-createdtime ).
+            IF ls_v-createdon IS INITIAL. ls_v-createdon = <h>-credate. ENDIF.
           ENDIF.
 
           " Plant / route / settlement date / document from the resolved tour.
@@ -1596,6 +1600,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           ls_c-quandiff   = <m>-quan_diff.
           ls_c-uom        = <m>-uom.
           ls_c-reason     = <m>-reason.
+          ls_c-reasoncode = <m>-reason.
           ls_c-batch      = <m>-charg.
 
           READ TABLE lt_makt ASSIGNING FIELD-SYMBOL(<mk>) WITH KEY matnr = <m>-matnr.
@@ -1667,6 +1672,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             ls_m-amountdiffeval = conv_jpy( lv_deval ).
           ENDIF.
           ls_m-reason         = <mb>-reason.
+          ls_m-reasoncode     = <mb>-reason.
           ls_m-currency       = <mb>-currency_amount.
           IF <it> IS ASSIGNED.
             ls_m-tourid     = <it>-tour_id.
@@ -2290,6 +2296,10 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             WHEN '3' OR 'R'. ls_h-light = 1.
             WHEN OTHERS.     ls_h-light = 0.
           ENDCASE.
+          " Payment difference status = the classic traffic-light column
+          " (coloured by LIGHT). Carry the summary-status text so the column is
+          " a coloured status indicator.
+          ls_h-paymentdiffstatus = ls_h-summarystatus.
 
           APPEND ls_h TO rt.
         ENDLOOP.

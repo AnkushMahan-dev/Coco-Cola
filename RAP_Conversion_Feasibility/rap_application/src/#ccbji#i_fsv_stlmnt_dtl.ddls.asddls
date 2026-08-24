@@ -161,7 +161,7 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       @EndUserText.label: 'Equipment Owner'
       EquipOwner       : abap.char(2);
 
-      @EndUserText.label: 'Processing Indicator'
+      @EndUserText.label: 'Manually Processed'
       ManProc          : abap.char(1);
 
       @EndUserText.label: 'Visit Log Status'
@@ -240,6 +240,11 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
 
       @EndUserText.label: 'Reason'
       Reason           : abap.char(4);
+
+      // Same 'reason' value, but Check-Out/In and Money Difference label it
+      // 'Reason Code' (Sales/Replenishment keeps 'Removal Indicator' on Reason).
+      @EndUserText.label: 'Reason Code'
+      ReasonCode       : abap.char(4);
 
       @EndUserText.label: 'Batch'
       Batch            : abap.char(10);
@@ -420,6 +425,9 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       // ---- Route Summary (CASH) : full classic f_set_columns4 figures -------
       @EndUserText.label: 'Summary Status'
       SummaryStatus    : abap.char(20);
+
+      @EndUserText.label: 'Payment difference status'
+      PaymentDiffStatus : abap.char(20);
 
       @EndUserText.label: 'Trading Division'
       TradingDiv       : abap.char(4);

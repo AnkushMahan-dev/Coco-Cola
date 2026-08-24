@@ -39,7 +39,7 @@ sap.ui.define([
                  "CreatedTime", "CreatedBy", "ChangedOn", "ChangedTime", "ChangedBy",
                  "Scenario", "DriverSwap", "VisitGroup", "IDocNo", "CheckIn", "CheckOut",
                  "OrigEDate", "LogStatus", "ManRel", "Errors", "Warnings", "Origin",
-                 "Planned", "PresalesStatus", "TourStatus", "FsrStatus"],
+                 "Planned", "PresalesStatus", "TourStatus", "StatusId"],
         "VISI": ["ExceptionText", "CreatedOn", "Driver", "VisitId",
                  "Customer", "EquipOwner", "AccountGroup", "BusinessType", "Vkorg",
                  "DistChannel", "Division", "VisitReason", "ChangedOn", "ChangedTime",
@@ -55,9 +55,9 @@ sap.ui.define([
                  "FiscYear", "DocType", "DocumentDate", "PostingDate", "PostingItem", "PostingKey",
                  "PostingAmount", "PostingCurrency", "ReversalDoc"],
         "CHCK": ["CheckId", "ItemNo", "Material", "MaterialDesc", "QuanPlan", "QuanCount",
-                 "QuanDiff", "Uom", "Reason", "Batch", "Amount", "Currency", "PaymentMethod"],
+                 "QuanDiff", "Uom", "ReasonCode", "Batch", "Amount", "Currency", "PaymentMethod"],
         "MONY": ["SldDocId", "PaymentMethod", "AmountCo", "AmountExpenses", "AmountEarnings",
-                 "AmountCi", "AmountDiff", "AmountPlan", "AmountDiffEval", "Reason", "Currency"],
+                 "AmountCi", "AmountDiff", "AmountPlan", "AmountDiffEval", "ReasonCode", "Currency"],
         "QUAN": ["SldDocId", "Material", "MaterialDesc", "QuanPlan", "QuanCheckout", "QuanDiff",
                  "QuanDelivered", "QuanReturn", "QuanCheckin", "QuanFinalDiff", "Uom",
                  "ValueFinDiff", "Currency", "Batch"],
@@ -73,7 +73,8 @@ sap.ui.define([
                  "SalesAmt", "PromoAmt", "AggFreeAmt", "FreeVendAmt", "SampleAmount", "NetAmt",
                  "CashCollected", "Recharge", "Refund", "Receipt", "UncollectCash", "BankedAmt",
                  "TheorCash", "TotCash", "EMoney", "Prepaid", "EmpId", "TotPayment", "DiffAmt",
-                 "DriverCredit", "DriverDebit", "DriverReceive", "DriverGive", "Driver"]
+                 "PaymentDiffStatus", "DriverCredit", "DriverDebit", "DriverReceive",
+                 "DriverGive", "Driver"]
     };
 
     // Label -> property fallback for fields whose binding/ID cannot be
@@ -82,7 +83,8 @@ sap.ui.define([
     // exact @UI label text (trailing ':' / spaces are stripped before lookup).
     var LABEL_TO_PROP = {
         "Vehicle": "Vehicle",
-        "Original Quantity": "OrigQty"
+        "Original Quantity": "OrigQty",
+        "FSR Status": "FsrStatus"
     };
 
     // Set of EVERY known entity property that appears on the object page, so a

@@ -212,6 +212,9 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
   @UI: { lineItem: [ { position: 243, label: 'Removal Indicator' } ], identification: [ { position: 403, label: 'Removal Indicator' } ] }
   Reason;
 
+  @UI: { lineItem: [ { position: 244, label: 'Reason Code' } ], identification: [ { position: 404, label: 'Reason Code' } ] }
+  ReasonCode;
+
   @UI: { lineItem: [ { position: 244, label: 'Batch' } ], identification: [ { position: 404, label: 'Batch' } ] }
   Batch;
 
@@ -439,6 +442,11 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
   // ---- Route Summary (CASH) : full classic f_set_columns4 figures ----------
   @UI: { lineItem: [ { position: 300, label: 'Summary Status' } ], identification: [ { position: 460, label: 'Summary Status' } ] }
   SummaryStatus;
+
+  // Payment difference status: coloured by the same traffic light (Light).
+  @UI: { lineItem:       [ { position: 336, label: 'Payment difference status', criticality: 'Light' } ],
+         identification: [ { position: 461, label: 'Payment difference status', criticality: 'Light' } ] }
+  PaymentDiffStatus;
 
   @UI: { lineItem: [ { position: 301, label: 'Trading Division' } ], identification: [ { position: 461, label: 'Trading Division' } ] }
   TradingDiv;

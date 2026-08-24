@@ -121,14 +121,14 @@ sap.ui.define([
         // code and the planned/counted/difference quantities.
         "CHCK": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "StatusId",
                  "TourId", "CheckId", "ItemNo", "Material", "MaterialDesc", "QuanPlan",
-                 "QuanCount", "QuanDiff", "Uom", "Reason", "Batch", "Amount", "Currency"],
+                 "QuanCount", "QuanDiff", "Uom", "ReasonCode", "Batch", "Amount", "Currency"],
         // Money difference (classic ty_final4). No quantity columns exist in
         // this mode - Planned/Original Quantity belong to Quantity difference,
         // not here. 'Amount' carries the classic Difference Amount; Reason and
         // Mon. Diff. In/Out (AmountDiffEval) complete the classic layout.
         "MONY": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "StatusId",
                  "TourId", "SldDocId", "PaymentMethod", "AmountCo", "AmountExpenses",
-                 "AmountEarnings", "AmountCi", "AmountDiff", "Reason", "Currency",
+                 "AmountEarnings", "AmountCi", "AmountDiff", "ReasonCode", "Currency",
                  "AmountPlan", "AmountDiffEval"],
         // Quantity difference (classic ty_final5): Target/Check-Out/Delivered/
         // Returned/Check-In quantities and the final difference + its value.
@@ -151,8 +151,8 @@ sap.ui.define([
                  "Quantity", "Uom", "AggSampleQty", "SalesAmt", "PromoAmt", "AggFreeAmt",
                  "FreeVendAmt", "SampleAmount", "NetAmt", "CashCollected", "Recharge", "Refund",
                  "Receipt", "UncollectCash", "BankedAmt", "TheorCash", "TotCash", "EMoney",
-                 "Prepaid", "EmpId", "TotPayment", "DiffAmt", "DriverCredit", "DriverDebit",
-                 "DriverReceive", "DriverGive", "Driver"]
+                 "Prepaid", "EmpId", "TotPayment", "DiffAmt", "PaymentDiffStatus",
+                 "DriverCredit", "DriverDebit", "DriverReceive", "DriverGive", "Driver"]
     };
 
     // Union of EVERY column referenced by any mode. CRITICAL for the column
@@ -166,7 +166,7 @@ sap.ui.define([
     // mode's layout. They must be listed here so the per-mode apply can HIDE
     // them (a column absent from ALL_COLUMNS is never touched and therefore
     // stays visible in every mode - that is how 'Original Quantity' leaked).
-    var EXTRA_HIDDEN = ["OrigQty"];
+    var EXTRA_HIDDEN = ["OrigQty", "FsrStatus"];
 
     var ALL_COLUMNS = (function () {
         var seen = {}, all = [];
