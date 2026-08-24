@@ -1326,7 +1326,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
                  fiscalyear            AS gjahr,
                  accountingdocumentitem AS buzei,
                  postingkey            AS bschl,
-                 debitcreditcode       AS shkzg,
+                 accountingdocumentitemtype AS buzid,
                  absltamtinbalancetransaccrcy AS pswbt,
                  balancetransactioncurrency   AS pswsl,
                  customer              AS kunnr
@@ -1438,13 +1438,10 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
               ls_p-postingkey      = <fi>-bschl.
               ls_p-postingamount   = conv_jpy( <fi>-pswbt ).
               ls_p-postingcurrency = <fi>-pswsl.
-              " Rcpt/Exp = receipt vs expense from the debit/credit indicator
-              " (H = credit -> Receipt, S = debit -> Expense).
-              CASE <fi>-shkzg.
-                WHEN 'H'. ls_p-rcptexp = 'Rcpt'.
-                WHEN 'S'. ls_p-rcptexp = 'Exp'.
-                WHEN OTHERS. CLEAR ls_p-rcptexp.
-              ENDCASE.
+              " Rcpt/Exp = the FI line item identification (classic ty_final2
+              " BUZID / column 'Rcpt/Exp.'), e.g. '1' for the customer/G-L
+              " settlement items, blank for the banked-in rows.
+              ls_p-rcptexp = <fi>-buzid.
               " Recipient = the posting line's customer/account (classic MOD-006:
               " when settled, "Customer" becomes "Recipient" and the visit
               " customer is shown separately in Customer).
@@ -2461,16 +2458,26 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
     IF iv_date IS INITIAL.
       RETURN.
     ENDIF.
-    TRY.
-        DATA lv_ts TYPE timestamp.
-        CONVERT DATE iv_date TIME iv_time INTO TIME STAMP lv_ts TIME ZONE 'UTC  '.
-        " + 9 hours = 32400 seconds.
-        lv_ts = cl_abap_tstmp=>add( tstmp = lv_ts secs = 32400 ).
-        CONVERT TIME STAMP lv_ts TIME ZONE 'UTC  ' INTO DATE ev_date TIME ev_time.
-      CATCH cx_root.
-        ev_date = iv_date.
-        ev_time = iv_time.
-    ENDTRY.
+    " Pure date/time arithmetic (+9h) - no FM, timezone customizing or timestamp
+    " class, so it cannot silently fall back to the raw value the way the
+    " previous FM/timestamp versions did (they left 13.08 23:52 UTC unchanged
+    " instead of rolling to 14.08 JST).
+    DATA lv_secs TYPE i.
+    lv_secs = iv_time+0(2) * 3600 + iv_time+2(2) * 60 + iv_time+4(2) + 32400.
+    DATA lv_date TYPE d.
+    lv_date = iv_date.
+    WHILE lv_secs >= 86400.
+      lv_secs = lv_secs - 86400.
+      lv_date = lv_date + 1.
+    ENDWHILE.
+    ev_date = lv_date.
+    DATA: lv_h TYPE n LENGTH 2,
+          lv_m TYPE n LENGTH 2,
+          lv_s TYPE n LENGTH 2.
+    lv_h = lv_secs DIV 3600.
+    lv_m = ( lv_secs MOD 3600 ) DIV 60.
+    lv_s = lv_secs MOD 60.
+    ev_time = lv_h && lv_m && lv_s.
   ENDMETHOD.
 
 ENDCLASS.
