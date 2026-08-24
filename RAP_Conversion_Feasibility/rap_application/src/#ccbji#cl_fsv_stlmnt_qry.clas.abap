@@ -1326,7 +1326,6 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
                  fiscalyear            AS gjahr,
                  accountingdocumentitem AS buzei,
                  postingkey            AS bschl,
-                 accountingdocumentitemtype AS buzid,
                  absltamtinbalancetransaccrcy AS pswbt,
                  balancetransactioncurrency   AS pswsl,
                  customer              AS kunnr
@@ -1337,30 +1336,6 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
               AND fiscalyear        = @lt_fikey-fisc_year
             INTO TABLE @DATA(lt_item).
 
-          " Rcpt/Exp = BSEG-BUZID (line item identification, e.g. '1'). The CDS
-          " AccountingDocumentItemType and a plain BSEG SELECT both come back
-          " blank on S/4, so read the document with FI_DOCUMENT_READ exactly like
-          " the classic report (its t_bseg carries the populated BUZID).
-          DATA: lt_bseg     TYPE STANDARD TABLE OF bseg,
-                lt_bseg_tmp TYPE STANDARD TABLE OF bseg.
-          CLEAR lt_bseg.
-          LOOP AT lt_fikey ASSIGNING FIELD-SYMBOL(<fk>).
-            CLEAR lt_bseg_tmp.
-            CALL FUNCTION 'FI_DOCUMENT_READ'
-              EXPORTING
-                i_bukrs     = <fk>-compcod
-                i_belnr     = <fk>-oi_csh_post
-                i_gjahr     = <fk>-fisc_year
-              TABLES
-                t_bseg      = lt_bseg_tmp
-              EXCEPTIONS
-                wrong_input = 1
-                not_found   = 2
-                OTHERS      = 3.
-            IF sy-subrc = 0.
-              APPEND LINES OF lt_bseg_tmp TO lt_bseg.
-            ENDIF.
-          ENDLOOP.
 
           SELECT bukrs, belnr, gjahr, blart, budat, bldat, stblg FROM bkpf
             FOR ALL ENTRIES IN @lt_fikey
@@ -1463,18 +1438,9 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
               ls_p-postingkey      = <fi>-bschl.
               ls_p-postingamount   = conv_jpy( <fi>-pswbt ).
               ls_p-postingcurrency = <fi>-pswsl.
-              " Rcpt/Exp = the FI line item identification (classic ty_final2
-              " BUZID / column 'Rcpt/Exp.'), e.g. '1' for the customer/G-L
-              " settlement items, blank for the banked-in rows. Match the
-              " document line item on a normalised BUZEI (BSEG is NUMC3).
-              DATA lv_bz TYPE buzei.
-              lv_bz = <fi>-buzei.
-              READ TABLE lt_bseg ASSIGNING FIELD-SYMBOL(<bg>)
-                WITH KEY bukrs = <fi>-bukrs belnr = <fi>-belnr
-                         gjahr = <fi>-gjahr buzei = lv_bz.
-              IF sy-subrc = 0.
-                ls_p-rcptexp = <bg>-buzid.
-              ENDIF.
+              " Rcpt/Exp column maps to the Cash Type (classic CASH_TYP): '1'
+              " for the cash settlement line items, blank for the banked rows.
+              ls_p-rcptexp = ls_base-cashtype.
               " Recipient = the posting line's customer/account (classic MOD-006:
               " when settled, "Customer" becomes "Recipient" and the visit
               " customer is shown separately in Customer).
