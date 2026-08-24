@@ -57,7 +57,7 @@ sap.ui.define([
         "CHCK": ["CheckId", "ItemNo", "Material", "MaterialDesc", "QuanPlan", "QuanCount",
                  "QuanDiff", "Uom", "Reason", "Batch", "Amount", "Currency", "PaymentMethod"],
         "MONY": ["SldDocId", "PaymentMethod", "AmountCo", "AmountExpenses", "AmountEarnings",
-                 "AmountCi", "Amount", "AmountPlan", "Reason", "Currency"],
+                 "AmountCi", "Amount", "AmountPlan", "AmountDiffEval", "Reason", "Currency"],
         "QUAN": ["SldDocId", "Material", "MaterialDesc", "QuanPlan", "QuanCheckout", "QuanDiff",
                  "QuanDelivered", "QuanReturn", "QuanCheckin", "QuanFinalDiff", "Uom",
                  "ValueFinDiff", "Currency", "Batch"],

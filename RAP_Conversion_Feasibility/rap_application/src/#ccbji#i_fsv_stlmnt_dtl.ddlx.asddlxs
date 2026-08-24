@@ -260,6 +260,9 @@ annotate entity /CCBJI/I_FSV_STLMNT_DTL with
   @UI: { lineItem: [ { position: 260, label: 'Amount Planned' } ], identification: [ { position: 420, label: 'Amount Planned' } ] }
   AmountPlan;
 
+  @UI: { lineItem: [ { position: 260, label: 'Mon. Diff. In/Out' } ], identification: [ { position: 420, label: 'Mon. Diff. In/Out' } ] }
+  AmountDiffEval;
+
   @UI: { lineItem: [ { position: 261, label: 'Quantity Check-Out' } ], identification: [ { position: 421, label: 'Quantity Check-Out' } ] }
   QuanCheckout;
 

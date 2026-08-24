@@ -331,6 +331,11 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       @EndUserText.label: 'Amount Planned'
       AmountPlan       : abap.dec(15, 2);
 
+      // Money difference In/Out evaluation (classic amount_diff_eval,
+      // column label 'Mon. Diff. In/Out').
+      @EndUserText.label: 'Mon. Diff. In/Out'
+      AmountDiffEval   : abap.dec(15, 2);
+
       // Quantity difference (classic ty_final5)
       @EndUserText.label: 'Quantity Check-Out'
       QuanCheckout     : abap.dec(15, 3);

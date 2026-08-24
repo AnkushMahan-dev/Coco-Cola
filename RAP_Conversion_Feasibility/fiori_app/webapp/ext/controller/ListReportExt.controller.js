@@ -75,7 +75,7 @@ sap.ui.define([
         "VISI": ["ShipmentNo", "StatusId", "Customer", "VisitId", "VisitReason"], // Visit details
         "SLRP": ["ShipmentNo", "StatusId", "Customer", "Material", "Vkorg"],      // Sales / Replenishment
         "PAYT": ["ShipmentNo", "Customer", "PaymentMethod", "Currency", "SldDocId"], // Payment
-        "CHCK": ["ShipmentNo", "StatusId", "Driver", "Vehicle", "TourId"],        // Check-out / Check-in
+        "CHCK": ["ShipmentNo", "StatusId", "Driver", "TourId"],                   // Check-out / Check-in
         "MONY": ["ShipmentNo", "Customer", "Currency", "PaymentMethod"],          // Money difference
         "QUAN": ["ShipmentNo", "Customer", "Material", "DeliveryNo"],             // Quantity difference
         "FSRD": ["ShipmentNo", "StatusId", "Customer", "SldDocId", "ObjType"],    // FSR documents
@@ -116,8 +116,14 @@ sap.ui.define([
                  "PostingAmount", "PostingCurrency", "ReversalDoc"],
         "CHCK": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "StatusId",
                  "TourId", "Material", "MaterialDesc"],
+        // Money difference (classic ty_final4). No quantity columns exist in
+        // this mode - Planned/Original Quantity belong to Quantity difference,
+        // not here. 'Amount' carries the classic Difference Amount; Reason and
+        // Mon. Diff. In/Out (AmountDiffEval) complete the classic layout.
         "MONY": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "StatusId",
-                 "SldDocId", "Amount"],
+                 "TourId", "SldDocId", "PaymentMethod", "AmountCo", "AmountExpenses",
+                 "AmountEarnings", "AmountCi", "Amount", "Reason", "Currency",
+                 "AmountPlan", "AmountDiffEval"],
         "QUAN": ["ReportMode", "ShipmentNo", "Plant", "Route", "SettlementDate", "StatusId",
                  "SldDocId", "Material", "MaterialDesc", "QuanDiff", "Uom"],
         // FSR Documents - full classic f_set_columns / f_get_shipment_data

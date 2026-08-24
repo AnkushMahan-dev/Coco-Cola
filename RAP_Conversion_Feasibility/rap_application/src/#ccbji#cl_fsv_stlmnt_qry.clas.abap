@@ -169,6 +169,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
              amountearnings   TYPE p LENGTH 8 DECIMALS 2,
              amountci         TYPE p LENGTH 8 DECIMALS 2,
              amountplan       TYPE p LENGTH 8 DECIMALS 2,
+             amountdiffeval   TYPE p LENGTH 8 DECIMALS 2,
              " Quantity (ty_final5)
              quancheckout     TYPE p LENGTH 8 DECIMALS 3,
              quandelivered    TYPE p LENGTH 8 DECIMALS 3,
@@ -1647,6 +1648,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           ls_m-amountci       = conv_jpy( <mb>-amount_ci ).
           ls_m-amount         = conv_jpy( <mb>-amount_diff ).
           ls_m-amountplan     = conv_jpy( <mb>-amount_plan ).
+          ls_m-amountdiffeval = conv_jpy( <mb>-amount_diff_eval ).
           ls_m-reason         = <mb>-reason.
           ls_m-currency       = <mb>-currency_amount.
           IF <it> IS ASSIGNED.
