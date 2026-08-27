@@ -488,7 +488,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           lv_sample_max = lv_offset + ( 2 * lv_page_sz ).
         ENDIF.
         " Absolute safety ceiling and floor (never unbounded, never trivially small).
-        IF lv_sample_max > 10000. lv_sample_max = 10000. ENDIF.
+        IF lv_sample_max > 20000. lv_sample_max = 20000. ENDIF.
         IF lv_sample_max < 200.   lv_sample_max = 200.   ENDIF.
 
         " Resolve tours:
@@ -799,7 +799,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
     CASE iv_mode.
       WHEN 'CHCK' OR 'MONY' OR 'QUAN'. lv_cap = 500.
       WHEN 'VISI' OR 'SLRP' OR 'PAYT'. lv_cap = 3000.
-      WHEN OTHERS.                     lv_cap = 10000.
+      WHEN OTHERS.                     lv_cap = 20000.   " Tour / FSR / Cash
     ENDCASE.
     IF lv_max > lv_cap. lv_max = lv_cap. ENDIF.
 
