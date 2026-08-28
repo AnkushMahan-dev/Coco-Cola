@@ -481,15 +481,18 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
 
         DATA lv_sample_max TYPE i.
         IF lv_page_sz = if_rap_query_paging=>page_size_unlimited OR lv_page_sz <= 0.
-          " "Load all" / count request: use a generous but safe default.
-          lv_sample_max = 2000.
+          " "Load all" / count request: use a generous default.
+          lv_sample_max = 50000.
         ELSE.
           " Enough tours to fill the requested window plus one page of buffer.
           lv_sample_max = lv_offset + ( 2 * lv_page_sz ).
         ENDIF.
-        " Absolute safety ceiling and floor (never unbounded, never trivially small).
-        IF lv_sample_max > 20000. lv_sample_max = 20000. ENDIF.
-        IF lv_sample_max < 200.   lv_sample_max = 200.   ENDIF.
+        " High safety ceiling only (prevents a runaway blank search from
+        " short-dumping); it is NOT a business record limit - a FILTERED
+        " selection (plant / route / date / visit list) goes through get_tours
+        " and is never capped, exactly like the classic selection screen.
+        IF lv_sample_max > 50000. lv_sample_max = 50000. ENDIF.
+        IF lv_sample_max < 50.    lv_sample_max = 50.    ENDIF.
 
         " Resolve tours:
         "  - Object Page by-key read (RowKey): decode mode+tour from the key
@@ -797,9 +800,9 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
 
     DATA lv_cap TYPE i.
     CASE iv_mode.
-      WHEN 'CHCK' OR 'MONY' OR 'QUAN'. lv_cap = 500.
-      WHEN 'VISI' OR 'SLRP' OR 'PAYT'. lv_cap = 3000.
-      WHEN OTHERS.                     lv_cap = 20000.   " Tour / FSR / Cash
+      WHEN 'CHCK' OR 'MONY' OR 'QUAN'. lv_cap = 20000.   " row-explosive modes
+      WHEN 'VISI' OR 'SLRP' OR 'PAYT'. lv_cap = 30000.
+      WHEN OTHERS.                     lv_cap = 50000.   " Tour / FSR / Cash
     ENDCASE.
     IF lv_max > lv_cap. lv_max = lv_cap. ENDIF.
 
@@ -1950,26 +1953,47 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             WHERE bktxt IN @lr_bktxt INTO TABLE @lt_mkpf.
         ENDIF.
 
+        " Pre-index the tours by their shipment and visit-list numbers (leading-
+        " zero stripped) into a hashed table ONCE, so each order finds its tour
+        " in O(1) instead of scanning every tour (was O(orders x tours)). The
+        " match rule and the matched tour are identical to the old inner loop -
+        " purely a lookup-speed change, same output. The matched line carries
+        " the full tour fields so the downstream row build is unchanged.
+        TYPES: BEGIN OF ty_tkey,
+                 k         TYPE xblnr,
+                 tourid    TYPE /dsd/hh_tour_id,
+                 vlid      TYPE /dsd/vc_vlid,
+                 shipment  TYPE tknum,
+                 werks     TYPE werks_d,
+                 route     TYPE route,
+                 date      TYPE erdat,
+                 idoc      TYPE edi_docnum,
+                 status_id TYPE /dsd/st_status_id,
+               END OF ty_tkey.
+        DATA lt_tourkey TYPE HASHED TABLE OF ty_tkey WITH UNIQUE KEY k.
+        LOOP AT it_tour ASSIGNING FIELD-SYMBOL(<tk>).
+          DATA ls_tk TYPE ty_tkey.
+          ls_tk = CORRESPONDING #( <tk> ).
+          DATA lv_k TYPE xblnr.
+          lv_k = <tk>-shipment.  SHIFT lv_k LEFT DELETING LEADING '0'.
+          IF lv_k IS NOT INITIAL AND NOT line_exists( lt_tourkey[ k = lv_k ] ).
+            ls_tk-k = lv_k.  INSERT ls_tk INTO TABLE lt_tourkey.
+          ENDIF.
+          lv_k = <tk>-vlid.      SHIFT lv_k LEFT DELETING LEADING '0'.
+          IF lv_k IS NOT INITIAL AND NOT line_exists( lt_tourkey[ k = lv_k ] ).
+            ls_tk-k = lv_k.  INSERT ls_tk INTO TABLE lt_tourkey.
+          ENDIF.
+        ENDLOOP.
+
         LOOP AT lt_vbak ASSIGNING FIELD-SYMBOL(<o>).
           " Find the tour whose SHIPMENT or VISIT LIST matches this xblnr
-          " (both compared leading-zero-insensitive).
+          " (both compared leading-zero-insensitive) via the hashed table.
           DATA lv_xb TYPE xblnr.
           lv_xb = <o>-xblnr.
           SHIFT lv_xb LEFT DELETING LEADING '0'.
           DATA lv_found TYPE abap_bool.
-          CLEAR lv_found.
-          LOOP AT it_tour ASSIGNING FIELD-SYMBOL(<tf>).
-            DATA lv_ts TYPE xblnr.
-            lv_ts = <tf>-shipment.
-            SHIFT lv_ts LEFT DELETING LEADING '0'.
-            DATA lv_tv TYPE xblnr.
-            lv_tv = <tf>-vlid.
-            SHIFT lv_tv LEFT DELETING LEADING '0'.
-            IF lv_ts = lv_xb OR lv_tv = lv_xb.
-              lv_found = abap_true.
-              EXIT.
-            ENDIF.
-          ENDLOOP.
+          READ TABLE lt_tourkey ASSIGNING FIELD-SYMBOL(<tf>) WITH KEY k = lv_xb.
+          lv_found = xsdbool( sy-subrc = 0 ).
 
           DATA ls_f TYPE ty_result.
           CLEAR ls_f.
