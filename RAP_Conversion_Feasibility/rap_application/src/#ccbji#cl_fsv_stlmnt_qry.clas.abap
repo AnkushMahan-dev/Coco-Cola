@@ -1148,10 +1148,15 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           INTO TABLE @DATA(lt_it).
         IF lt_it IS INITIAL. RETURN. ENDIF.
 
+        " Sorted material-text lookup: the per-item loop below reads it by MATNR,
+        " so a sorted key turns each read from a linear scan into a binary search
+        " (same values, faster). Exact-match line type keeps the fill positional.
+        TYPES: BEGIN OF ty_matdesc, matnr TYPE matnr, maktx TYPE maktx, END OF ty_matdesc.
+        DATA lt_makt TYPE SORTED TABLE OF ty_matdesc WITH NON-UNIQUE KEY matnr.
         SELECT matnr, maktx FROM makt
           FOR ALL ENTRIES IN @lt_it
           WHERE matnr = @lt_it-matnr AND spras = @sy-langu
-          INTO TABLE @DATA(lt_makt).
+          INTO TABLE @lt_makt.
 
         " Package group per material (classic reads MARA-/SCL/PKGGROUP).
         SELECT matnr, /scl/pkggroup FROM mara
@@ -1584,10 +1589,12 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           INTO TABLE @DATA(lt_mi).
         IF lt_mi IS INITIAL. RETURN. ENDIF.
 
+        TYPES: BEGIN OF ty_matdesc, matnr TYPE matnr, maktx TYPE maktx, END OF ty_matdesc.
+        DATA lt_makt TYPE SORTED TABLE OF ty_matdesc WITH NON-UNIQUE KEY matnr.
         SELECT matnr, maktx FROM makt
           FOR ALL ENTRIES IN @lt_mi
           WHERE matnr = @lt_mi-matnr AND spras = @sy-langu
-          INTO TABLE @DATA(lt_makt).
+          INTO TABLE @lt_makt.
 
         SELECT * FROM /dsd/hh_racocici
           FOR ALL ENTRIES IN @it_tour
@@ -1718,11 +1725,13 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           WHERE sld_doc_id = @lt_item-sld_doc_id
           INTO TABLE @DATA(lt_qbal).
 
+        TYPES: BEGIN OF ty_matdesc, matnr TYPE matnr, maktx TYPE maktx, END OF ty_matdesc.
+        DATA lt_makt TYPE SORTED TABLE OF ty_matdesc WITH NON-UNIQUE KEY matnr.
         IF lt_qbal IS NOT INITIAL.
           SELECT matnr, maktx FROM makt
             FOR ALL ENTRIES IN @lt_qbal
             WHERE matnr = @lt_qbal-matnr AND spras = @sy-langu
-            INTO TABLE @DATA(lt_makt).
+            INTO TABLE @lt_makt.
         ENDIF.
 
         LOOP AT lt_qbal ASSIGNING FIELD-SYMBOL(<qb>).
