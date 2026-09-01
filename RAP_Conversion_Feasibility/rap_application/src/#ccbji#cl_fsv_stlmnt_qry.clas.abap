@@ -424,9 +424,14 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         DATA lv_blank_go TYPE abap_bool VALUE abap_true.
         DATA lv_fstr     TYPE string.
         TRY.
-            lv_fstr = to_upper( io_request->get_filter( )->string( ) ).
+            " if_rap_query_filter renders the WHERE condition (incl. BETWEEN,
+            " which get_as_ranges cannot express) as an OpenSQL string.
+            lv_fstr = to_upper( io_request->get_filter( )->get_as_sql_string( ) ).
           CATCH cx_root.
+            " Could not render the filter -> be safe, treat it as a real filter
+            " so the proven slow path (which applies the filter) is used.
             CLEAR lv_fstr.
+            lv_blank_go = abap_false.
         ENDTRY.
         IF lv_fstr CS 'SHIPMENT'   OR lv_fstr CS 'PLANT'      OR lv_fstr CS 'ROUTE'
         OR lv_fstr CS 'SETTLEMENT' OR lv_fstr CS 'STATUS'     OR lv_fstr CS 'DRIVER'
