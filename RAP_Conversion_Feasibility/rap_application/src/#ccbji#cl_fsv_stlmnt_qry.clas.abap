@@ -764,20 +764,28 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           ENDIF.
 
           DATA(lt_fprows) = read_tour( it_tour = lt_fptour ).
-          LOOP AT lt_fprows ASSIGNING FIELD-SYMBOL(<fpr>).
-            <fpr>-seqno = lv_offset + sy-tabix.
-            IF <fpr>-reportmode IS INITIAL. <fpr>-reportmode = 'TOUR'. ENDIF.
-            <fpr>-rowkey = |{ <fpr>-reportmode }~{ <fpr>-tourid }~{ <fpr>-visitid }~{ <fpr>-slddocid }~{ <fpr>-material }~{ <fpr>-deliveryno }~{ <fpr>-shipmentno }|.
-          ENDLOOP.
-          io_response->set_data( lt_fprows ).
 
-          IF io_request->is_total_numb_of_rec_requested( ).
-            SELECT COUNT( DISTINCT tour_id ) FROM /dsd/hh_rahd
-              WHERE tour_id IN @lr_ftid
-              INTO @DATA(lv_ftcount).
-            io_response->set_total_number_of_records( lv_ftcount ).
+          " SAFETY FALLBACK: only take over the request if the fast path actually
+          " produced rows. If it yields nothing (e.g. an unforeseen key-format
+          " edge case), DO NOT return an empty list - fall through to the proven
+          " slow path below, which builds the correct result. Worst case is the
+          " old (slower) behaviour; the output is never wrong or empty.
+          IF lt_fprows IS NOT INITIAL.
+            LOOP AT lt_fprows ASSIGNING FIELD-SYMBOL(<fpr>).
+              <fpr>-seqno = lv_offset + sy-tabix.
+              IF <fpr>-reportmode IS INITIAL. <fpr>-reportmode = 'TOUR'. ENDIF.
+              <fpr>-rowkey = |{ <fpr>-reportmode }~{ <fpr>-tourid }~{ <fpr>-visitid }~{ <fpr>-slddocid }~{ <fpr>-material }~{ <fpr>-deliveryno }~{ <fpr>-shipmentno }|.
+            ENDLOOP.
+            io_response->set_data( lt_fprows ).
+
+            IF io_request->is_total_numb_of_rec_requested( ).
+              SELECT COUNT( DISTINCT tour_id ) FROM /dsd/hh_rahd
+                WHERE tour_id IN @lr_ftid
+                INTO @DATA(lv_ftcount).
+              io_response->set_total_number_of_records( lv_ftcount ).
+            ENDIF.
+            RETURN.
           ENDIF.
-          RETURN.
         ENDIF.
         " =====================================================================
 
