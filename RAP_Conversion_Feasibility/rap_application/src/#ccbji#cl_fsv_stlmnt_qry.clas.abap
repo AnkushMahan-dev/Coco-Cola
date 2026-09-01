@@ -628,6 +628,122 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         ENDIF.
         " =====================================================================
 
+        " ===== FAST DB-PAGED PATH: TOUR with a Visit List filter =============
+        " Builds ONLY the requested page's tours instead of every matching tour,
+        " so a wide range no longer rebuilds the whole result on each scroll.
+        " Output IDENTICAL to the slow path (same tours, same count, same
+        " read_tour values); only the order becomes deterministic (tour_id).
+        "
+        " NO GIANT IN-LIST: the matching tours can number in the thousands, so we
+        " must NOT do "tour_id IN <thousands-entry range>" (that raises
+        " SAPSQL_STMNT_TOO_LARGE). Use FOR ALL ENTRIES (auto-batched), exactly
+        " like the slow path. KEY BRIDGE: /DSD/ST_STATUS-TOURID is CHAR 12,
+        " /DSD/HH_RAHD-TOUR_ID is CHAR 32 (same value left-justified) - so the
+        " FAE driver is padded to CHAR 32, and the page-status range is CHAR 12.
+        " Engages ONLY for TOUR + Visit List (no plant/route/date/status, no
+        " detail/driver/vehicle/tpp filter, no sort, not by-key). If it yields
+        " nothing it FALLS THROUGH to the proven slow path (never empty).
+        IF lv_mode = 'TOUR'
+           AND lt_shipment IS NOT INITIAL
+           AND lt_plant IS INITIAL AND lt_settle_date IS INITIAL AND lt_route IS INITIAL
+           AND lt_status IS INITIAL
+           AND lt_rowkey IS INITIAL AND lt_seqno IS INITIAL
+           AND io_request->is_data_requested( ) = abap_true
+           AND lv_page_sz <> if_rap_query_paging=>page_size_unlimited AND lv_page_sz > 0
+           AND lines( io_request->get_sort_elements( ) ) = 0
+           AND lt_driver IS INITIAL AND lt_vehicle IS INITIAL AND lt_tpp IS INITIAL
+           AND lt_f_customer IS INITIAL AND lt_f_material IS INITIAL AND lt_f_vkorg IS INITIAL
+           AND lt_f_paymt IS INITIAL AND lt_f_currency IS INITIAL AND lt_f_slddoc IS INITIAL
+           AND lt_f_visitid IS INITIAL AND lt_f_tourid IS INITIAL AND lt_f_viscod IS INITIAL
+           AND lt_f_objtyp IS INITIAL AND lt_f_delivery IS INITIAL AND lt_f_cashtype IS INITIAL.
+
+          " Visit List(s) -> VLID range, EXACTLY as get_tours does.
+          DATA lr_fvlid TYPE RANGE OF /dsd/vc_vlid.
+          LOOP AT lt_shipment INTO DATA(ls_fsh).
+            IF ls_fsh-high IS NOT INITIAL.
+              APPEND VALUE #( sign = ls_fsh-sign option = ls_fsh-option low = ls_fsh-low high = ls_fsh-high ) TO lr_fvlid.
+            ELSEIF ls_fsh-low IS NOT INITIAL.
+              APPEND VALUE #( sign = ls_fsh-sign option = ls_fsh-option low = ls_fsh-low ) TO lr_fvlid.
+              APPEND VALUE #( sign = 'I' option = 'EQ' low = |{ ls_fsh-low ALPHA = IN }| ) TO lr_fvlid.
+              DATA lv_fvst TYPE /dsd/vc_vlid.
+              lv_fvst = ls_fsh-low.
+              SHIFT lv_fvst LEFT DELETING LEADING '0'.
+              APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_fvst ) TO lr_fvlid.
+            ENDIF.
+          ENDLOOP.
+
+          " Matching tour ids (CHAR12) from the VLID range - small VLID range, so
+          " this SELECT is safe.
+          SELECT DISTINCT tourid FROM /dsd/st_status
+            WHERE vlid IN @lr_fvlid
+            INTO TABLE @DATA(lt_ftid).
+
+          " Distinct tour headers for those tours, via FOR ALL ENTRIES (batched,
+          " never too-large). Pad the CHAR12 tourid to the CHAR32 hh key, like
+          " the slow path (enrich_tours + read_tour FAE).
+          DATA lt_alltid TYPE STANDARD TABLE OF ty_ptid.
+          IF lt_ftid IS NOT INITIAL.
+            TYPES: BEGIN OF ty_ft32, tourid TYPE /dsd/hh_tour_id, END OF ty_ft32.
+            DATA lt_ft32 TYPE STANDARD TABLE OF ty_ft32.
+            CLEAR lt_ft32.
+            LOOP AT lt_ftid INTO DATA(ls_ftid2).
+              APPEND VALUE #( tourid = ls_ftid2-tourid ) TO lt_ft32.
+            ENDLOOP.
+            SELECT DISTINCT tour_id FROM /dsd/hh_rahd
+              FOR ALL ENTRIES IN @lt_ft32
+              WHERE tour_id = @lt_ft32-tourid
+              INTO TABLE @lt_alltid.
+            SORT lt_alltid BY tour_id.
+          ENDIF.
+
+          " Total = number of matching tours; page = the requested slice.
+          DATA(lv_ftcount) = lines( lt_alltid ).
+          DATA lt_fptid TYPE STANDARD TABLE OF ty_ptid.
+          DATA(lv_ff) = lv_offset + 1.
+          DATA(lv_ft) = lv_offset + lv_page_sz.
+          LOOP AT lt_alltid INTO DATA(ls_at) FROM lv_ff TO lv_ft.
+            APPEND ls_at TO lt_fptid.
+          ENDLOOP.
+
+          " Build ONLY the page's tours. Page status read with a CHAR12 range
+          " (hh tour_id 32 -> st tourid 12 by truncation, like classic).
+          DATA lt_fptour TYPE tt_tour.
+          IF lt_fptid IS NOT INITIAL.
+            DATA lr_fppage TYPE RANGE OF /dsd/st_tourid.
+            CLEAR lr_fppage.
+            LOOP AT lt_fptid ASSIGNING FIELD-SYMBOL(<fpt>).
+              DATA lv_fp12 TYPE /dsd/st_tourid.
+              lv_fp12 = <fpt>-tour_id.
+              APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_fp12 ) TO lr_fppage.
+            ENDLOOP.
+            DATA lt_fpst TYPE tt_status.
+            SELECT * FROM /dsd/st_status
+              WHERE tourid IN @lr_fppage
+              INTO TABLE @lt_fpst.
+            lt_fptour = enrich_tours( it_status = lt_fpst it_route = VALUE #( ) ).
+            SORT lt_fptour BY tourid.
+            DELETE ADJACENT DUPLICATES FROM lt_fptour COMPARING tourid.
+          ENDIF.
+
+          DATA(lt_fprows) = read_tour( it_tour = lt_fptour ).
+
+          " FAIL-SAFE: only take over if we actually produced rows; otherwise
+          " fall through to the proven slow path (never returns empty/wrong).
+          IF lt_fprows IS NOT INITIAL.
+            LOOP AT lt_fprows ASSIGNING FIELD-SYMBOL(<fpr>).
+              <fpr>-seqno = lv_offset + sy-tabix.
+              IF <fpr>-reportmode IS INITIAL. <fpr>-reportmode = 'TOUR'. ENDIF.
+              <fpr>-rowkey = |{ <fpr>-reportmode }~{ <fpr>-tourid }~{ <fpr>-visitid }~{ <fpr>-slddocid }~{ <fpr>-material }~{ <fpr>-deliveryno }~{ <fpr>-shipmentno }|.
+            ENDLOOP.
+            io_response->set_data( lt_fprows ).
+            IF io_request->is_total_numb_of_rec_requested( ).
+              io_response->set_total_number_of_records( lv_ftcount ).
+            ENDIF.
+            RETURN.
+          ENDIF.
+        ENDIF.
+        " =====================================================================
+
         " ======== FAST DB-PAGED PATH: row-explosive modes (windowed) =========
         " Visit / Sales / Payment / Check / Money / Quantity / FSR produce a
         " VARIABLE number of rows per tour, so they cannot be paged by tour like
