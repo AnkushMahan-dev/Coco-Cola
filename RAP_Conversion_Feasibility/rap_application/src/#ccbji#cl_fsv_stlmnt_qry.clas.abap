@@ -443,6 +443,39 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           lv_blank_go = abap_false.
         ENDIF.
 
+        " get_as_ranges() silently DROPS an interval (BETWEEN, or >= / <=) on the
+        " Shipment / Visit List, so lt_shipment stayed empty and the request fell
+        " through to an unbounded sample (memory dump) instead of the classic
+        " result. When the range parser gave nothing but the filter DOES restrict
+        " ShipmentNo, recover the bounds from the SQL string (which renders the
+        " interval) and rebuild lt_shipment. EQ / IN already come through as
+        " ranges, so this only has to cover what get_as_ranges cannot express.
+        IF lt_shipment IS INITIAL AND lv_fstr CS 'SHIPMENTNO'.
+          DATA lv_s1 TYPE tknum.
+          DATA lv_s2 TYPE tknum.
+          FIND FIRST OCCURRENCE OF REGEX `SHIPMENTNO\s+BETWEEN\s+'([^']*)'\s+AND\s+'([^']*)'`
+               IN lv_fstr SUBMATCHES lv_s1 lv_s2.
+          IF sy-subrc = 0.
+            APPEND VALUE #( sign = 'I' option = 'BT' low = lv_s1 high = lv_s2 ) TO lt_shipment.
+          ELSE.
+            CLEAR: lv_s1, lv_s2.
+            FIND FIRST OCCURRENCE OF REGEX `SHIPMENTNO\s*>=\s*'([^']*)'` IN lv_fstr SUBMATCHES lv_s1.
+            FIND FIRST OCCURRENCE OF REGEX `SHIPMENTNO\s*<=\s*'([^']*)'` IN lv_fstr SUBMATCHES lv_s2.
+            IF lv_s1 IS NOT INITIAL AND lv_s2 IS NOT INITIAL.
+              APPEND VALUE #( sign = 'I' option = 'BT' low = lv_s1 high = lv_s2 ) TO lt_shipment.
+            ELSEIF lv_s1 IS NOT INITIAL.
+              APPEND VALUE #( sign = 'I' option = 'GE' low = lv_s1 ) TO lt_shipment.
+            ELSEIF lv_s2 IS NOT INITIAL.
+              APPEND VALUE #( sign = 'I' option = 'LE' low = lv_s2 ) TO lt_shipment.
+            ELSE.
+              FIND FIRST OCCURRENCE OF REGEX `SHIPMENTNO\s*=\s*'([^']*)'` IN lv_fstr SUBMATCHES lv_s1.
+              IF sy-subrc = 0.
+                APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_s1 ) TO lt_shipment.
+              ENDIF.
+            ENDIF.
+          ENDIF.
+        ENDIF.
+
         " Leading-zero tolerance: for code fields that are commonly stored
         " zero-padded (customer, material, delivery, settlement doc, visit,
         " tour), add stripped + ALPHA-padded EQ variants so the filter matches
@@ -731,12 +764,18 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             " the external run to S_VLID (get_tours treats ShipmentNo as the
             " visit list, matching leading-zero variants).
             IF lv_cash_vlid IS NOT INITIAL.
-              DATA lr_cash_ship TYPE tt_r_tknum.
-              APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_cash_vlid ) TO lr_cash_ship.
-              lt_tour = get_tours(
-                it_shipment    = lr_cash_ship  it_route  = VALUE #( )
-                it_settle_date = VALUE #( )     it_plant  = VALUE #( )
-                it_status      = VALUE #( ) ).
+              " The RowKey carries the DISPLAYED Shipment/Visit List, which is
+              " the VLID (read_cash stores vlid in shipmentno). Resolve this one
+              " visit list's tour(s) by VLID directly - get_tours now keys on
+              " VTTK-TKNUM (the list selection), which is a different value.
+              DATA lr_cvlid TYPE RANGE OF /dsd/vc_vlid.
+              APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_cash_vlid ) TO lr_cvlid.
+              APPEND VALUE #( sign = 'I' option = 'EQ' low = |{ lv_cash_vlid ALPHA = IN }| ) TO lr_cvlid.
+              DATA lt_cst TYPE tt_status.
+              SELECT * FROM /dsd/st_status
+                WHERE vlid IN @lr_cvlid
+                INTO TABLE @lt_cst.
+              lt_tour = enrich_tours( it_status = lt_cst it_route = VALUE #( ) ).
             ENDIF.
           ELSE.
             IF lines( lt_parts ) >= 2.
@@ -881,37 +920,31 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         DATA lt_status TYPE tt_status.
 
         IF it_shipment IS NOT INITIAL.
-          " Visit List -> status / tour   (classic f_status, rb_visi branch:
-          " the Visit List matches /DSD/ST_STATUS-VLID, giving TOUR_ID).
+          " Shipment / Visit List -> status / tour.
           "
-          " LEADING-ZERO INSENSITIVE: the user may type the Visit List with or
-          " without leading zeros (e.g. 9162643559 or 0009162643559). VLID is
-          " stored zero-padded, so for every entered value we match THREE forms
-          " - the raw value, the ALPHA (zero-padded) value, and the stripped
-          " value - so it resolves regardless of how it was keyed in.
-          DATA lr_vlid TYPE RANGE OF /dsd/vc_vlid.
-          LOOP AT it_shipment INTO DATA(ls_sh).
-            IF ls_sh-low IS NOT INITIAL.
-              " raw
-              APPEND VALUE #( sign = ls_sh-sign option = 'EQ' low = ls_sh-low ) TO lr_vlid.
-              " zero-padded (ALPHA IN)
-              DATA lv_pad TYPE /dsd/vc_vlid.
-              lv_pad = |{ ls_sh-low ALPHA = IN }|.
-              APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_pad ) TO lr_vlid.
-              " leading-zeros stripped
-              DATA lv_str TYPE /dsd/vc_vlid.
-              lv_str = ls_sh-low.
-              SHIFT lv_str LEFT DELETING LEADING '0'.
-              APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_str ) TO lr_vlid.
-            ENDIF.
-            IF ls_sh-high IS NOT INITIAL.
-              APPEND VALUE #( sign = ls_sh-sign option = ls_sh-option low = ls_sh-low high = ls_sh-high ) TO lr_vlid.
-            ENDIF.
-          ENDLOOP.
-
-          SELECT * FROM /dsd/st_status
-            WHERE vlid IN @lr_vlid AND status_id IN @it_status
-            INTO TABLE @lt_status.
+          " CLASSIC FIDELITY (RDSDFSVI_STLMNT_DTL_SUB): the "Shipment / Visit
+          " List" selection is matched against VTTK-TKNUM, and the status rows
+          " are those whose /DSD/ST_STATUS-SHIPMENT equals that tknum - NOT VLID:
+          "     SELECT tknum FROM vttk        WHERE tknum IN s_tknum
+          "     SELECT ... FROM /dsd/st_status WHERE shipment EQ vttk-tknum
+          " The old code matched VLID, which keyed a completely different (and
+          " far larger) set - millions of rows and a TSV memory dump - instead
+          " of the classic result. Read the shipments from VTTK first (so the
+          " tknum range, incl. a BETWEEN, is applied at the DB), then the status
+          " rows via SHIPMENT = TKNUM. Route stays a post-narrow in enrich_tours
+          " (leading-zero tolerant), exactly as before.
+          TYPES: BEGIN OF ty_tk, tknum TYPE tknum, END OF ty_tk.
+          DATA lt_vttk TYPE STANDARD TABLE OF ty_tk.
+          SELECT tknum FROM vttk
+            WHERE tknum IN @it_shipment
+            INTO TABLE @lt_vttk.
+          IF lt_vttk IS NOT INITIAL.
+            SELECT * FROM /dsd/st_status
+              FOR ALL ENTRIES IN @lt_vttk
+              WHERE shipment  = @lt_vttk-tknum
+                AND status_id IN @it_status
+              INTO TABLE @lt_status.
+          ENDIF.
         ELSE.
           " Plant/date -> visit lists -> status / tour
           SELECT * FROM /ccej/t_inb_stat

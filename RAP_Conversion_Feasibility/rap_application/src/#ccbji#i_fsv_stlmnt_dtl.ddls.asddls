@@ -25,12 +25,13 @@ define custom entity /CCBJI/I_FSV_STLMNT_DTL
       @Consumption.filter: { mandatory: true, selectionType: #SINGLE, defaultValue: 'TOUR' }
       ReportMode       : /ccbji/fsv_mode;
 
-      // Value help over the actual Visit Lists (/DSD/ST_STATUS-VLID via
-      // I_FSV_VLIST_VH). Free text still works (type with or without leading
-      // zeros - the backend matches both); the F4 dialog filters server-side as
-      // the user types, so it stays usable even on the large table.
+      // Value help over the Shipment numbers (VTTK-TKNUM via I_FSV_SHIP_VH).
+      // The classic report matches this selection against VTTK-TKNUM (and the
+      // status rows via /DSD/ST_STATUS-SHIPMENT = TKNUM), so the F4 suggests the
+      // same key the query filters on. Free text still works, and a range /
+      // BETWEEN is applied at the database just like the classic select-option.
       @EndUserText.label: 'Shipment / Visit List'
-      @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_VLIST_VH', element: 'ShipmentNo' } } ]
+      @Consumption.valueHelpDefinition: [ { entity: { name: '/CCBJI/I_FSV_SHIP_VH', element: 'ShipmentNo' } } ]
       ShipmentNo       : tknum;
 
       // Plain char(32): matches /dsd/hh_tour_id length (CHAR 32) but avoids its
