@@ -302,6 +302,24 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
                 ev_total     TYPE int8
                 ev_ok        TYPE abap_bool.
 
+    "! HANA-pushdown pagination for the settlement-document modes Money (MONY)
+    "! and Quantity (QUAN). Their driver (/DSD/SL_SLD_MBAL / _QBAL) is keyed by
+    "! settlement document (SLD_DOC_ID) and reaches the tour only through
+    "! /DSD/SL_SLD_ITEM, so the driver is filtered, ordered and sliced
+    "! (LIMIT/OFFSET) IN HANA via a nested EXISTS (mbal/qbal -> item -> status),
+    "! then each page row is built with the SAME field mapping as read_money /
+    "! read_quan (identical values). ev_ok = abap_false -> caller falls back to
+    "! the proven slow path.
+    METHODS page_sld_1to1
+      IMPORTING iv_mode      TYPE clike
+                it_shipment  TYPE tt_r_tknum
+                iv_offset    TYPE i
+                iv_pagesz    TYPE i
+                iv_total_req TYPE abap_bool
+      EXPORTING et_page      TYPE tt_result
+                ev_total     TYPE int8
+                ev_ok        TYPE abap_bool.
+
     "! CASH Object Page single-row read: reconstruct exactly the clicked row
     "! from its RowKey (mode + visit id + visit list) WITHOUT re-running the
     "! external cash-difference program, and enrich the cheap header fields.
@@ -1033,6 +1051,63 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           ENDIF.
           " Not handled / empty first page while data may exist -> fall through
           " to the proven slow path (safety net; never silently empty).
+        ENDIF.
+        " =====================================================================
+
+        " ===== FAST DB-PAGED PATH: MONEY / QUANTITY with a Visit List filter ==
+        " Money (MONY) and Quantity (QUAN) are one output row per settlement
+        " balance record (/DSD/SL_SLD_MBAL / _QBAL). Those tables reach the tour
+        " only via /DSD/SL_SLD_ITEM, so the page is pushed to HANA through a
+        " nested EXISTS (balance -> item -> status) with ORDER BY + LIMIT/OFFSET,
+        " then each page row is built with the SAME field mapping as read_money /
+        " read_quan (identical values). Falls through to the proven slow path if
+        " the first page is empty. Engages ONLY for MONY / QUAN with a Visit List
+        " and no other key / filter / sort.
+        IF ( lv_mode = 'MONY' OR lv_mode = 'QUAN' )
+           AND lt_shipment IS NOT INITIAL
+           AND lt_plant IS INITIAL AND lt_settle_date IS INITIAL AND lt_route IS INITIAL
+           AND lt_status IS INITIAL
+           AND lt_rowkey IS INITIAL AND lt_seqno IS INITIAL
+           AND io_request->is_data_requested( ) = abap_true
+           AND lv_page_sz <> if_rap_query_paging=>page_size_unlimited AND lv_page_sz > 0
+           AND lines( io_request->get_sort_elements( ) ) = 0
+           AND lt_driver IS INITIAL AND lt_vehicle IS INITIAL AND lt_tpp IS INITIAL
+           AND lt_f_customer IS INITIAL AND lt_f_material IS INITIAL AND lt_f_vkorg IS INITIAL
+           AND lt_f_paymt IS INITIAL AND lt_f_currency IS INITIAL AND lt_f_slddoc IS INITIAL
+           AND lt_f_visitid IS INITIAL AND lt_f_tourid IS INITIAL AND lt_f_viscod IS INITIAL
+           AND lt_f_objtyp IS INITIAL AND lt_f_delivery IS INITIAL AND lt_f_cashtype IS INITIAL.
+
+          DATA lt_spage    TYPE tt_result.
+          DATA lv_stot     TYPE int8.
+          DATA lv_sok      TYPE abap_bool.
+          DATA lv_stot_req TYPE abap_bool.
+          lv_stot_req = io_request->is_total_numb_of_rec_requested( ).
+          page_sld_1to1(
+            EXPORTING iv_mode      = lv_mode
+                      it_shipment  = lt_shipment
+                      iv_offset    = lv_offset
+                      iv_pagesz    = lv_page_sz
+                      iv_total_req = lv_stot_req
+            IMPORTING et_page      = lt_spage
+                      ev_total     = lv_stot
+                      ev_ok        = lv_sok ).
+
+          IF lv_sok = abap_true.
+            IF lt_spage IS NOT INITIAL.
+              io_response->set_data( lt_spage ).
+              IF lv_stot_req = abap_true.
+                io_response->set_total_number_of_records( lv_stot ).
+              ENDIF.
+              RETURN.
+            ELSEIF lv_offset > 0 OR ( lv_stot_req = abap_true AND lv_stot = 0 ).
+              io_response->set_data( VALUE tt_result( ) ).
+              IF lv_stot_req = abap_true.
+                io_response->set_total_number_of_records( lv_stot ).
+              ENDIF.
+              RETURN.
+            ENDIF.
+          ENDIF.
+          " Not handled / empty first page while data may exist -> fall through.
         ENDIF.
         " =====================================================================
 
@@ -2440,6 +2515,217 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             APPEND ls_r TO et_page.
           ENDIF.
         ENDLOOP.
+
+        " OData V4 requires a unique key per row within the page.
+        DATA lt_seen TYPE HASHED TABLE OF ty_rowkey WITH UNIQUE KEY table_line.
+        LOOP AT et_page ASSIGNING FIELD-SYMBOL(<pr>).
+          IF line_exists( lt_seen[ table_line = <pr>-rowkey ] ).
+            <pr>-rowkey = |{ <pr>-rowkey }~{ <pr>-seqno }|.
+          ENDIF.
+          INSERT <pr>-rowkey INTO TABLE lt_seen.
+        ENDLOOP.
+
+        ev_ok = abap_true.
+
+      CATCH cx_root.
+        CLEAR: et_page, ev_total.
+        ev_ok = abap_false.
+    ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD page_sld_1to1.
+
+    CLEAR: et_page, ev_total, ev_ok.
+
+    TRY.
+        " Visit List(s) -> VLID range (same as the other pushdown paths).
+        DATA lr_vlid TYPE RANGE OF /dsd/vc_vlid.
+        LOOP AT it_shipment INTO DATA(ls_sh).
+          IF ls_sh-high IS NOT INITIAL.
+            APPEND VALUE #( sign = ls_sh-sign option = ls_sh-option low = ls_sh-low high = ls_sh-high ) TO lr_vlid.
+          ELSEIF ls_sh-low IS NOT INITIAL.
+            APPEND VALUE #( sign = ls_sh-sign option = ls_sh-option low = ls_sh-low ) TO lr_vlid.
+            APPEND VALUE #( sign = 'I' option = 'EQ' low = |{ ls_sh-low ALPHA = IN }| ) TO lr_vlid.
+            DATA lv_vst TYPE /dsd/vc_vlid.
+            lv_vst = ls_sh-low.
+            SHIFT lv_vst LEFT DELETING LEADING '0'.
+            APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_vst ) TO lr_vlid.
+          ENDIF.
+        ENDLOOP.
+        IF lr_vlid IS INITIAL. RETURN. ENDIF.
+
+        DATA lt_mb TYPE STANDARD TABLE OF /dsd/sl_sld_mbal.
+        DATA lt_qb TYPE STANDARD TABLE OF /dsd/sl_sld_qbal.
+
+        " Page the driver in HANA (nested EXISTS: mbal/qbal -> item -> status).
+        CASE iv_mode.
+          WHEN 'MONY'.
+            IF iv_total_req = abap_true.
+              SELECT COUNT(*) FROM /dsd/sl_sld_mbal AS d
+                WHERE EXISTS ( SELECT * FROM /dsd/sl_sld_item AS it
+                               WHERE it~sld_doc_id = d~sld_doc_id
+                                 AND EXISTS ( SELECT * FROM /dsd/st_status AS st
+                                              WHERE st~tourid = it~tour_id AND st~vlid IN @lr_vlid ) )
+                INTO @ev_total.
+            ENDIF.
+            SELECT * FROM /dsd/sl_sld_mbal AS d
+              WHERE EXISTS ( SELECT * FROM /dsd/sl_sld_item AS it
+                             WHERE it~sld_doc_id = d~sld_doc_id
+                               AND EXISTS ( SELECT * FROM /dsd/st_status AS st
+                                            WHERE st~tourid = it~tour_id AND st~vlid IN @lr_vlid ) )
+              ORDER BY sld_doc_id, payment_type
+              INTO TABLE @lt_mb
+              UP TO @iv_pagesz ROWS OFFSET @iv_offset.
+          WHEN 'QUAN'.
+            IF iv_total_req = abap_true.
+              SELECT COUNT(*) FROM /dsd/sl_sld_qbal AS d
+                WHERE EXISTS ( SELECT * FROM /dsd/sl_sld_item AS it
+                               WHERE it~sld_doc_id = d~sld_doc_id
+                                 AND EXISTS ( SELECT * FROM /dsd/st_status AS st
+                                              WHERE st~tourid = it~tour_id AND st~vlid IN @lr_vlid ) )
+                INTO @ev_total.
+            ENDIF.
+            SELECT * FROM /dsd/sl_sld_qbal AS d
+              WHERE EXISTS ( SELECT * FROM /dsd/sl_sld_item AS it
+                             WHERE it~sld_doc_id = d~sld_doc_id
+                               AND EXISTS ( SELECT * FROM /dsd/st_status AS st
+                                            WHERE st~tourid = it~tour_id AND st~vlid IN @lr_vlid ) )
+              ORDER BY sld_doc_id, matnr, charg
+              INTO TABLE @lt_qb
+              UP TO @iv_pagesz ROWS OFFSET @iv_offset.
+          WHEN OTHERS.
+            RETURN.
+        ENDCASE.
+
+        IF ( iv_mode = 'MONY' AND lt_mb IS INITIAL )
+        OR ( iv_mode = 'QUAN' AND lt_qb IS INITIAL ).
+          ev_ok = abap_true. RETURN.
+        ENDIF.
+
+        " Item -> tour / obj_id for the page's settlement docs (a settlement
+        " document belongs to a single tour, so the item's tour is the row's
+        " tour, exactly as read_money/read_quan resolve it). Sorted for a
+        " binary-search first-item read. Full row type -> no guessed DDIC types.
+        DATA lt_sit TYPE STANDARD TABLE OF /dsd/sl_sld_item.
+        IF iv_mode = 'MONY'.
+          SELECT sld_doc_id, tour_id, obj_id FROM /dsd/sl_sld_item
+            FOR ALL ENTRIES IN @lt_mb
+            WHERE sld_doc_id = @lt_mb-sld_doc_id
+            INTO CORRESPONDING FIELDS OF TABLE @lt_sit.
+        ELSE.
+          SELECT sld_doc_id, tour_id, obj_id FROM /dsd/sl_sld_item
+            FOR ALL ENTRIES IN @lt_qb
+            WHERE sld_doc_id = @lt_qb-sld_doc_id
+            INTO CORRESPONDING FIELDS OF TABLE @lt_sit.
+        ENDIF.
+        SORT lt_sit BY sld_doc_id.
+
+        " Enrich the page's tours (plant / route / date / status) via enrich_tours.
+        DATA lr_dt TYPE RANGE OF /dsd/hh_tour_id.
+        LOOP AT lt_sit INTO DATA(ls_it0).
+          APPEND VALUE #( sign = 'I' option = 'EQ' low = ls_it0-tour_id ) TO lr_dt.
+        ENDLOOP.
+        SORT lr_dt BY low.
+        DELETE ADJACENT DUPLICATES FROM lr_dt COMPARING low.
+        DATA lt_dst TYPE tt_status.
+        IF lr_dt IS NOT INITIAL.
+          SELECT * FROM /dsd/st_status WHERE tourid IN @lr_dt INTO TABLE @lt_dst.
+        ENDIF.
+        DATA(lt_dtour) = enrich_tours( it_status = lt_dst it_route = VALUE #( ) ).
+        SORT lt_dtour BY tourid.
+        DELETE ADJACENT DUPLICATES FROM lt_dtour COMPARING tourid.
+
+        DATA lv_seq TYPE int4.
+        lv_seq = iv_offset.
+
+        IF iv_mode = 'MONY'.
+          " Material-text is not used by MONY. Build rows exactly like read_money.
+          LOOP AT lt_mb ASSIGNING FIELD-SYMBOL(<mb>).
+            DATA ls_m TYPE ty_result.
+            CLEAR ls_m.
+            ls_m-reportmode     = 'MONY'.
+            ls_m-slddocid       = <mb>-sld_doc_id.
+            ls_m-paymentmethod  = <mb>-payment_type.
+            ls_m-amountco       = conv_jpy( <mb>-amount_co ).
+            ls_m-amountexpenses = conv_jpy( <mb>-amount_expenses ).
+            ls_m-amountearnings = conv_jpy( <mb>-amount_earnings ).
+            ls_m-amountci       = conv_jpy( <mb>-amount_ci ).
+            ls_m-amount         = conv_jpy( <mb>-amount_diff ).
+            ls_m-amountdiff     = conv_jpy( <mb>-amount_diff ).
+            ls_m-amountplan     = conv_jpy( <mb>-amount_plan ).
+            DATA lv_deval TYPE p LENGTH 15 DECIMALS 2.
+            ASSIGN COMPONENT 'AMOUNT_DIFF_EVAL' OF STRUCTURE <mb> TO FIELD-SYMBOL(<de>).
+            IF sy-subrc = 0.
+              lv_deval = <de>.
+              ls_m-amountdiffeval = lv_deval.
+            ENDIF.
+            ls_m-reason     = <mb>-reason.
+            ls_m-reasoncode = <mb>-reason.
+            ls_m-currency   = <mb>-currency_amount.
+            READ TABLE lt_sit ASSIGNING FIELD-SYMBOL(<si>) WITH KEY sld_doc_id = <mb>-sld_doc_id BINARY SEARCH.
+            IF sy-subrc = 0.
+              ls_m-tourid     = <si>-tour_id.
+              ls_m-shipmentno = <si>-obj_id.
+              READ TABLE lt_dtour ASSIGNING FIELD-SYMBOL(<t>) WITH KEY tourid = <si>-tour_id BINARY SEARCH.
+              IF sy-subrc = 0.
+                ls_m-plant = <t>-werks.  ls_m-route = <t>-route.
+                ls_m-settlementdate = <t>-date.  ls_m-statusid = <t>-status_id.
+              ENDIF.
+            ENDIF.
+            lv_seq = lv_seq + 1.
+            ls_m-seqno  = lv_seq.
+            ls_m-rowkey = |{ ls_m-reportmode }~{ ls_m-tourid }~{ ls_m-visitid }~{ ls_m-slddocid }~{ ls_m-material }~{ ls_m-deliveryno }~{ ls_m-shipmentno }|.
+            APPEND ls_m TO et_page.
+          ENDLOOP.
+        ELSE.
+          " QUAN: material text (MAKT) for the page's materials only.
+          TYPES: BEGIN OF ty_md, matnr TYPE matnr, maktx TYPE maktx, END OF ty_md.
+          DATA lt_makt TYPE SORTED TABLE OF ty_md WITH NON-UNIQUE KEY matnr.
+          SELECT matnr, maktx FROM makt
+            FOR ALL ENTRIES IN @lt_qb
+            WHERE matnr = @lt_qb-matnr AND spras = @sy-langu
+            INTO TABLE @lt_makt.
+          LOOP AT lt_qb ASSIGNING FIELD-SYMBOL(<qb>).
+            DATA ls_q TYPE ty_result.
+            CLEAR ls_q.
+            ls_q-reportmode    = 'QUAN'.
+            ls_q-slddocid      = <qb>-sld_doc_id.
+            ls_q-material      = <qb>-matnr.
+            ls_q-quanplan      = <qb>-quan_planned.
+            ls_q-quancheckout  = <qb>-quan_checkout.
+            ls_q-quandiff      = <qb>-quan_diff.
+            ls_q-quandelivered = <qb>-quan_delivered.
+            ls_q-quanreturn    = <qb>-quan_return.
+            ls_q-quancheckin   = <qb>-quan_checkin.
+            ls_q-quanfinaldiff = <qb>-quan_final_diff.
+            ls_q-uom           = <qb>-uom_for_quan.
+            ls_q-valuefindiff  = <qb>-value_fin_diff.
+            ls_q-currency      = <qb>-currency_fin_dif.
+            ls_q-plant         = <qb>-plant.
+            ls_q-batch         = <qb>-charg.
+            READ TABLE lt_makt ASSIGNING FIELD-SYMBOL(<mk>) WITH KEY matnr = <qb>-matnr.
+            IF sy-subrc = 0.
+              ls_q-materialdesc = <mk>-maktx.
+            ENDIF.
+            READ TABLE lt_sit ASSIGNING FIELD-SYMBOL(<sq>) WITH KEY sld_doc_id = <qb>-sld_doc_id BINARY SEARCH.
+            IF sy-subrc = 0.
+              ls_q-tourid     = <sq>-tour_id.
+              ls_q-shipmentno = <sq>-obj_id.
+              READ TABLE lt_dtour ASSIGNING FIELD-SYMBOL(<tq>) WITH KEY tourid = <sq>-tour_id BINARY SEARCH.
+              IF sy-subrc = 0.
+                IF ls_q-plant IS INITIAL. ls_q-plant = <tq>-werks. ENDIF.
+                ls_q-route = <tq>-route.
+                ls_q-settlementdate = <tq>-date.  ls_q-statusid = <tq>-status_id.
+              ENDIF.
+            ENDIF.
+            lv_seq = lv_seq + 1.
+            ls_q-seqno  = lv_seq.
+            ls_q-rowkey = |{ ls_q-reportmode }~{ ls_q-tourid }~{ ls_q-visitid }~{ ls_q-slddocid }~{ ls_q-material }~{ ls_q-deliveryno }~{ ls_q-shipmentno }|.
+            APPEND ls_q TO et_page.
+          ENDLOOP.
+        ENDIF.
 
         " OData V4 requires a unique key per row within the page.
         DATA lt_seen TYPE HASHED TABLE OF ty_rowkey WITH UNIQUE KEY table_line.
