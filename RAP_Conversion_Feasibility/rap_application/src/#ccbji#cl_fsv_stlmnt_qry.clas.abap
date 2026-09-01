@@ -532,6 +532,31 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           lv_mode = 'TOUR'.
         ENDIF.
 
+        " CLASSIC REQUIRES A KEY SELECTION (RDSDFSVI_STLMNT_DTL_SUB, f_validation
+        " line 6296): the report never runs on a blank screen - it demands a
+        " Shipment / Visit List, or Plant + Route + Settlement Date together, or a
+        " Tour ID (else message i525 "enter a selection"). Mirror that exactly:
+        " with no key selection - and no Object-Page drill-down (RowKey) or seqno
+        " paging - return an EMPTY list. This makes the no-input output match the
+        " classic report (which shows nothing, so a non-maintained visit list such
+        " as 9002952691 can never appear) AND removes the whole blank-scroll
+        " sampling cost, so the default view is instant.
+        DATA lv_has_key TYPE abap_bool.
+        IF lt_shipment IS NOT INITIAL
+           OR lt_f_tourid IS NOT INITIAL
+           OR ( lt_plant IS NOT INITIAL AND lt_route IS NOT INITIAL AND lt_settle_date IS NOT INITIAL ).
+          lv_has_key = abap_true.
+        ENDIF.
+        IF lv_has_key = abap_false AND lt_rowkey IS INITIAL AND lt_seqno IS INITIAL.
+          IF io_request->is_total_numb_of_rec_requested( ).
+            io_response->set_total_number_of_records( 0 ).
+          ENDIF.
+          IF io_request->is_data_requested( ).
+            io_response->set_data( VALUE tt_result( ) ).
+          ENDIF.
+          RETURN.
+        ENDIF.
+
         " Paging window (read once, reused for the slice at the end). The blank
         " search samples a number of tours DERIVED from this window, so the row
         " count is no longer a hard 100 - it grows as the client scrolls
@@ -781,6 +806,18 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
               INTO TABLE @lt_st.
             lt_tour = enrich_tours( it_status = lt_st it_route = VALUE #( ) ).
           ENDIF.
+        ELSEIF lt_f_tourid IS NOT INITIAL
+           AND lt_shipment IS INITIAL AND lt_plant IS INITIAL AND lt_settle_date IS INITIAL.
+          " Tour ID entered on its own: resolve the tour(s) DIRECTLY by tour id
+          " (exact + fast), instead of sampling all tours and post-filtering.
+          DATA lr_ftid TYPE RANGE OF /dsd/hh_tour_id.
+          lr_ftid = VALUE #( FOR r IN lt_f_tourid
+                             ( sign = r-sign option = r-option low = r-low high = r-high ) ).
+          DATA lt_fstat TYPE tt_status.
+          SELECT * FROM /dsd/st_status
+            WHERE tourid IN @lr_ftid AND status_id IN @lt_status
+            INTO TABLE @lt_fstat.
+          lt_tour = enrich_tours( it_status = lt_fstat it_route = lt_route ).
         ELSEIF lt_shipment IS INITIAL AND lt_plant IS INITIAL AND lt_settle_date IS INITIAL.
           lt_tour = sample_tours( iv_mode = lv_mode iv_max = lv_sample_max ).
         ELSE.
