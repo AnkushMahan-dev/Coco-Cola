@@ -35,8 +35,9 @@
  * and never dumps (TRY/CATCH cx_root), so a stale hidden filter is harmless.
  */
 sap.ui.define([
-    "sap/ui/core/mvc/ControllerExtension"
-], function (ControllerExtension) {
+    "sap/ui/core/mvc/ControllerExtension",
+    "sap/m/MessageBox"
+], function (ControllerExtension, MessageBox) {
     "use strict";
 
     // Field path of the driving dropdown.
@@ -272,7 +273,10 @@ sap.ui.define([
             }
             // Search / Go pressed.
             if (oFilterBar.attachSearch) {
-                oFilterBar.attachSearch(fnApply);
+                oFilterBar.attachSearch(function () {
+                    that._validateKeySelection();
+                    fnApply();
+                });
             }
             // Conditions model changed (covers programmatic + restore).
             var oCondModel = oFilterBar.getModel && oFilterBar.getModel("$filters");
@@ -296,6 +300,44 @@ sap.ui.define([
                 return String(aMode[0].values[0]).toUpperCase();
             }
             return "";
+        },
+
+        /**
+         * True when the filter bar has at least one condition on the field.
+         */
+        _hasCond: function (oConditions, sField) {
+            var a = oConditions && oConditions[sField];
+            return !!(a && a.length);
+        },
+
+        /**
+         * Client-side validation mirroring the classic report's f_validation
+         * (message i525): the report needs a key selection - a Shipment / Visit
+         * List, OR Plant + Route + Settlement Date together, OR a Tour ID. When
+         * none is entered, show a message on Go. The backend independently
+         * returns an empty list for the no-key case, so this only adds the
+         * message; it never causes a runtime error. Fully guarded.
+         */
+        _validateKeySelection: function () {
+            try {
+                var oFB = this._oFilterBar;
+                if (!oFB || !oFB.getConditions) {
+                    return;
+                }
+                var c = oFB.getConditions() || {};
+                var bKey = this._hasCond(c, "ShipmentNo") ||
+                           this._hasCond(c, "TourId") ||
+                           (this._hasCond(c, "Plant") &&
+                            this._hasCond(c, "Route") &&
+                            this._hasCond(c, "SettlementDate"));
+                if (!bKey) {
+                    MessageBox.warning(
+                        "Please enter a Shipment / Visit List, or Plant + Route + " +
+                        "Settlement Date together, or a Tour ID, before running the report.");
+                }
+            } catch (e) {
+                // Never let validation break the app.
+            }
         },
 
         /**
