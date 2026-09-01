@@ -1131,9 +1131,27 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             INTO TABLE @DATA(lt_vlh).
         ENDIF.
 
-        LOOP AT it_tour ASSIGNING FIELD-SYMBOL(<t>).
+        " CLASSIC FIDELITY (f_get_driver_details): the displayed set is ONE row
+        " per /DSD/HH_RAHD tour header (inner join on tour_id) - NOT one row per
+        " status row. A tourid present in /DSD/ST_STATUS but with no HH_RAHD
+        " header is dropped, and the several status rows per tour collapse to a
+        " single row. So drive the output from the (unique) tour headers lt_rahd
+        " and look up the FIRST resolved status of each tour for the display
+        " fields, exactly as classic's "READ TABLE l_i_status ... BINARY SEARCH".
+        DATA lt_tstat TYPE tt_tour.
+        lt_tstat = it_tour.
+        SORT lt_tstat BY tourid.
+
+        LOOP AT lt_rahd ASSIGNING FIELD-SYMBOL(<h>).
           DATA ls_r TYPE ty_result.
           CLEAR ls_r.
+
+          READ TABLE lt_tstat ASSIGNING FIELD-SYMBOL(<t>)
+               WITH KEY tourid = <h>-tour_id BINARY SEARCH.
+          IF sy-subrc <> 0.
+            CONTINUE.
+          ENDIF.
+
           ls_r-reportmode     = 'TOUR'.
           ls_r-shipmentno     = <t>-vlid.
           ls_r-tourid         = <t>-tourid.
@@ -1143,8 +1161,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           ls_r-statusid       = <t>-status_id.
           ls_r-idocno         = <t>-idoc.
 
-          READ TABLE lt_rahd ASSIGNING FIELD-SYMBOL(<h>) WITH KEY tour_id = <t>-tourid.
-          IF sy-subrc = 0.
+          IF abap_true = abap_true.
             ls_r-driver           = <h>-driver.
             ls_r-codriver         = <h>-codriver.
             " Raw RAHD processing status is the classic "Tour Status" (e.g. 30);
