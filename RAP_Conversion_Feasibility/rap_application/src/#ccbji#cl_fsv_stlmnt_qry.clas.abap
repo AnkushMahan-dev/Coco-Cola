@@ -795,17 +795,42 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           SORT lt_vgtid BY tour_id.
           DELETE ADJACENT DUPLICATES FROM lt_vgtid COMPARING tour_id.
 
-          " Windowed build: 100 tours per batch (small range - no dump); stop as
-          " soon as the page is filled unless the exact total is requested.
-          DATA lv_vgtarget TYPE i.
-          lv_vgtarget = lv_offset + lv_page_sz.
-          DATA(lv_vgfull) = io_request->is_total_numb_of_rec_requested( ).
-          DATA lt_vgpres TYPE tt_result.
-          DATA lv_vgidx TYPE i VALUE 0.
           DATA lv_vgcnt TYPE i.
           lv_vgcnt = lines( lt_vgtid ).
           DATA lr_vgbt TYPE RANGE OF /dsd/hh_tour_id.
           DATA lv_vgc2 TYPE i.
+
+          " EXACT COUNT without building rows: read_visit emits one row per
+          " /DSD/HH_RACVHD record, so the total = COUNT(*) of racvhd over the
+          " matching tours. Count in 100-tour batches (small range - no dump).
+          " THIS is the fix for slow paging: the count no longer builds the whole
+          " result set.
+          IF io_request->is_total_numb_of_rec_requested( ) AND lt_vgtid IS NOT INITIAL.
+            DATA lv_vcount TYPE int8.
+            CLEAR lv_vcount.
+            DATA lv_vcidx TYPE i VALUE 0.
+            DATA lv_vcc   TYPE i.
+            WHILE lv_vcidx < lv_vgcnt.
+              CLEAR lr_vgbt.
+              lv_vcc = 0.
+              WHILE lv_vcidx < lv_vgcnt AND lv_vcc < 100.
+                lv_vcidx = lv_vcidx + 1.
+                APPEND VALUE #( sign = 'I' option = 'EQ' low = lt_vgtid[ lv_vcidx ]-tour_id ) TO lr_vgbt.
+                lv_vcc = lv_vcc + 1.
+              ENDWHILE.
+              SELECT COUNT(*) FROM /dsd/hh_racvhd WHERE tour_id IN @lr_vgbt INTO @DATA(lv_vbatch).
+              lv_vcount = lv_vcount + lv_vbatch.
+            ENDWHILE.
+            io_response->set_total_number_of_records( lv_vcount ).
+          ENDIF.
+
+          " Windowed build for the PAGE only: 100 tours per batch (small range -
+          " no dump), ALWAYS stop as soon as the page is filled (the total is
+          " already set above), so a data scroll never builds the whole result.
+          DATA lv_vgtarget TYPE i.
+          lv_vgtarget = lv_offset + lv_page_sz.
+          DATA lt_vgpres TYPE tt_result.
+          DATA lv_vgidx TYPE i VALUE 0.
           WHILE lv_vgidx < lv_vgcnt.
             CLEAR lr_vgbt.
             lv_vgc2 = 0.
@@ -825,7 +850,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             DATA(lt_vgbr) = read_visit( it_tour = lt_vgtour ).
             APPEND LINES OF lt_vgbr TO lt_vgpres.
 
-            IF lv_vgfull = abap_false AND lines( lt_vgpres ) >= lv_vgtarget.
+            IF lines( lt_vgpres ) >= lv_vgtarget.
               EXIT.
             ENDIF.
           ENDWHILE.
@@ -842,10 +867,6 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
               ENDIF.
               INSERT <vgr>-rowkey INTO TABLE lt_vgseen.
             ENDLOOP.
-
-            IF lv_vgfull = abap_true.
-              io_response->set_total_number_of_records( lines( lt_vgpres ) ).
-            ENDIF.
 
             DATA lt_vgpage TYPE tt_result.
             DATA(lv_vgf) = lv_offset + 1.
