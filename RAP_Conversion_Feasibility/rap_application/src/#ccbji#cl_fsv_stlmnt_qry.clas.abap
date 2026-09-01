@@ -329,6 +329,14 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
                 ev_set_id      TYPE c
                 ev_money_code  TYPE c.
 
+    "! Normalise an OData "between": get_as_ranges() splits it into two separate
+    "! inclusive-bound rows (I GE low) and (I LE high) which, in a range table,
+    "! OR together and match EVERY row. Merge a lone GE + lone LE into a single
+    "! inclusive BT range so the interval restricts correctly. Generic so it
+    "! works on any range table (shipment, plant, date, ...).
+    METHODS norm_between
+      CHANGING ct_range TYPE STANDARD TABLE.
+
 ENDCLASS.
 
 
@@ -414,6 +422,31 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             WHEN OTHERS.
           ENDCASE.
         ENDLOOP.
+
+        " Fix OData "between": get_as_ranges() splits an interval into (I GE low)
+        " + (I LE high), which OR together in a range table and match EVERY row
+        " (this is why a Visit List "between a and b" returned ~2.9M). Merge such
+        " a lone GE+LE pair back into one inclusive BT range on every range field.
+        norm_between( CHANGING ct_range = lt_shipment ).
+        norm_between( CHANGING ct_range = lt_plant ).
+        norm_between( CHANGING ct_range = lt_route ).
+        norm_between( CHANGING ct_range = lt_settle_date ).
+        norm_between( CHANGING ct_range = lt_status ).
+        norm_between( CHANGING ct_range = lt_driver ).
+        norm_between( CHANGING ct_range = lt_vehicle ).
+        norm_between( CHANGING ct_range = lt_tpp ).
+        norm_between( CHANGING ct_range = lt_f_customer ).
+        norm_between( CHANGING ct_range = lt_f_material ).
+        norm_between( CHANGING ct_range = lt_f_vkorg ).
+        norm_between( CHANGING ct_range = lt_f_paymt ).
+        norm_between( CHANGING ct_range = lt_f_currency ).
+        norm_between( CHANGING ct_range = lt_f_slddoc ).
+        norm_between( CHANGING ct_range = lt_f_visitid ).
+        norm_between( CHANGING ct_range = lt_f_tourid ).
+        norm_between( CHANGING ct_range = lt_f_viscod ).
+        norm_between( CHANGING ct_range = lt_f_objtyp ).
+        norm_between( CHANGING ct_range = lt_f_delivery ).
+        norm_between( CHANGING ct_range = lt_f_cashtype ).
 
         " "Blank Go" detector for the DB-paged fast paths. A range the parser
         " could not turn into ranges (e.g. a BETWEEN on the Visit List) leaves
@@ -548,6 +581,13 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           lv_has_key = abap_true.
         ENDIF.
         IF lv_has_key = abap_false AND lt_rowkey IS INITIAL AND lt_seqno IS INITIAL.
+          " RAP requires the provider to CONSUME every request aspect on every
+          " return path; otherwise it raises "Query not fully covered by
+          " implementation: ... get_paging missing". Consume them before the
+          " early empty return.
+          DATA(lo_pg_gate)  = io_request->get_paging( ).
+          DATA(lt_srt_gate) = io_request->get_sort_elements( ).
+          DATA(lt_req_gate) = io_request->get_requested_elements( ).
           IF io_request->is_total_numb_of_rec_requested( ).
             io_response->set_total_number_of_records( 0 ).
           ENDIF.
@@ -933,6 +973,48 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
       ELSE.
         io_response->set_data( lt_result ).
       ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD norm_between.
+
+    " OData "between" arrives from get_as_ranges() as two separate inclusive
+    " bounds (I GE low) and (I LE high). In an ABAP range these OR together and
+    " match EVERY row. If the table is exactly a lone GE + lone LE (no EQ/BT/CP),
+    " merge them into one inclusive BT range so the interval restricts correctly.
+    DATA lv_lo    TYPE string.
+    DATA lv_hi    TYPE string.
+    DATA lv_ge    TYPE abap_bool.
+    DATA lv_le    TYPE abap_bool.
+    DATA lv_other TYPE abap_bool.
+
+    FIELD-SYMBOLS <row> TYPE any.
+    LOOP AT ct_range ASSIGNING <row>.
+      ASSIGN COMPONENT 'OPTION' OF STRUCTURE <row> TO FIELD-SYMBOL(<opt>).
+      ASSIGN COMPONENT 'LOW'    OF STRUCTURE <row> TO FIELD-SYMBOL(<low>).
+      IF <opt> IS NOT ASSIGNED OR <low> IS NOT ASSIGNED.
+        RETURN.
+      ENDIF.
+      CASE <opt>.
+        WHEN 'GE' OR 'GT'. lv_lo = <low>. lv_ge = abap_true.
+        WHEN 'LE' OR 'LT'. lv_hi = <low>. lv_le = abap_true.
+        WHEN OTHERS.       lv_other = abap_true.
+      ENDCASE.
+    ENDLOOP.
+
+    IF lv_ge = abap_true AND lv_le = abap_true AND lv_other = abap_false.
+      CLEAR ct_range.
+      APPEND INITIAL LINE TO ct_range ASSIGNING <row>.
+      ASSIGN COMPONENT 'SIGN'   OF STRUCTURE <row> TO FIELD-SYMBOL(<sg>).
+      ASSIGN COMPONENT 'OPTION' OF STRUCTURE <row> TO <opt>.
+      ASSIGN COMPONENT 'LOW'    OF STRUCTURE <row> TO <low>.
+      ASSIGN COMPONENT 'HIGH'   OF STRUCTURE <row> TO FIELD-SYMBOL(<hi>).
+      <sg>  = 'I'.
+      <opt> = 'BT'.
+      <low> = lv_lo.
+      <hi>  = lv_hi.
     ENDIF.
 
   ENDMETHOD.
