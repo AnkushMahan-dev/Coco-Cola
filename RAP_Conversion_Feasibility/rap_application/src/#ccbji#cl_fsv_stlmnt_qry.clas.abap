@@ -494,6 +494,69 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         IF lv_sample_max > 50000. lv_sample_max = 50000. ENDIF.
         IF lv_sample_max < 50.    lv_sample_max = 50.    ENDIF.
 
+        " ============ FAST DB-PAGED PATH: TOUR mode, plain scroll ============
+        " Tour is one row per tour (read_tour is an unconditional 1:1 map), so a
+        " page needs only the page's tours - not a full compute of every tour
+        " then a slice. This resolves + builds ONLY the requested page's tours
+        " (deterministic ORDER BY tour_id) and gets the total from a cheap COUNT,
+        " so response time no longer grows with the total number of tours and no
+        " record cap is involved. It engages ONLY for a plain forward scroll:
+        " blank selection, no custom sort, no detail filter, not a by-key read;
+        " every other case falls through UNCHANGED to the proven path below.
+        IF lv_mode = 'TOUR'
+           AND lt_shipment IS INITIAL AND lt_plant IS INITIAL AND lt_settle_date IS INITIAL
+           AND lt_rowkey IS INITIAL AND lt_seqno IS INITIAL
+           AND io_request->is_data_requested( ) = abap_true
+           AND lv_page_sz <> if_rap_query_paging=>page_size_unlimited AND lv_page_sz > 0
+           AND lines( io_request->get_sort_elements( ) ) = 0
+           AND lt_driver IS INITIAL AND lt_vehicle IS INITIAL AND lt_tpp IS INITIAL
+           AND lt_f_customer IS INITIAL AND lt_f_material IS INITIAL AND lt_f_vkorg IS INITIAL
+           AND lt_f_paymt IS INITIAL AND lt_f_currency IS INITIAL AND lt_f_slddoc IS INITIAL
+           AND lt_f_visitid IS INITIAL AND lt_f_tourid IS INITIAL AND lt_f_viscod IS INITIAL
+           AND lt_f_objtyp IS INITIAL AND lt_f_delivery IS INITIAL AND lt_f_cashtype IS INITIAL.
+
+          " Only the page window of tour ids (tour_id order), skipping the offset.
+          DATA lt_ptid TYPE STANDARD TABLE OF /dsd/hh_tour_id.
+          DATA lv_need TYPE i.
+          lv_need = lv_offset + lv_page_sz.
+          SELECT DISTINCT tour_id FROM /dsd/hh_rahd
+            ORDER BY tour_id INTO TABLE @lt_ptid UP TO @lv_need ROWS.
+          IF lv_offset > 0.
+            IF lines( lt_ptid ) > lv_offset.
+              DELETE lt_ptid TO lv_offset.
+            ELSE.
+              CLEAR lt_ptid.
+            ENDIF.
+          ENDIF.
+
+          DATA lt_ptour TYPE tt_tour.
+          IF lt_ptid IS NOT INITIAL.
+            DATA lt_pst TYPE tt_status.
+            SELECT * FROM /dsd/st_status
+              FOR ALL ENTRIES IN @lt_ptid
+              WHERE tourid = @lt_ptid-table_line
+              INTO TABLE @lt_pst.
+            lt_ptour = enrich_tours( it_status = lt_pst it_route = VALUE #( ) ).
+            SORT lt_ptour BY tourid.
+            DELETE ADJACENT DUPLICATES FROM lt_ptour COMPARING tourid.
+          ENDIF.
+
+          DATA(lt_prows) = read_tour( it_tour = lt_ptour ).
+          LOOP AT lt_prows ASSIGNING FIELD-SYMBOL(<pr>).
+            <pr>-seqno = lv_offset + sy-tabix.
+            IF <pr>-reportmode IS INITIAL. <pr>-reportmode = 'TOUR'. ENDIF.
+            <pr>-rowkey = |{ <pr>-reportmode }~{ <pr>-tourid }~{ <pr>-visitid }~{ <pr>-slddocid }~{ <pr>-material }~{ <pr>-deliveryno }~{ <pr>-shipmentno }|.
+          ENDLOOP.
+          io_response->set_data( lt_prows ).
+
+          IF io_request->is_total_numb_of_rec_requested( ).
+            SELECT COUNT( DISTINCT tour_id ) FROM /dsd/hh_rahd INTO @DATA(lv_tcount).
+            io_response->set_total_number_of_records( lv_tcount ).
+          ENDIF.
+          RETURN.
+        ENDIF.
+        " =====================================================================
+
         " Resolve tours:
         "  - Object Page by-key read (RowKey): decode mode+tour from the key
         "    and rebuild just that tour, so the single clicked row is reproduced.
