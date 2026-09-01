@@ -1168,27 +1168,15 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             INTO TABLE @DATA(lt_vlh).
         ENDIF.
 
-        " CLASSIC FIDELITY (f_get_driver_details): the displayed set is ONE row
-        " per /DSD/HH_RAHD tour header (inner join on tour_id) - NOT one row per
-        " status row. A tourid present in /DSD/ST_STATUS but with no HH_RAHD
-        " header is dropped, and the several status rows per tour collapse to a
-        " single row. So drive the output from the (unique) tour headers lt_rahd
-        " and look up the FIRST resolved status of each tour for the display
-        " fields, exactly as classic's "READ TABLE l_i_status ... BINARY SEARCH".
-        DATA lt_tstat TYPE tt_tour.
-        lt_tstat = it_tour.
-        SORT lt_tstat BY tourid.
-
-        LOOP AT lt_rahd ASSIGNING FIELD-SYMBOL(<h>).
+        " CLASSIC FIDELITY (f_get_driver_details): the report emits ONE row per
+        " /DSD/ST_STATUS document row whose VLID is in the selection - the many
+        " documents that share a tour are all shown (they differ by visit list),
+        " so the set is NOT collapsed to one row per tour_id. Drive the output
+        " from it_tour (one entry per status/document row) and use the tour
+        " header /DSD/HH_RAHD only to enrich each row.
+        LOOP AT it_tour ASSIGNING FIELD-SYMBOL(<t>).
           DATA ls_r TYPE ty_result.
           CLEAR ls_r.
-
-          READ TABLE lt_tstat ASSIGNING FIELD-SYMBOL(<t>)
-               WITH KEY tourid = <h>-tour_id BINARY SEARCH.
-          IF sy-subrc <> 0.
-            CONTINUE.
-          ENDIF.
-
           ls_r-reportmode     = 'TOUR'.
           ls_r-shipmentno     = <t>-vlid.
           ls_r-tourid         = <t>-tourid.
@@ -1198,7 +1186,8 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           ls_r-statusid       = <t>-status_id.
           ls_r-idocno         = <t>-idoc.
 
-          IF abap_true = abap_true.
+          READ TABLE lt_rahd ASSIGNING FIELD-SYMBOL(<h>) WITH KEY tour_id = <t>-tourid.
+          IF sy-subrc = 0.
             ls_r-driver           = <h>-driver.
             ls_r-codriver         = <h>-codriver.
             " Raw RAHD processing status is the classic "Tour Status" (e.g. 30);
