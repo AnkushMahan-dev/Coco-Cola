@@ -746,6 +746,119 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         ENDIF.
         " =====================================================================
 
+        " ===== FAST DB-PAGED PATH: VISIT with a Visit List filter ============
+        " Visit is row-explosive (many visit rows per tour), so it is paged the
+        " WINDOWED way: the matching tours (Visit List range) are processed in
+        " tour_id order in small batches (100 at a time - never a giant IN-list),
+        " accumulating visit rows until the requested page is filled (data-only)
+        " or all rows are built (when the exact total is requested). Same
+        " read_visit builder/values as the slow path; order deterministic
+        " (tour_id, then per-tour). Falls through to the slow path if it yields
+        " nothing. Engages ONLY for VISI + Visit List (no other key/filter/sort).
+        IF lv_mode = 'VISI'
+           AND lt_shipment IS NOT INITIAL
+           AND lt_plant IS INITIAL AND lt_settle_date IS INITIAL AND lt_route IS INITIAL
+           AND lt_status IS INITIAL
+           AND lt_rowkey IS INITIAL AND lt_seqno IS INITIAL
+           AND io_request->is_data_requested( ) = abap_true
+           AND lv_page_sz <> if_rap_query_paging=>page_size_unlimited AND lv_page_sz > 0
+           AND lines( io_request->get_sort_elements( ) ) = 0
+           AND lt_driver IS INITIAL AND lt_vehicle IS INITIAL AND lt_tpp IS INITIAL
+           AND lt_f_customer IS INITIAL AND lt_f_material IS INITIAL AND lt_f_vkorg IS INITIAL
+           AND lt_f_paymt IS INITIAL AND lt_f_currency IS INITIAL AND lt_f_slddoc IS INITIAL
+           AND lt_f_visitid IS INITIAL AND lt_f_tourid IS INITIAL AND lt_f_viscod IS INITIAL
+           AND lt_f_objtyp IS INITIAL AND lt_f_delivery IS INITIAL AND lt_f_cashtype IS INITIAL.
+
+          " Visit List(s) -> VLID range, EXACTLY as get_tours does.
+          DATA lr_vvlid TYPE RANGE OF /dsd/vc_vlid.
+          LOOP AT lt_shipment INTO DATA(ls_vsh).
+            IF ls_vsh-high IS NOT INITIAL.
+              APPEND VALUE #( sign = ls_vsh-sign option = ls_vsh-option low = ls_vsh-low high = ls_vsh-high ) TO lr_vvlid.
+            ELSEIF ls_vsh-low IS NOT INITIAL.
+              APPEND VALUE #( sign = ls_vsh-sign option = ls_vsh-option low = ls_vsh-low ) TO lr_vvlid.
+              APPEND VALUE #( sign = 'I' option = 'EQ' low = |{ ls_vsh-low ALPHA = IN }| ) TO lr_vvlid.
+              DATA lv_vvst TYPE /dsd/vc_vlid.
+              lv_vvst = ls_vsh-low.
+              SHIFT lv_vvst LEFT DELETING LEADING '0'.
+              APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_vvst ) TO lr_vvlid.
+            ENDIF.
+          ENDLOOP.
+
+          " Matching tour ids (CHAR12) from the range, as a CHAR32 sorted list.
+          SELECT DISTINCT tourid FROM /dsd/st_status
+            WHERE vlid IN @lr_vvlid
+            INTO TABLE @DATA(lt_vftid).
+          DATA lt_vgtid TYPE STANDARD TABLE OF ty_ptid.
+          LOOP AT lt_vftid INTO DATA(ls_vft).
+            APPEND VALUE #( tour_id = ls_vft-tourid ) TO lt_vgtid.
+          ENDLOOP.
+          SORT lt_vgtid BY tour_id.
+          DELETE ADJACENT DUPLICATES FROM lt_vgtid COMPARING tour_id.
+
+          " Windowed build: 100 tours per batch (small range - no dump); stop as
+          " soon as the page is filled unless the exact total is requested.
+          DATA lv_vgtarget TYPE i.
+          lv_vgtarget = lv_offset + lv_page_sz.
+          DATA(lv_vgfull) = io_request->is_total_numb_of_rec_requested( ).
+          DATA lt_vgpres TYPE tt_result.
+          DATA lv_vgidx TYPE i VALUE 0.
+          DATA lv_vgcnt TYPE i.
+          lv_vgcnt = lines( lt_vgtid ).
+          DATA lr_vgbt TYPE RANGE OF /dsd/hh_tour_id.
+          DATA lv_vgc2 TYPE i.
+          WHILE lv_vgidx < lv_vgcnt.
+            CLEAR lr_vgbt.
+            lv_vgc2 = 0.
+            WHILE lv_vgidx < lv_vgcnt AND lv_vgc2 < 100.
+              lv_vgidx = lv_vgidx + 1.
+              APPEND VALUE #( sign = 'I' option = 'EQ' low = lt_vgtid[ lv_vgidx ]-tour_id ) TO lr_vgbt.
+              lv_vgc2 = lv_vgc2 + 1.
+            ENDWHILE.
+
+            DATA lt_vgstat TYPE tt_status.
+            SELECT * FROM /dsd/st_status WHERE tourid IN @lr_vgbt INTO TABLE @lt_vgstat.
+            DATA lt_vgtour TYPE tt_tour.
+            lt_vgtour = enrich_tours( it_status = lt_vgstat it_route = VALUE #( ) ).
+            SORT lt_vgtour BY tourid.
+            DELETE ADJACENT DUPLICATES FROM lt_vgtour COMPARING tourid.
+
+            DATA(lt_vgbr) = read_visit( it_tour = lt_vgtour ).
+            APPEND LINES OF lt_vgbr TO lt_vgpres.
+
+            IF lv_vgfull = abap_false AND lines( lt_vgpres ) >= lv_vgtarget.
+              EXIT.
+            ENDIF.
+          ENDWHILE.
+
+          " FAIL-SAFE: only take over if we produced rows; else fall through.
+          IF lt_vgpres IS NOT INITIAL.
+            DATA lt_vgseen TYPE HASHED TABLE OF ty_rowkey WITH UNIQUE KEY table_line.
+            LOOP AT lt_vgpres ASSIGNING FIELD-SYMBOL(<vgr>).
+              <vgr>-seqno = sy-tabix.
+              IF <vgr>-reportmode IS INITIAL. <vgr>-reportmode = 'VISI'. ENDIF.
+              <vgr>-rowkey = |{ <vgr>-reportmode }~{ <vgr>-tourid }~{ <vgr>-visitid }~{ <vgr>-slddocid }~{ <vgr>-material }~{ <vgr>-deliveryno }~{ <vgr>-shipmentno }|.
+              IF line_exists( lt_vgseen[ table_line = <vgr>-rowkey ] ).
+                <vgr>-rowkey = |{ <vgr>-rowkey }~{ <vgr>-seqno }|.
+              ENDIF.
+              INSERT <vgr>-rowkey INTO TABLE lt_vgseen.
+            ENDLOOP.
+
+            IF lv_vgfull = abap_true.
+              io_response->set_total_number_of_records( lines( lt_vgpres ) ).
+            ENDIF.
+
+            DATA lt_vgpage TYPE tt_result.
+            DATA(lv_vgf) = lv_offset + 1.
+            DATA(lv_vgt) = lv_offset + lv_page_sz.
+            LOOP AT lt_vgpres INTO DATA(ls_vg) FROM lv_vgf TO lv_vgt.
+              APPEND ls_vg TO lt_vgpage.
+            ENDLOOP.
+            io_response->set_data( lt_vgpage ).
+            RETURN.
+          ENDIF.
+        ENDIF.
+        " =====================================================================
+
         " ======== FAST DB-PAGED PATH: row-explosive modes (windowed) =========
         " Visit / Sales / Payment / Check / Money / Quantity / FSR produce a
         " VARIABLE number of rows per tour, so they cannot be paged by tour like
