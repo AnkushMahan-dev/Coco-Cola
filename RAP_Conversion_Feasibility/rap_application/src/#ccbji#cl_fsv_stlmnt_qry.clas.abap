@@ -532,41 +532,6 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           lv_mode = 'TOUR'.
         ENDIF.
 
-        " ===================================================================
-        " NO-INPUT VALIDATION (classic f_validation, msg i525): the classic
-        " report NEVER runs on a blank screen - it requires a Shipment / Visit
-        " List, or Plant + Route + Settlement Date together, or a Tour ID. This
-        " runs BEFORE the mode dispatch, so it applies to EVERY report type.
-        " With no such key - and not an Object-Page drill-down (RowKey) or seqno
-        " paging - return an EMPTY list (like classic), so a non-maintained visit
-        " list such as 9002952691 can never appear. It ALSO makes the default
-        " (no-input) view instant - no blank-scroll sampling at all.
-        "
-        " IMPORTANT: this ONLY short-circuits the no-key case. When any key is
-        " present the code below runs UNCHANGED, so filtered counts/values are
-        " exactly as before.
-        DATA lv_has_key TYPE abap_bool.
-        IF lt_shipment IS NOT INITIAL
-           OR lt_f_tourid IS NOT INITIAL
-           OR ( lt_plant IS NOT INITIAL AND lt_route IS NOT INITIAL AND lt_settle_date IS NOT INITIAL ).
-          lv_has_key = abap_true.
-        ENDIF.
-        IF lv_has_key = abap_false AND lt_rowkey IS INITIAL AND lt_seqno IS INITIAL.
-          " RAP requires every request aspect to be CONSUMED on every return
-          " path, else it raises "Query not fully covered ... get_paging missing".
-          DATA(lo_pg_gate)  = io_request->get_paging( ).
-          DATA(lt_srt_gate) = io_request->get_sort_elements( ).
-          DATA(lt_req_gate) = io_request->get_requested_elements( ).
-          IF io_request->is_total_numb_of_rec_requested( ).
-            io_response->set_total_number_of_records( 0 ).
-          ENDIF.
-          IF io_request->is_data_requested( ).
-            io_response->set_data( VALUE tt_result( ) ).
-          ENDIF.
-          RETURN.
-        ENDIF.
-        " ===================================================================
-
         " Paging window (read once, reused for the slice at the end). The blank
         " search samples a number of tours DERIVED from this window, so the row
         " count is no longer a hard 100 - it grows as the client scrolls
@@ -660,132 +625,6 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             io_response->set_total_number_of_records( lv_tcount ).
           ENDIF.
           RETURN.
-        ENDIF.
-        " =====================================================================
-
-        " ===== FAST DB-PAGED PATH: TOUR with a Visit List filter =============
-        " Same idea as the blank TOUR path, but restricted to the entered
-        " Shipment / Visit List. Builds ONLY the requested page's tours + a cheap
-        " DB COUNT, so a wide range no longer rebuilds the whole result on every
-        " scroll. Output IDENTICAL to the slow path (same tours, count, values);
-        " only the order becomes deterministic (tour_id).
-        "
-        " KEY-TYPE NOTE: /DSD/ST_STATUS-TOURID is CHAR 12 while /DSD/HH_RAHD-TOUR_ID
-        " is CHAR 32 holding the SAME value left-justified. So:
-        "   - hh_rahd.tour_id is matched with a range typed as /dsd/hh_tour_id
-        "     (CHAR 32) built from st_status.tourid (assignment pads 12->32),
-        "     exactly like the slow path (enrich_tours -> read_tour FAE).
-        "   - st_status.tourid is matched with a range typed as /dsd/st_tourid
-        "     (CHAR 12) built from hh_rahd.tour_id (assignment truncates 32->12),
-        "     exactly like classic (<sld_item>-tourid = <sld_item>-tour_id).
-        " Engages ONLY when the sole key is the Visit List (no plant/route/date/
-        " status), no detail/driver/vehicle/tpp filter, no sort, not by-key.
-        IF lv_mode = 'TOUR'
-           AND lt_shipment IS NOT INITIAL
-           AND lt_plant IS INITIAL AND lt_settle_date IS INITIAL AND lt_route IS INITIAL
-           AND lt_status IS INITIAL
-           AND lt_rowkey IS INITIAL AND lt_seqno IS INITIAL
-           AND io_request->is_data_requested( ) = abap_true
-           AND lv_page_sz <> if_rap_query_paging=>page_size_unlimited AND lv_page_sz > 0
-           AND lines( io_request->get_sort_elements( ) ) = 0
-           AND lt_driver IS INITIAL AND lt_vehicle IS INITIAL AND lt_tpp IS INITIAL
-           AND lt_f_customer IS INITIAL AND lt_f_material IS INITIAL AND lt_f_vkorg IS INITIAL
-           AND lt_f_paymt IS INITIAL AND lt_f_currency IS INITIAL AND lt_f_slddoc IS INITIAL
-           AND lt_f_visitid IS INITIAL AND lt_f_tourid IS INITIAL AND lt_f_viscod IS INITIAL
-           AND lt_f_objtyp IS INITIAL AND lt_f_delivery IS INITIAL AND lt_f_cashtype IS INITIAL.
-
-          " Resolve the entered Visit List(s) into a VLID range EXACTLY as
-          " get_tours does, so the tour set is identical.
-          DATA lr_fvlid TYPE RANGE OF /dsd/vc_vlid.
-          LOOP AT lt_shipment INTO DATA(ls_fsh).
-            IF ls_fsh-high IS NOT INITIAL.
-              APPEND VALUE #( sign = ls_fsh-sign option = ls_fsh-option low = ls_fsh-low high = ls_fsh-high ) TO lr_fvlid.
-            ELSEIF ls_fsh-low IS NOT INITIAL.
-              APPEND VALUE #( sign = ls_fsh-sign option = ls_fsh-option low = ls_fsh-low ) TO lr_fvlid.
-              APPEND VALUE #( sign = 'I' option = 'EQ' low = |{ ls_fsh-low ALPHA = IN }| ) TO lr_fvlid.
-              DATA lv_fvst TYPE /dsd/vc_vlid.
-              lv_fvst = ls_fsh-low.
-              SHIFT lv_fvst LEFT DELETING LEADING '0'.
-              APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_fvst ) TO lr_fvlid.
-            ENDIF.
-          ENDLOOP.
-
-          " Matching tour ids (CHAR12) -> range typed as HH_RAHD tour id (CHAR32),
-          " so hh_rahd.tour_id matches (pads 12->32, like the slow path).
-          SELECT DISTINCT tourid FROM /dsd/st_status
-            WHERE vlid IN @lr_fvlid
-            INTO TABLE @DATA(lt_ftid).
-          DATA lr_ftid TYPE RANGE OF /dsd/hh_tour_id.
-          LOOP AT lt_ftid INTO DATA(ls_ftid).
-            APPEND VALUE #( sign = 'I' option = 'EQ' low = ls_ftid-tourid ) TO lr_ftid.
-          ENDLOOP.
-          IF lr_ftid IS INITIAL.
-            io_response->set_data( VALUE tt_result( ) ).
-            IF io_request->is_total_numb_of_rec_requested( ).
-              io_response->set_total_number_of_records( 0 ).
-            ENDIF.
-            RETURN.
-          ENDIF.
-
-          " Only the page window of matching tour ids (tour_id order).
-          DATA lt_fptid TYPE STANDARD TABLE OF ty_ptid.
-          DATA lv_fneed TYPE i.
-          lv_fneed = lv_offset + lv_page_sz.
-          SELECT DISTINCT tour_id FROM /dsd/hh_rahd
-            WHERE tour_id IN @lr_ftid
-            ORDER BY tour_id INTO TABLE @lt_fptid UP TO @lv_fneed ROWS.
-          IF lv_offset > 0.
-            IF lines( lt_fptid ) > lv_offset.
-              DELETE lt_fptid TO lv_offset.
-            ELSE.
-              CLEAR lt_fptid.
-            ENDIF.
-          ENDIF.
-
-          " Build ONLY the page's tours (same builder as the slow path). The page
-          " status is read with a CHAR-12 range (hh_rahd.tour_id 32 -> st tourid
-          " 12 by truncation), so st_status.tourid matches.
-          DATA lt_fptour TYPE tt_tour.
-          IF lt_fptid IS NOT INITIAL.
-            DATA lr_fppage TYPE RANGE OF /dsd/st_tourid.
-            CLEAR lr_fppage.
-            LOOP AT lt_fptid ASSIGNING FIELD-SYMBOL(<fpt>).
-              DATA lv_fp12 TYPE /dsd/st_tourid.
-              lv_fp12 = <fpt>-tour_id.
-              APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_fp12 ) TO lr_fppage.
-            ENDLOOP.
-            DATA lt_fpst TYPE tt_status.
-            SELECT * FROM /dsd/st_status
-              WHERE tourid IN @lr_fppage
-              INTO TABLE @lt_fpst.
-            lt_fptour = enrich_tours( it_status = lt_fpst it_route = VALUE #( ) ).
-            SORT lt_fptour BY tourid.
-            DELETE ADJACENT DUPLICATES FROM lt_fptour COMPARING tourid.
-          ENDIF.
-
-          DATA(lt_fprows) = read_tour( it_tour = lt_fptour ).
-
-          " SAFETY FALLBACK: only take over the request if the fast path actually
-          " produced rows. If it yields nothing (e.g. an unforeseen key-format
-          " edge case), DO NOT return an empty list - fall through to the proven
-          " slow path below, which builds the correct result. Worst case is the
-          " old (slower) behaviour; the output is never wrong or empty.
-          IF lt_fprows IS NOT INITIAL.
-            LOOP AT lt_fprows ASSIGNING FIELD-SYMBOL(<fpr>).
-              <fpr>-seqno = lv_offset + sy-tabix.
-              IF <fpr>-reportmode IS INITIAL. <fpr>-reportmode = 'TOUR'. ENDIF.
-              <fpr>-rowkey = |{ <fpr>-reportmode }~{ <fpr>-tourid }~{ <fpr>-visitid }~{ <fpr>-slddocid }~{ <fpr>-material }~{ <fpr>-deliveryno }~{ <fpr>-shipmentno }|.
-            ENDLOOP.
-            io_response->set_data( lt_fprows ).
-
-            IF io_request->is_total_numb_of_rec_requested( ).
-              SELECT COUNT( DISTINCT tour_id ) FROM /dsd/hh_rahd
-                WHERE tour_id IN @lr_ftid
-                INTO @DATA(lv_ftcount).
-              io_response->set_total_number_of_records( lv_ftcount ).
-            ENDIF.
-            RETURN.
-          ENDIF.
         ENDIF.
         " =====================================================================
 
@@ -1285,19 +1124,11 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             FOR ALL ENTRIES IN @lt_rahd
             WHERE tour_id = @lt_rahd-tour_id
             INTO TABLE @DATA(lt_coci).
-          " Perf (#4): sort the lookup once, then BINARY SEARCH per row (O(log n)
-          " instead of O(n)) - EXACTLY as the classic report does
-          " (f_get_driver_details: SORT l_i_racocihd BY tour_id + BINARY SEARCH).
-          " Output-neutral: one CHECKER row per tour, so the found row is the same.
-          SORT lt_coci BY tour_id.
           " Visit group (AUTH) by visit list (OBJ_ID).
           SELECT vlid, auth, exdat1 FROM /dsd/vc_vlh
             FOR ALL ENTRIES IN @lt_rahd
             WHERE vlid = @lt_rahd-obj_id
             INTO TABLE @DATA(lt_vlh).
-          " Perf (#4): VLID is the key of /dsd/vc_vlh (unique), so sort + BINARY
-          " SEARCH returns the identical row, just faster.
-          SORT lt_vlh BY vlid.
         ENDIF.
 
         " CLASSIC FIDELITY (f_get_driver_details): the displayed set is ONE row
@@ -1354,7 +1185,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             ENDIF.
 
             " Visit group (AUTH).
-            READ TABLE lt_vlh ASSIGNING FIELD-SYMBOL(<vl>) WITH KEY vlid = <h>-obj_id BINARY SEARCH.
+            READ TABLE lt_vlh ASSIGNING FIELD-SYMBOL(<vl>) WITH KEY vlid = <h>-obj_id.
             IF sy-subrc = 0.
               ls_r-visitgroup = <vl>-auth.
               " Original execution date (classic MOD-030, /DSD/VC_VLH-EXDAT1).
@@ -1362,7 +1193,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             ENDIF.
 
             " Scenario + Driver swap from CHECKER (classic MOD-008/017 rules).
-            READ TABLE lt_coci ASSIGNING FIELD-SYMBOL(<co>) WITH KEY tour_id = <t>-tourid BINARY SEARCH.
+            READ TABLE lt_coci ASSIGNING FIELD-SYMBOL(<co>) WITH KEY tour_id = <t>-tourid.
             IF sy-subrc = 0 AND <co>-checker IS NOT INITIAL.
               DATA(lv_len) = strlen( <co>-checker ) - 1.
               ls_r-scenario = <co>-checker+lv_len(1).
