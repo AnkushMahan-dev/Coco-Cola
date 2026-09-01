@@ -697,7 +697,9 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           ENDIF.
 
           " Total = number of matching tours; page = the requested slice.
-          DATA(lv_ftcount) = lines( lt_alltid ).
+          " (INT8: set_total_number_of_records expects INT8, not INT4.)
+          DATA lv_ftcount TYPE int8.
+          lv_ftcount = lines( lt_alltid ).
           DATA lt_fptid TYPE STANDARD TABLE OF ty_ptid.
           DATA(lv_ff) = lv_offset + 1.
           DATA(lv_ft) = lv_offset + lv_page_sz.
