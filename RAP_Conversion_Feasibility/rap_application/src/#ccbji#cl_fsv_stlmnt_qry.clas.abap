@@ -516,7 +516,9 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
            AND lt_f_objtyp IS INITIAL AND lt_f_delivery IS INITIAL AND lt_f_cashtype IS INITIAL.
 
           " Only the page window of tour ids (tour_id order), skipping the offset.
-          DATA lt_ptid TYPE STANDARD TABLE OF /dsd/hh_tour_id.
+          " Structured table so FOR ALL ENTRIES can reference a named component.
+          TYPES: BEGIN OF ty_ptid, tour_id TYPE /dsd/hh_tour_id, END OF ty_ptid.
+          DATA lt_ptid TYPE STANDARD TABLE OF ty_ptid.
           DATA lv_need TYPE i.
           lv_need = lv_offset + lv_page_sz.
           SELECT DISTINCT tour_id FROM /dsd/hh_rahd
@@ -534,7 +536,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             DATA lt_pst TYPE tt_status.
             SELECT * FROM /dsd/st_status
               FOR ALL ENTRIES IN @lt_ptid
-              WHERE tourid = @lt_ptid-table_line
+              WHERE tourid = @lt_ptid-tour_id
               INTO TABLE @lt_pst.
             lt_ptour = enrich_tours( it_status = lt_pst it_route = VALUE #( ) ).
             SORT lt_ptour BY tourid.
