@@ -284,6 +284,24 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
     METHODS read_fsr      IMPORTING it_tour TYPE tt_tour RETURNING VALUE(rt) TYPE tt_result.
     METHODS read_cash     IMPORTING it_tour TYPE tt_tour RETURNING VALUE(rt) TYPE tt_result.
 
+    "! HANA-pushdown pagination for the 1:1 row-explosive modes (Sales / Check /
+    "! Money / Quantity) under a Visit List filter. The mode's driver detail
+    "! table is filtered, ordered and sliced (LIMIT/OFFSET) IN THE DATABASE, so
+    "! any page reads at most page_size driver rows regardless of scroll depth.
+    "! The EXISTING read_* builder then runs for the page's tours (so every
+    "! output VALUE is identical), and only the page's driver rows are kept
+    "! (matched by their natural key). ev_ok = abap_false -> the caller falls
+    "! back to the proven slow path (never silently empty).
+    METHODS page_driver_1to1
+      IMPORTING iv_mode      TYPE clike
+                it_shipment  TYPE tt_r_tknum
+                iv_offset    TYPE i
+                iv_pagesz    TYPE i
+                iv_total_req TYPE abap_bool
+      EXPORTING et_page      TYPE tt_result
+                ev_total     TYPE int8
+                ev_ok        TYPE abap_bool.
+
     "! CASH Object Page single-row read: reconstruct exactly the clicked row
     "! from its RowKey (mode + visit id + visit list) WITHOUT re-running the
     "! external cash-difference program, and enrich the cheap header fields.
@@ -956,6 +974,65 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           ENDIF.
           " First page empty while data may exist -> fall through to the
           " proven slow path (safety net; the query is never silently empty).
+        ENDIF.
+        " =====================================================================
+
+        " ===== FAST DB-PAGED PATH: SALES / CHECK with a Visit List filter =====
+        " Sales (SLRP) and Check (CHCK) are each ONE output row per driver detail
+        " record (a delivery item / a check item), so - like VISIT - the page is
+        " pushed to HANA: the driver table is filtered (EXISTS on the Visit List
+        " range), ORDER'd and sliced (LIMIT/OFFSET) in the database, so any page
+        " reads at most page_size driver rows. The EXACT builder (read_sales /
+        " read_check) then runs for the page's tours, so every output value is
+        " identical to the classic report. Falls through to the proven slow path
+        " if the first page is empty (safety net). Engages ONLY for SLRP / CHCK
+        " with a Visit List and no other key / filter / sort.
+        IF ( lv_mode = 'SLRP' OR lv_mode = 'CHCK' )
+           AND lt_shipment IS NOT INITIAL
+           AND lt_plant IS INITIAL AND lt_settle_date IS INITIAL AND lt_route IS INITIAL
+           AND lt_status IS INITIAL
+           AND lt_rowkey IS INITIAL AND lt_seqno IS INITIAL
+           AND io_request->is_data_requested( ) = abap_true
+           AND lv_page_sz <> if_rap_query_paging=>page_size_unlimited AND lv_page_sz > 0
+           AND lines( io_request->get_sort_elements( ) ) = 0
+           AND lt_driver IS INITIAL AND lt_vehicle IS INITIAL AND lt_tpp IS INITIAL
+           AND lt_f_customer IS INITIAL AND lt_f_material IS INITIAL AND lt_f_vkorg IS INITIAL
+           AND lt_f_paymt IS INITIAL AND lt_f_currency IS INITIAL AND lt_f_slddoc IS INITIAL
+           AND lt_f_visitid IS INITIAL AND lt_f_tourid IS INITIAL AND lt_f_viscod IS INITIAL
+           AND lt_f_objtyp IS INITIAL AND lt_f_delivery IS INITIAL AND lt_f_cashtype IS INITIAL.
+
+          DATA lt_dpage    TYPE tt_result.
+          DATA lv_dtot     TYPE int8.
+          DATA lv_dok      TYPE abap_bool.
+          DATA lv_dtot_req TYPE abap_bool.
+          lv_dtot_req = io_request->is_total_numb_of_rec_requested( ).
+          page_driver_1to1(
+            EXPORTING iv_mode      = lv_mode
+                      it_shipment  = lt_shipment
+                      iv_offset    = lv_offset
+                      iv_pagesz    = lv_page_sz
+                      iv_total_req = lv_dtot_req
+            IMPORTING et_page      = lt_dpage
+                      ev_total     = lv_dtot
+                      ev_ok        = lv_dok ).
+
+          IF lv_dok = abap_true.
+            IF lt_dpage IS NOT INITIAL.
+              io_response->set_data( lt_dpage ).
+              IF lv_dtot_req = abap_true.
+                io_response->set_total_number_of_records( lv_dtot ).
+              ENDIF.
+              RETURN.
+            ELSEIF lv_offset > 0 OR ( lv_dtot_req = abap_true AND lv_dtot = 0 ).
+              io_response->set_data( VALUE tt_result( ) ).
+              IF lv_dtot_req = abap_true.
+                io_response->set_total_number_of_records( lv_dtot ).
+              ENDIF.
+              RETURN.
+            ENDIF.
+          ENDIF.
+          " Not handled / empty first page while data may exist -> fall through
+          " to the proven slow path (safety net; never silently empty).
         ENDIF.
         " =====================================================================
 
@@ -2234,6 +2311,150 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         ENDLOOP.
       CATCH cx_root.
         CLEAR rt.
+    ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD page_driver_1to1.
+
+    CLEAR: et_page, ev_total, ev_ok.
+
+    TRY.
+        " Visit List(s) -> VLID range, EXACTLY as get_tours / the VISIT path do.
+        DATA lr_vlid TYPE RANGE OF /dsd/vc_vlid.
+        LOOP AT it_shipment INTO DATA(ls_sh).
+          IF ls_sh-high IS NOT INITIAL.
+            APPEND VALUE #( sign = ls_sh-sign option = ls_sh-option low = ls_sh-low high = ls_sh-high ) TO lr_vlid.
+          ELSEIF ls_sh-low IS NOT INITIAL.
+            APPEND VALUE #( sign = ls_sh-sign option = ls_sh-option low = ls_sh-low ) TO lr_vlid.
+            APPEND VALUE #( sign = 'I' option = 'EQ' low = |{ ls_sh-low ALPHA = IN }| ) TO lr_vlid.
+            DATA lv_vst TYPE /dsd/vc_vlid.
+            lv_vst = ls_sh-low.
+            SHIFT lv_vst LEFT DELETING LEADING '0'.
+            APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_vst ) TO lr_vlid.
+          ENDIF.
+        ENDLOOP.
+        IF lr_vlid IS INITIAL. RETURN. ENDIF.
+
+        " Normalised page of driver rows: tour_id (for enrichment) + a natural
+        " key string (to pick the page rows out of the builder's output).
+        TYPES: BEGIN OF ty_dpg,
+                 tour_id TYPE /dsd/hh_tour_id,
+                 pkey    TYPE string,
+               END OF ty_dpg.
+        DATA lt_dpg TYPE STANDARD TABLE OF ty_dpg.
+
+        CASE iv_mode.
+          WHEN 'SLRP'.
+            " Driver = /DSD/HH_RADELIT (one output row per delivery item).
+            IF iv_total_req = abap_true.
+              SELECT COUNT(*) FROM /dsd/hh_radelit AS d
+                WHERE EXISTS ( SELECT * FROM /dsd/st_status AS st
+                               WHERE st~tourid = d~tour_id AND st~vlid IN @lr_vlid )
+                INTO @ev_total.
+            ENDIF.
+            SELECT tour_id, visit_id, hh_delvry, hh_delvry_it
+              FROM /dsd/hh_radelit AS d
+              WHERE EXISTS ( SELECT * FROM /dsd/st_status AS st
+                             WHERE st~tourid = d~tour_id AND st~vlid IN @lr_vlid )
+              ORDER BY tour_id, visit_id, hh_delvry, hh_delvry_it
+              INTO TABLE @DATA(lt_sl)
+              UP TO @iv_pagesz ROWS OFFSET @iv_offset.
+            LOOP AT lt_sl INTO DATA(ls_sl).
+              APPEND VALUE #( tour_id = ls_sl-tour_id
+                              pkey    = |{ ls_sl-tour_id }#{ ls_sl-visit_id }#{ ls_sl-hh_delvry }#{ ls_sl-hh_delvry_it }| )
+                     TO lt_dpg.
+            ENDLOOP.
+
+          WHEN 'CHCK'.
+            " Driver = /DSD/HH_RACOCIMI (one output row per check item).
+            IF iv_total_req = abap_true.
+              SELECT COUNT(*) FROM /dsd/hh_racocimi AS d
+                WHERE EXISTS ( SELECT * FROM /dsd/st_status AS st
+                               WHERE st~tourid = d~tour_id AND st~vlid IN @lr_vlid )
+                INTO @ev_total.
+            ENDIF.
+            SELECT tour_id, check_id, itemnr
+              FROM /dsd/hh_racocimi AS d
+              WHERE EXISTS ( SELECT * FROM /dsd/st_status AS st
+                             WHERE st~tourid = d~tour_id AND st~vlid IN @lr_vlid )
+              ORDER BY tour_id, check_id, itemnr
+              INTO TABLE @DATA(lt_ck)
+              UP TO @iv_pagesz ROWS OFFSET @iv_offset.
+            LOOP AT lt_ck INTO DATA(ls_ck).
+              APPEND VALUE #( tour_id = ls_ck-tour_id
+                              pkey    = |{ ls_ck-tour_id }#{ ls_ck-check_id }#{ ls_ck-itemnr }| )
+                     TO lt_dpg.
+            ENDLOOP.
+
+          WHEN OTHERS.
+            RETURN.
+        ENDCASE.
+
+        IF lt_dpg IS INITIAL. ev_ok = abap_true. RETURN. ENDIF.
+
+        " Tour context for the page's tours only, via the same enrich_tours.
+        DATA lr_dt TYPE RANGE OF /dsd/hh_tour_id.
+        LOOP AT lt_dpg INTO DATA(ls_dp).
+          APPEND VALUE #( sign = 'I' option = 'EQ' low = ls_dp-tour_id ) TO lr_dt.
+        ENDLOOP.
+        SORT lr_dt BY low.
+        DELETE ADJACENT DUPLICATES FROM lr_dt COMPARING low.
+
+        DATA lt_dst TYPE tt_status.
+        SELECT * FROM /dsd/st_status WHERE tourid IN @lr_dt INTO TABLE @lt_dst.
+        DATA(lt_dtour) = enrich_tours( it_status = lt_dst it_route = VALUE #( ) ).
+        SORT lt_dtour BY tourid.
+        DELETE ADJACENT DUPLICATES FROM lt_dtour COMPARING tourid.
+
+        " Reuse the EXACT builder for these tours (identical output values),
+        " then keep only the page's driver rows by natural key.
+        DATA lt_full TYPE tt_result.
+        CASE iv_mode.
+          WHEN 'SLRP'. lt_full = read_sales( it_tour = lt_dtour ).
+          WHEN 'CHCK'. lt_full = read_check( it_tour = lt_dtour ).
+        ENDCASE.
+
+        TYPES: BEGIN OF ty_kx, pkey TYPE string, idx TYPE i, END OF ty_kx.
+        DATA lt_kx TYPE HASHED TABLE OF ty_kx WITH UNIQUE KEY pkey.
+        LOOP AT lt_full ASSIGNING FIELD-SYMBOL(<fr>).
+          DATA lv_ok TYPE string.
+          CASE iv_mode.
+            WHEN 'SLRP'. lv_ok = |{ <fr>-tourid }#{ <fr>-visitid }#{ <fr>-deliveryno }#{ <fr>-deliveryitem }|.
+            WHEN 'CHCK'. lv_ok = |{ <fr>-tourid }#{ <fr>-checkid }#{ <fr>-itemno }|.
+          ENDCASE.
+          INSERT VALUE #( pkey = lv_ok idx = sy-tabix ) INTO TABLE lt_kx.
+        ENDLOOP.
+
+        DATA lv_seq TYPE int4.
+        lv_seq = iv_offset.
+        LOOP AT lt_dpg INTO ls_dp.
+          READ TABLE lt_kx ASSIGNING FIELD-SYMBOL(<kx>) WITH KEY pkey = ls_dp-pkey.
+          IF sy-subrc = 0.
+            DATA ls_r TYPE ty_result.
+            ls_r = lt_full[ <kx>-idx ].
+            lv_seq = lv_seq + 1.
+            ls_r-seqno  = lv_seq.
+            ls_r-rowkey = |{ ls_r-reportmode }~{ ls_r-tourid }~{ ls_r-visitid }~{ ls_r-slddocid }~{ ls_r-material }~{ ls_r-deliveryno }~{ ls_r-shipmentno }|.
+            APPEND ls_r TO et_page.
+          ENDIF.
+        ENDLOOP.
+
+        " OData V4 requires a unique key per row within the page.
+        DATA lt_seen TYPE HASHED TABLE OF ty_rowkey WITH UNIQUE KEY table_line.
+        LOOP AT et_page ASSIGNING FIELD-SYMBOL(<pr>).
+          IF line_exists( lt_seen[ table_line = <pr>-rowkey ] ).
+            <pr>-rowkey = |{ <pr>-rowkey }~{ <pr>-seqno }|.
+          ENDIF.
+          INSERT <pr>-rowkey INTO TABLE lt_seen.
+        ENDLOOP.
+
+        ev_ok = abap_true.
+
+      CATCH cx_root.
+        CLEAR: et_page, ev_total.
+        ev_ok = abap_false.
     ENDTRY.
 
   ENDMETHOD.
