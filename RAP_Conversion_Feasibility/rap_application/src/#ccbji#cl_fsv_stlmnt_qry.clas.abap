@@ -1159,11 +1159,19 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             FOR ALL ENTRIES IN @lt_rahd
             WHERE tour_id = @lt_rahd-tour_id
             INTO TABLE @DATA(lt_coci).
+          " Perf (#4): sort the lookup once, then BINARY SEARCH per row (O(log n)
+          " instead of O(n)) - EXACTLY as the classic report does
+          " (f_get_driver_details: SORT l_i_racocihd BY tour_id + BINARY SEARCH).
+          " Output-neutral: one CHECKER row per tour, so the found row is the same.
+          SORT lt_coci BY tour_id.
           " Visit group (AUTH) by visit list (OBJ_ID).
           SELECT vlid, auth, exdat1 FROM /dsd/vc_vlh
             FOR ALL ENTRIES IN @lt_rahd
             WHERE vlid = @lt_rahd-obj_id
             INTO TABLE @DATA(lt_vlh).
+          " Perf (#4): VLID is the key of /dsd/vc_vlh (unique), so sort + BINARY
+          " SEARCH returns the identical row, just faster.
+          SORT lt_vlh BY vlid.
         ENDIF.
 
         " CLASSIC FIDELITY (f_get_driver_details): the displayed set is ONE row
@@ -1220,7 +1228,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             ENDIF.
 
             " Visit group (AUTH).
-            READ TABLE lt_vlh ASSIGNING FIELD-SYMBOL(<vl>) WITH KEY vlid = <h>-obj_id.
+            READ TABLE lt_vlh ASSIGNING FIELD-SYMBOL(<vl>) WITH KEY vlid = <h>-obj_id BINARY SEARCH.
             IF sy-subrc = 0.
               ls_r-visitgroup = <vl>-auth.
               " Original execution date (classic MOD-030, /DSD/VC_VLH-EXDAT1).
@@ -1228,7 +1236,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             ENDIF.
 
             " Scenario + Driver swap from CHECKER (classic MOD-008/017 rules).
-            READ TABLE lt_coci ASSIGNING FIELD-SYMBOL(<co>) WITH KEY tour_id = <t>-tourid.
+            READ TABLE lt_coci ASSIGNING FIELD-SYMBOL(<co>) WITH KEY tour_id = <t>-tourid BINARY SEARCH.
             IF sy-subrc = 0 AND <co>-checker IS NOT INITIAL.
               DATA(lv_len) = strlen( <co>-checker ) - 1.
               ls_r-scenario = <co>-checker+lv_len(1).
