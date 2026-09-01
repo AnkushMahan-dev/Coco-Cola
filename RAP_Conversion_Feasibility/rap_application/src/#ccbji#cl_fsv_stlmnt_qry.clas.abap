@@ -415,6 +415,29 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           ENDCASE.
         ENDLOOP.
 
+        " "Blank Go" detector for the DB-paged fast paths. A range the parser
+        " could not turn into ranges (e.g. a BETWEEN on the Visit List) leaves
+        " lt_shipment empty, which would let the fast path treat a real filter as
+        " a blank scroll and return everything. So decide "blank" from the RAW
+        " filter string: the fast paths run ONLY when it mentions no restricting
+        " field. Any filter -> the proven slow path (which applies it) is used.
+        DATA lv_blank_go TYPE abap_bool VALUE abap_true.
+        DATA lv_fstr     TYPE string.
+        TRY.
+            lv_fstr = to_upper( io_request->get_filter( )->string( ) ).
+          CATCH cx_root.
+            CLEAR lv_fstr.
+        ENDTRY.
+        IF lv_fstr CS 'SHIPMENT'   OR lv_fstr CS 'PLANT'      OR lv_fstr CS 'ROUTE'
+        OR lv_fstr CS 'SETTLEMENT' OR lv_fstr CS 'STATUS'     OR lv_fstr CS 'DRIVER'
+        OR lv_fstr CS 'VEHICLE'    OR lv_fstr CS 'CUSTOMER'   OR lv_fstr CS 'MATERIAL'
+        OR lv_fstr CS 'VKORG'      OR lv_fstr CS 'PAYMENT'    OR lv_fstr CS 'CURRENCY'
+        OR lv_fstr CS 'SLDDOC'     OR lv_fstr CS 'VISITID'    OR lv_fstr CS 'TOURID'
+        OR lv_fstr CS 'VISITREASON' OR lv_fstr CS 'OBJTYPE'   OR lv_fstr CS 'DELIVERY'
+        OR lv_fstr CS 'CASHTYPE'   OR lv_fstr CS 'VISITGROUP' OR lv_fstr CS 'TPP'.
+          lv_blank_go = abap_false.
+        ENDIF.
+
         " Leading-zero tolerance: for code fields that are commonly stored
         " zero-padded (customer, material, delivery, settlement doc, visit,
         " tour), add stripped + ALPHA-padded EQ variants so the filter matches
@@ -504,6 +527,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         " blank selection, no custom sort, no detail filter, not a by-key read;
         " every other case falls through UNCHANGED to the proven path below.
         IF lv_mode = 'TOUR'
+           AND lv_blank_go = abap_true
            AND lt_shipment IS INITIAL AND lt_plant IS INITIAL AND lt_settle_date IS INITIAL
            AND lt_rowkey IS INITIAL AND lt_seqno IS INITIAL
            AND io_request->is_data_requested( ) = abap_true
@@ -577,7 +601,8 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         " only the row order becomes deterministic (tour_id, then per-tour).
         " Engages ONLY for a plain scroll (blank selection, no sort, no filter,
         " not by-key); Route Summary and every other case are untouched.
-        IF lt_shipment IS INITIAL AND lt_plant IS INITIAL AND lt_settle_date IS INITIAL
+        IF lv_blank_go = abap_true
+           AND lt_shipment IS INITIAL AND lt_plant IS INITIAL AND lt_settle_date IS INITIAL
            AND lt_rowkey IS INITIAL AND lt_seqno IS INITIAL
            AND io_request->is_data_requested( ) = abap_true
            AND lv_page_sz <> if_rap_query_paging=>page_size_unlimited AND lv_page_sz > 0
