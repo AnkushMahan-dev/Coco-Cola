@@ -800,27 +800,17 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           DATA lr_vgbt TYPE RANGE OF /dsd/hh_tour_id.
           DATA lv_vgc2 TYPE i.
 
-          " EXACT COUNT without building rows: read_visit emits one row per
-          " /DSD/HH_RACVHD record, so the total = COUNT(*) of racvhd over the
-          " matching tours. Count in 100-tour batches (small range - no dump).
-          " THIS is the fix for slow paging: the count no longer builds the whole
-          " result set.
-          IF io_request->is_total_numb_of_rec_requested( ) AND lt_vgtid IS NOT INITIAL.
-            DATA lv_vcount TYPE int8.
-            CLEAR lv_vcount.
-            DATA lv_vcidx TYPE i VALUE 0.
-            DATA lv_vcc   TYPE i.
-            WHILE lv_vcidx < lv_vgcnt.
-              CLEAR lr_vgbt.
-              lv_vcc = 0.
-              WHILE lv_vcidx < lv_vgcnt AND lv_vcc < 100.
-                lv_vcidx = lv_vcidx + 1.
-                APPEND VALUE #( sign = 'I' option = 'EQ' low = lt_vgtid[ lv_vcidx ]-tour_id ) TO lr_vgbt.
-                lv_vcc = lv_vcc + 1.
-              ENDWHILE.
-              SELECT COUNT(*) FROM /dsd/hh_racvhd WHERE tour_id IN @lr_vgbt INTO @DATA(lv_vbatch).
-              lv_vcount = lv_vcount + lv_vbatch.
-            ENDWHILE.
+          " EXACT COUNT in ONE HANA query: read_visit emits one row per
+          " /DSD/HH_RACVHD record, so the total = the number of racvhd records
+          " whose tour has a status in the entered Visit List range. EXISTS
+          " keeps it to a single set-based statement - no giant IN-list (which
+          " dumps) and no status-row multiplication (which a JOIN would cause).
+          IF io_request->is_total_numb_of_rec_requested( ).
+            SELECT COUNT(*) FROM /dsd/hh_racvhd AS rv
+              WHERE EXISTS ( SELECT * FROM /dsd/st_status AS st
+                             WHERE st~tourid = rv~tour_id
+                               AND st~vlid IN @lr_vvlid )
+              INTO @DATA(lv_vcount).
             io_response->set_total_number_of_records( lv_vcount ).
           ENDIF.
 
