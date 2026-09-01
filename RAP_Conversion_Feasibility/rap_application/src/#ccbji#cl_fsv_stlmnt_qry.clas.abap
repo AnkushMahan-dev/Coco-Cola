@@ -557,13 +557,16 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           DATA(lo_pg_gate)  = io_request->get_paging( ).
           DATA(lt_srt_gate) = io_request->get_sort_elements( ).
           DATA(lt_req_gate) = io_request->get_requested_elements( ).
-          IF io_request->is_total_numb_of_rec_requested( ).
-            io_response->set_total_number_of_records( 0 ).
-          ENDIF.
-          IF io_request->is_data_requested( ).
-            io_response->set_data( VALUE tt_result( ) ).
-          ENDIF.
-          RETURN.
+          " Classic f_validation (message i525): no selection entered. Show a
+          " readable validation message instead of an empty list. Raised HERE so
+          " the expensive blank-scroll sampling below never runs; the specific
+          " CATCH cx_rap_query_provider re-raises it past the generic CATCH so it
+          " reaches the Fiori UI as a message.
+          RAISE EXCEPTION TYPE cx_rap_query_provider
+            MESSAGE e398(00)
+            WITH 'Please enter a Shipment / Visit List, or Plant'
+                 '+ Route + Settlement Date together, or a Tour'
+                 'ID, before running the report.'.
         ENDIF.
         " ===================================================================
 
@@ -868,6 +871,10 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         IF lt_driver     IS NOT INITIAL. DELETE lt_result WHERE driver        NOT IN lt_driver.     ENDIF.
         IF lt_vehicle    IS NOT INITIAL. DELETE lt_result WHERE vehicle       NOT IN lt_vehicle.    ENDIF.
         IF lt_tpp        IS NOT INITIAL. DELETE lt_result WHERE tpp           NOT IN lt_tpp.        ENDIF.
+      CATCH cx_rap_query_provider INTO DATA(lx_validation).
+        " No-input validation message (raised by the key-selection gate above) -
+        " propagate it to the UI instead of swallowing it as a data error.
+        RAISE EXCEPTION lx_validation.
       CATCH cx_root.
         CLEAR lt_result.
     ENDTRY.
