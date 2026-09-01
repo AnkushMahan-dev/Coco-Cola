@@ -764,18 +764,12 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             " the external run to S_VLID (get_tours treats ShipmentNo as the
             " visit list, matching leading-zero variants).
             IF lv_cash_vlid IS NOT INITIAL.
-              " The RowKey carries the DISPLAYED Shipment/Visit List, which is
-              " the VLID (read_cash stores vlid in shipmentno). Resolve this one
-              " visit list's tour(s) by VLID directly - get_tours now keys on
-              " VTTK-TKNUM (the list selection), which is a different value.
-              DATA lr_cvlid TYPE RANGE OF /dsd/vc_vlid.
-              APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_cash_vlid ) TO lr_cvlid.
-              APPEND VALUE #( sign = 'I' option = 'EQ' low = |{ lv_cash_vlid ALPHA = IN }| ) TO lr_cvlid.
-              DATA lt_cst TYPE tt_status.
-              SELECT * FROM /dsd/st_status
-                WHERE vlid IN @lr_cvlid
-                INTO TABLE @lt_cst.
-              lt_tour = enrich_tours( it_status = lt_cst it_route = VALUE #( ) ).
+              DATA lr_cash_ship TYPE tt_r_tknum.
+              APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_cash_vlid ) TO lr_cash_ship.
+              lt_tour = get_tours(
+                it_shipment    = lr_cash_ship  it_route  = VALUE #( )
+                it_settle_date = VALUE #( )     it_plant  = VALUE #( )
+                it_status      = VALUE #( ) ).
             ENDIF.
           ELSE.
             IF lines( lt_parts ) >= 2.
@@ -920,31 +914,39 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         DATA lt_status TYPE tt_status.
 
         IF it_shipment IS NOT INITIAL.
-          " Shipment / Visit List -> status / tour.
+          " Visit List -> status / tour   (classic rb_visi branch: the entered
+          " "Shipment / Visit List" is matched against /DSD/ST_STATUS-VLID, and
+          " only values maintained in /dsd/vc_vlh are valid - see enrich_tours,
+          " which drops any status row whose VLID is not a real visit list).
+          "     SELECT ... FROM /dsd/st_status WHERE vlid IN s_tknum
           "
-          " CLASSIC FIDELITY (RDSDFSVI_STLMNT_DTL_SUB): the "Shipment / Visit
-          " List" selection is matched against VTTK-TKNUM, and the status rows
-          " are those whose /DSD/ST_STATUS-SHIPMENT equals that tknum - NOT VLID:
-          "     SELECT tknum FROM vttk        WHERE tknum IN s_tknum
-          "     SELECT ... FROM /dsd/st_status WHERE shipment EQ vttk-tknum
-          " The old code matched VLID, which keyed a completely different (and
-          " far larger) set - millions of rows and a TSV memory dump - instead
-          " of the classic result. Read the shipments from VTTK first (so the
-          " tknum range, incl. a BETWEEN, is applied at the DB), then the status
-          " rows via SHIPMENT = TKNUM. Route stays a post-narrow in enrich_tours
-          " (leading-zero tolerant), exactly as before.
-          TYPES: BEGIN OF ty_tk, tknum TYPE tknum, END OF ty_tk.
-          DATA lt_vttk TYPE STANDARD TABLE OF ty_tk.
-          SELECT tknum FROM vttk
-            WHERE tknum IN @it_shipment
-            INTO TABLE @lt_vttk.
-          IF lt_vttk IS NOT INITIAL.
-            SELECT * FROM /dsd/st_status
-              FOR ALL ENTRIES IN @lt_vttk
-              WHERE shipment  = @lt_vttk-tknum
-                AND status_id IN @it_status
-              INTO TABLE @lt_status.
-          ENDIF.
+          " LEADING-ZERO INSENSITIVE: the user may type the Visit List with or
+          " without leading zeros (e.g. 9162643559 or 0009162643559). VLID is
+          " stored zero-padded, so for every entered value we match THREE forms
+          " - the raw value, the ALPHA (zero-padded) value, and the stripped
+          " value - so it resolves regardless of how it was keyed in. A range
+          " (BETWEEN) is passed through unchanged so it is applied at the DB.
+          DATA lr_vlid TYPE RANGE OF /dsd/vc_vlid.
+          LOOP AT it_shipment INTO DATA(ls_sh).
+            IF ls_sh-high IS NOT INITIAL.
+              " interval (BT / GE-with-high etc): pass through unchanged.
+              APPEND VALUE #( sign = ls_sh-sign option = ls_sh-option low = ls_sh-low high = ls_sh-high ) TO lr_vlid.
+            ELSEIF ls_sh-low IS NOT INITIAL.
+              " single value: match raw + zero-padded + stripped.
+              APPEND VALUE #( sign = ls_sh-sign option = ls_sh-option low = ls_sh-low ) TO lr_vlid.
+              DATA lv_pad TYPE /dsd/vc_vlid.
+              lv_pad = |{ ls_sh-low ALPHA = IN }|.
+              APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_pad ) TO lr_vlid.
+              DATA lv_str TYPE /dsd/vc_vlid.
+              lv_str = ls_sh-low.
+              SHIFT lv_str LEFT DELETING LEADING '0'.
+              APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_str ) TO lr_vlid.
+            ENDIF.
+          ENDLOOP.
+
+          SELECT * FROM /dsd/st_status
+            WHERE vlid IN @lr_vlid AND status_id IN @it_status
+            INTO TABLE @lt_status.
         ELSE.
           " Plant/date -> visit lists -> status / tour
           SELECT * FROM /ccej/t_inb_stat
