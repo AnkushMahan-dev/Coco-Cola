@@ -329,14 +329,6 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
                 ev_set_id      TYPE c
                 ev_money_code  TYPE c.
 
-    "! Normalise an OData "between": get_as_ranges() splits it into two separate
-    "! inclusive-bound rows (I GE low) and (I LE high) which, in a range table,
-    "! OR together and match EVERY row. Merge a lone GE + lone LE into a single
-    "! inclusive BT range so the interval restricts correctly. Generic so it
-    "! works on any range table (shipment, plant, date, ...).
-    METHODS norm_between
-      CHANGING ct_range TYPE STANDARD TABLE.
-
 ENDCLASS.
 
 
@@ -422,31 +414,6 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             WHEN OTHERS.
           ENDCASE.
         ENDLOOP.
-
-        " Fix OData "between": get_as_ranges() splits an interval into (I GE low)
-        " + (I LE high), which OR together in a range table and match EVERY row
-        " (this is why a Visit List "between a and b" returned ~2.9M). Merge such
-        " a lone GE+LE pair back into one inclusive BT range on every range field.
-        norm_between( CHANGING ct_range = lt_shipment ).
-        norm_between( CHANGING ct_range = lt_plant ).
-        norm_between( CHANGING ct_range = lt_route ).
-        norm_between( CHANGING ct_range = lt_settle_date ).
-        norm_between( CHANGING ct_range = lt_status ).
-        norm_between( CHANGING ct_range = lt_driver ).
-        norm_between( CHANGING ct_range = lt_vehicle ).
-        norm_between( CHANGING ct_range = lt_tpp ).
-        norm_between( CHANGING ct_range = lt_f_customer ).
-        norm_between( CHANGING ct_range = lt_f_material ).
-        norm_between( CHANGING ct_range = lt_f_vkorg ).
-        norm_between( CHANGING ct_range = lt_f_paymt ).
-        norm_between( CHANGING ct_range = lt_f_currency ).
-        norm_between( CHANGING ct_range = lt_f_slddoc ).
-        norm_between( CHANGING ct_range = lt_f_visitid ).
-        norm_between( CHANGING ct_range = lt_f_tourid ).
-        norm_between( CHANGING ct_range = lt_f_viscod ).
-        norm_between( CHANGING ct_range = lt_f_objtyp ).
-        norm_between( CHANGING ct_range = lt_f_delivery ).
-        norm_between( CHANGING ct_range = lt_f_cashtype ).
 
         " "Blank Go" detector for the DB-paged fast paths. A range the parser
         " could not turn into ranges (e.g. a BETWEEN on the Visit List) leaves
@@ -563,38 +530,6 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         ENDIF.
         IF lv_mode IS INITIAL.
           lv_mode = 'TOUR'.
-        ENDIF.
-
-        " CLASSIC REQUIRES A KEY SELECTION (RDSDFSVI_STLMNT_DTL_SUB, f_validation
-        " line 6296): the report never runs on a blank screen - it demands a
-        " Shipment / Visit List, or Plant + Route + Settlement Date together, or a
-        " Tour ID (else message i525 "enter a selection"). Mirror that exactly:
-        " with no key selection - and no Object-Page drill-down (RowKey) or seqno
-        " paging - return an EMPTY list. This makes the no-input output match the
-        " classic report (which shows nothing, so a non-maintained visit list such
-        " as 9002952691 can never appear) AND removes the whole blank-scroll
-        " sampling cost, so the default view is instant.
-        DATA lv_has_key TYPE abap_bool.
-        IF lt_shipment IS NOT INITIAL
-           OR lt_f_tourid IS NOT INITIAL
-           OR ( lt_plant IS NOT INITIAL AND lt_route IS NOT INITIAL AND lt_settle_date IS NOT INITIAL ).
-          lv_has_key = abap_true.
-        ENDIF.
-        IF lv_has_key = abap_false AND lt_rowkey IS INITIAL AND lt_seqno IS INITIAL.
-          " RAP requires the provider to CONSUME every request aspect on every
-          " return path; otherwise it raises "Query not fully covered by
-          " implementation: ... get_paging missing". Consume them before the
-          " early empty return.
-          DATA(lo_pg_gate)  = io_request->get_paging( ).
-          DATA(lt_srt_gate) = io_request->get_sort_elements( ).
-          DATA(lt_req_gate) = io_request->get_requested_elements( ).
-          IF io_request->is_total_numb_of_rec_requested( ).
-            io_response->set_total_number_of_records( 0 ).
-          ENDIF.
-          IF io_request->is_data_requested( ).
-            io_response->set_data( VALUE tt_result( ) ).
-          ENDIF.
-          RETURN.
         ENDIF.
 
         " Paging window (read once, reused for the slice at the end). The blank
@@ -846,18 +781,6 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
               INTO TABLE @lt_st.
             lt_tour = enrich_tours( it_status = lt_st it_route = VALUE #( ) ).
           ENDIF.
-        ELSEIF lt_f_tourid IS NOT INITIAL
-           AND lt_shipment IS INITIAL AND lt_plant IS INITIAL AND lt_settle_date IS INITIAL.
-          " Tour ID entered on its own: resolve the tour(s) DIRECTLY by tour id
-          " (exact + fast), instead of sampling all tours and post-filtering.
-          DATA lr_ftid TYPE RANGE OF /dsd/hh_tour_id.
-          lr_ftid = VALUE #( FOR r IN lt_f_tourid
-                             ( sign = r-sign option = r-option low = r-low high = r-high ) ).
-          DATA lt_fstat TYPE tt_status.
-          SELECT * FROM /dsd/st_status
-            WHERE tourid IN @lr_ftid AND status_id IN @lt_status
-            INTO TABLE @lt_fstat.
-          lt_tour = enrich_tours( it_status = lt_fstat it_route = lt_route ).
         ELSEIF lt_shipment IS INITIAL AND lt_plant IS INITIAL AND lt_settle_date IS INITIAL.
           lt_tour = sample_tours( iv_mode = lv_mode iv_max = lv_sample_max ).
         ELSE.
@@ -973,48 +896,6 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
       ELSE.
         io_response->set_data( lt_result ).
       ENDIF.
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD norm_between.
-
-    " OData "between" arrives from get_as_ranges() as two separate inclusive
-    " bounds (I GE low) and (I LE high). In an ABAP range these OR together and
-    " match EVERY row. If the table is exactly a lone GE + lone LE (no EQ/BT/CP),
-    " merge them into one inclusive BT range so the interval restricts correctly.
-    DATA lv_lo    TYPE string.
-    DATA lv_hi    TYPE string.
-    DATA lv_ge    TYPE abap_bool.
-    DATA lv_le    TYPE abap_bool.
-    DATA lv_other TYPE abap_bool.
-
-    FIELD-SYMBOLS <row> TYPE any.
-    LOOP AT ct_range ASSIGNING <row>.
-      ASSIGN COMPONENT 'OPTION' OF STRUCTURE <row> TO FIELD-SYMBOL(<opt>).
-      ASSIGN COMPONENT 'LOW'    OF STRUCTURE <row> TO FIELD-SYMBOL(<low>).
-      IF <opt> IS NOT ASSIGNED OR <low> IS NOT ASSIGNED.
-        RETURN.
-      ENDIF.
-      CASE <opt>.
-        WHEN 'GE' OR 'GT'. lv_lo = <low>. lv_ge = abap_true.
-        WHEN 'LE' OR 'LT'. lv_hi = <low>. lv_le = abap_true.
-        WHEN OTHERS.       lv_other = abap_true.
-      ENDCASE.
-    ENDLOOP.
-
-    IF lv_ge = abap_true AND lv_le = abap_true AND lv_other = abap_false.
-      CLEAR ct_range.
-      APPEND INITIAL LINE TO ct_range ASSIGNING <row>.
-      ASSIGN COMPONENT 'SIGN'   OF STRUCTURE <row> TO FIELD-SYMBOL(<sg>).
-      ASSIGN COMPONENT 'OPTION' OF STRUCTURE <row> TO <opt>.
-      ASSIGN COMPONENT 'LOW'    OF STRUCTURE <row> TO <low>.
-      ASSIGN COMPONENT 'HIGH'   OF STRUCTURE <row> TO FIELD-SYMBOL(<hi>).
-      <sg>  = 'I'.
-      <opt> = 'BT'.
-      <low> = lv_lo.
-      <hi>  = lv_hi.
     ENDIF.
 
   ENDMETHOD.
@@ -1250,15 +1131,27 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             INTO TABLE @DATA(lt_vlh).
         ENDIF.
 
-        " CLASSIC FIDELITY (f_get_driver_details): the report emits ONE row per
-        " /DSD/ST_STATUS document row whose VLID is in the selection - the many
-        " documents that share a tour are all shown (they differ by visit list),
-        " so the set is NOT collapsed to one row per tour_id. Drive the output
-        " from it_tour (one entry per status/document row) and use the tour
-        " header /DSD/HH_RAHD only to enrich each row.
-        LOOP AT it_tour ASSIGNING FIELD-SYMBOL(<t>).
+        " CLASSIC FIDELITY (f_get_driver_details): the displayed set is ONE row
+        " per /DSD/HH_RAHD tour header (inner join on tour_id) - NOT one row per
+        " status row. A tourid present in /DSD/ST_STATUS but with no HH_RAHD
+        " header is dropped, and the several status rows per tour collapse to a
+        " single row. So drive the output from the (unique) tour headers lt_rahd
+        " and look up the FIRST resolved status of each tour for the display
+        " fields, exactly as classic's "READ TABLE l_i_status ... BINARY SEARCH".
+        DATA lt_tstat TYPE tt_tour.
+        lt_tstat = it_tour.
+        SORT lt_tstat BY tourid.
+
+        LOOP AT lt_rahd ASSIGNING FIELD-SYMBOL(<h>).
           DATA ls_r TYPE ty_result.
           CLEAR ls_r.
+
+          READ TABLE lt_tstat ASSIGNING FIELD-SYMBOL(<t>)
+               WITH KEY tourid = <h>-tour_id BINARY SEARCH.
+          IF sy-subrc <> 0.
+            CONTINUE.
+          ENDIF.
+
           ls_r-reportmode     = 'TOUR'.
           ls_r-shipmentno     = <t>-vlid.
           ls_r-tourid         = <t>-tourid.
@@ -1268,8 +1161,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           ls_r-statusid       = <t>-status_id.
           ls_r-idocno         = <t>-idoc.
 
-          READ TABLE lt_rahd ASSIGNING FIELD-SYMBOL(<h>) WITH KEY tour_id = <t>-tourid.
-          IF sy-subrc = 0.
+          IF abap_true = abap_true.
             ls_r-driver           = <h>-driver.
             ls_r-codriver         = <h>-codriver.
             " Raw RAHD processing status is the classic "Tour Status" (e.g. 30);
