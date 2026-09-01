@@ -295,8 +295,8 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
     METHODS page_driver_1to1
       IMPORTING iv_mode      TYPE clike
                 it_shipment  TYPE tt_r_tknum
-                iv_offset    TYPE i
-                iv_pagesz    TYPE i
+                iv_offset    TYPE int8
+                iv_pagesz    TYPE int8
                 iv_total_req TYPE abap_bool
       EXPORTING et_page      TYPE tt_result
                 ev_total     TYPE int8
@@ -313,8 +313,8 @@ CLASS /ccbji/cl_fsv_stlmnt_qry DEFINITION
     METHODS page_sld_1to1
       IMPORTING iv_mode      TYPE clike
                 it_shipment  TYPE tt_r_tknum
-                iv_offset    TYPE i
-                iv_pagesz    TYPE i
+                iv_offset    TYPE int8
+                iv_pagesz    TYPE int8
                 iv_total_req TYPE abap_bool
       EXPORTING et_page      TYPE tt_result
                 ev_total     TYPE int8
