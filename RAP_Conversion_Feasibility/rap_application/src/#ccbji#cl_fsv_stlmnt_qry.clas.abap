@@ -532,6 +532,41 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           lv_mode = 'TOUR'.
         ENDIF.
 
+        " ===================================================================
+        " NO-INPUT VALIDATION (classic f_validation, msg i525): the classic
+        " report NEVER runs on a blank screen - it requires a Shipment / Visit
+        " List, or Plant + Route + Settlement Date together, or a Tour ID. This
+        " runs BEFORE the mode dispatch, so it applies to EVERY report type.
+        " With no such key - and not an Object-Page drill-down (RowKey) or seqno
+        " paging - return an EMPTY list (like classic), so a non-maintained visit
+        " list such as 9002952691 can never appear. It ALSO makes the default
+        " (no-input) view instant - no blank-scroll sampling at all.
+        "
+        " IMPORTANT: this ONLY short-circuits the no-key case. When any key is
+        " present the code below runs UNCHANGED, so filtered counts/values are
+        " exactly as before.
+        DATA lv_has_key TYPE abap_bool.
+        IF lt_shipment IS NOT INITIAL
+           OR lt_f_tourid IS NOT INITIAL
+           OR ( lt_plant IS NOT INITIAL AND lt_route IS NOT INITIAL AND lt_settle_date IS NOT INITIAL ).
+          lv_has_key = abap_true.
+        ENDIF.
+        IF lv_has_key = abap_false AND lt_rowkey IS INITIAL AND lt_seqno IS INITIAL.
+          " RAP requires every request aspect to be CONSUMED on every return
+          " path, else it raises "Query not fully covered ... get_paging missing".
+          DATA(lo_pg_gate)  = io_request->get_paging( ).
+          DATA(lt_srt_gate) = io_request->get_sort_elements( ).
+          DATA(lt_req_gate) = io_request->get_requested_elements( ).
+          IF io_request->is_total_numb_of_rec_requested( ).
+            io_response->set_total_number_of_records( 0 ).
+          ENDIF.
+          IF io_request->is_data_requested( ).
+            io_response->set_data( VALUE tt_result( ) ).
+          ENDIF.
+          RETURN.
+        ENDIF.
+        " ===================================================================
+
         " Paging window (read once, reused for the slice at the end). The blank
         " search samples a number of tours DERIVED from this window, so the row
         " count is no longer a hard 100 - it grows as the client scrolls
