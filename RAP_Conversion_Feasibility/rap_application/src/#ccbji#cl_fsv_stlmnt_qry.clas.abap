@@ -566,6 +566,114 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         ENDIF.
         " =====================================================================
 
+        " ======== FAST DB-PAGED PATH: row-explosive modes (windowed) =========
+        " Visit / Sales / Payment / Check / Money / Quantity / FSR produce a
+        " VARIABLE number of rows per tour, so they cannot be paged by tour like
+        " Tour. They are instead computed tour-by-tour in a deterministic
+        " tour_id order, stopping as soon as the requested page is filled (when
+        " no total count is asked for), so a data-only scroll page no longer
+        " computes every tour. When the total IS requested the full set is
+        " computed (needed for an exact count). Same builders, same values -
+        " only the row order becomes deterministic (tour_id, then per-tour).
+        " Engages ONLY for a plain scroll (blank selection, no sort, no filter,
+        " not by-key); Route Summary and every other case are untouched.
+        IF lt_shipment IS INITIAL AND lt_plant IS INITIAL AND lt_settle_date IS INITIAL
+           AND lt_rowkey IS INITIAL AND lt_seqno IS INITIAL
+           AND io_request->is_data_requested( ) = abap_true
+           AND lv_page_sz <> if_rap_query_paging=>page_size_unlimited AND lv_page_sz > 0
+           AND lines( io_request->get_sort_elements( ) ) = 0
+           AND lt_driver IS INITIAL AND lt_vehicle IS INITIAL AND lt_tpp IS INITIAL
+           AND lt_f_customer IS INITIAL AND lt_f_material IS INITIAL AND lt_f_vkorg IS INITIAL
+           AND lt_f_paymt IS INITIAL AND lt_f_currency IS INITIAL AND lt_f_slddoc IS INITIAL
+           AND lt_f_visitid IS INITIAL AND lt_f_tourid IS INITIAL AND lt_f_viscod IS INITIAL
+           AND lt_f_objtyp IS INITIAL AND lt_f_delivery IS INITIAL AND lt_f_cashtype IS INITIAL
+           AND ( lv_mode = 'VISI' OR lv_mode = 'SLRP' OR lv_mode = 'PAYT'
+              OR lv_mode = 'CHCK' OR lv_mode = 'MONY' OR lv_mode = 'QUAN'
+              OR lv_mode = 'FSRD' ).
+
+          " Candidate tour ids for the mode, tour_id order (ids only - cheap).
+          DATA lt_gtid TYPE STANDARD TABLE OF ty_ptid.
+          CASE lv_mode.
+            WHEN 'VISI'.           SELECT DISTINCT tour_id FROM /dsd/hh_racvhd   ORDER BY tour_id INTO TABLE @lt_gtid.
+            WHEN 'SLRP'.           SELECT DISTINCT tour_id FROM /dsd/hh_radelhd  ORDER BY tour_id INTO TABLE @lt_gtid.
+            WHEN 'PAYT'.           SELECT DISTINCT tour_id FROM /dsd/hh_raec     ORDER BY tour_id INTO TABLE @lt_gtid.
+            WHEN 'CHCK'.           SELECT DISTINCT tour_id FROM /dsd/hh_racocimi ORDER BY tour_id INTO TABLE @lt_gtid.
+            WHEN 'MONY' OR 'QUAN'. SELECT DISTINCT tour_id FROM /dsd/sl_sld_item ORDER BY tour_id INTO TABLE @lt_gtid.
+            WHEN 'FSRD'.           SELECT DISTINCT tour_id FROM /dsd/hh_rahd     ORDER BY tour_id INTO TABLE @lt_gtid.
+          ENDCASE.
+
+          DATA lv_gtarget TYPE i.
+          lv_gtarget = lv_offset + lv_page_sz.
+          DATA lv_gfull TYPE abap_bool.
+          lv_gfull = io_request->is_total_numb_of_rec_requested( ).
+
+          DATA lt_gpres TYPE tt_result.
+          DATA lv_gidx  TYPE i VALUE 0.
+          DATA lv_gcnt  TYPE i.
+          lv_gcnt = lines( lt_gtid ).
+          DATA lr_gbt   TYPE RANGE OF /dsd/hh_tour_id.
+          DATA lv_gc2   TYPE i.
+          WHILE lv_gidx < lv_gcnt.
+            CLEAR lr_gbt.
+            lv_gc2 = 0.
+            WHILE lv_gidx < lv_gcnt AND lv_gc2 < 100.
+              lv_gidx = lv_gidx + 1.
+              APPEND VALUE #( sign = 'I' option = 'EQ' low = lt_gtid[ lv_gidx ]-tour_id ) TO lr_gbt.
+              lv_gc2 = lv_gc2 + 1.
+            ENDWHILE.
+
+            DATA lt_gstat TYPE tt_status.
+            SELECT * FROM /dsd/st_status WHERE tourid IN @lr_gbt INTO TABLE @lt_gstat.
+            DATA lt_gtour TYPE tt_tour.
+            lt_gtour = enrich_tours( it_status = lt_gstat it_route = VALUE #( ) ).
+            SORT lt_gtour BY tourid.
+            DELETE ADJACENT DUPLICATES FROM lt_gtour COMPARING tourid.
+
+            DATA lt_gbr TYPE tt_result.
+            CLEAR lt_gbr.
+            CASE lv_mode.
+              WHEN 'VISI'. lt_gbr = read_visit(   it_tour = lt_gtour ).
+              WHEN 'SLRP'. lt_gbr = read_sales(   it_tour = lt_gtour ).
+              WHEN 'PAYT'. lt_gbr = read_payment( it_tour = lt_gtour ).
+              WHEN 'CHCK'. lt_gbr = read_check(   it_tour = lt_gtour ).
+              WHEN 'MONY'. lt_gbr = read_money(   it_tour = lt_gtour ).
+              WHEN 'QUAN'. lt_gbr = read_quan(    it_tour = lt_gtour ).
+              WHEN 'FSRD'. lt_gbr = read_fsr(     it_tour = lt_gtour ).
+            ENDCASE.
+            APPEND LINES OF lt_gbr TO lt_gpres.
+
+            IF lv_gfull = abap_false AND lines( lt_gpres ) >= lv_gtarget.
+              EXIT.
+            ENDIF.
+          ENDWHILE.
+
+          " RowKey + seqno (identical rule to the full path) + duplicate guard.
+          DATA lt_gseen TYPE HASHED TABLE OF ty_rowkey WITH UNIQUE KEY table_line.
+          LOOP AT lt_gpres ASSIGNING FIELD-SYMBOL(<gr>).
+            <gr>-seqno = sy-tabix.
+            IF <gr>-reportmode IS INITIAL. <gr>-reportmode = lv_mode. ENDIF.
+            <gr>-rowkey = |{ <gr>-reportmode }~{ <gr>-tourid }~{ <gr>-visitid }~{ <gr>-slddocid }~{ <gr>-material }~{ <gr>-deliveryno }~{ <gr>-shipmentno }|.
+            IF line_exists( lt_gseen[ table_line = <gr>-rowkey ] ).
+              <gr>-rowkey = |{ <gr>-rowkey }~{ <gr>-seqno }|.
+            ENDIF.
+            INSERT <gr>-rowkey INTO TABLE lt_gseen.
+          ENDLOOP.
+
+          IF lv_gfull = abap_true.
+            io_response->set_total_number_of_records( lines( lt_gpres ) ).
+          ENDIF.
+
+          DATA lt_gpage TYPE tt_result.
+          DATA(lv_gf) = lv_offset + 1.
+          DATA(lv_gt) = lv_offset + lv_page_sz.
+          LOOP AT lt_gpres INTO DATA(ls_g) FROM lv_gf TO lv_gt.
+            APPEND ls_g TO lt_gpage.
+          ENDLOOP.
+          io_response->set_data( lt_gpage ).
+          RETURN.
+        ENDIF.
+        " =====================================================================
+
         " Resolve tours:
         "  - Object Page by-key read (RowKey): decode mode+tour from the key
         "    and rebuild just that tour, so the single clicked row is reproduced.
