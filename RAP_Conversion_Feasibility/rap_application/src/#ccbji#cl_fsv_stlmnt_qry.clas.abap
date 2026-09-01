@@ -533,10 +533,17 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
 
           DATA lt_ptour TYPE tt_tour.
           IF lt_ptid IS NOT INITIAL.
+            " Use a RANGE (not FOR ALL ENTRIES): /dsd/hh_tour_id and
+            " /DSD/ST_STATUS-TOURID have a type mismatch that a range's implicit
+            " conversion handles - the same pattern the by-key path already uses.
+            DATA lr_ptid TYPE RANGE OF /dsd/hh_tour_id.
+            CLEAR lr_ptid.
+            LOOP AT lt_ptid ASSIGNING FIELD-SYMBOL(<pt>).
+              APPEND VALUE #( sign = 'I' option = 'EQ' low = <pt>-tour_id ) TO lr_ptid.
+            ENDLOOP.
             DATA lt_pst TYPE tt_status.
             SELECT * FROM /dsd/st_status
-              FOR ALL ENTRIES IN @lt_ptid
-              WHERE tourid = @lt_ptid-tour_id
+              WHERE tourid IN @lr_ptid
               INTO TABLE @lt_pst.
             lt_ptour = enrich_tours( it_status = lt_pst it_route = VALUE #( ) ).
             SORT lt_ptour BY tourid.
