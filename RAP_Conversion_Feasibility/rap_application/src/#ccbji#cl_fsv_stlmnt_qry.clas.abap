@@ -2045,15 +2045,15 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
                  status_id TYPE /dsd/st_status_id,
                END OF ty_tkey.
         DATA lt_tourkey TYPE HASHED TABLE OF ty_tkey WITH UNIQUE KEY k.
-        LOOP AT it_tour ASSIGNING FIELD-SYMBOL(<tk>).
+        LOOP AT it_tour ASSIGNING FIELD-SYMBOL(<pk>).
           DATA ls_tk TYPE ty_tkey.
-          ls_tk = CORRESPONDING #( <tk> ).
+          ls_tk = CORRESPONDING #( <pk> ).
           DATA lv_k TYPE xblnr.
-          lv_k = <tk>-shipment.  SHIFT lv_k LEFT DELETING LEADING '0'.
+          lv_k = <pk>-shipment.  SHIFT lv_k LEFT DELETING LEADING '0'.
           IF lv_k IS NOT INITIAL AND NOT line_exists( lt_tourkey[ k = lv_k ] ).
             ls_tk-k = lv_k.  INSERT ls_tk INTO TABLE lt_tourkey.
           ENDIF.
-          lv_k = <tk>-vlid.      SHIFT lv_k LEFT DELETING LEADING '0'.
+          lv_k = <pk>-vlid.      SHIFT lv_k LEFT DELETING LEADING '0'.
           IF lv_k IS NOT INITIAL AND NOT line_exists( lt_tourkey[ k = lv_k ] ).
             ls_tk-k = lv_k.  INSERT ls_tk INTO TABLE lt_tourkey.
           ENDIF.
