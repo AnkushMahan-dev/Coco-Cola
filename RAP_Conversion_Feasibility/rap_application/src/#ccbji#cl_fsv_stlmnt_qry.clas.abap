@@ -747,14 +747,17 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         " =====================================================================
 
         " ===== FAST DB-PAGED PATH: VISIT with a Visit List filter ============
-        " Visit is row-explosive (many visit rows per tour), so it is paged the
-        " WINDOWED way: the matching tours (Visit List range) are processed in
-        " tour_id order in small batches (100 at a time - never a giant IN-list),
-        " accumulating visit rows until the requested page is filled (data-only)
-        " or all rows are built (when the exact total is requested). Same
-        " read_visit builder/values as the slow path; order deterministic
-        " (tour_id, then per-tour). Falls through to the slow path if it yields
-        " nothing. Engages ONLY for VISI + Visit List (no other key/filter/sort).
+        " Visit is row-explosive (many visit rows per tour). This path pushes
+        " the whole page to HANA: the visit records are filtered by the Visit
+        " List range (EXISTS on /dsd/st_status - no giant IN-list, no JOIN
+        " multiplication), ORDER'd deterministically, and sliced with
+        " LIMIT/OFFSET in the database, so any page reads at most page_size
+        " rows - pagination no longer grows with scroll depth and matches ECC's
+        " native paging. The delicate per-row derivation then runs on only the
+        " page's rows in ABAP, so every OUTPUT VALUE is identical to read_visit
+        " / the classic report. Total is a single EXISTS COUNT. Falls through to
+        " the proven slow path if the first page comes back empty (safety net).
+        " Engages ONLY for VISI + Visit List (no other key / filter / sort).
         IF lv_mode = 'VISI'
            AND lt_shipment IS NOT INITIAL
            AND lt_plant IS INITIAL AND lt_settle_date IS INITIAL AND lt_route IS INITIAL
@@ -784,89 +787,175 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             ENDIF.
           ENDLOOP.
 
-          " Matching tour ids (CHAR12) from the range, as a CHAR32 sorted list.
-          SELECT DISTINCT tourid FROM /dsd/st_status
-            WHERE vlid IN @lr_vvlid
-            INTO TABLE @DATA(lt_vftid).
-          DATA lt_vgtid TYPE STANDARD TABLE OF ty_ptid.
-          LOOP AT lt_vftid INTO DATA(ls_vft).
-            APPEND VALUE #( tour_id = ls_vft-tourid ) TO lt_vgtid.
-          ENDLOOP.
-          SORT lt_vgtid BY tour_id.
-          DELETE ADJACENT DUPLICATES FROM lt_vgtid COMPARING tour_id.
-
-          DATA lv_vgcnt TYPE i.
-          lv_vgcnt = lines( lt_vgtid ).
-          DATA lr_vgbt TYPE RANGE OF /dsd/hh_tour_id.
-          DATA lv_vgc2 TYPE i.
-
-          " EXACT COUNT in ONE HANA query: read_visit emits one row per
-          " /DSD/HH_RACVHD record, so the total = the number of racvhd records
-          " whose tour has a status in the entered Visit List range. EXISTS
-          " keeps it to a single set-based statement - no giant IN-list (which
-          " dumps) and no status-row multiplication (which a JOIN would cause).
-          IF io_request->is_total_numb_of_rec_requested( ).
+          " --------------------------------------------------------------
+          " Exact total: ONE set-based EXISTS count. read_visit emits one
+          " row per /DSD/HH_RACVHD record, so the total is the number of
+          " racvhd records whose tour has a status in the entered Visit List
+          " range. No giant IN-list (dumps), no JOIN row-multiplication.
+          " --------------------------------------------------------------
+          DATA lv_vtot     TYPE int8.
+          DATA lv_vtot_req TYPE abap_bool.
+          lv_vtot_req = io_request->is_total_numb_of_rec_requested( ).
+          IF lv_vtot_req = abap_true.
             SELECT COUNT(*) FROM /dsd/hh_racvhd AS rv
               WHERE EXISTS ( SELECT * FROM /dsd/st_status AS st
                              WHERE st~tourid = rv~tour_id
                                AND st~vlid IN @lr_vvlid )
-              INTO @DATA(lv_vcount).
-            io_response->set_total_number_of_records( lv_vcount ).
+              INTO @lv_vtot.
           ENDIF.
 
-          " Windowed build for the PAGE only: 100 tours per batch (small range -
-          " no dump), ALWAYS stop as soon as the page is filled (the total is
-          " already set above), so a data scroll never builds the whole result.
-          DATA lv_vgtarget TYPE i.
-          lv_vgtarget = lv_offset + lv_page_sz.
-          DATA lt_vgpres TYPE tt_result.
-          DATA lv_vgidx TYPE i VALUE 0.
-          WHILE lv_vgidx < lv_vgcnt.
-            CLEAR lr_vgbt.
-            lv_vgc2 = 0.
-            WHILE lv_vgidx < lv_vgcnt AND lv_vgc2 < 100.
-              lv_vgidx = lv_vgidx + 1.
-              APPEND VALUE #( sign = 'I' option = 'EQ' low = lt_vgtid[ lv_vgidx ]-tour_id ) TO lr_vgbt.
-              lv_vgc2 = lv_vgc2 + 1.
-            ENDWHILE.
+          " --------------------------------------------------------------
+          " PAGE pushed down to HANA: fetch ONLY the requested page's visit
+          " records. The DB does the filter (EXISTS), the deterministic
+          " ORDER BY and the LIMIT/OFFSET, so a scroll to ANY page reads at
+          " most page_size rows - pagination no longer grows with depth and
+          " matches ECC's native paging. The delicate per-row derivation
+          " (Japan-local timestamps, visit-log / exception light, master-data
+          " lookups) then runs on just those page rows in ABAP, so every
+          " OUTPUT VALUE is identical to read_visit / the classic report.
+          " --------------------------------------------------------------
+          SELECT tour_id, visit_id, custnr, vkorg, vtweg, spart, viscod,
+                 cngdate, cngtime, cnguser, status, man_proc
+            FROM /dsd/hh_racvhd AS rv
+            WHERE EXISTS ( SELECT * FROM /dsd/st_status AS st
+                           WHERE st~tourid = rv~tour_id
+                             AND st~vlid IN @lr_vvlid )
+            ORDER BY tour_id, visit_id, custnr
+            INTO TABLE @DATA(lt_pv)
+            UP TO @lv_page_sz ROWS OFFSET @lv_offset.
 
-            DATA lt_vgstat TYPE tt_status.
-            SELECT * FROM /dsd/st_status WHERE tourid IN @lr_vgbt INTO TABLE @lt_vgstat.
-            DATA lt_vgtour TYPE tt_tour.
-            lt_vgtour = enrich_tours( it_status = lt_vgstat it_route = VALUE #( ) ).
-            SORT lt_vgtour BY tourid.
-            DELETE ADJACENT DUPLICATES FROM lt_vgtour COMPARING tourid.
+          IF lt_pv IS NOT INITIAL.
+            " Tour context (plant / route / settlement date / status) for the
+            " page's tours only - a tiny lookup, same enrich_tours the slow
+            " path uses (no route filter here: this path is gated on it).
+            DATA lr_pvbt TYPE RANGE OF /dsd/hh_tour_id.
+            LOOP AT lt_pv INTO DATA(ls_pvkey).
+              APPEND VALUE #( sign = 'I' option = 'EQ' low = ls_pvkey-tour_id ) TO lr_pvbt.
+            ENDLOOP.
+            SORT lr_pvbt BY low.
+            DELETE ADJACENT DUPLICATES FROM lr_pvbt COMPARING low.
 
-            DATA(lt_vgbr) = read_visit( it_tour = lt_vgtour ).
-            APPEND LINES OF lt_vgbr TO lt_vgpres.
+            DATA lt_pvst TYPE tt_status.
+            SELECT * FROM /dsd/st_status WHERE tourid IN @lr_pvbt INTO TABLE @lt_pvst.
+            DATA(lt_pvtour) = enrich_tours( it_status = lt_pvst it_route = VALUE #( ) ).
+            SORT lt_pvtour BY tourid.
+            DELETE ADJACENT DUPLICATES FROM lt_pvtour COMPARING tourid.
 
-            IF lines( lt_vgpres ) >= lv_vgtarget.
-              EXIT.
+            " Master data for the page rows only (<= page_size lookups).
+            SELECT kunnr, ktokd, katr4, /scl/equp_ownr FROM kna1
+              FOR ALL ENTRIES IN @lt_pv
+              WHERE kunnr = @lt_pv-custnr
+              INTO TABLE @DATA(lt_pvk1).
+            SELECT tour_id, driver, credate, cretime, creuser FROM /dsd/hh_rahd
+              FOR ALL ENTRIES IN @lt_pv
+              WHERE tour_id = @lt_pv-tour_id
+              INTO TABLE @DATA(lt_pvrahd).
+            DATA lt_pvlpkey TYPE STANDARD TABLE OF /dsd/vc_vlp.
+            LOOP AT lt_pv ASSIGNING FIELD-SYMBOL(<pvkey>).
+              APPEND VALUE #( vlid = <pvkey>-tour_id+2(10) kunnr = <pvkey>-custnr ) TO lt_pvlpkey.
+            ENDLOOP.
+            IF lt_pvlpkey IS NOT INITIAL.
+              SELECT vlid, kunnr FROM /dsd/vc_vlp
+                FOR ALL ENTRIES IN @lt_pvlpkey
+                WHERE vlid = @lt_pvlpkey-vlid AND kunnr = @lt_pvlpkey-kunnr
+                INTO TABLE @DATA(lt_pvlp).
             ENDIF.
-          ENDWHILE.
 
-          " FAIL-SAFE: only take over if we produced rows; else fall through.
-          IF lt_vgpres IS NOT INITIAL.
-            DATA lt_vgseen TYPE HASHED TABLE OF ty_rowkey WITH UNIQUE KEY table_line.
-            LOOP AT lt_vgpres ASSIGNING FIELD-SYMBOL(<vgr>).
-              <vgr>-seqno = sy-tabix.
-              IF <vgr>-reportmode IS INITIAL. <vgr>-reportmode = 'VISI'. ENDIF.
-              <vgr>-rowkey = |{ <vgr>-reportmode }~{ <vgr>-tourid }~{ <vgr>-visitid }~{ <vgr>-slddocid }~{ <vgr>-material }~{ <vgr>-deliveryno }~{ <vgr>-shipmentno }|.
-              IF line_exists( lt_vgseen[ table_line = <vgr>-rowkey ] ).
-                <vgr>-rowkey = |{ <vgr>-rowkey }~{ <vgr>-seqno }|.
+            CONSTANTS: lc_vgn TYPE int1     VALUE 3,
+                       lc_vyl TYPE int1     VALUE 2,
+                       lc_vv  TYPE c LENGTH 1 VALUE 'V',
+                       lc_vn  TYPE c LENGTH 1 VALUE 'N',
+                       lc_vu  TYPE c LENGTH 1 VALUE 'U'.
+
+            DATA lt_vpage TYPE tt_result.
+            DATA lv_pvseq TYPE int4.
+            lv_pvseq = lv_offset.
+            LOOP AT lt_pv ASSIGNING FIELD-SYMBOL(<pvc>).
+              lv_pvseq = lv_pvseq + 1.
+              DATA ls_pvr TYPE ty_result.
+              CLEAR ls_pvr.
+              ls_pvr-reportmode       = 'VISI'.
+              ls_pvr-tourid           = <pvc>-tour_id.
+              ls_pvr-visitid          = <pvc>-visit_id.
+              ls_pvr-customer         = <pvc>-custnr.
+              ls_pvr-vkorg            = <pvc>-vkorg.
+              ls_pvr-distchannel      = <pvc>-vtweg.
+              ls_pvr-division         = <pvc>-spart.
+              ls_pvr-visitreason      = <pvc>-viscod.
+              ls_pvr-changedby        = <pvc>-cnguser.
+              ls_pvr-processingstatus = <pvc>-status.
+              ls_pvr-manproc          = <pvc>-man_proc.
+              to_local_time( EXPORTING iv_date = <pvc>-cngdate iv_time = <pvc>-cngtime
+                             IMPORTING ev_date = ls_pvr-changedon ev_time = ls_pvr-changedtime ).
+
+              READ TABLE lt_pvk1 ASSIGNING FIELD-SYMBOL(<pvk1>) WITH KEY kunnr = <pvc>-custnr.
+              IF sy-subrc = 0.
+                ls_pvr-accountgroup = <pvk1>-ktokd.
+                ls_pvr-businesstype = <pvk1>-katr4.
+                ls_pvr-equipowner   = <pvk1>-/scl/equp_ownr.
               ENDIF.
-              INSERT <vgr>-rowkey INTO TABLE lt_vgseen.
+
+              READ TABLE lt_pvrahd ASSIGNING FIELD-SYMBOL(<pvh>) WITH KEY tour_id = <pvc>-tour_id.
+              IF sy-subrc = 0.
+                ls_pvr-driver = <pvh>-driver.
+                to_local_time( EXPORTING iv_date = <pvh>-credate iv_time = <pvh>-cretime
+                               IMPORTING ev_date = ls_pvr-createdon ev_time = ls_pvr-createdtime ).
+                IF ls_pvr-createdon IS INITIAL. ls_pvr-createdon = <pvh>-credate. ENDIF.
+              ENDIF.
+
+              READ TABLE lt_pvtour ASSIGNING FIELD-SYMBOL(<pvt>) WITH KEY tourid = <pvc>-tour_id.
+              IF sy-subrc = 0.
+                ls_pvr-shipmentno     = <pvt>-vlid.
+                ls_pvr-plant          = <pvt>-werks.
+                ls_pvr-route          = <pvt>-route.
+                ls_pvr-settlementdate = <pvt>-date.
+                ls_pvr-statusid       = <pvt>-status_id.
+              ENDIF.
+
+              READ TABLE lt_pvlp TRANSPORTING NO FIELDS
+                WITH KEY vlid = <pvc>-tour_id+2(10) kunnr = <pvc>-custnr.
+              IF sy-subrc = 0.
+                IF <pvc>-man_proc = abap_true.
+                  ls_pvr-light = lc_vgn.  ls_pvr-visitlog = lc_vv.
+                ELSE.
+                  ls_pvr-light = lc_vyl.  ls_pvr-visitlog = lc_vn.
+                ENDIF.
+              ELSE.
+                ls_pvr-light = lc_vyl.    ls_pvr-visitlog = lc_vu.
+              ENDIF.
+
+              ls_pvr-seqno  = lv_pvseq.
+              ls_pvr-rowkey = |{ ls_pvr-reportmode }~{ ls_pvr-tourid }~{ ls_pvr-visitid }~{ ls_pvr-slddocid }~{ ls_pvr-material }~{ ls_pvr-deliveryno }~{ ls_pvr-shipmentno }|.
+              APPEND ls_pvr TO lt_vpage.
             ENDLOOP.
 
-            DATA lt_vgpage TYPE tt_result.
-            DATA(lv_vgf) = lv_offset + 1.
-            DATA(lv_vgt) = lv_offset + lv_page_sz.
-            LOOP AT lt_vgpres INTO DATA(ls_vg) FROM lv_vgf TO lv_vgt.
-              APPEND ls_vg TO lt_vgpage.
+            " OData V4 requires a unique key per row within the page.
+            DATA lt_pvseen TYPE HASHED TABLE OF ty_rowkey WITH UNIQUE KEY table_line.
+            LOOP AT lt_vpage ASSIGNING FIELD-SYMBOL(<pvp>).
+              IF line_exists( lt_pvseen[ table_line = <pvp>-rowkey ] ).
+                <pvp>-rowkey = |{ <pvp>-rowkey }~{ <pvp>-seqno }|.
+              ENDIF.
+              INSERT <pvp>-rowkey INTO TABLE lt_pvseen.
             ENDLOOP.
-            io_response->set_data( lt_vgpage ).
+
+            io_response->set_data( lt_vpage ).
+            IF lv_vtot_req = abap_true.
+              io_response->set_total_number_of_records( lv_vtot ).
+            ENDIF.
+            RETURN.
+
+          ELSEIF lv_offset > 0 OR ( lv_vtot_req = abap_true AND lv_vtot = 0 ).
+            " Page beyond the end, or genuinely no matching visits: the empty
+            " page is the correct answer - return it (fast); do NOT fall
+            " through and recompute.
+            io_response->set_data( VALUE tt_result( ) ).
+            IF lv_vtot_req = abap_true.
+              io_response->set_total_number_of_records( lv_vtot ).
+            ENDIF.
             RETURN.
           ENDIF.
+          " First page empty while data may exist -> fall through to the
+          " proven slow path (safety net; the query is never silently empty).
         ENDIF.
         " =====================================================================
 
