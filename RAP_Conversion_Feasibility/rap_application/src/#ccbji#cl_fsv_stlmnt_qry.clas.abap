@@ -1271,14 +1271,14 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
            AND lt_f_visitid IS INITIAL AND lt_f_tourid IS INITIAL AND lt_f_viscod IS INITIAL
            AND lt_f_objtyp IS INITIAL AND lt_f_delivery IS INITIAL AND lt_f_cashtype IS INITIAL.
           TRY.
-              DATA(lt_ptour) = get_tours( it_shipment    = lt_shipment
+              DATA(lt_paytour) = get_tours( it_shipment    = lt_shipment
                                           it_route       = VALUE #( )
                                           it_settle_date = VALUE #( )
                                           it_plant       = VALUE #( )
                                           it_status      = VALUE #( ) ).
-              IF lt_ptour IS NOT INITIAL.
-                SORT lt_ptour BY tourid.
-                DELETE ADJACENT DUPLICATES FROM lt_ptour COMPARING tourid.
+              IF lt_paytour IS NOT INITIAL.
+                SORT lt_paytour BY tourid.
+                DELETE ADJACENT DUPLICATES FROM lt_paytour COMPARING tourid.
 
                 DATA lv_pfull TYPE abap_bool.
                 lv_pfull = io_request->is_total_numb_of_rec_requested( ).
@@ -1288,14 +1288,14 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
                 DATA lt_pall TYPE tt_result.
                 DATA lv_pi   TYPE i VALUE 0.
                 DATA lv_pn   TYPE i.
-                lv_pn = lines( lt_ptour ).
+                lv_pn = lines( lt_paytour ).
                 WHILE lv_pi < lv_pn.
                   DATA lt_pbatch TYPE tt_tour.
                   CLEAR lt_pbatch.
                   DATA lv_pc TYPE i VALUE 0.
                   WHILE lv_pi < lv_pn AND lv_pc < 100.
                     lv_pi = lv_pi + 1.
-                    APPEND lt_ptour[ lv_pi ] TO lt_pbatch.
+                    APPEND lt_paytour[ lv_pi ] TO lt_pbatch.
                     lv_pc = lv_pc + 1.
                   ENDWHILE.
                   DATA(lt_pbr) = read_payment( it_tour = lt_pbatch ).
