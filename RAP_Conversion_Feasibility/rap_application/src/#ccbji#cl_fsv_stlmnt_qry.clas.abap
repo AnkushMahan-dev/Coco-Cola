@@ -1285,7 +1285,9 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
                 DATA lv_ptarget TYPE i.
                 lv_ptarget = lv_offset + lv_page_sz.
 
-                DATA lt_pall TYPE tt_result.
+                DATA lt_pall     TYPE tt_result.   " the PAGE rows only (bounded)
+                DATA lv_pcount   TYPE int8.        " exact total, WITHOUT materialising
+                DATA lv_pagedone TYPE abap_bool.
                 DATA lv_pi   TYPE i VALUE 0.
                 DATA lv_pn   TYPE i.
                 lv_pn = lines( lt_paytour ).
@@ -1299,11 +1301,21 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
                     lv_pc = lv_pc + 1.
                   ENDWHILE.
                   DATA(lt_pbr) = read_payment( it_tour = lt_pbatch ).
-                  APPEND LINES OF lt_pbr TO lt_pall.
-                  " Data-only scroll stops as soon as the requested page is filled
-                  " (same page-bounded behaviour as every other mode); the total
-                  " count build (lv_pfull) computes the whole set once.
-                  IF lv_pfull = abap_false AND lines( lt_pall ) >= lv_ptarget.
+                  " Count every batch (a running number, not rows) so the exact
+                  " total never needs the whole result in memory - that full
+                  " accumulation is what caused the TSV_NEW_PAGE_ALLOC dump on a
+                  " wide range. Keep ONLY the page's rows; discard each batch.
+                  lv_pcount = lv_pcount + lines( lt_pbr ).
+                  IF lv_pagedone = abap_false.
+                    APPEND LINES OF lt_pbr TO lt_pall.
+                    IF lines( lt_pall ) >= lv_ptarget.
+                      lv_pagedone = abap_true.
+                    ENDIF.
+                  ENDIF.
+                  CLEAR lt_pbr.
+                  " Data-only scroll stops once the page is filled; when the total
+                  " is requested we keep going only to COUNT the rest (rows freed).
+                  IF lv_pfull = abap_false AND lv_pagedone = abap_true.
                     EXIT.
                   ENDIF.
                 ENDWHILE.
@@ -1322,7 +1334,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
                   ENDLOOP.
 
                   IF lv_pfull = abap_true.
-                    io_response->set_total_number_of_records( lines( lt_pall ) ).
+                    io_response->set_total_number_of_records( lv_pcount ).
                   ENDIF.
 
                   DATA lt_ppage TYPE tt_result.
@@ -1376,7 +1388,9 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
                 DATA lv_fstarget TYPE i.
                 lv_fstarget = lv_offset + lv_page_sz.
 
-                DATA lt_fall TYPE tt_result.
+                DATA lt_fall     TYPE tt_result.   " the PAGE rows only (bounded)
+                DATA lv_fcount   TYPE int8.        " exact total, WITHOUT materialising
+                DATA lv_fpagedone TYPE abap_bool.
                 DATA lv_fi   TYPE i VALUE 0.
                 DATA lv_fn   TYPE i.
                 lv_fn = lines( lt_fsrtour ).
@@ -1390,8 +1404,17 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
                     lv_fc = lv_fc + 1.
                   ENDWHILE.
                   DATA(lt_fbr) = read_fsr( it_tour = lt_fbatch ).
-                  APPEND LINES OF lt_fbr TO lt_fall.
-                  IF lv_fsfull = abap_false AND lines( lt_fall ) >= lv_fstarget.
+                  " Count without materialising the whole result (avoids the TSV
+                  " page-alloc dump on a wide range); keep only the page's rows.
+                  lv_fcount = lv_fcount + lines( lt_fbr ).
+                  IF lv_fpagedone = abap_false.
+                    APPEND LINES OF lt_fbr TO lt_fall.
+                    IF lines( lt_fall ) >= lv_fstarget.
+                      lv_fpagedone = abap_true.
+                    ENDIF.
+                  ENDIF.
+                  CLEAR lt_fbr.
+                  IF lv_fsfull = abap_false AND lv_fpagedone = abap_true.
                     EXIT.
                   ENDIF.
                 ENDWHILE.
@@ -1409,7 +1432,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
                   ENDLOOP.
 
                   IF lv_fsfull = abap_true.
-                    io_response->set_total_number_of_records( lines( lt_fall ) ).
+                    io_response->set_total_number_of_records( lv_fcount ).
                   ENDIF.
 
                   DATA lt_fpage TYPE tt_result.
