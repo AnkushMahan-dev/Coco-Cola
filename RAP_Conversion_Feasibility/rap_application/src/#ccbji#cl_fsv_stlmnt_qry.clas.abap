@@ -2390,23 +2390,31 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         " the VISIT LIST. Each such document's line items become their own
         " payment rows labelled "Banked In Amount". This is why a visit list
         " with one RAEC payment (2 line items) still shows 4 rows.
-        DATA lr_vl TYPE RANGE OF xblnr.
+        TYPES: BEGIN OF ty_xbk, xblnr TYPE xblnr, END OF ty_xbk.
+        DATA lt_vlk TYPE STANDARD TABLE OF ty_xbk.
         LOOP AT it_tour ASSIGNING FIELD-SYMBOL(<tv>).
           IF <tv>-vlid IS NOT INITIAL.
-            APPEND VALUE #( sign = 'I' option = 'EQ' low = <tv>-vlid ) TO lr_vl.
+            APPEND VALUE #( xblnr = <tv>-vlid ) TO lt_vlk.
             DATA lv_vlz TYPE xblnr.
             lv_vlz = <tv>-vlid.
             SHIFT lv_vlz LEFT DELETING LEADING '0'.
             IF lv_vlz <> <tv>-vlid AND lv_vlz IS NOT INITIAL.
-              APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_vlz ) TO lr_vl.
+              APPEND VALUE #( xblnr = lv_vlz ) TO lt_vlk.
             ENDIF.
           ENDIF.
         ENDLOOP.
+        SORT lt_vlk BY xblnr.
+        DELETE ADJACENT DUPLICATES FROM lt_vlk COMPARING xblnr.
 
-        IF lr_vl IS NOT INITIAL.
-          " DZ bank-deposit documents referenced by the visit list.
+        IF lt_vlk IS NOT INITIAL.
+          " DZ bank-deposit documents referenced by the visit list. Use FOR ALL
+          " ENTRIES (auto-batched): a giant xblnr IN-list dumps with
+          " SAPSQL_STMNT_TOO_LARGE for a wide Visit List range, and the method's
+          " outer CATCH then turned that dump into an EMPTY payment result (a
+          " single value worked because its IN-list was tiny).
           SELECT bukrs, belnr, gjahr, blart, budat, stblg, xblnr FROM bkpf
-            WHERE blart = 'DZ' AND xblnr IN @lr_vl
+            FOR ALL ENTRIES IN @lt_vlk
+            WHERE blart = 'DZ' AND xblnr = @lt_vlk-xblnr
             INTO TABLE @DATA(lt_bank).
 
           IF lt_bank IS NOT INITIAL.

@@ -110,9 +110,7 @@
               "controlConfiguration": {
                 "@com.sap.vocabularies.UI.v1.LineItem": {
                   "tableSettings": {
-                    "type": "ResponsiveTable",
-                    "growingThreshold": 500,
-                    "growingMode": "Scroll"
+                    "type": "GridTable"
                   }
                 }
               }
