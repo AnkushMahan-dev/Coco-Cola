@@ -715,6 +715,10 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           LOOP AT lt_shipment INTO DATA(ls_fsh).
             IF ls_fsh-high IS NOT INITIAL.
               APPEND VALUE #( sign = ls_fsh-sign option = ls_fsh-option low = ls_fsh-low high = ls_fsh-high ) TO lr_fvlid.
+              " Zero-padded interval too: VLID is stored zero-padded, so the raw
+              " bounds would sort below it and match nothing (range -> empty).
+              APPEND VALUE #( sign = ls_fsh-sign option = ls_fsh-option
+                              low = |{ ls_fsh-low ALPHA = IN }| high = |{ ls_fsh-high ALPHA = IN }| ) TO lr_fvlid.
             ELSEIF ls_fsh-low IS NOT INITIAL.
               APPEND VALUE #( sign = ls_fsh-sign option = ls_fsh-option low = ls_fsh-low ) TO lr_fvlid.
               APPEND VALUE #( sign = 'I' option = 'EQ' low = |{ ls_fsh-low ALPHA = IN }| ) TO lr_fvlid.
@@ -830,6 +834,10 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           LOOP AT lt_shipment INTO DATA(ls_vsh).
             IF ls_vsh-high IS NOT INITIAL.
               APPEND VALUE #( sign = ls_vsh-sign option = ls_vsh-option low = ls_vsh-low high = ls_vsh-high ) TO lr_vvlid.
+              " Zero-padded interval too: VLID is stored zero-padded, so the raw
+              " bounds would sort below it and match nothing (range -> empty).
+              APPEND VALUE #( sign = ls_vsh-sign option = ls_vsh-option
+                              low = |{ ls_vsh-low ALPHA = IN }| high = |{ ls_vsh-high ALPHA = IN }| ) TO lr_vvlid.
             ELSEIF ls_vsh-low IS NOT INITIAL.
               APPEND VALUE #( sign = ls_vsh-sign option = ls_vsh-option low = ls_vsh-low ) TO lr_vvlid.
               APPEND VALUE #( sign = 'I' option = 'EQ' low = |{ ls_vsh-low ALPHA = IN }| ) TO lr_vvlid.
@@ -1542,6 +1550,10 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
             IF ls_sh-high IS NOT INITIAL.
               " interval (BT / GE-with-high etc): pass through unchanged.
               APPEND VALUE #( sign = ls_sh-sign option = ls_sh-option low = ls_sh-low high = ls_sh-high ) TO lr_vlid.
+              " Zero-padded interval too: VLID is stored zero-padded, so the raw
+              " bounds would sort below it and match nothing (range -> empty).
+              APPEND VALUE #( sign = ls_sh-sign option = ls_sh-option
+                              low = |{ ls_sh-low ALPHA = IN }| high = |{ ls_sh-high ALPHA = IN }| ) TO lr_vlid.
             ELSEIF ls_sh-low IS NOT INITIAL.
               " single value: match raw + zero-padded + stripped.
               APPEND VALUE #( sign = ls_sh-sign option = ls_sh-option low = ls_sh-low ) TO lr_vlid.
@@ -2568,6 +2580,10 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
     LOOP AT it_shipment INTO DATA(ls_sh).
       IF ls_sh-high IS NOT INITIAL.
         APPEND VALUE #( sign = ls_sh-sign option = ls_sh-option low = ls_sh-low high = ls_sh-high ) TO rr_vlid.
+        " Zero-padded interval too: VLID is stored zero-padded, so the raw
+        " bounds would sort below it and match nothing (range -> empty).
+        APPEND VALUE #( sign = ls_sh-sign option = ls_sh-option
+                        low = |{ ls_sh-low ALPHA = IN }| high = |{ ls_sh-high ALPHA = IN }| ) TO rr_vlid.
       ELSEIF ls_sh-low IS NOT INITIAL.
         APPEND VALUE #( sign = ls_sh-sign option = ls_sh-option low = ls_sh-low ) TO rr_vlid.
         APPEND VALUE #( sign = 'I' option = 'EQ' low = |{ ls_sh-low ALPHA = IN }| ) TO rr_vlid.
@@ -2591,6 +2607,10 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         LOOP AT it_shipment INTO DATA(ls_sh).
           IF ls_sh-high IS NOT INITIAL.
             APPEND VALUE #( sign = ls_sh-sign option = ls_sh-option low = ls_sh-low high = ls_sh-high ) TO lr_vlid.
+            " Zero-padded interval too: VLID is stored zero-padded, so the raw
+            " bounds would sort below it and match nothing (range -> empty).
+            APPEND VALUE #( sign = ls_sh-sign option = ls_sh-option
+                            low = |{ ls_sh-low ALPHA = IN }| high = |{ ls_sh-high ALPHA = IN }| ) TO lr_vlid.
           ELSEIF ls_sh-low IS NOT INITIAL.
             APPEND VALUE #( sign = ls_sh-sign option = ls_sh-option low = ls_sh-low ) TO lr_vlid.
             APPEND VALUE #( sign = 'I' option = 'EQ' low = |{ ls_sh-low ALPHA = IN }| ) TO lr_vlid.
