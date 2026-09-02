@@ -1247,6 +1247,97 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
         ENDIF.
         " =====================================================================
 
+        " ===== FAST PATH: PAYMENT (PAYT) with a Visit List filter ============
+        " Payment cannot be paged by a single driver table (each row is one FI
+        " line item of a RAEC payment OR of a DZ bank document, with header-only
+        " fallbacks), so it is paged the WINDOWED way instead: the matched tours
+        " are processed in tour_id order in batches, reusing read_payment (so
+        " every value is identical), accumulating rows until the requested page
+        " is filled. A data-only scroll therefore stops early instead of
+        " rebuilding the whole result on every page, and even the total-count
+        " build is cheaper because each batch's per-row work is small. Isolated
+        " to PAYT; falls through to the proven slow path on empty / error.
+        IF lv_mode = 'PAYT'
+           AND lt_shipment IS NOT INITIAL
+           AND lt_plant IS INITIAL AND lt_settle_date IS INITIAL AND lt_route IS INITIAL
+           AND lt_status IS INITIAL
+           AND lt_rowkey IS INITIAL AND lt_seqno IS INITIAL
+           AND io_request->is_data_requested( ) = abap_true
+           AND lv_page_sz <> if_rap_query_paging=>page_size_unlimited AND lv_page_sz > 0
+           AND lines( io_request->get_sort_elements( ) ) = 0
+           AND lt_driver IS INITIAL AND lt_vehicle IS INITIAL AND lt_tpp IS INITIAL
+           AND lt_f_customer IS INITIAL AND lt_f_material IS INITIAL AND lt_f_vkorg IS INITIAL
+           AND lt_f_paymt IS INITIAL AND lt_f_currency IS INITIAL AND lt_f_slddoc IS INITIAL
+           AND lt_f_visitid IS INITIAL AND lt_f_tourid IS INITIAL AND lt_f_viscod IS INITIAL
+           AND lt_f_objtyp IS INITIAL AND lt_f_delivery IS INITIAL AND lt_f_cashtype IS INITIAL.
+          TRY.
+              DATA(lt_ptour) = get_tours( it_shipment    = lt_shipment
+                                          it_route       = VALUE #( )
+                                          it_settle_date = VALUE #( )
+                                          it_plant       = VALUE #( )
+                                          it_status      = VALUE #( ) ).
+              IF lt_ptour IS NOT INITIAL.
+                SORT lt_ptour BY tourid.
+                DELETE ADJACENT DUPLICATES FROM lt_ptour COMPARING tourid.
+
+                DATA lv_pfull TYPE abap_bool.
+                lv_pfull = io_request->is_total_numb_of_rec_requested( ).
+                DATA lv_ptarget TYPE i.
+                lv_ptarget = lv_offset + lv_page_sz.
+
+                DATA lt_pall TYPE tt_result.
+                DATA lv_pi   TYPE i VALUE 0.
+                DATA lv_pn   TYPE i.
+                lv_pn = lines( lt_ptour ).
+                WHILE lv_pi < lv_pn.
+                  DATA lt_pbatch TYPE tt_tour.
+                  CLEAR lt_pbatch.
+                  DATA lv_pc TYPE i VALUE 0.
+                  WHILE lv_pi < lv_pn AND lv_pc < 100.
+                    lv_pi = lv_pi + 1.
+                    APPEND lt_ptour[ lv_pi ] TO lt_pbatch.
+                    lv_pc = lv_pc + 1.
+                  ENDWHILE.
+                  DATA(lt_pbr) = read_payment( it_tour = lt_pbatch ).
+                  APPEND LINES OF lt_pbr TO lt_pall.
+                  IF lv_pfull = abap_false AND lines( lt_pall ) >= lv_ptarget.
+                    EXIT.
+                  ENDIF.
+                ENDWHILE.
+
+                IF lt_pall IS NOT INITIAL.
+                  " RowKey + seqno + duplicate guard (same rule as the slow path).
+                  DATA lt_pseen TYPE HASHED TABLE OF ty_rowkey WITH UNIQUE KEY table_line.
+                  LOOP AT lt_pall ASSIGNING FIELD-SYMBOL(<pp>).
+                    <pp>-seqno = sy-tabix.
+                    IF <pp>-reportmode IS INITIAL. <pp>-reportmode = 'PAYT'. ENDIF.
+                    <pp>-rowkey = |{ <pp>-reportmode }~{ <pp>-tourid }~{ <pp>-visitid }~{ <pp>-slddocid }~{ <pp>-material }~{ <pp>-deliveryno }~{ <pp>-shipmentno }|.
+                    IF line_exists( lt_pseen[ table_line = <pp>-rowkey ] ).
+                      <pp>-rowkey = |{ <pp>-rowkey }~{ <pp>-seqno }|.
+                    ENDIF.
+                    INSERT <pp>-rowkey INTO TABLE lt_pseen.
+                  ENDLOOP.
+
+                  IF lv_pfull = abap_true.
+                    io_response->set_total_number_of_records( lines( lt_pall ) ).
+                  ENDIF.
+
+                  DATA lt_ppage TYPE tt_result.
+                  DATA(lv_pf) = lv_offset + 1.
+                  DATA(lv_pt) = lv_offset + lv_page_sz.
+                  LOOP AT lt_pall INTO DATA(ls_pp) FROM lv_pf TO lv_pt.
+                    APPEND ls_pp TO lt_ppage.
+                  ENDLOOP.
+                  io_response->set_data( lt_ppage ).
+                  RETURN.
+                ENDIF.
+              ENDIF.
+            CATCH cx_root.
+              " fall through to the proven slow path (never silently empty).
+          ENDTRY.
+        ENDIF.
+        " =====================================================================
+
         " ======== FAST DB-PAGED PATH: row-explosive modes (windowed) =========
         " Visit / Sales / Payment / Check / Money / Quantity / FSR produce a
         " VARIABLE number of rows per tour, so they cannot be paged by tour like
