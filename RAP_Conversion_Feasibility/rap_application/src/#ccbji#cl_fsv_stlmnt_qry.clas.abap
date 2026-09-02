@@ -1300,10 +1300,10 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
                   ENDWHILE.
                   DATA(lt_pbr) = read_payment( it_tour = lt_pbatch ).
                   APPEND LINES OF lt_pbr TO lt_pall.
-                  " Offset 0 (the initial load) builds the WHOLE result so it can
-                  " be returned in one response (fetch-all). Only a deep server
-                  " page (offset > 0, if the client still paginates) stops early.
-                  IF lv_pfull = abap_false AND lv_offset > 0 AND lines( lt_pall ) >= lv_ptarget.
+                  " Data-only scroll stops as soon as the requested page is filled
+                  " (same page-bounded behaviour as every other mode); the total
+                  " count build (lv_pfull) computes the whole set once.
+                  IF lv_pfull = abap_false AND lines( lt_pall ) >= lv_ptarget.
                     EXIT.
                   ENDIF.
                 ENDWHILE.
@@ -1325,21 +1325,100 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
                     io_response->set_total_number_of_records( lines( lt_pall ) ).
                   ENDIF.
 
-                  IF lv_offset = 0.
-                    " Fetch-all: return the ENTIRE result in this one response, so
-                    " the GridTable then pages client-side with no further server
-                    " round trips (the classic report likewise builds once). Avoids
-                    " the repeated per-page rebuild that made Payment feel slow.
-                    io_response->set_data( lt_pall ).
-                  ELSE.
-                    DATA lt_ppage TYPE tt_result.
-                    DATA(lv_pf) = lv_offset + 1.
-                    DATA(lv_pt) = lv_offset + lv_page_sz.
-                    LOOP AT lt_pall INTO DATA(ls_pp) FROM lv_pf TO lv_pt.
-                      APPEND ls_pp TO lt_ppage.
-                    ENDLOOP.
-                    io_response->set_data( lt_ppage ).
+                  DATA lt_ppage TYPE tt_result.
+                  DATA(lv_pf) = lv_offset + 1.
+                  DATA(lv_pt) = lv_offset + lv_page_sz.
+                  LOOP AT lt_pall INTO DATA(ls_pp) FROM lv_pf TO lv_pt.
+                    APPEND ls_pp TO lt_ppage.
+                  ENDLOOP.
+                  io_response->set_data( lt_ppage ).
+                  RETURN.
+                ENDIF.
+              ENDIF.
+            CATCH cx_root.
+              " fall through to the proven slow path (never silently empty).
+          ENDTRY.
+        ENDIF.
+        " =====================================================================
+
+        " ===== FAST PATH: FSR (FSRD) with a Visit List filter ================
+        " FSR fans out across the SD document flow (order -> delivery -> invoice
+        " -> accounting) plus an appended document row, so - like Payment - it is
+        " paged the WINDOWED way: the matched tours are processed in tour_id order
+        " in batches, reusing read_fsr (identical values), accumulating rows until
+        " the requested page is filled. Keeps FSR consistent with every other mode
+        " (large-page paging). Isolated to FSRD; falls through to the slow path.
+        IF lv_mode = 'FSRD'
+           AND lt_shipment IS NOT INITIAL
+           AND lt_plant IS INITIAL AND lt_settle_date IS INITIAL AND lt_route IS INITIAL
+           AND lt_status IS INITIAL
+           AND lt_rowkey IS INITIAL AND lt_seqno IS INITIAL
+           AND io_request->is_data_requested( ) = abap_true
+           AND lv_page_sz <> if_rap_query_paging=>page_size_unlimited AND lv_page_sz > 0
+           AND lines( io_request->get_sort_elements( ) ) = 0
+           AND lt_driver IS INITIAL AND lt_vehicle IS INITIAL AND lt_tpp IS INITIAL
+           AND lt_f_customer IS INITIAL AND lt_f_material IS INITIAL AND lt_f_vkorg IS INITIAL
+           AND lt_f_paymt IS INITIAL AND lt_f_currency IS INITIAL AND lt_f_slddoc IS INITIAL
+           AND lt_f_visitid IS INITIAL AND lt_f_tourid IS INITIAL AND lt_f_viscod IS INITIAL
+           AND lt_f_objtyp IS INITIAL AND lt_f_delivery IS INITIAL AND lt_f_cashtype IS INITIAL.
+          TRY.
+              DATA(lt_fsrtour) = get_tours( it_shipment    = lt_shipment
+                                           it_route       = VALUE #( )
+                                           it_settle_date = VALUE #( )
+                                           it_plant       = VALUE #( )
+                                           it_status      = VALUE #( ) ).
+              IF lt_fsrtour IS NOT INITIAL.
+                SORT lt_fsrtour BY tourid.
+                DELETE ADJACENT DUPLICATES FROM lt_fsrtour COMPARING tourid.
+
+                DATA lv_fsfull TYPE abap_bool.
+                lv_fsfull = io_request->is_total_numb_of_rec_requested( ).
+                DATA lv_fstarget TYPE i.
+                lv_fstarget = lv_offset + lv_page_sz.
+
+                DATA lt_fall TYPE tt_result.
+                DATA lv_fi   TYPE i VALUE 0.
+                DATA lv_fn   TYPE i.
+                lv_fn = lines( lt_fsrtour ).
+                WHILE lv_fi < lv_fn.
+                  DATA lt_fbatch TYPE tt_tour.
+                  CLEAR lt_fbatch.
+                  DATA lv_fc TYPE i VALUE 0.
+                  WHILE lv_fi < lv_fn AND lv_fc < 500.
+                    lv_fi = lv_fi + 1.
+                    APPEND lt_fsrtour[ lv_fi ] TO lt_fbatch.
+                    lv_fc = lv_fc + 1.
+                  ENDWHILE.
+                  DATA(lt_fbr) = read_fsr( it_tour = lt_fbatch ).
+                  APPEND LINES OF lt_fbr TO lt_fall.
+                  IF lv_fsfull = abap_false AND lines( lt_fall ) >= lv_fstarget.
+                    EXIT.
                   ENDIF.
+                ENDWHILE.
+
+                IF lt_fall IS NOT INITIAL.
+                  DATA lt_fseen TYPE HASHED TABLE OF ty_rowkey WITH UNIQUE KEY table_line.
+                  LOOP AT lt_fall ASSIGNING FIELD-SYMBOL(<fp>).
+                    <fp>-seqno = sy-tabix.
+                    IF <fp>-reportmode IS INITIAL. <fp>-reportmode = 'FSRD'. ENDIF.
+                    <fp>-rowkey = |{ <fp>-reportmode }~{ <fp>-tourid }~{ <fp>-visitid }~{ <fp>-slddocid }~{ <fp>-material }~{ <fp>-deliveryno }~{ <fp>-shipmentno }|.
+                    IF line_exists( lt_fseen[ table_line = <fp>-rowkey ] ).
+                      <fp>-rowkey = |{ <fp>-rowkey }~{ <fp>-seqno }|.
+                    ENDIF.
+                    INSERT <fp>-rowkey INTO TABLE lt_fseen.
+                  ENDLOOP.
+
+                  IF lv_fsfull = abap_true.
+                    io_response->set_total_number_of_records( lines( lt_fall ) ).
+                  ENDIF.
+
+                  DATA lt_fpage TYPE tt_result.
+                  DATA(lv_fsf) = lv_offset + 1.
+                  DATA(lv_fst) = lv_offset + lv_page_sz.
+                  LOOP AT lt_fall INTO DATA(ls_fp) FROM lv_fsf TO lv_fst.
+                    APPEND ls_fp TO lt_fpage.
+                  ENDLOOP.
+                  io_response->set_data( lt_fpage ).
                   RETURN.
                 ENDIF.
               ENDIF.

@@ -205,6 +205,7 @@ sap.ui.define([
             if (oFilterBar) {
                 this._oFilterBar = oFilterBar;
                 this._oTable = this._findTable();
+                this._setTablePageSize();
                 this._attach(oFilterBar);
                 this._setupModeDropdown();
                 this._setupDisplayLogs();
@@ -249,6 +250,29 @@ sap.ui.define([
                 return oCtrl.isA && oCtrl.isA("sap.ui.mdc.Table");
             });
             return (aTables && aTables.length) ? aTables[0] : null;
+        },
+
+        /**
+         * Page size: fetch a LARGE block of records per request (same for every
+         * mode), instead of the small ~30-row default. Combined with the
+         * GridTable (which virtualises rendering), scrolling stays smooth while
+         * each request returns 500 records - the "next 500" paging the user
+         * asked for. sap.ui.mdc.Table#setThreshold controls how many records the
+         * table requests from the OData service. Fully guarded.
+         */
+        _setTablePageSize: function () {
+            try {
+                var oTable = this._oTable;
+                if (!oTable || oTable.__pageSizeDone) {
+                    return;
+                }
+                if (oTable.setThreshold) {
+                    oTable.setThreshold(500);   // records fetched per request
+                    oTable.__pageSizeDone = true;
+                }
+            } catch (e) {
+                // Any MDC API difference: leave the default page size.
+            }
         },
 
         /**
