@@ -1300,7 +1300,10 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
                   ENDWHILE.
                   DATA(lt_pbr) = read_payment( it_tour = lt_pbatch ).
                   APPEND LINES OF lt_pbr TO lt_pall.
-                  IF lv_pfull = abap_false AND lines( lt_pall ) >= lv_ptarget.
+                  " Offset 0 (the initial load) builds the WHOLE result so it can
+                  " be returned in one response (fetch-all). Only a deep server
+                  " page (offset > 0, if the client still paginates) stops early.
+                  IF lv_pfull = abap_false AND lv_offset > 0 AND lines( lt_pall ) >= lv_ptarget.
                     EXIT.
                   ENDIF.
                 ENDWHILE.
@@ -1322,13 +1325,21 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
                     io_response->set_total_number_of_records( lines( lt_pall ) ).
                   ENDIF.
 
-                  DATA lt_ppage TYPE tt_result.
-                  DATA(lv_pf) = lv_offset + 1.
-                  DATA(lv_pt) = lv_offset + lv_page_sz.
-                  LOOP AT lt_pall INTO DATA(ls_pp) FROM lv_pf TO lv_pt.
-                    APPEND ls_pp TO lt_ppage.
-                  ENDLOOP.
-                  io_response->set_data( lt_ppage ).
+                  IF lv_offset = 0.
+                    " Fetch-all: return the ENTIRE result in this one response, so
+                    " the GridTable then pages client-side with no further server
+                    " round trips (the classic report likewise builds once). Avoids
+                    " the repeated per-page rebuild that made Payment feel slow.
+                    io_response->set_data( lt_pall ).
+                  ELSE.
+                    DATA lt_ppage TYPE tt_result.
+                    DATA(lv_pf) = lv_offset + 1.
+                    DATA(lv_pt) = lv_offset + lv_page_sz.
+                    LOOP AT lt_pall INTO DATA(ls_pp) FROM lv_pf TO lv_pt.
+                      APPEND ls_pp TO lt_ppage.
+                    ENDLOOP.
+                    io_response->set_data( lt_ppage ).
+                  ENDIF.
                   RETURN.
                 ENDIF.
               ENDIF.
