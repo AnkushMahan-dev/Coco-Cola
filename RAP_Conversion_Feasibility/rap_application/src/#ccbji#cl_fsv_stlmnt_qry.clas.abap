@@ -1293,7 +1293,7 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
                   DATA lt_pbatch TYPE tt_tour.
                   CLEAR lt_pbatch.
                   DATA lv_pc TYPE i VALUE 0.
-                  WHILE lv_pi < lv_pn AND lv_pc < 100.
+                  WHILE lv_pi < lv_pn AND lv_pc < 500.
                     lv_pi = lv_pi + 1.
                     APPEND lt_paytour[ lv_pi ] TO lt_pbatch.
                     lv_pc = lv_pc + 1.
@@ -2354,6 +2354,14 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
               AND belnr = @lt_fikey-oi_csh_post
               AND gjahr = @lt_fikey-fisc_year
             INTO TABLE @DATA(lt_bkpf).
+
+          " Sort the FI item / header tables by their document key so the
+          " per-payment lookups below use a binary search instead of a full
+          " scan for every payment (was O(payments x items)). Sorting the items
+          " by the FULL key (incl. posting item) keeps the collected order and
+          " therefore the output row order identical.
+          SORT lt_item BY bukrs belnr gjahr buzei.
+          SORT lt_bkpf BY bukrs belnr gjahr.
         ENDIF.
 
         LOOP AT lt_pay ASSIGNING FIELD-SYMBOL(<p>).
@@ -2420,7 +2428,8 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           " Document-level accounting fields (same for every line item).
           IF <p>-oi_csh_post IS NOT INITIAL.
             READ TABLE lt_bkpf ASSIGNING FIELD-SYMBOL(<bk>)
-              WITH KEY bukrs = <p>-compcod belnr = <p>-oi_csh_post gjahr = <p>-fisc_year.
+              WITH KEY bukrs = <p>-compcod belnr = <p>-oi_csh_post gjahr = <p>-fisc_year
+              BINARY SEARCH.
             IF sy-subrc = 0.
               ls_base-doctype      = <bk>-blart.
               ls_base-postingdate  = <bk>-budat.
@@ -2433,11 +2442,22 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
           DATA lt_pitem LIKE lt_item.
           CLEAR lt_pitem.
           IF <p>-oi_csh_post IS NOT INITIAL.
-            LOOP AT lt_item ASSIGNING FIELD-SYMBOL(<fi>)
-              WHERE bukrs = <p>-compcod AND belnr = <p>-oi_csh_post
-                AND gjahr = <p>-fisc_year.
-              APPEND <fi> TO lt_pitem.
-            ENDLOOP.
+            " Binary-search the first line item of this document, then take the
+            " contiguous block (lt_item is sorted by bukrs/belnr/gjahr/buzei).
+            READ TABLE lt_item TRANSPORTING NO FIELDS
+              WITH KEY bukrs = <p>-compcod belnr = <p>-oi_csh_post gjahr = <p>-fisc_year
+              BINARY SEARCH.
+            IF sy-subrc = 0.
+              DATA lv_ix TYPE i.
+              lv_ix = sy-tabix.
+              LOOP AT lt_item ASSIGNING FIELD-SYMBOL(<fi>) FROM lv_ix.
+                IF <fi>-bukrs <> <p>-compcod OR <fi>-belnr <> <p>-oi_csh_post
+                OR <fi>-gjahr <> <p>-fisc_year.
+                  EXIT.
+                ENDIF.
+                APPEND <fi> TO lt_pitem.
+              ENDLOOP.
+            ENDIF.
           ENDIF.
 
           IF lt_pitem IS NOT INITIAL.
@@ -2524,6 +2544,21 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
                 AND fiscalyear         = @lt_bank-gjahr
               INTO TABLE @DATA(lt_bankit).
 
+            " Sorted tour index by normalized visit list, so each bank document
+            " finds its tour with a binary search instead of scanning ALL tours
+            " (was O(bank x tours) - the biggest cost for a wide range). The
+            " normalized match already covers the raw match (equal raw values
+            " are equal after leading-zero removal), and vlid -> tour is 1:1, so
+            " the same tour is picked.
+            TYPES: BEGIN OF ty_tvn, vlnorm TYPE xblnr, idx TYPE i, END OF ty_tvn.
+            DATA lt_tvn TYPE SORTED TABLE OF ty_tvn WITH NON-UNIQUE KEY vlnorm.
+            LOOP AT it_tour ASSIGNING FIELD-SYMBOL(<tv2>).
+              DATA lv_tvn TYPE xblnr.
+              lv_tvn = <tv2>-vlid.
+              SHIFT lv_tvn LEFT DELETING LEADING '0'.
+              INSERT VALUE #( vlnorm = lv_tvn idx = sy-tabix ) INTO TABLE lt_tvn.
+            ENDLOOP.
+
             LOOP AT lt_bank ASSIGNING FIELD-SYMBOL(<bd>).
               " Header from the tour whose visit list = this document's ref.
               DATA ls_bd TYPE ty_result.
@@ -2541,19 +2576,18 @@ CLASS /ccbji/cl_fsv_stlmnt_qry IMPLEMENTATION.
               ls_bd-slddocid      = <bd>-belnr.
               DATA lv_bxz TYPE xblnr.
               lv_bxz = <bd>-xblnr.  SHIFT lv_bxz LEFT DELETING LEADING '0'.
-              LOOP AT it_tour ASSIGNING <tv>.
-                DATA lv_tvz TYPE xblnr.
-                lv_tvz = <tv>-vlid.  SHIFT lv_tvz LEFT DELETING LEADING '0'.
-                IF lv_tvz = lv_bxz OR <tv>-vlid = <bd>-xblnr.
+              READ TABLE lt_tvn ASSIGNING FIELD-SYMBOL(<tvn>) WITH KEY vlnorm = lv_bxz.
+              IF sy-subrc = 0.
+                ASSIGN it_tour[ <tvn>-idx ] TO <tv>.
+                IF <tv> IS ASSIGNED.
                   ls_bd-shipmentno     = <tv>-vlid.
                   ls_bd-tourid         = <tv>-tourid.
                   ls_bd-plant          = <tv>-werks.
                   ls_bd-route          = <tv>-route.
                   ls_bd-settlementdate = <tv>-date.
                   ls_bd-statusid       = <tv>-status_id.
-                  EXIT.
                 ENDIF.
-              ENDLOOP.
+              ENDIF.
 
               " One row per line item of the bank document.
               DATA lv_any TYPE abap_bool.
